@@ -1,39 +1,26 @@
-newtype MaybeT m a = MaybeT { runMaybeT :: m (Maybe a) }
-instance Monad m => Monad (MaybeT m) where
-  return  = MaybeT . return . Just
-  x >>= f = MaybeT $ do maybeValue <- runMaybeT x
-                        case maybeValue of
-                          Nothing    -> return Nothing
-                          Just value -> runMaybeT $ f value
+import Control.Monad.Error (ErrorT(..), runErrorT)
+import Control.Monad.State.Lazy (state, State, runState)
+import Data.ByteString (pack, ByteString)
 
-newtype State s a = State { runState :: s -> (a,s) }
-instance Monad (State s) where
-  return x = State $ \s -> (x,s)
-  (State h) >>= f = State $ \s -> let (a, newState) = h s
-                                      (State g) = f a
-                                  in  g newState
+type ParseFun = Integer -> ByteString -> ((Either String Integer), ByteString)
+type Parser = ErrorT String (State ByteString) Integer
 
---lift = undefined
+(-->) :: Parser -> ParseFun -> Parser
+x --> f = x >>= ErrorT . state . f
 
---lengthCounter len string = if (length string) == len then 1 else 0
+countAll :: ParseFun
+countAll init = runState $ runErrorT $ classFileFormat where
+                classFileFormat = return init
+                                  --> increment --> increment --> breaking --> decrement
 
-type Counter = Integer -> MaybeT (State [String]) Integer
-
-increment :: Counter
-increment count = MaybeT $ State $ (\strings -> (Just(count + 1), strings))
-
-decrement :: Counter
-decrement count = MaybeT $ State $ (\strings -> (Just(count - 1), strings))
-
-breaking :: Counter
-breaking count = MaybeT $ State $ (\strings -> (Nothing, strings))
-
-countAll :: [String] -> (Maybe Integer, [String])
-countAll = runState $ runMaybeT $ return 0 >>= increment >>= increment >>= breaking >>= decrement
+-- the following are all ParseFun functions:
+increment count bytes = (Right $ count + 1, bytes)
+decrement count bytes = (Right $ count - 1, bytes)
+breaking count bytes = (Left "cake!", bytes)
 
 main = do
-  let c = fst $ countAll ["a", "b"] in
-    case c of
-      Just v -> putStrLn "cake"
-      Nothing -> putStrLn "Broken!"
+  let c = fst $ countAll 0 $ pack [1, 2]
+  case c of
+    Right v -> putStrLn "cake"
+    Left v -> putStrLn "Broken!"
   putStrLn "asd"
