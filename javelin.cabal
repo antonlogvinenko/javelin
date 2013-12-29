@@ -15,9 +15,10 @@ category:            System
 build-type:          Simple
 cabal-version:       >=1.8
 
-executable javeline
+executable javelin
   main-is:             Main.hs
-  -- other-modules:       
+  -- other-modules:
+  exposed-modules:     Javelin.ByteCode
   build-depends:       base ==4.6.*,
                        mtl ==2.1.*,
                        bytestring ==0.10.*
