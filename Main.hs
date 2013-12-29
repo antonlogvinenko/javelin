@@ -1,32 +1,40 @@
 import Control.Monad.Error (ErrorT(..), runErrorT)
 import Control.Monad.State.Lazy (state, State, runState)
-import Data.ByteString (ByteString)
-import qualified Data.ByteString as BS (take, drop, pack, unpack)
-import Data.Word (Word32, Word8)
+import Data.ByteString (ByteString, unpack)
+import Data.Word (Word32, Word16, Word8)
 
-parse :: ByteString -> Either String ClassDef
+parse :: [Word8] -> Either String ClassDef
 parse = fst . (runState . runErrorT $ classFileFormat) where
         x --> f = x >>= ErrorT . state . f
         classFileFormat = return EmptyClassDef
-                          --> increment --> magicNumber
+                          --> magicNumber --> minorVersion
 
 data ClassDef = EmptyClassDef |
-                ClassDef {minorVersion :: Word32,
-                          majorVersion :: Word32}
+                ClassDef {minVer :: Word16,
+                          majVer :: Word16} deriving (Show)
 
-increment cd bs = (Right $ cd, bs)
-breaking cd bs = (Left "cake!", bs)
+require len bs f = if length bs < len
+                   then (Left "Unexpected EOF", bs)
+                   else f
 
-magicNumber cd bs = if BS.take 4 bs == BS.pack [0xCA, 0xFE, 0xBA, 0xBE]
-                    then (Right cd, BS.drop 4 bs)
+magicNumber cd bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
+                    then (Right cd, drop 4 bs)
                     else (Left "Not a Java class format", bs)
+
+version bs cdUpd = require 2 bs $
+                 let high = bs !! 1
+                     low = bs !! 2
+                     ver = fromIntegral $ high * 8 + low
+                 in (Right $ cdUpd ver, bs)
+minorVersion cd bs = version bs $ \x -> cd {minVer = x}
+majorVersion cd bs = version bs $ \x -> cd {majVer = x}
                       
 main = do
-  let c = parse $ BS.pack [0xCA, 0xFE, 0xBA, 0xBE]
+  let c = parse [0xCA, 0xFE, 0xBA, 0xBE, 0x00, 0x00]
   case c of
-    Right v -> putStrLn "cake"
-    Left v -> putStrLn "Broken!"
-  putStrLn "asd"
+    Right cd -> putStrLn $ "Parsed ok :)"
+    Left msg -> putStrLn $ "Failed with error: " ++ msg
+  putStrLn "Complete"
 
 
 -- parser functions
