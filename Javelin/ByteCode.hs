@@ -43,9 +43,9 @@ constantPool = stub
 
 -- use lenses for upd2bytes
 -- test - unit, functional (read file)
--- infrastructure: inform where the error happened - EOF when parsing WHAT?
-
 -- hlint
+
+-- infrastructure: inform where the error happened - EOF when parsing WHAT?
 -- parser functions
 -- read file
 
