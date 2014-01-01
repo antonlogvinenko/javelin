@@ -3,7 +3,7 @@
 
 name:                javelin
 version:             0.1.0.0
-synopsis:            Javelin!
+synopsis:            Haskell JVM Javelin
 -- description:         
 homepage:            http://github.com/antonlogvinenko/javelin
 license:             MIT
@@ -18,7 +18,6 @@ cabal-version:       >=1.8
 executable javelin
   main-is:             Main.hs
   -- other-modules:
-  exposed-modules:     Javelin.ByteCode
   build-depends:       base ==4.6.*,
                        mtl ==2.1.*,
                        bytestring ==0.10.*

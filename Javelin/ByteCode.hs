@@ -1,10 +1,11 @@
-module Javelin.ByteCode (parse) where
+module Javelin.ByteCode (parse, ClassDef) where
   
 import Control.Monad.Error (ErrorT(..), runErrorT)
 import Control.Monad.State.Lazy (state, State, runState)
 import Data.ByteString (ByteString, unpack)
 import Data.Word (Word32, Word16, Word8)
 
+-- | Transforms Java class bytecode into either error message or a class definition.
 parse :: [Word8] -> Either String ClassDef
 parse = fst . (runState . runErrorT $ classFileFormat) where
         x --> f = x >>= ErrorT . state . f
@@ -14,6 +15,7 @@ parse = fst . (runState . runErrorT $ classFileFormat) where
 
 data ConstantPoolInfo = ConstantPoolInfo deriving (Show)
 
+-- | Represents Java class file structure
 data ClassDef = EmptyClassDef |
                 ClassDef {minVer :: Word16,
                           majVer :: Word16,
@@ -38,14 +40,4 @@ minorVersion cd bs = upd2bytes bs $ \v -> cd {minVer = v}
 majorVersion cd bs = upd2bytes bs $ \v -> cd {majVer = v}
 constantPoolCount cd bs = upd2bytes bs $ \v -> cd {constPoolSize = v}
 constantPool = stub
-
-
-
--- use lenses for upd2bytes
--- test - unit, functional (read file)
--- hlint
-
--- infrastructure: inform where the error happened - EOF when parsing WHAT?
--- parser functions
--- read file
 
