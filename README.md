@@ -4,7 +4,6 @@ javelin
 Haskell JVM
 
 javelin-1
-documentation
 test - unit, functional (read file)
 use lenses for upd2bytes
 hlint
