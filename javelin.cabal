@@ -17,6 +17,7 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:   Javelin.ByteCode
+  ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
   hs-source-dirs:    src
   build-depends:     base ==4.6.*,
