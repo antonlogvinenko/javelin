@@ -3,6 +3,9 @@ javelin
 
 Haskell JVM
 
+This project was started in Haskell and being continued in Clojure - https://github.com/antonlogvinenko/javelin
+Haskell platform seems to be very immature for practical purposes now.
+
 javelin-1
 emacs modes - more useful...
 read, use quickcheck, hunit, tasty, hspec?, write tests
