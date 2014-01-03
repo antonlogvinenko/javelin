@@ -18,8 +18,11 @@ requireTest = let t = (Left "error", [0x00])
                ]
 
 upd EmptyClassDef _ = EmptyClassDef
-upd cd v = cd {minVer = v, majVer = v, constPoolSize = v, constPool = []}
-              
+upd cd v = cd {minVer = v}
+
+tEmpty = EmptyClassDef
+tMinor = tEmpty {minVer = 1}         
+           
 update2bytesTest = let t = EmptyClassDef :: ClassDef
                    in testGroup "bytes update" [
                            testCase "bla" $

@@ -50,3 +50,5 @@ majorVersion cd bs = upd2bytes bs $ \v -> cd {majVer = v}
 constantPoolCount cd bs = upd2bytes bs $ \v -> cd {constPoolSize = v}
 constantPool = stub
 
+
+               
