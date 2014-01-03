@@ -15,11 +15,20 @@ category:            System
 build-type:          Simple
 cabal-version:       >=1.8
 
+library
+  exposed-modules:   Javelin.ByteCode
+  build-depends:     base >=4.6 && <4.7
+  hs-source-dirs:    src
+  build-depends:     base ==4.6.*,
+                     mtl ==2.1.*,
+                     bytestring ==0.10.*
+
 test-suite test
   hs-source-dirs:    test
   main-is:           Main.hs
   Type:              exitcode-stdio-1.0
   build-depends:     base ==4.6.*, Cabal >= 1.16.0,
+                     javelin,
                      HUnit,
                      QuickCheck,
                      smallcheck,
