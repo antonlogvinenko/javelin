@@ -22,7 +22,8 @@ library
   hs-source-dirs:    src
   build-depends:     base ==4.6.*,
                      mtl ==2.1.*,
-                     bytestring ==0.10.*
+                     bytestring ==0.10.*,
+                     data-default ==0.5.*
 
 test-suite test
   hs-source-dirs:    test
@@ -44,4 +45,5 @@ executable javelin
   -- other-modules:
   build-depends:       base ==4.6.*,
                        mtl ==2.1.*,
-                       bytestring ==0.10.*
+                       bytestring ==0.10.*,
+                       data-default ==0.5.*

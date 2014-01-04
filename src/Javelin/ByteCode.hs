@@ -9,7 +9,8 @@ import Control.Monad.Error (ErrorT(..), runErrorT)
 import Control.Monad.State.Lazy (state, State, runState)
 import Data.ByteString (ByteString, unpack)
 import Data.Word (Word32, Word16, Word8)
-
+import Data.Default
+    
 type ParsedByteCode = Either String ClassDef
     
 -- | Transforms Java class bytecode into either error message or a class definition.
@@ -28,12 +29,14 @@ data ClassDef = ClassDef {minVer :: Word16,
                           constPoolSize :: Word16,
                           constPool :: [ConstantPoolInfo]
                          } deriving (Show, Eq)
-
+              
 emptyClassDef = ClassDef {minVer = 0,
                           majVer = 0,
                           constPoolSize = 0,
                           constPool = []}
-              
+
+a = def :: Int
+                
 stub cd bs = (Right cd, bs)
 
 require :: Int -> [Word8] -> (ParsedByteCode, [Word8]) -> (ParsedByteCode, [Word8])
