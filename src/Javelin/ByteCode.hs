@@ -1,61 +1,55 @@
-module Javelin.ByteCode (parse,
-                         require, upd2bytes, stub,
-                         magicNumber, minorVersion, majorVersion,
-                         constantPoolCount, constantPool,
-                         ClassDef(..), emptyClassDef)
+module Javelin.ByteCode (parse, require, get2Bytes, magicNumber, version,
+                         constantPool, constantPoolSize, classBody)
 where
 
-import Control.Monad.Error (ErrorT(..), runErrorT)
-import Control.Monad.State.Lazy (state, State, runState)
 import Data.ByteString (ByteString, unpack)
 import Data.Word (Word32, Word16, Word8)
-import Data.Default
-    
-type ParsedByteCode = Either String ClassDef
-    
--- | Transforms Java class bytecode into either error message or a class definition.
-parse :: [Word8] -> ParsedByteCode
-parse = fst . (runState . runErrorT $ classFileFormat) where
-    x --> f = x >>= ErrorT . state . f
-    classFileFormat = return emptyClassDef -->
-                      magicNumber --> minorVersion --> majorVersion -->
-                      constantPoolCount --> constantPool
+import Control.Monad
+                   
+data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
+                deriving (Show, Eq)
+data ClassBody = ClassBody {constool :: [ConstantPool]}
+                 deriving (Show, Eq)
+data ConstantPool = ConstantPool
+                    deriving (Show, Eq)
 
-data ConstantPoolInfo = ConstantPoolInfo deriving (Show, Eq)
+type Parser a = [Word8] -> Either String ([Word8], a)
 
--- | Represents Java class file structure
-data ClassDef = ClassDef {minVer :: Word16,
-                          majVer :: Word16,
-                          constPoolSize :: Word16,
-                          constPool :: [ConstantPoolInfo]
-                         } deriving (Show, Eq)
-              
-emptyClassDef = ClassDef {minVer = 0,
-                          majVer = 0,
-                          constPoolSize = 0,
-                          constPool = []}
+require :: Int -> [Word8] ->  a -> Either String a
+require len bs value = if length bs < len
+                       then Left "Unexpected EOF"
+                       else Right value
 
-a = def :: Int
-                
-stub cd bs = (Right cd, bs)
+get2Bytes bs = require 2 bs $
+               let high = bs !! 0
+                   low = bs !! 1
+                   ver = (fromIntegral high) * 256 + fromIntegral low
+               in (drop 2 bs, ver)
 
-require :: Int -> [Word8] -> (ParsedByteCode, [Word8]) -> (ParsedByteCode, [Word8])
-require len bs f = if length bs < len
-                   then (Left "Unexpected EOF", bs)
-                   else f
-upd2bytes bs cdUpd = require 2 bs $
-                     let high = bs !! 0
-                         low = bs !! 1
-                         ver = (fromIntegral high) * 256 + fromIntegral low
-                     in (Right $ cdUpd ver, drop 2 bs)
+magicNumber :: Parser Int
+magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
+                 then Right (drop 4 bs, 42)
+                 else Left "Not a Java class format"
+                        
+version :: Parser Word16
+version = get2Bytes
 
-magicNumber cd bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
-                    then (Right cd, drop 4 bs)
-                    else (Left "Not a Java class format", bs)
-minorVersion cd bs = upd2bytes bs $ \v -> cd {minVer = v}
-majorVersion cd bs = upd2bytes bs $ \v -> cd {majVer = v}
-constantPoolCount cd bs = upd2bytes bs $ \v -> cd {constPoolSize = v}
-constantPool = stub
+constantPoolSize :: Parser Word16
+constantPoolSize = get2Bytes
 
+constantPool :: Word16 -> Parser [ConstantPool]
+constantPool len bytes = Right (bytes, [])
+                              
+classBody :: Parser ClassBody
+classBody bytes = do
+  (bytes1, len) <- constantPoolSize bytes
+  (bytes2, pool) <- constantPool len bytes1
+  return (bytes2, ClassBody pool)
 
-               
+parse :: [Word8] -> Either String ByteCode
+parse bytes = do
+  (bytes0, _) <- magicNumber bytes
+  (bytes1, minor) <- version bytes0
+  (bytes2, major) <- version bytes1
+  (bytes3, body) <- classBody bytes2
+  if length bytes3 == 0 then Left "Bytes left" else return $ ByteCode minor major body
