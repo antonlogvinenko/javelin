@@ -1,4 +1,4 @@
-module Javelin.ByteCode (parse, require, get2Bytes, magicNumber, version,
+module Javelin.ByteCode (parse, require, getBytes, magicNumber, version,
                          constantPool, constantPoolSize, classBody)
 where
 
@@ -20,11 +20,11 @@ require len bs value = if length bs < len
                        then Left "Unexpected EOF"
                        else Right value
 
-get2Bytes bs = require 2 bs $
-               let high = bs !! 0
-                   low = bs !! 1
-                   ver = (fromIntegral high) * 256 + fromIntegral low
-               in (drop 2 bs, ver)
+getBytes count bs = require 2 bs $
+                     let high = bs !! 0
+                         low = bs !! 1
+                         ver = (fromIntegral high) * 256 + fromIntegral low
+                     in (drop 2 bs, ver)
 
 magicNumber :: Parser Int
 magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
@@ -32,10 +32,10 @@ magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
                  else Left "Not a Java class format"
                         
 version :: Parser Word16
-version = get2Bytes
+version = getBytes 2
 
 constantPoolSize :: Parser Word16
-constantPoolSize = get2Bytes
+constantPoolSize = getBytes 2
 
 constantPool :: Word16 -> Parser [ConstantPool]
 constantPool len bytes = Right (bytes, [])
