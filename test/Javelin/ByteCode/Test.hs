@@ -17,18 +17,11 @@ requireTest = let t = (Left "error", [0x00])
                                require 3 [0x00, 0x00] t @=? (Left "Unexpected EOF", [0x00, 0x00])
                ]
 
-upd EmptyClassDef _ = EmptyClassDef
-upd cd v = cd {minVer = v}
-
-tEmpty = EmptyClassDef
-tMinor = tEmpty {minVer = 1}         
-           
-update2bytesTest = let t = EmptyClassDef :: ClassDef
-                   in testGroup "bytes update" [
-                           testCase "bla" $
-                                    (upd2bytes [0x01, 0x02] (upd t)
-                                                  @=? (Right t, []))
-                    ]
+update2bytesTest = testGroup "bytes update" [
+                    testCase "bla" $
+                                 (upd2bytes [1, 2] (\v -> emptyClassDef {minVer = v})
+                                                @=? (Right $ emptyClassDef {minVer = 258}, []))
+                   ]
 
 
 byteCodeParserTest = testGroup "ByteCode parser" [
