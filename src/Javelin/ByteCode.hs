@@ -46,14 +46,10 @@ upd2bytes bs cdUpd = require 2 bs $
                          ver = (fromIntegral high) * 256 + fromIntegral low
                      in (Right $ cdUpd ver, drop 2 bs)
 
-
-                        
-                        
 magicNumber cd bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
                     then (Right cd, drop 4 bs)
                     else (Left "Not a Java class format", bs)
---minorVersion cd bs = upd2bytes bs $ \v -> cd {minVer = v}
-minorVersion cd bs = (Right $ cd {minVer = 1}, drop 2 bs)
+minorVersion cd bs = upd2bytes bs $ \v -> cd {minVer = v}
 majorVersion cd bs = upd2bytes bs $ \v -> cd {majVer = v}
 constantPoolCount cd bs = upd2bytes bs $ \v -> cd {constPoolSize = v}
 constantPool = stub
