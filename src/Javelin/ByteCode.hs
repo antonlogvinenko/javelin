@@ -7,15 +7,13 @@ import Control.Monad
                    
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
                 deriving (Show, Eq)
-data ClassBody = ClassBody {constool :: [ConstantPool],
+data ClassBody = ClassBody {constPool :: [ConstantPool],
                            flags :: Word16,
                            this :: Word16,
                            super :: Word16}
                  deriving (Show, Eq)
 data ConstantPool = ConstantPool
                     deriving (Show, Eq)
-
-data Interface = Interface deriving (Show, Eq)
 
 data Field = Field deriving (Show, Eq)
 
@@ -47,7 +45,7 @@ version = getBytes 2
 getConstantPool :: Word16 -> Parser [ConstantPool]
 getConstantPool len bytes = Right (bytes, [])
 
-getInterfaces :: Word16 -> Parser [Interface]
+getInterfaces :: Word16 -> Parser [Word16]
 getInterfaces len bytes = Right (bytes, [])
 
 getFields :: Word16 -> Parser [Field]
