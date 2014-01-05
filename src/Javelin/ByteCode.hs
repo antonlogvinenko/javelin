@@ -39,6 +39,11 @@ data Method = Method deriving (Show, Eq)
 
 
 -- Basic utility functions
+getCountAndList :: (Word16 -> Parser [x]) -> [Word8] -> Either String ([Word8], [x])
+getCountAndList f bytes = do
+  (bytes1, count) <- getBytes 2 bytes
+  f count bytes1
+
 require :: Int -> [Word8] ->  a -> Either String a
 require len bs value = if length bs < len
                        then Left "Unexpected EOF"
@@ -162,10 +167,6 @@ getMethods len bytes = Right (bytes, [])
 getAttributes :: Word16 -> Parser [Attribute]
 getAttributes len bytes = Right (bytes, [])
 
-getCountAndList :: (Word16 -> Parser [x]) -> [Word8] -> Either String ([Word8], [x])
-getCountAndList f bytes = do
-  (bytes1, count) <- getBytes 2 bytes
-  f count bytes1
 
 classBody :: Parser ClassBody
 classBody bytes = do
