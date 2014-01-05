@@ -142,18 +142,23 @@ utf8InfoParser bytes = do
   (bytes1, len) <- getBytes 2 bytes
   (bytes2, lenBytes) <- takeBytes (fromIntegral len) bytes1
   return $ (bytes2, Utf8Info len lenBytes)
-  
 
+  
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
 getInterfaces len bytes = Right (bytes, [])
 
+
+-- Fields
 getFields :: Word16 -> Parser [Field]
 getFields len bytes = Right (bytes, [])
 
+
+-- Methods
 getMethods :: Word16 -> Parser [Method]
 getMethods len bytes = Right (bytes, [])
 
+-- Attributes
 getAttributes :: Word16 -> Parser [Attribute]
 getAttributes len bytes = Right (bytes, [])
 

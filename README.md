@@ -3,7 +3,13 @@ javelin
 
 Haskell JVM
 
-javelin-2
+* bytecode
+ ** structure
+ ** semantics + details
+ ** validation
+ ** tests
+ ** modification?
+
 -- further parsing
 -- sandbox
 
