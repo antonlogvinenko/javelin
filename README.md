@@ -3,13 +3,15 @@ javelin
 
 Haskell JVM
 
-* bytecode
-  * structure
-  * semantics + details
-  * validation
-  * tests
-  * modification?
-
+* javelin-
+  * bytecode
+    * structure
+    * semantics + details
+    * validation
+    * tests
+    * modification?
+  * sandboxing
+  
 -- further parsing
 -- sandbox
 
