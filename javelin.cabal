@@ -23,7 +23,7 @@ library
   build-depends:     base ==4.6.*,
                      mtl ==2.1.*,
                      bytestring ==0.10.*,
-                     data-default ==0.5.*
+                     containers ==0.5.3.1
 
 test-suite test
   hs-source-dirs:    test
@@ -46,4 +46,4 @@ executable javelin
   build-depends:       base ==4.6.*,
                        mtl ==2.1.*,
                        bytestring ==0.10.*,
-                       data-default ==0.5.*
+                       containers ==0.5.3.1
