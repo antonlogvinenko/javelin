@@ -15,9 +15,12 @@ data ClassBody = ClassBody {constPool :: [Constant],
                            super :: Word16}
                  deriving (Show, Eq)
 
-data Constant = Utf8 | Integer | Float | Long | Double | Class | String |
-                Fieldref | Methodref | InterfaceMethodref | NameAndType |
-                MethodHandle | MethodType | InvokeDynamic
+data Constant = Utf8 | Integer | Float | Long | Double | Class {nameIndex :: Word16} | String
+              | Fieldref {classIndex :: Word16, nameAndTypeIndex :: Word16}
+              | Methodref {classIndex :: Word16, nameAndTypeIndex :: Word16}
+              | InterfaceMethodref {classIndex :: Word16, nameAndTypeIndex :: Word16}
+              | NameAndType
+              | MethodHandle | MethodType | InvokeDynamic
               deriving (Show, Eq)
 
 
@@ -55,19 +58,33 @@ version = getBytes 2
 
 -- Constant pool
 constantTypeParser :: Map Int (Parser Constant)
-constantTypeParser = fromList [(1, constParser), (3, constParser), (4, constParser),
-                               (5, constParser), (6, constParser), (7, constParser),
-                               (8, constParser), (9, constParser), (10, constParser),
-                               (11, constParser), (12, constParser), (15, constParser),
-                               (16, constParser), (18, constParser)]
+constantTypeParser = fromList [(1, identityParser), (3, identityParser), (4, identityParser),
+                               (5, identityParser), (6, identityParser), (7, identityParser),
+                               (8, classInfoParser), (9, fieldrefParser), (10, methodrefParser),
+                               (11, interfaceMethodrefParser), (12, identityParser), (15, identityParser),
+                               (16, identityParser), (18, identityParser)]
 getConstantParser :: Int -> Parser Constant
 getConstantParser idx = findWithDefault failingConstParser idx constantTypeParser
 
-constParser :: Parser Constant
-constParser bytes = Right (bytes, Utf8)
+identityParser :: Parser Constant
+identityParser bytes = Right (bytes, Utf8)
 
 failingConstParser :: Parser Constant
 failingConstParser _ = Left "Undefined constant"
+
+classInfoParser :: Parser Constant
+classInfoParser bytes = do
+  (bytes1, nameIndex) <- getBytes 2 bytes
+  return $ (bytes1, Class nameIndex)
+
+fieldrefParser = fieldMethodRefParser Fieldref
+methodrefParser = fieldMethodRefParser Methodref
+interfaceMethodrefParser = fieldMethodRefParser InterfaceMethodref
+
+fieldMethodRefParser constConstr bytes = do
+  (bytes1, classIndex) <- getBytes 2 bytes
+  (bytes2, nameAndTypeIndex) <- getBytes 2 bytes
+  return $ (bytes2, constConstr classIndex nameAndTypeIndex)
 
 getConstant bytes = do
   (bytes1, tag) <- getBytes 1 bytes
