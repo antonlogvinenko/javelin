@@ -3,7 +3,7 @@ javelin
 
 Haskell JVM
 
-* javelin-
+* javelin-2
   * bytecode
     * structure
     * semantics + details
