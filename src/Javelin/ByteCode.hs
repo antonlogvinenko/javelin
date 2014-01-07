@@ -6,13 +6,19 @@ import Data.Word (Word32, Word16, Word8)
 import Control.Monad
 import Data.Map.Lazy
 
+
 -- Modeling java class format
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
                 deriving (Show, Eq)
+
 data ClassBody = ClassBody {constPool :: [Constant],
                            flags :: Word16,
                            this :: Word16,
-                           super :: Word16}
+                           super :: Word16,
+                           interfaces :: [Word16],
+                           fields :: [FieldInfo],
+                           methods :: [MethodInfo],
+                           attributes :: [AttributeInfo]}
                  deriving (Show, Eq)
 
 data Constant = Utf8Info {len :: Word16, stringBytes :: [Word8]}
@@ -30,11 +36,11 @@ data Constant = Utf8Info {len :: Word16, stringBytes :: [Word8]}
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
               | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Show, Eq)
 
-data Field = Field { fieldAccessFlags :: Word16,
-                     fieldNameIndex :: Word16,
-                     descriptorIndex :: Word16,
-                     fieldAttributes :: [AttributeInfo]
-                   } deriving (Show, Eq)
+data FieldInfo = FieldInfo { fieldAccessFlags :: Word16,
+                             fieldNameIndex :: Word16,
+                             descriptorIndex :: Word16,
+                             fieldAttributes :: [AttributeInfo]
+                           } deriving (Show, Eq)
 
 data MethodInfo = MethodInfo { methodAccessFlags :: Word16,
                                methodNameIndex :: Word16,
@@ -43,7 +49,6 @@ data MethodInfo = MethodInfo { methodAccessFlags :: Word16,
                              } deriving (Show, Eq)
 
 data AttributeInfo = AttributeInfo deriving (Show, Eq)
-
 
 
 -- Basic utility functions
@@ -154,7 +159,7 @@ invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
 
 
 -- Fields
-getFields :: Word16 -> Parser [Field]
+getFields :: Word16 -> Parser [FieldInfo]
 getFields len bytes = Right (bytes, [])
 
 
@@ -182,7 +187,7 @@ classBody bytes = do
   (bytes6, fields) <- getCountAndList getFields bytes5
   (bytes7, methods) <- getCountAndList getMethods bytes6
   (bytesLast, attributes) <- getCountAndList getAttributes bytes7
-  return (bytesLast, ClassBody pool flags this super)
+  return (bytesLast, ClassBody pool flags this super interfaces fields methods attributes)
 
 
 -- Parser of all things alive
