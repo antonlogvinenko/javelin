@@ -12,7 +12,7 @@ data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
                 deriving (Show, Eq)
 
 data ClassBody = ClassBody {constPool :: [Constant],
-                           flags :: Word16,
+                           classAccessFlags :: [ClassAccessFlags],
                            this :: Word16,
                            super :: Word16,
                            interfaces :: [Word16],
@@ -20,6 +20,10 @@ data ClassBody = ClassBody {constPool :: [Constant],
                            methods :: [MethodInfo],
                            attributes :: [AttributeInfo]}
                  deriving (Show, Eq)
+
+data ClassAccessFlags = Public | Final
+                      | Super | Interface | Abstract
+                      | Synthetic | Annotation | Enum deriving (Show, Eq)
 
 data Constant = Utf8Info {len :: Word16, stringBytes :: [Word8]}
               | IntegerInfo {bytes :: Word32}
@@ -82,6 +86,17 @@ magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
                         
 version :: Parser Word16
 version = getBytes 2
+
+classFlagsList = fromList [(0x0001, Public), (0x0010, Final), (0x0020, Super),
+                           (0x0200, Interface), (0x0400, Abstract),
+                           (0x1000, Synthetic), (0x2000, Annotation), (0x4000, Enum)]
+
+getClassFlagsList bytes = Right []
+
+parseClassAccessFlags bytes = do
+  (bytes1, flagsBytes) <- getBytes 2 bytes
+  let flags = flagsList2 flagsBytes
+  return $ (bytes1, flags)
 
 
 -- Constant pool
@@ -162,11 +177,9 @@ invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
 getFields :: Word16 -> Parser [FieldInfo]
 getFields len bytes = Right (bytes, [])
 
-
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
 getInterfaces len bytes = Right (bytes, [])
-
 
 -- Methods
 getMethods :: Word16 -> Parser [MethodInfo]
@@ -180,7 +193,7 @@ getAttributes len bytes = Right (bytes, [])
 classBody :: Parser ClassBody
 classBody bytes = do
   (bytes1, pool) <- getCountAndList getConstantPool bytes
-  (bytes2, flags) <- getBytes 2 bytes1
+  (bytes2, flags) <- parseClassAccessFlags bytes1
   (bytes3, this) <- getBytes 2 bytes2
   (bytes4, super) <- getBytes 2 bytes3
   (bytes5, interfaces) <- getCountAndList getInterfaces bytes4
