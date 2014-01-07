@@ -25,17 +25,25 @@ data Constant = Utf8Info {len :: Word16, stringBytes :: [Word8]}
               | Fieldref {classIndex :: Word16, nameAndTypeIndex :: Word16}
               | Methodref {classIndex :: Word16, nameAndTypeIndex :: Word16}
               | InterfaceMethodref {classIndex :: Word16, nameAndTypeIndex :: Word16}
-              | NameAndTypeInfo { nameIndex :: Word16, descriptorIndex :: Word16}
-              | MethodHandle
-              | MethodType
-              | InvokeDynamic
-              deriving (Show, Eq)
+              | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16}
+              | MethodHandleInfo { referenceKind :: Word8, refereneIndex :: Word16 }
+              | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
+              | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Show, Eq)
 
-data Field = Field deriving (Show, Eq)
+data Field = Field { fieldAccessFlags :: Word16,
+                     fieldNameIndex :: Word16,
+                     descriptorIndex :: Word16,
+                     fieldAttributes :: [AttributeInfo]
+                   } deriving (Show, Eq)
 
-data Attribute = Attribute deriving (Show, Eq)
+data MethodInfo = MethodInfo { methodAccessFlags :: Word16,
+                               methodNameIndex :: Word16,
+                               methodInfoDescriptorIndex :: Word16,
+                               methodAttributes :: [AttributeInfo]
+                             } deriving (Show, Eq)
 
-data Method = Method deriving (Show, Eq)
+data AttributeInfo = AttributeInfo deriving (Show, Eq)
+
 
 
 -- Basic utility functions
@@ -94,64 +102,55 @@ constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser), (4, 
                                (11, interfaceMethodrefParser), (12, nameAndTypeInfoParser), (15, identityParser),
                                (16, identityParser), (18, identityParser)]
                      
-identityParser :: Parser Constant
 identityParser bytes = Right (bytes, Utf8Info 1 [])
-
-failingConstParser :: Parser Constant
 failingConstParser _ = Left "Undefined constant"
 
-fieldrefParser = twoTwoBytesInfoParser Fieldref
-methodrefParser = twoTwoBytesInfoParser Methodref
-interfaceMethodrefParser = twoTwoBytesInfoParser InterfaceMethodref
+twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Parser Constant
 twoTwoBytesInfoParser constConstr bytes = do
   (bytes1, firstWord16) <- getBytes 2 bytes
   (bytes2, secondWord16) <- getBytes 2 bytes
   return $ (bytes2, constConstr firstWord16 secondWord16)
-nameAndTypeInfoParser :: Parser Constant
-nameAndTypeInfoParser = twoTwoBytesInfoParser NameAndTypeInfo
-
-
-twoBytesInfoParser :: (Word16 -> Constant) -> Parser Constant
-twoBytesInfoParser constConstr bytes = do
-  (bytes1, twoBytes) <- getBytes 2 bytes
-  return $ (bytes1, constConstr twoBytes)
-  
-classInfoParser :: Parser Constant
-classInfoParser = twoBytesInfoParser ClassInfo
-
-stringInfoParser :: Parser Constant
-stringInfoParser = twoBytesInfoParser StringInfo
-
-
-fourBytesInfoParser :: (Word32 -> Constant) -> Parser Constant
-fourBytesInfoParser constConstr bytes = do
-  (bytes1, value) <- getBytes 4 bytes
-  return $ (bytes1, constConstr value)
-integerInfoParser :: Parser Constant
-floatInfoParser :: Parser Constant
-integerInfoParser = fourBytesInfoParser IntegerInfo
-floatInfoParser = fourBytesInfoParser FloatInfo
 
 twoFourBytesInfoParser :: (Word32 -> Word32 -> Constant) -> Parser Constant
 twoFourBytesInfoParser constConstr bytes = do
   (bytes1, bytesHigh) <- getBytes 4 bytes
   (bytes2, bytesLow) <- getBytes 4 bytes1
   return $ (bytes2, constConstr bytesHigh bytesLow)
-longInfoParser :: Parser Constant
-longInfoParser = twoFourBytesInfoParser LongInfo
-doubleInfoParser :: Parser Constant
-doubleInfoParser = twoFourBytesInfoParser DoubleInfo
 
-utf8InfoParser :: Parser Constant
+twoBytesInfoParser :: (Word16 -> Constant) -> Parser Constant
+twoBytesInfoParser constConstr bytes = do
+  (bytes1, twoBytes) <- getBytes 2 bytes
+  return $ (bytes1, constConstr twoBytes)
+
+fourBytesInfoParser :: (Word32 -> Constant) -> Parser Constant
+fourBytesInfoParser constConstr bytes = do
+  (bytes1, value) <- getBytes 4 bytes
+  return $ (bytes1, constConstr value)
+
+fieldrefParser = twoTwoBytesInfoParser Fieldref
+methodrefParser = twoTwoBytesInfoParser Methodref
+interfaceMethodrefParser = twoTwoBytesInfoParser InterfaceMethodref
+nameAndTypeInfoParser = twoTwoBytesInfoParser NameAndTypeInfo
+classInfoParser = twoBytesInfoParser ClassInfo
+stringInfoParser = twoBytesInfoParser StringInfo
+integerInfoParser = fourBytesInfoParser IntegerInfo
+floatInfoParser = fourBytesInfoParser FloatInfo
+longInfoParser = twoFourBytesInfoParser LongInfo
+doubleInfoParser = twoFourBytesInfoParser DoubleInfo
 utf8InfoParser bytes = do
   (bytes1, len) <- getBytes 2 bytes
   (bytes2, lenBytes) <- takeBytes (fromIntegral len) bytes1
   return $ (bytes2, Utf8Info len lenBytes)
+methodHandleInfoParser bytes = do
+  (bytes1, kind) <- getBytes 1 bytes
+  (bytes2, index) <- getBytes 2 bytes1
+  return $ (bytes2, MethodHandleInfo kind index)
+methodTypeInfoParser bytes = do
+  (bytes1, index) <- getBytes 2 bytes
+  return $ (bytes1, MethodTypeInfo index)
+invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
 
-  
--- Interfaces
-getInterfaces :: Word16 -> Parser [Word16]
-getInterfaces len bytes = Right (bytes, [])
+
 
 
 -- Fields
@@ -159,12 +158,17 @@ getFields :: Word16 -> Parser [Field]
 getFields len bytes = Right (bytes, [])
 
 
+-- Interfaces
+getInterfaces :: Word16 -> Parser [Word16]
+getInterfaces len bytes = Right (bytes, [])
+
+
 -- Methods
-getMethods :: Word16 -> Parser [Method]
+getMethods :: Word16 -> Parser [MethodInfo]
 getMethods len bytes = Right (bytes, [])
 
 -- Attributes
-getAttributes :: Word16 -> Parser [Attribute]
+getAttributes :: Word16 -> Parser [AttributeInfo]
 getAttributes len bytes = Right (bytes, [])
 
 

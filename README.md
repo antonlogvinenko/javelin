@@ -9,7 +9,7 @@ Haskell JVM
     * semantics + details
     * validation
     * tests
-    * modification?
+    * modification: store higher level data about class file
   * sandboxing
   
 -- further parsing
