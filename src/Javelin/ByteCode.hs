@@ -237,7 +237,8 @@ getMethods len = getNTimes len $ getFieldMethod methodInfoAccessFlagsMap MethodI
 
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
-getInterfaces len bytes = Right (bytes, [])
+getInterfaces len = getNTimes len $ getBytes 2
+
 
 
 -- Attributes
