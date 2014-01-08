@@ -66,11 +66,45 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodAttributes :: [AttributeInfo]
                              } deriving (Show, Eq)
 
+data Exception = Exception { startPc :: Word16,
+                             endPc :: Word16,
+                             handlerPc :: Word16,
+                             catchType :: Word16
+                           } deriving (Show, Eq)
+
+data VerificationTypeInfo = VerificationTypeInfo
+                          deriving (Show, Eq)
+
+data StackMapFrame = SameFrame { frameType :: Word8 }
+                   | SameLocals1StackItemFrame { frameType :: Word8,
+                                                 stackItem :: VerificationTypeInfo }
+                   | SameLocals1StackItemFrameExtended { frameType :: Word8,
+                                                         offsetData :: Word16,
+                                                         stackItem :: VerificationTypeInfo }
+                   | ChopFrame { frameType :: Word8,
+                                 offsetDelta :: Word16 }
+                   | SameFrameExtended {frameType :: Word8,
+                                        offsetDelta :: Word16 }
+                   | AppendFrame { frameType :: Word8,
+                                   offsetDelta :: Word16,
+                                   locals :: [VerificationTypeInfo]}
+                   | FullFrame { frameType :: Word8,
+                                 offsetDelta :: Word16,
+                                 locals :: [VerificationTypeInfo],
+                                 stack :: [VerificationTypeInfo] }
+                   deriving (Show, Eq)
+
 data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | ConstantValue { constantValueIndex :: Word16 }
-                   | Code
-                   | StackMapTable
-                   | Exceptions
+                   | Code { maxStack :: Word16,
+                            maxLocals :: Word16,
+                            codeLength :: Word16,
+                            code :: [Word8],
+                            exceptionTable :: [Exception],
+                            codeAttributes :: [AttributeInfo]
+                            }
+                   | StackMapTable { entries :: [StackMapFrame] }
+                   | Exceptions {}
                    | InnerClasses
                    | EnclosingMethod
                    | Synthetic

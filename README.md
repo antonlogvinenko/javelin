@@ -8,7 +8,7 @@ Haskell JVM
     * structure
       * attributes
       * names formats
-    * semantics + details
+    * semantics + details, numbers
     * validation
     * tests
     * modification: store higher level data about class file
