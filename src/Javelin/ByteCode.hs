@@ -22,9 +22,9 @@ data ClassBody = ClassBody {constPool :: [Constant],
                            attributes :: [AttributeInfo]}
                  deriving (Show, Eq)
 
-data ClassAccessFlags = Public | Final
-                      | Super | Interface | Abstract
-                      | Synthetic | Annotation | Enum deriving (Show, Eq)
+data ClassAccessFlags = ClassPublic | ClassFinal
+                      | ClassSuper | ClassInterface | ClassAbstract
+                      | ClassSynthetic | ClassAnnotation | ClassEnum deriving (Show, Eq)
 
 data Constant = Utf8Info {len :: Word16, stringBytes :: [Word8]}
               | IntegerInfo {bytes :: Word32}
@@ -41,11 +41,17 @@ data Constant = Utf8Info {len :: Word16, stringBytes :: [Word8]}
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
               | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Show, Eq)
 
-data FieldInfo = FieldInfo { fieldAccessFlags :: Word16,
+data FieldInfo = FieldInfo { fieldAccessFlags :: [FieldInfoAccessFlag],
                              fieldNameIndex :: Word16,
-                             descriptorIndex :: Word16,
+                             fieldDescriptorIndex :: Word16,
                              fieldAttributes :: [AttributeInfo]
                            } deriving (Show, Eq)
+
+data FieldInfoAccessFlag = FieldPublic | FieldPrivate | FieldProtected
+                         | FieldStatic | FieldFinal
+                         | FieldVolatile | FieldTransient | FieldSynthetic
+                         | FieldEnum
+                         deriving (Show, Eq)
 
 data MethodInfo = MethodInfo { methodAccessFlags :: Word16,
                                methodNameIndex :: Word16,
@@ -75,9 +81,25 @@ getBytes count bs = require count bs $
 
 takeBytes count bs = require count bs $ (drop count bs, take count bs)
                      
-
 type Parser a = [Word8] -> Either String ([Word8], a)
 
+addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]
+addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
+                                             then list
+                                             else case Map.lookup mask flagsMap of
+                                               Just x -> x : list
+                                               Nothing -> list
+foldMask :: Word16 -> Map.Map Word16 a -> [a]
+foldMask bytes flagsMap = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
+
+getNTimes :: Word16 -> Parser a -> Parser [a]
+getNTimes n parser bytes = do
+  if n == 1
+     then Right (bytes, [])
+    else do
+    (bytes1, obj) <- parser bytes
+    (bytes2, objs) <- getNTimes (n - 1) parser bytes1
+    return (bytes2, obj : objs)
 
 -- Class file header functions
 magicNumber :: Parser Int
@@ -88,34 +110,23 @@ magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
 version :: Parser Word16
 version = getBytes 2
 
-classFlagsList = Map.fromList [(0x0001, Public), (0x0010, Final), (0x0020, Super),
-                           (0x0200, Interface), (0x0400, Abstract),
-                           (0x1000, Synthetic), (0x2000, Annotation), (0x4000, Enum)]
-
-bla :: Word16 -> [ClassAccessFlags] -> Word16 -> [ClassAccessFlags]
-bla number list mask = if (mask .&. number) == 0
-                       then list
-                       else case Map.lookup mask classFlagsList of
-                         Just x -> x : list
-                         Nothing -> list
+classFlagsList = Map.fromList [(0x0001, ClassPublic), (0x0010, ClassFinal), (0x0020, ClassSuper),
+                               (0x0200, ClassInterface), (0x0400, ClassAbstract),
+                               (0x1000, ClassSynthetic), (0x2000, ClassAnnotation),
+                               (0x4000, ClassEnum)]
 
 parseClassAccessFlags :: Parser [ClassAccessFlags]
 parseClassAccessFlags bytes = do
   (bytes1, flagsBytes) <- getBytes 2 bytes
-  let flags = foldl (bla flagsBytes) [] (Map.keys classFlagsList)
-  return $ (bytes1, [])
+  let flags = foldMask flagsBytes classFlagsList
+  return $ (bytes1, flags)
 
 
 -- Constant pool
 getConstantPool :: Word16 -> Parser [Constant]
-getConstantPool len bytes = do
-  if len == 1
-    then Right (bytes, [])
-    else do
-    (bytes1, pool) <- getConstant bytes
-    (bytes2, pools) <- getConstantPool (len - 1) bytes1
-    return (bytes2, (pool:pools))
+getConstantPool len = getNTimes len getConstant
 
+getConstant :: Parser Constant
 getConstant bytes = do
   (bytes1, tag) <- getBytes 1 bytes
   getConstantParser tag bytes1
@@ -181,8 +192,22 @@ invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
 
 
 -- Fields
+fieldInfoAccessFlagsMap = Map.fromList [(0x0001, FieldPublic), (0x0002, FieldPrivate),
+                                      (0x0004, FieldProtected), (0x0008, FieldStatic),
+                                      (0x0010, FieldFinal), (0x0040, FieldVolatile),
+                                      (0x0080, FieldTransient), (0x1000, FieldSynthetic),
+                                      (0x4000, FieldEnum)]
 getFields :: Word16 -> Parser [FieldInfo]
 getFields len bytes = Right (bytes, [])
+
+getField len bytes = do
+  (bytes1, flagBytes) <- getBytes 2 bytes
+  let accessFlags = foldMask flagBytes fieldInfoAccessFlagsMap
+  (bytes2, nameIndex) <- getBytes 2 bytes1
+  (bytes3, descriptorIndex) <- getBytes 2 bytes2
+  (bytes4, attributesCount) <- getBytes 2 bytes3
+  (bytesLast, attributes) <- getAttributes attributesCount bytes4
+  return $ (bytesLast, FieldInfo accessFlags nameIndex descriptorIndex attributes)
 
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
