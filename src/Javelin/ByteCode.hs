@@ -247,7 +247,12 @@ getInterfaces len = getNTimes len $ getBytes 2
 
 -- Attributes
 getAttributes :: Word16 -> Parser [AttributeInfo]
-getAttributes len bytes = Right (bytes, [])
+getAttributes len = getNTimes len $ getAttribute
+
+getAttribute :: Parser AttributeInfo
+getAttribute bytes = do
+  (bytes1, attributeNameIndex) <- getBytes 2 bytes
+  (bytes2, attributeLength) <- getBytes 4 bytes1
 
 
 classBody :: Parser ClassBody
