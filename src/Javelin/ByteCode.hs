@@ -153,6 +153,7 @@ getBytes count bs = require count bs $
 takeBytes count bs = require count bs $ (drop count bs, take count bs)
                      
 type Parser a = [Word8] -> Either String ([Word8], a)
+type RepeatingParser a = Word16 -> Parser a
 
 addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]
 addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
@@ -163,7 +164,7 @@ addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
 foldMask :: Word16 -> Map.Map Word16 a -> [a]
 foldMask bytes flagsMap = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
 
-getNTimes :: Parser a -> Word16 -> Parser [a]
+getNTimes :: Parser a -> RepeatingParser [a]
 getNTimes parser n bytes = do
   if n == 1
      then Right (bytes, [])
@@ -197,7 +198,7 @@ parseClassAccessFlags bytes = do
 
 
 -- Constant pool
-getConstantPool :: Word16 -> Parser [Constant]
+getConstantPool :: RepeatingParser [Constant]
 getConstantPool = getNTimes getConstant
 
 getConstant :: Parser Constant
@@ -293,26 +294,26 @@ getFieldMethod accessFlagsMap constr bytes = do
 getField :: Parser FieldInfo
 getField = getFieldMethod fieldInfoAccessFlagsMap FieldInfo
 
-getFields :: Word16 -> Parser [FieldInfo]
+getFields :: RepeatingParser [FieldInfo]
 getFields = getNTimes getField
 
 getMethod :: Parser MethodInfo
 getMethod = getFieldMethod methodInfoAccessFlagsMap MethodInfo
 
-getMethods :: Word16 -> Parser [MethodInfo]
+getMethods :: RepeatingParser [MethodInfo]
 getMethods = getNTimes getMethod
 
 
 
 -- Interfaces
-getInterfaces :: Word16 -> Parser [Word16]
+getInterfaces :: RepeatingParser [Word16]
 getInterfaces = getNTimes $ getBytes 2
 
 
 
 -- Attributes
-getAttributes :: Word16 -> Parser [AttributeInfo]
-getAttributes = getNTimes $ getAttribute
+getAttributes :: RepeatingParser [AttributeInfo]
+getAttributes = getNTimes getAttribute
 
 getAttribute :: Parser AttributeInfo
 getAttribute bytes = do
