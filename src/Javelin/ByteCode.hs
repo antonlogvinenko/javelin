@@ -4,7 +4,8 @@ where
 import Data.ByteString (ByteString, unpack)
 import Data.Word (Word32, Word16, Word8)
 import Control.Monad
-import Data.Map.Lazy
+import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
+import Data.Bits
 
 
 -- Modeling java class format
@@ -87,16 +88,22 @@ magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
 version :: Parser Word16
 version = getBytes 2
 
-classFlagsList = fromList [(0x0001, Public), (0x0010, Final), (0x0020, Super),
+classFlagsList = Map.fromList [(0x0001, Public), (0x0010, Final), (0x0020, Super),
                            (0x0200, Interface), (0x0400, Abstract),
                            (0x1000, Synthetic), (0x2000, Annotation), (0x4000, Enum)]
 
-getClassFlagsList bytes = Right []
+bla :: Word16 -> [ClassAccessFlags] -> Word16 -> [ClassAccessFlags]
+bla number list mask = if (mask .&. number) == 0
+                       then list
+                       else case Map.lookup mask classFlagsList of
+                         Just x -> x : list
+                         Nothing -> list
 
+parseClassAccessFlags :: Parser [ClassAccessFlags]
 parseClassAccessFlags bytes = do
   (bytes1, flagsBytes) <- getBytes 2 bytes
-  let flags = flagsList2 flagsBytes
-  return $ (bytes1, flags)
+  let flags = foldl (bla flagsBytes) [] (Map.keys classFlagsList)
+  return $ (bytes1, [])
 
 
 -- Constant pool
@@ -114,9 +121,9 @@ getConstant bytes = do
   getConstantParser tag bytes1
 
 getConstantParser :: Int -> Parser Constant
-getConstantParser idx = findWithDefault failingConstParser idx constantTypeParser
-constantTypeParser :: Map Int (Parser Constant)
-constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser), (4, floatInfoParser),
+getConstantParser idx = Map.findWithDefault failingConstParser idx constantTypeParser
+constantTypeParser :: Map.Map Int (Parser Constant)
+constantTypeParser = Map.fromList [(1, utf8InfoParser), (3, integerInfoParser), (4, floatInfoParser),
                                (5, longInfoParser), (6, doubleInfoParser), (7, classInfoParser),
                                (8, stringInfoParser), (9, fieldrefParser), (10, methodrefParser),
                                (11, interfaceMethodrefParser), (12, nameAndTypeInfoParser), (15, identityParser),
