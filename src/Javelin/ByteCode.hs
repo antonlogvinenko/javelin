@@ -163,13 +163,13 @@ addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
 foldMask :: Word16 -> Map.Map Word16 a -> [a]
 foldMask bytes flagsMap = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
 
-getNTimes :: Word16 -> Parser a -> Parser [a]
-getNTimes n parser bytes = do
+getNTimes :: Parser a -> Word16 -> Parser [a]
+getNTimes parser n bytes = do
   if n == 1
      then Right (bytes, [])
     else do
     (bytes1, obj) <- parser bytes
-    (bytes2, objs) <- getNTimes (n - 1) parser bytes1
+    (bytes2, objs) <- getNTimes parser (n - 1) bytes1
     return (bytes2, obj : objs)
 
 
@@ -198,7 +198,7 @@ parseClassAccessFlags bytes = do
 
 -- Constant pool
 getConstantPool :: Word16 -> Parser [Constant]
-getConstantPool len = getNTimes len getConstant
+getConstantPool = getNTimes getConstant
 
 getConstant :: Parser Constant
 getConstant bytes = do
@@ -294,25 +294,25 @@ getField :: Parser FieldInfo
 getField = getFieldMethod fieldInfoAccessFlagsMap FieldInfo
 
 getFields :: Word16 -> Parser [FieldInfo]
-getFields len = getNTimes len getField
+getFields = getNTimes getField
 
 getMethod :: Parser MethodInfo
 getMethod = getFieldMethod methodInfoAccessFlagsMap MethodInfo
 
 getMethods :: Word16 -> Parser [MethodInfo]
-getMethods len = getNTimes len getMethod
+getMethods = getNTimes getMethod
 
 
 
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
-getInterfaces len = getNTimes len $ getBytes 2
+getInterfaces = getNTimes $ getBytes 2
 
 
 
 -- Attributes
 getAttributes :: Word16 -> Parser [AttributeInfo]
-getAttributes len = getNTimes len $ getAttribute
+getAttributes = getNTimes $ getAttribute
 
 getAttribute :: Parser AttributeInfo
 getAttribute bytes = do

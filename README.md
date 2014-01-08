@@ -9,6 +9,7 @@ Haskell JVM
     * refactor parsers
     * change inheritance
     * strings, number formats
+
     * validation
     * modification: store higher level data about class file
     * test
