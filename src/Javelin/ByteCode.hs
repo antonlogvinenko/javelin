@@ -8,6 +8,7 @@ import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys,
 import Data.Bits
 
 
+
 -- Modeling java class format
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
                 deriving (Show, Eq)
@@ -53,13 +54,20 @@ data FieldInfoAccessFlag = FieldPublic | FieldPrivate | FieldProtected
                          | FieldEnum
                          deriving (Show, Eq)
 
-data MethodInfo = MethodInfo { methodAccessFlags :: Word16,
+data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
+                          | MethodStatic | MethodFinal | MethodSynchronized
+                          | MethodBridge | MethodVarargs | MethodNative
+                          | MethodAbstract | MethodStrict | MethodSynthetic
+                          deriving (Show, Eq)
+  
+data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodNameIndex :: Word16,
                                methodInfoDescriptorIndex :: Word16,
                                methodAttributes :: [AttributeInfo]
                              } deriving (Show, Eq)
 
 data AttributeInfo = AttributeInfo deriving (Show, Eq)
+
 
 
 -- Basic utility functions
@@ -101,6 +109,17 @@ getNTimes n parser bytes = do
     (bytes2, objs) <- getNTimes (n - 1) parser bytes1
     return (bytes2, obj : objs)
 
+getFieldMethod accessFlagsMap constr bytes = do
+  (bytes1, flagBytes) <- getBytes 2 bytes
+  let accessFlags = foldMask flagBytes accessFlagsMap
+  (bytes2, nameIndex) <- getBytes 2 bytes1
+  (bytes3, descriptorIndex) <- getBytes 2 bytes2
+  (bytes4, attributesCount) <- getBytes 2 bytes3
+  (bytesLast, attributes) <- getAttributes attributesCount bytes4
+  return $ (bytesLast, constr accessFlags nameIndex descriptorIndex attributes)
+
+
+
 -- Class file header functions
 magicNumber :: Parser Int
 magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
@@ -120,6 +139,7 @@ parseClassAccessFlags bytes = do
   (bytes1, flagsBytes) <- getBytes 2 bytes
   let flags = foldMask flagsBytes classFlagsList
   return $ (bytes1, flags)
+
 
 
 -- Constant pool
@@ -190,32 +210,38 @@ invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
 
 
 
-
 -- Fields
 fieldInfoAccessFlagsMap = Map.fromList [(0x0001, FieldPublic), (0x0002, FieldPrivate),
                                       (0x0004, FieldProtected), (0x0008, FieldStatic),
                                       (0x0010, FieldFinal), (0x0040, FieldVolatile),
                                       (0x0080, FieldTransient), (0x1000, FieldSynthetic),
                                       (0x4000, FieldEnum)]
-getFields :: Word16 -> Parser [FieldInfo]
-getFields len bytes = Right (bytes, [])
 
-getField len bytes = do
-  (bytes1, flagBytes) <- getBytes 2 bytes
-  let accessFlags = foldMask flagBytes fieldInfoAccessFlagsMap
-  (bytes2, nameIndex) <- getBytes 2 bytes1
-  (bytes3, descriptorIndex) <- getBytes 2 bytes2
-  (bytes4, attributesCount) <- getBytes 2 bytes3
-  (bytesLast, attributes) <- getAttributes attributesCount bytes4
-  return $ (bytesLast, FieldInfo accessFlags nameIndex descriptorIndex attributes)
+getFields :: Word16 -> Parser [FieldInfo]
+getFields len = getNTimes len getField
+
+getField :: Parser FieldInfo
+getField = getFieldMethod fieldInfoAccessFlagsMap FieldInfo
+
+
+-- Methods
+methodInfoAccessFlagsMap = Map.fromList [(0x0001, MethodPublic), (0x0002, MethodPrivate),
+                                         (0x0004, MethodProtected), (0x0008, MethodStatic),
+                                         (0x0010, MethodFinal), (0x0020, MethodSynchronized),
+                                         (0x0040, MethodBridge), (0x0080, MethodVarargs),
+                                         (0x0100, MethodNative), (0x0400, MethodAbstract),
+                                         (0x0800, MethodStrict), (0x1000, MethodSynthetic)]
+
+getMethods :: Word16 -> Parser [MethodInfo]
+getMethods len = getNTimes len getMethod
+
+getMethod :: Parser MethodInfo
+getMethod = getFieldMethod methodInfoAccessFlagsMap MethodInfo
 
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
 getInterfaces len bytes = Right (bytes, [])
 
--- Methods
-getMethods :: Word16 -> Parser [MethodInfo]
-getMethods len bytes = Right (bytes, [])
 
 -- Attributes
 getAttributes :: Word16 -> Parser [AttributeInfo]
