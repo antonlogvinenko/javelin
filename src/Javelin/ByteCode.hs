@@ -27,7 +27,7 @@ data ClassAccessFlags = ClassPublic | ClassFinal
                       | ClassSuper | ClassInterface | ClassAbstract
                       | ClassSynthetic | ClassAnnotation | ClassEnum deriving (Show, Eq)
 
-data Constant = Utf8Info {len :: Word16, stringBytes :: [Word8]}
+data Constant = Utf8Info {len :: Word16, stringBytes :: String}
               | IntegerInfo {bytes :: Word32}
               | FloatInfo {bytes :: Word32}
               | LongInfo {highBytes :: Word32, lowBytes :: Word32}
@@ -207,10 +207,13 @@ integerInfoParser = fourBytesInfoParser IntegerInfo
 floatInfoParser = fourBytesInfoParser FloatInfo
 longInfoParser = twoFourBytesInfoParser LongInfo
 doubleInfoParser = twoFourBytesInfoParser DoubleInfo
+
+bytesToString bytes = ""
+
 utf8InfoParser bytes = do
   (bytes1, len) <- getBytes 2 bytes
   (bytes2, lenBytes) <- takeBytes (fromIntegral len) bytes1
-  return $ (bytes2, Utf8Info len lenBytes)
+  return $ (bytes2, Utf8Info len $ bytesToString lenBytes)
 methodHandleInfoParser bytes = do
   (bytes1, kind) <- getBytes 1 bytes
   (bytes2, index) <- getBytes 2 bytes1
