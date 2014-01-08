@@ -66,7 +66,28 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodAttributes :: [AttributeInfo]
                              } deriving (Show, Eq)
 
-data AttributeInfo = AttributeInfo deriving (Show, Eq)
+data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
+                   | ConstantValue { constantValueIndex :: Word16 }
+                   | Code
+                   | StackMapTable
+                   | Exceptions
+                   | InnerClasses
+                   | EnclosingMethod
+                   | Synthetic
+                   | Signature
+                   | SourceFile
+                   | SourceDebugExtension
+                   | LineNumberTable
+                   | LocalVariableTable
+                   | LocalVatiableTypeTable
+                   | Deprecated
+                   | RuntimeVisibleAnnotations
+                   | RuntimeInvisibleAnnotations
+                   | RuntimeVisibleParameterAnnotations
+                   | RuntimeInvisibleParameterAnnotations
+                   | AnnotationDefault
+                   | BootstrapMethods
+                   deriving (Show, Eq)
 
 
 
@@ -108,8 +129,6 @@ getNTimes n parser bytes = do
     (bytes1, obj) <- parser bytes
     (bytes2, objs) <- getNTimes (n - 1) parser bytes1
     return (bytes2, obj : objs)
-
-
 
 
 
@@ -239,6 +258,7 @@ getMethods :: Word16 -> Parser [MethodInfo]
 getMethods len = getNTimes len getMethod
 
 
+
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
 getInterfaces len = getNTimes len $ getBytes 2
@@ -253,6 +273,10 @@ getAttribute :: Parser AttributeInfo
 getAttribute bytes = do
   (bytes1, attributeNameIndex) <- getBytes 2 bytes
   (bytes2, attributeLength) <- getBytes 4 bytes1
+  parseAttribute attributeNameIndex attributeLength
+
+
+parseAttribute attributeNameIndex attributeLength = Right $ ([], UnknownAttribute [])
 
 
 classBody :: Parser ClassBody
@@ -266,6 +290,7 @@ classBody bytes = do
   (bytes7, methods) <- getCountAndList getMethods bytes6
   (bytesLast, attributes) <- getCountAndList getAttributes bytes7
   return (bytesLast, ClassBody pool flags this super interfaces fields methods attributes)
+  
 
 
 -- Parser of all things alive

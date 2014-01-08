@@ -6,6 +6,8 @@ Haskell JVM
 * javelin-2
   * bytecode
     * structure
+      * attributes
+      * names formats
     * semantics + details
     * validation
     * tests
