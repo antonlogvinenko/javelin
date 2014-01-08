@@ -5,13 +5,13 @@ Haskell JVM
 
 * javelin-2
   * bytecode
-    * structure
-      * attributes
-      * names formats
-    * semantics + details, numbers
+    * overall structure
+    * refactor parsers
+    * change inheritance
+    * strings, number formats
     * validation
-    * tests
     * modification: store higher level data about class file
+    * test
   * sandboxing
   
 -- further parsing

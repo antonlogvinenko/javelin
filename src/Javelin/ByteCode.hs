@@ -66,13 +66,22 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodAttributes :: [AttributeInfo]
                              } deriving (Show, Eq)
 
+
 data Exception = Exception { startPc :: Word16,
                              endPc :: Word16,
                              handlerPc :: Word16,
                              catchType :: Word16
                            } deriving (Show, Eq)
 
-data VerificationTypeInfo = VerificationTypeInfo
+data VerificationTypeInfo = TopVariableInfo
+                          | IntegerVariableInfo
+                          | FloatVariableInfo
+                          | LongVariableInfo
+                          | DoubleVariableInfo
+                          | NullVariableInfo
+                          | UninitializedThisVariableInfo
+                          | ObjectVariableInfo { poolIndex :: Word16 }
+                          | UninitializedVariableInfo { offset :: Word16 }
                           deriving (Show, Eq)
 
 data StackMapFrame = SameFrame { frameType :: Word8 }
@@ -101,11 +110,10 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                             codeLength :: Word16,
                             code :: [Word8],
                             exceptionTable :: [Exception],
-                            codeAttributes :: [AttributeInfo]
-                            }
+                            codeAttributes :: [AttributeInfo] }
                    | StackMapTable { entries :: [StackMapFrame] }
-                   | Exceptions {}
-                   | InnerClasses
+                   | Exceptions { exceptionIndexTable :: [Word16]}
+                   | InnerClasses 
                    | EnclosingMethod
                    | Synthetic
                    | Signature
