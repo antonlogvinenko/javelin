@@ -109,14 +109,7 @@ getNTimes n parser bytes = do
     (bytes2, objs) <- getNTimes (n - 1) parser bytes1
     return (bytes2, obj : objs)
 
-getFieldMethod accessFlagsMap constr bytes = do
-  (bytes1, flagBytes) <- getBytes 2 bytes
-  let accessFlags = foldMask flagBytes accessFlagsMap
-  (bytes2, nameIndex) <- getBytes 2 bytes1
-  (bytes3, descriptorIndex) <- getBytes 2 bytes2
-  (bytes4, attributesCount) <- getBytes 2 bytes3
-  (bytesLast, attributes) <- getAttributes attributesCount bytes4
-  return $ (bytesLast, constr accessFlags nameIndex descriptorIndex attributes)
+
 
 
 
@@ -210,19 +203,13 @@ invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
 
 
 
--- Fields
+-- Fields, Methods
 fieldInfoAccessFlagsMap = Map.fromList [(0x0001, FieldPublic), (0x0002, FieldPrivate),
                                       (0x0004, FieldProtected), (0x0008, FieldStatic),
                                       (0x0010, FieldFinal), (0x0040, FieldVolatile),
                                       (0x0080, FieldTransient), (0x1000, FieldSynthetic),
                                       (0x4000, FieldEnum)]
 
-getFields :: Word16 -> Parser [FieldInfo]
-getFields len = getNTimes len $ getFieldMethod fieldInfoAccessFlagsMap FieldInfo
-
-
-
--- Methods
 methodInfoAccessFlagsMap = Map.fromList [(0x0001, MethodPublic), (0x0002, MethodPrivate),
                                          (0x0004, MethodProtected), (0x0008, MethodStatic),
                                          (0x0010, MethodFinal), (0x0020, MethodSynchronized),
@@ -230,9 +217,26 @@ methodInfoAccessFlagsMap = Map.fromList [(0x0001, MethodPublic), (0x0002, Method
                                          (0x0100, MethodNative), (0x0400, MethodAbstract),
                                          (0x0800, MethodStrict), (0x1000, MethodSynthetic)]
 
-getMethods :: Word16 -> Parser [MethodInfo]
-getMethods len = getNTimes len $ getFieldMethod methodInfoAccessFlagsMap MethodInfo
+getFieldMethod accessFlagsMap constr bytes = do
+  (bytes1, flagBytes) <- getBytes 2 bytes
+  let accessFlags = foldMask flagBytes accessFlagsMap
+  (bytes2, nameIndex) <- getBytes 2 bytes1
+  (bytes3, descriptorIndex) <- getBytes 2 bytes2
+  (bytes4, attributesCount) <- getBytes 2 bytes3
+  (bytesLast, attributes) <- getAttributes attributesCount bytes4
+  return $ (bytesLast, constr accessFlags nameIndex descriptorIndex attributes)
 
+getField :: Parser FieldInfo
+getField = getFieldMethod fieldInfoAccessFlagsMap FieldInfo
+
+getFields :: Word16 -> Parser [FieldInfo]
+getFields len = getNTimes len getField
+
+getMethod :: Parser MethodInfo
+getMethod = getFieldMethod methodInfoAccessFlagsMap MethodInfo
+
+getMethods :: Word16 -> Parser [MethodInfo]
+getMethods len = getNTimes len getMethod
 
 
 -- Interfaces
