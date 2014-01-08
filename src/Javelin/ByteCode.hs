@@ -218,10 +218,8 @@ fieldInfoAccessFlagsMap = Map.fromList [(0x0001, FieldPublic), (0x0002, FieldPri
                                       (0x4000, FieldEnum)]
 
 getFields :: Word16 -> Parser [FieldInfo]
-getFields len = getNTimes len getField
+getFields len = getNTimes len $ getFieldMethod fieldInfoAccessFlagsMap FieldInfo
 
-getField :: Parser FieldInfo
-getField = getFieldMethod fieldInfoAccessFlagsMap FieldInfo
 
 
 -- Methods
@@ -233,10 +231,9 @@ methodInfoAccessFlagsMap = Map.fromList [(0x0001, MethodPublic), (0x0002, Method
                                          (0x0800, MethodStrict), (0x1000, MethodSynthetic)]
 
 getMethods :: Word16 -> Parser [MethodInfo]
-getMethods len = getNTimes len getMethod
+getMethods len = getNTimes len $ getFieldMethod methodInfoAccessFlagsMap MethodInfo
 
-getMethod :: Parser MethodInfo
-getMethod = getFieldMethod methodInfoAccessFlagsMap MethodInfo
+
 
 -- Interfaces
 getInterfaces :: Word16 -> Parser [Word16]
