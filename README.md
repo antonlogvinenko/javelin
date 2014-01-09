@@ -9,8 +9,9 @@ Haskell JVM
     * refactor parsers
     * change inheritance?
     * strings, number formats
+    * other details besides any kind of verification
 
-    * validation
+    * validation, verification
     * modification: store higher level data about class file
     * test
   * sandboxing
