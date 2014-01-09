@@ -103,6 +103,18 @@ data StackMapFrame = SameFrame { frameType :: Word8 }
                                  stack :: [VerificationTypeInfo] }
                    deriving (Show, Eq)
 
+data InnerClassInfo = InnerClassInfo { innerClassInfoIndex :: Word16,
+                                       outerClassInfoIndex :: Word16,
+                                       innerNameIndex :: Word16,
+                                       innerClassAccessFlags :: [InnerClassAccessFlags]
+                                     } deriving (Show, Eq)
+
+data InnerClassAccessFlags = InnerClassPublic | InnerClassPrivate | InnerClassProtected
+                           | InnerClassStatic | InnerClassFinal | InnerClassInterface
+                           | InnerClassAbstract | InnerClassSynthetic
+                           | InnerClassAnnotation | InnerClassEnum
+                           deriving (Show, Eq)
+
 data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | ConstantValue { constantValueIndex :: Word16 }
                    | Code { maxStack :: Word16,
@@ -113,12 +125,13 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                             codeAttributes :: [AttributeInfo] }
                    | StackMapTable { entries :: [StackMapFrame] }
                    | Exceptions { exceptionIndexTable :: [Word16]}
-                   | InnerClasses 
-                   | EnclosingMethod
+                   | InnerClasses { classes :: [InnerClassInfo]}
+                   | EnclosingMethod { enclosingClassIndex :: Word16,
+                                       enclosingMethodIndex :: Word16 }
                    | Synthetic
-                   | Signature
-                   | SourceFile
-                   | SourceDebugExtension
+                   | Signature { signatureIndex :: Word16 }
+                   | SourceFile { sourceFileIndex :: Word16 }
+                   | SourceDebugExtension 
                    | LineNumberTable
                    | LocalVariableTable
                    | LocalVatiableTypeTable
@@ -312,6 +325,13 @@ getInterfaces = getNTimes $ getBytes 2
 
 
 -- Attributes
+innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, InnerClassPrivate),
+                                         (0x0004, InnerClassProtected), (0x0008, InnerClassStatic),
+                                         (0x0010, InnerClassFinal), (0x0200, InnerClassInterface),
+                                         (0x0400, InnerClassAbstract), (0x1000, InnerClassSynthetic),
+                                         (0x2000, InnerClassAnnotation), (0x4000, InnerClassEnum)]
+
+
 getAttributes :: RepeatingParser [AttributeInfo]
 getAttributes = getNTimes getAttribute
 
@@ -322,7 +342,7 @@ getAttribute bytes = do
   parseAttribute attributeNameIndex attributeLength
 
 
-parseAttribute attributeNameIndex attributeLength = Right $ ([], UnknownAttribute [])
+parseAttribute attributeNameIndex attributeLength = Right ([], UnknownAttribute [])
 
 
 classBody :: Parser ClassBody

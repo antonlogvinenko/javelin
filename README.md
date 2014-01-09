@@ -7,7 +7,7 @@ Haskell JVM
   * bytecode
     * overall structure
     * refactor parsers
-    * change inheritance
+    * change inheritance?
     * strings, number formats
 
     * validation
