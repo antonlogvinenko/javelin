@@ -115,6 +115,17 @@ data InnerClassAccessFlags = InnerClassPublic | InnerClassPrivate | InnerClassPr
                            | InnerClassAnnotation | InnerClassEnum
                            deriving (Show, Eq)
 
+data LineNumber = LineNumber { lineStartPc :: Word16,
+                               lineNumber :: Word16
+                             } deriving (Show, Eq)
+
+data LocalVariable = LocalVariable { localVariableStartPc :: Word16,
+                                     localVariableLength :: Word16,
+                                     localVariableNameIndex :: Word16,
+                                     localVariableDescriptorIndex :: Word16,
+                                     localVariableIndex :: Word16 }
+                   deriving (Show, Eq)
+
 data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | ConstantValue { constantValueIndex :: Word16 }
                    | Code { maxStack :: Word16,
@@ -131,17 +142,17 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | Synthetic
                    | Signature { signatureIndex :: Word16 }
                    | SourceFile { sourceFileIndex :: Word16 }
-                   | SourceDebugExtension 
-                   | LineNumberTable
-                   | LocalVariableTable
-                   | LocalVatiableTypeTable
+                   | SourceDebugExtension { debugExtension :: String }
+                   | LineNumberTable { lineNumberTable :: [LineNumber]}
+                   | LocalVariableTable { localVariableTable :: [LocalVariable] }
+                   | LocalVatiableTypeTable {}
                    | Deprecated
-                   | RuntimeVisibleAnnotations
-                   | RuntimeInvisibleAnnotations
-                   | RuntimeVisibleParameterAnnotations
-                   | RuntimeInvisibleParameterAnnotations
-                   | AnnotationDefault
-                   | BootstrapMethods
+                   | RuntimeVisibleAnnotations {}
+                   | RuntimeInvisibleAnnotations {}
+                   | RuntimeVisibleParameterAnnotations {}
+                   | RuntimeInvisibleParameterAnnotations {}
+                   | AnnotationDefault { defaultValue :: [Word8] }
+                   | BootstrapMethods {}
                    deriving (Show, Eq)
 
 
