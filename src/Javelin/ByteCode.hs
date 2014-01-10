@@ -152,7 +152,7 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | SourceDebugExtension { debugExtension :: String }
                    | LineNumberTable { lineNumberTable :: [LineNumber]}
                    | LocalVariableTable { localVariableTable :: [LocalVariable] }
-                   | LocalVatiableTypeTable {}
+                   | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableType] }
                    | Deprecated
                    | RuntimeVisibleAnnotations {}
                    | RuntimeInvisibleAnnotations {}
