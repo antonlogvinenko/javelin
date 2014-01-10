@@ -8,11 +8,12 @@ import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys,
 import Data.Bits
 
 
-
--- Modeling java class format
+-- Java bytecode
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
                 deriving (Show, Eq)
 
+
+-- class body
 data ClassBody = ClassBody {constPool :: [Constant],
                            classAccessFlags :: [ClassAccessFlags],
                            this :: Word16,
@@ -66,6 +67,36 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodAttributes :: [AttributeInfo]
                              } deriving (Show, Eq)
 
+
+-- Attributes
+data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
+                   | ConstantValue { constantValueIndex :: Word16 }
+                   | Code { maxStack :: Word16,
+                            maxLocals :: Word16,
+                            codeLength :: Word16,
+                            code :: [Word8],
+                            exceptionTable :: [Exception],
+                            codeAttributes :: [AttributeInfo] }
+                   | StackMapTable { entries :: [StackMapFrame] }
+                   | Exceptions { exceptionIndexTable :: [Word16]}
+                   | InnerClasses { classes :: [InnerClassInfo]}
+                   | EnclosingMethod { enclosingClassIndex :: Word16,
+                                       enclosingMethodIndex :: Word16 }
+                   | Synthetic
+                   | Signature { signatureIndex :: Word16 }
+                   | SourceFile { sourceFileIndex :: Word16 }
+                   | SourceDebugExtension { debugExtension :: String }
+                   | LineNumberTable { lineNumberTable :: [LineNumber]}
+                   | LocalVariableTable { localVariableTable :: [LocalVariable] }
+                   | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableType] }
+                   | Deprecated
+                   | RuntimeVisibleAnnotations {}
+                   | RuntimeInvisibleAnnotations {}
+                   | RuntimeVisibleParameterAnnotations {}
+                   | RuntimeInvisibleParameterAnnotations {}
+                   | AnnotationDefault { defaultValue :: [Word8] }
+                   | BootstrapMethods {}
+                   deriving (Show, Eq)
 
 data Exception = Exception { startPc :: Word16,
                              endPc :: Word16,
@@ -133,34 +164,7 @@ data LocalVariableType = LocalVariableType { localVariableTypeInfo :: LocalVaria
                                              localVariableSignatureIndex :: Word16
                                            } deriving (Show, Eq)
 
-data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
-                   | ConstantValue { constantValueIndex :: Word16 }
-                   | Code { maxStack :: Word16,
-                            maxLocals :: Word16,
-                            codeLength :: Word16,
-                            code :: [Word8],
-                            exceptionTable :: [Exception],
-                            codeAttributes :: [AttributeInfo] }
-                   | StackMapTable { entries :: [StackMapFrame] }
-                   | Exceptions { exceptionIndexTable :: [Word16]}
-                   | InnerClasses { classes :: [InnerClassInfo]}
-                   | EnclosingMethod { enclosingClassIndex :: Word16,
-                                       enclosingMethodIndex :: Word16 }
-                   | Synthetic
-                   | Signature { signatureIndex :: Word16 }
-                   | SourceFile { sourceFileIndex :: Word16 }
-                   | SourceDebugExtension { debugExtension :: String }
-                   | LineNumberTable { lineNumberTable :: [LineNumber]}
-                   | LocalVariableTable { localVariableTable :: [LocalVariable] }
-                   | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableType] }
-                   | Deprecated
-                   | RuntimeVisibleAnnotations {}
-                   | RuntimeInvisibleAnnotations {}
-                   | RuntimeVisibleParameterAnnotations {}
-                   | RuntimeInvisibleParameterAnnotations {}
-                   | AnnotationDefault { defaultValue :: [Word8] }
-                   | BootstrapMethods {}
-                   deriving (Show, Eq)
+
 
 
 
