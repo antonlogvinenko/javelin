@@ -119,12 +119,19 @@ data LineNumber = LineNumber { lineStartPc :: Word16,
                                lineNumber :: Word16
                              } deriving (Show, Eq)
 
-data LocalVariable = LocalVariable { localVariableStartPc :: Word16,
-                                     localVariableLength :: Word16,
-                                     localVariableNameIndex :: Word16,
-                                     localVariableDescriptorIndex :: Word16,
-                                     localVariableIndex :: Word16 }
-                   deriving (Show, Eq)
+data LocalVariableInfo = LocalVariableInfo { localVariableStartPc :: Word16,
+                                             localVariableLength :: Word16,
+                                             localVariableNameIndex :: Word16,
+                                             localVariableIndex :: Word16
+                                           } deriving (Show, Eq)
+
+data LocalVariable = LocalVariable { localVariableInfo :: LocalVariableInfo,
+                                     localVariableDescriptorIndex :: Word16
+                                   } deriving (Show, Eq)
+
+data LocalVariableType = LocalVariableType { localVariableTypeInfo :: LocalVariableInfo,
+                                             localVariableSignatureIndex :: Word16
+                                           } deriving (Show, Eq)
 
 data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | ConstantValue { constantValueIndex :: Word16 }
