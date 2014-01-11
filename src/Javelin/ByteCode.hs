@@ -370,16 +370,48 @@ innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, In
 
 attributesNamesMap = Map.fromList [("ConstantValue", constantValueAttribute),
                                    ("CodeAttribute", codeAttribute),
-                                   ("StackMapTableAttribute", stackMapTableAttribute)]
+                                   ("StackMapTableAttribute", stackMapTableAttribute),
+                                   ("Exceptions", exceptionsAttribute),
+                                   ("InnerClasses", innerClassesAttribute),
+                                   ("EnclosingMethod", enclosingMethodAttribute),
+                                   ("Synthetic", syntheticAttribute),
+                                   ("Signature", signatureAttribute),
+                                   ("SourceFile", sourceFileAttribute),
+                                   ("SourceDebugExtension", sourceDebugExtensionAttribute),
+                                   ("LineNumberTable", lineNumberTableAttribute),
+                                   ("LocalVariableTable", localVariableTableAttribute),
+                                   ("LocalVariableTypeTable", localVariableTypeTableAttribute),
+                                   ("Deprecated", deprecatedAttribute),
+                                   ("RuntimeVisibleAnnotations", runtimeVisibleAnnotationsAttribute),
+                                   ("RuntimeInvisibleAnnotations", runtimeInvisibleAnnotationsAttribute),
+                                   ("RuntimeVisibleParameterAnnotations", runtimeVisibleParameterAnnotationsAttribute),
+                                   ("RuntimeInvisibleParameterAnnotations", runtimeInvisibleParameterAnnotationsAttribute),
+                                   ("AnnotationDefault", annotationDefaultAttribute),
+                                   ("BootstrapMethods", bootstrapMethodsAttribute)]
 
-constantValueAttribute :: Parser AttributeInfo
 constantValueAttribute = undefined
-
-codeAttribute :: Parser AttributeInfo
 codeAttribute = undefined
+stackMapTableAttribute = undefined
+exceptionsAttribute = undefined
+innerClassesAttribute = undefined
+enclosingMethodAttribute = undefined
+syntheticAttribute = undefined
+signatureAttribute = undefined
+sourceFileAttribute = undefined
+sourceDebugExtensionAttribute = undefined
+lineNumberTableAttribute = undefined
+localVariableTableAttribute = undefined
+localVariableTypeTableAttribute = undefined
+deprecatedAttribute = undefined
 
-stackMapTableAttribute :: Parser AttributeInfo
-statkMapTableAttribute = undefined
+runtimeVisibleAnnotationsAttribute = undefined
+runtimeInvisibleAnnotationsAttribute = undefined
+runtimeVisibleParameterAnnotationsAttribute = undefined
+runtimeInvisibleParameterAnnotationsAttribute = undefined
+annotationDefaultAttribute = undefined
+bootstrapMethodsAttribute = undefined
+
+
 
 
 parseAttribute :: String -> Word16 -> Parser AttributeInfo
