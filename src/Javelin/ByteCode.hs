@@ -89,7 +89,7 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | Signature { signatureIndex :: Word16 }
                    | SourceFile { sourceFileIndex :: Word16 }
                    | SourceDebugExtension { debugExtension :: String }
-                   | LineNumberTable { lineNumberTable :: [LineNumber]}
+                   | LineNumberTable { lineNumberTable :: [LineNumber] }
                    | LocalVariableTable { localVariableTable :: [LocalVariable] }
                    | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableType] }
                    | Deprecated

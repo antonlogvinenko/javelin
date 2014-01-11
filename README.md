@@ -5,17 +5,19 @@ Haskell JVM
 
 * javelin-2
   * bytecode
+    * write missing parsers (attributes?)
+    * strings, number formats
     * overall structure
     * refactor parsers
     * change inheritance?
-    * strings, number formats
+    * understand all structure, semantics
     * other details besides any kind of verification
 
-    * validation, verification
+  * validation, verification
 
-    * modification: store higher level data about class file
+  * modification: store higher level data about class file
 
-    * test
+  * test
 
 Haskell:
 * sandbox
