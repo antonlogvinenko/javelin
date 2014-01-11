@@ -6,7 +6,8 @@ import Data.Word (Word32, Word16, Word8)
 import Control.Monad
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
 import Data.Bits
-
+import Data.Maybe
+import Data.List (lookup)
 
 
 -- Java bytecode
@@ -30,7 +31,7 @@ data ClassAccessFlags = ClassPublic | ClassFinal
                       | ClassSuper | ClassInterface | ClassAbstract
                       | ClassSynthetic | ClassAnnotation | ClassEnum deriving (Show, Eq)
 
-data Constant = Utf8Info {len :: Word16, stringBytes :: String}
+data Constant = Utf8Info { stringValue :: String}
               | IntegerInfo {bytes :: Word32}
               | FloatInfo {bytes :: Word32}
               | LongInfo {highBytes :: Word32, lowBytes :: Word32}
@@ -218,12 +219,17 @@ foldMask bytes flagsMap = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys f
 getNTimes :: Parser a -> RepeatingParser [a]
 getNTimes parser n bytes = do
   if n == 1
-     then Right (bytes, [])
+    then Right (bytes, [])
     else do
     (bytes1, obj) <- parser bytes
     (bytes2, objs) <- getNTimes parser (n - 1) bytes1
     return (bytes2, obj : objs)
 
+getFromPool :: [Constant] -> Word16 -> Maybe Constant
+getFromPool list idx = if okIdx < length list
+                       then Just $ list !! okIdx
+                       else Nothing
+  where okIdx = fromIntegral idx
 
 
 -- Class file header functions
@@ -266,7 +272,7 @@ constantTypeParser = Map.fromList [(1, utf8InfoParser), (3, integerInfoParser), 
                                (11, interfaceMethodrefParser), (12, nameAndTypeInfoParser), (15, identityParser),
                                (16, identityParser), (18, identityParser)]
                      
-identityParser bytes = Right (bytes, Utf8Info 1 [])
+identityParser bytes = Right (bytes, Utf8Info [])
 failingConstParser _ = Left "Undefined constant"
 
 twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Parser Constant
@@ -307,7 +313,7 @@ bytesToString bytes = ""
 utf8InfoParser bytes = do
   (bytes1, len) <- getBytes 2 bytes
   (bytes2, lenBytes) <- takeBytes (fromIntegral len) bytes1
-  return $ (bytes2, Utf8Info len $ bytesToString lenBytes)
+  return $ (bytes2, Utf8Info $ bytesToString lenBytes)
 methodHandleInfoParser bytes = do
   (bytes1, kind) <- getBytes 1 bytes
   (bytes2, index) <- getBytes 2 bytes1
@@ -333,27 +339,20 @@ methodInfoAccessFlagsMap = Map.fromList [(0x0001, MethodPublic), (0x0002, Method
                                          (0x0100, MethodNative), (0x0400, MethodAbstract),
                                          (0x0800, MethodStrict), (0x1000, MethodSynthetic)]
 
-getFieldMethod accessFlagsMap constr bytes = do
+getFieldMethod pool accessFlagsMap constr bytes = do
   (bytes1, flagBytes) <- getBytes 2 bytes
   let accessFlags = foldMask flagBytes accessFlagsMap
   (bytes2, nameIndex) <- getBytes 2 bytes1
   (bytes3, descriptorIndex) <- getBytes 2 bytes2
   (bytes4, attributesCount) <- getBytes 2 bytes3
-  (bytesLast, attributes) <- getAttributes attributesCount bytes4
+  (bytesLast, attributes) <- (getNTimes $ getAttribute pool) attributesCount bytes4
   return $ (bytesLast, constr accessFlags nameIndex descriptorIndex attributes)
 
-getField :: Parser FieldInfo
-getField = getFieldMethod fieldInfoAccessFlagsMap FieldInfo
+getField :: [Constant] -> Parser FieldInfo
+getField pool = getFieldMethod pool fieldInfoAccessFlagsMap FieldInfo
 
-getFields :: RepeatingParser [FieldInfo]
-getFields = getNTimes getField
-
-getMethod :: Parser MethodInfo
-getMethod = getFieldMethod methodInfoAccessFlagsMap MethodInfo
-
-getMethods :: RepeatingParser [MethodInfo]
-getMethods = getNTimes getMethod
-
+getMethod :: [Constant] -> Parser MethodInfo
+getMethod pool = getFieldMethod pool methodInfoAccessFlagsMap MethodInfo
 
 
 -- Interfaces
@@ -369,18 +368,31 @@ innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, In
                                          (0x0400, InnerClassAbstract), (0x1000, InnerClassSynthetic),
                                          (0x2000, InnerClassAnnotation), (0x4000, InnerClassEnum)]
 
+attributesNamesMap = Map.fromList [("ConstantValue", constantValueAttribute),
+                                   ("CodeAttribute", codeAttribute),
+                                   ("StackMapTableAttribute", stackMapTableAttribute)]
 
-getAttributes :: RepeatingParser [AttributeInfo]
-getAttributes = getNTimes getAttribute
+constantValueAttribute :: Parser AttributeInfo
+constantValueAttribute = undefined
 
-getAttribute :: Parser AttributeInfo
-getAttribute bytes = do
+codeAttribute :: Parser AttributeInfo
+codeAttribute = undefined
+
+stackMapTableAttribute :: Parser AttributeInfo
+statkMapTableAttribute = undefined
+
+
+parseAttribute :: String -> Word16 -> Parser AttributeInfo
+parseAttribute text length bytes = undefined
+
+getAttribute :: [Constant] -> Parser AttributeInfo
+getAttribute pool bytes = do
   (bytes1, attributeNameIndex) <- getBytes 2 bytes
   (bytes2, attributeLength) <- getBytes 4 bytes1
-  parseAttribute attributeNameIndex attributeLength
-
-
-parseAttribute attributeNameIndex attributeLength = Right ([], UnknownAttribute [])
+  case getFromPool pool attributeNameIndex of
+    Just (Utf8Info text) -> parseAttribute text attributeLength bytes
+    Just _ -> Left "some cake"
+    Nothing -> Left "some other cake"
 
 
 classBody :: Parser ClassBody
@@ -390,9 +402,9 @@ classBody bytes = do
   (bytes3, this) <- getBytes 2 bytes2
   (bytes4, super) <- getBytes 2 bytes3
   (bytes5, interfaces) <- getCountAndList getInterfaces bytes4
-  (bytes6, fields) <- getCountAndList getFields bytes5
-  (bytes7, methods) <- getCountAndList getMethods bytes6
-  (bytesLast, attributes) <- getCountAndList getAttributes bytes7
+  (bytes6, fields) <- getCountAndList (getNTimes $ getField pool) bytes5
+  (bytes7, methods) <- getCountAndList (getNTimes $ getMethod pool) bytes6
+  (bytesLast, attributes) <- getCountAndList (getNTimes $ getAttribute pool) bytes7
   return (bytesLast, ClassBody pool flags this super interfaces fields methods attributes)
   
 
