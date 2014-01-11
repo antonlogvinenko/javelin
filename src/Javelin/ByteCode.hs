@@ -8,9 +8,11 @@ import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys,
 import Data.Bits
 
 
+
 -- Java bytecode
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
                 deriving (Show, Eq)
+
 
 
 -- class body
@@ -68,6 +70,7 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                              } deriving (Show, Eq)
 
 
+
 -- Attributes
 data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | ConstantValue { constantValueIndex :: Word16 }
@@ -90,13 +93,28 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | LocalVariableTable { localVariableTable :: [LocalVariable] }
                    | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableType] }
                    | Deprecated
-                   | RuntimeVisibleAnnotations {}
-                   | RuntimeInvisibleAnnotations {}
-                   | RuntimeVisibleParameterAnnotations {}
-                   | RuntimeInvisibleParameterAnnotations {}
+                   | RuntimeVisibleAnnotations { annotations :: [Annotation] }
+                   | RuntimeInvisibleAnnotations { annotations :: [Annotation] }
+                   | RuntimeVisibleParameterAnnotations { parameterAnnotations :: [[Annotation]] }
+                   | RuntimeInvisibleParameterAnnotations { parameterAnnotations :: [[Annotation]] }
                    | AnnotationDefault { defaultValue :: [Word8] }
                    | BootstrapMethods {}
                    deriving (Show, Eq)
+
+data ElementValue = ElementConstValue { value :: Word16 }
+                  | ElementEnumConstValue { typeNameIndex :: Word16,
+                                            constNameIndex :: Word16 }
+                  | ElementClassInfoIndex { classInfoIndex :: Word16 }
+                  | ElementArrayValue { elementValues :: [ElementValue] }
+                  deriving (Show, Eq)
+
+data ElementValuePair = ElementValuePair { elementNameIndex :: Word16,
+                                           elementValue :: ElementValue
+                                         } deriving (Show, Eq)
+
+data Annotation = Annotation { typeIndex :: Word16,
+                               elementValuePairs :: [ElementValuePair]
+                             } deriving (Show, Eq)
 
 data Exception = Exception { startPc :: Word16,
                              endPc :: Word16,
@@ -163,8 +181,6 @@ data LocalVariable = LocalVariable { localVariableInfo :: LocalVariableInfo,
 data LocalVariableType = LocalVariableType { localVariableTypeInfo :: LocalVariableInfo,
                                              localVariableSignatureIndex :: Word16
                                            } deriving (Show, Eq)
-
-
 
 
 
