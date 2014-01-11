@@ -5,7 +5,9 @@ Haskell JVM
 
 * javelin-2
   * bytecode
-    * write missing parsers (attributes?)
+    * write missing parsers
+      * attrributes
+      * missing attribute behavior
     * strings, number formats
     * overall structure
     * refactor parsers

@@ -416,6 +416,7 @@ bootstrapMethodsAttribute = undefined
 
 parseAttribute :: String -> Word16 -> Parser AttributeInfo
 parseAttribute text length bytes = undefined
+--define behavior when handler not registered - just skip bytes
 
 getAttribute :: [Constant] -> Parser AttributeInfo
 getAttribute pool bytes = do
