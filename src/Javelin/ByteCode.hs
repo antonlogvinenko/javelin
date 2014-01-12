@@ -129,7 +129,7 @@ data VerificationTypeInfo = TopVariableInfo
                           | DoubleVariableInfo
                           | NullVariableInfo
                           | UninitializedThisVariableInfo
-                          | ObjectVariableInfo { poolIndex :: Word16 }
+                          | ObjectVariableInfo { cpoolIndex :: Word16 }
                           | UninitializedVariableInfo { offset :: Word16 }
                           deriving (Show, Eq)
 
@@ -387,11 +387,10 @@ attributesNamesMap = Map.fromList [("ConstantValue", constantValueAttribute),
                                    ("RuntimeInvisibleParameterAnnotations", runtimeInvisibleParameterAnnotationsAttribute),
                                    ("AnnotationDefault", annotationDefaultAttribute),
                                    ("BootstrapMethods", bootstrapMethodsAttribute)]
-
 constantValueAttribute pool len bytes = do
   (bytes1, value) <- getBytes 2 bytes
   return $ (bytes1, ConstantValue value)
-
+--code attribute
 getExceptionTable bytes = do
   (bytes1, startPc) <- getBytes 2 bytes
   (bytes2, endPc) <- getBytes 2 bytes1
@@ -408,30 +407,82 @@ codeAttribute pool len bytes = do
   (bytes7, attributesCount) <- getBytes 2 bytes6
   (bytes8, attributesInfo) <- getNTimes (getAttribute pool) attributesCount bytes7
   return $ (bytes8, CodeAttribute maxStack maxLocals code exceptionTable attributesInfo)
-
-stackMapFrameMap = Map.fromList [([0..63], sameFrameParser),
-                                 ([64..127], sameLocals1StackItemFrame),
-                                 ([247], sameLocals1StackItemFrameExtended),
-                                 ([248..250], chopFrame),
-                                 ([251], sameFrameExtended),
-                                 ([252..254], appendFrame),
-                                 ([255], fullFrame)]
-sameFrameParser = undefined
-sameLocals1StackItemFrame = undefined
-chopFrame = undefined
-sameFrameExtended = undefined
-appendFrame = undefined
-fullFrame = undefined
-stackMapFrame frameMap tag = undefined
+-- -> StackMapTable
+-- -> verification type info
+verificationTypeInfo = [(0, topVariableInfo), (1, integerVariableInfo),
+                        (2, floatVariableInfo), (3, longVariableInfo),
+                        (4, doubleVariableInfo), (5, nullVariableInfo),
+                        (6, uninitializedThisVariableInfo), (7, objectVariableInfo),
+                        (8, uninitializedVariableInfo)]
+onlyTagByteInfo bytes constr = return (bytes, constr)
+topVariableInfo tag bytes = onlyTagByteInfo bytes TopVariableInfo
+integerVariableInfo tag bytes = onlyTagByteInfo bytes IntegerVariableInfo
+floatVariableInfo tag bytes = onlyTagByteInfo bytes FloatVariableInfo
+longVariableInfo tag bytes = onlyTagByteInfo bytes LongVariableInfo
+doubleVariableInfo tag bytes = onlyTagByteInfo bytes DoubleVariableInfo
+nullVariableInfo tag bytes = onlyTagByteInfo bytes NullVariableInfo
+uninitializedThisVariableInfo tag bytes = onlyTagByteInfo bytes UninitializedThisVariableInfo
+objectVariableInfo tag bytes = do
+  (bytes1, cpoolIndex) <- getBytes 2 bytes
+  return $ (bytes1, ObjectVariableInfo cpoolIndex)
+uninitializedVariableInfo tag bytes = do
+  (bytes1, offset) <- getBytes 2 bytes
+  return $ (bytes, UninitializedVariableInfo offset)
+parseVerificationTypeInfo bytes = do
+  (bytes1, tag) <- getBytes 1 bytes
+  case take 1 . filter (\tags -> tag == fst tags) $ verificationTypeInfo of
+    [(_, parser)] -> parser tag bytes1
+    [] -> Left "Cake!"
+-- <-- verification type info
+stackMapFrameList =  [([0..63], sameFrameParser),
+                      ([64..127], sameLocals1StackItemFrame),
+                      ([247], sameLocals1StackItemFrameExtended),
+                      ([248..250], chopFrame),
+                      ([251], sameFrameExtended),
+                      ([252..254], appendFrame),
+                      ([255], fullFrame)]
+sameFrameParser tag bytes = return (bytes, SameFrame tag)
+sameLocals1StackItemFrame tag bytes = do
+  (bytes1, typeInfo) <- parseVerificationTypeInfo bytes
+  return (bytes1, SameLocals1StackItemFrame tag typeInfo)
+sameLocals1StackItemFrameExtended tag bytes = do
+  (bytes1, offsetData) <- getBytes 2 bytes
+  (bytes2, typeInfo) <- parseVerificationTypeInfo bytes1
+  return (bytes2, SameLocals1StackItemFrameExtended tag offsetData typeInfo)
+chopFrame tag bytes = do
+  (bytes1, offsetDelta) <- getBytes 2 bytes
+  return (bytes1, ChopFrame tag offsetDelta)
+sameFrameExtended tag bytes = do
+  (bytes1, offsetDelta) <- getBytes 2 bytes
+  return (bytes1, SameFrameExtended tag offsetDelta)
+appendFrame tag bytes = do
+  (bytes1, offsetDelta) <- getBytes 2 bytes
+  (bytes2, locals) <- getNTimes parseVerificationTypeInfo ((fromIntegral tag) - 251) bytes1
+  return (bytes, AppendFrame tag offsetDelta [])
+fullFrame tag bytes = do
+  (bytes1, offsetDelta) <- getBytes 2 bytes
+  (bytes2, localLength) <- getBytes 2 bytes1
+  (bytes3, locals) <- getNTimes parseVerificationTypeInfo localLength bytes2
+  (bytes4, stackLength) <- getBytes 2 bytes3
+  (bytes5, stack) <- getNTimes parseVerificationTypeInfo stackLength bytes4
+  return (bytes5, FullFrame tag offsetDelta locals stack)
+lookupFrameParser tag =
+  case take 1 . filter (\tags -> elem tag $ fst tags) $ stackMapFrameList of
+    [] -> Nothing
+    (x:_) -> Just $ snd x
 getStackMapFrame bytes = do
   (bytes1, tag) <- getBytes 1 bytes
-  let frameParser = lookupFrameParser stackMapFrame tag
-  return $ (bytes1, SameFrame tag)
+  case lookupFrameParser tag of
+    Just parser -> parser tag bytes1
+    Nothing -> Left "Oooops"
 stackMapTableAttribute pool len bytes = do
   (bytes1, entries) <- getNTimes getStackMapFrame len bytes
   return $ (bytes1, StackMapTable entries)
-  
-exceptionsAttribute = undefined
+-- -> StackMapTable  
+exceptionsAttribute pool len bytes = do
+  (bytes1, numberOfExceptions) <- getBytes 2 bytes
+  (bytes2, exceptions) <- getNTimes (getBytes 2) numberOfExceptions bytes1
+  return $ (bytes2, Exceptions exceptions)
 innerClassesAttribute = undefined
 enclosingMethodAttribute = undefined
 syntheticAttribute = undefined
@@ -442,7 +493,6 @@ lineNumberTableAttribute = undefined
 localVariableTableAttribute = undefined
 localVariableTypeTableAttribute = undefined
 deprecatedAttribute = undefined
-
 runtimeVisibleAnnotationsAttribute = undefined
 runtimeInvisibleAnnotationsAttribute = undefined
 runtimeVisibleParameterAnnotationsAttribute = undefined
@@ -466,7 +516,6 @@ getAttribute pool bytes = do
     Just _ -> Left "some cake"
     Nothing -> Left "some other cake"
 
-
 classBody :: Parser ClassBody
 classBody bytes = do
   (bytes1, pool) <- getCountAndList getConstantPool bytes
@@ -478,8 +527,6 @@ classBody bytes = do
   (bytes7, methods) <- getCountAndList (getNTimes $ getMethod pool) bytes6
   (bytesLast, attributes) <- getCountAndList (getNTimes $ getAttribute pool) bytes7
   return (bytesLast, ClassBody pool flags this super interfaces fields methods attributes)
-  
-
 
 -- Parser of all things alive
 parse :: [Word8] -> Either String ByteCode
