@@ -7,6 +7,8 @@ Haskell JVM
   * bytecode
     * write missing parsers
       * attrributes
+      * parse length in all attributes - it takes some bytes, for verification
+    * modules...
     * strings, number formats
     * overall structure
     * refactor parsers
