@@ -7,7 +7,6 @@ Haskell JVM
   * bytecode
     * write missing parsers
       * attrributes
-      * missing attribute behavior
     * strings, number formats
     * overall structure
     * refactor parsers
