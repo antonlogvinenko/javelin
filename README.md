@@ -12,6 +12,8 @@ Haskell JVM
     * strings, number formats
     * overall structure
     * refactor parsers
+      * common code for parsing tables
+      * common code for getBytes n
     * change inheritance?
     * understand all structure, semantics
     * other details besides any kind of verification
