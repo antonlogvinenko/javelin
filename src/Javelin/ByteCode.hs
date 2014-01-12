@@ -81,8 +81,8 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                                      exceptionTable :: [Exception],
                                      codeAttributes :: [AttributeInfo] }
                    | StackMapTable { entries :: [StackMapFrame] }
-                   | Exceptions { exceptionIndexTable :: [Word16]}
-                   | InnerClasses { classes :: [InnerClassInfo]}
+                   | Exceptions { exceptionIndexTable :: [Word16] }
+                   | InnerClasses { classes :: [InnerClassInfo] }
                    | EnclosingMethod { enclosingClassIndex :: Word16,
                                        enclosingMethodIndex :: Word16 }
                    | Synthetic
@@ -409,7 +409,24 @@ codeAttribute pool len bytes = do
   (bytes8, attributesInfo) <- getNTimes (getAttribute pool) attributesCount bytes7
   return $ (bytes8, CodeAttribute maxStack maxLocals code exceptionTable attributesInfo)
 
-getStackMapFrame bytes = undefined
+stackMapFrameMap = Map.fromList [([0..63], sameFrameParser),
+                                 ([64..127], sameLocals1StackItemFrame),
+                                 ([247], sameLocals1StackItemFrameExtended),
+                                 ([248..250], chopFrame),
+                                 ([251], sameFrameExtended),
+                                 ([252..254], appendFrame),
+                                 ([255], fullFrame)]
+sameFrameParser = undefined
+sameLocals1StackItemFrame = undefined
+chopFrame = undefined
+sameFrameExtended = undefined
+appendFrame = undefined
+fullFrame = undefined
+stackMapFrame frameMap tag = undefined
+getStackMapFrame bytes = do
+  (bytes1, tag) <- getBytes 1 bytes
+  let frameParser = lookupFrameParser stackMapFrame tag
+  return $ (bytes1, SameFrame tag)
 stackMapTableAttribute pool len bytes = do
   (bytes1, entries) <- getNTimes getStackMapFrame len bytes
   return $ (bytes1, StackMapTable entries)
@@ -436,9 +453,9 @@ bootstrapMethodsAttribute = undefined
 
 parseAttribute :: [Constant] -> String -> Word16 -> Parser AttributeInfo
 parseAttribute pool text len bytes = case Map.lookup text attributesNamesMap of
-  Just parser -> parser pool okLen bytes
+  Just parser -> parser pool len bytes
   Nothing -> Right (drop okLen bytes, UnknownAttribute $ take okLen bytes)
-  where okLen = fromIntegral len
+  where okLen = (fromIntegral len) :: Int
 
 getAttribute :: [Constant] -> Parser AttributeInfo
 getAttribute pool bytes = do
