@@ -75,12 +75,11 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
 -- Attributes
 data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | ConstantValue { constantValueIndex :: Word16 }
-                   | Code { maxStack :: Word16,
-                            maxLocals :: Word16,
-                            codeLength :: Word16,
-                            code :: [Word8],
-                            exceptionTable :: [Exception],
-                            codeAttributes :: [AttributeInfo] }
+                   | CodeAttribute { maxStack :: Word16,
+                                     maxLocals :: Word16,
+                                     code :: [Word8],
+                                     exceptionTable :: [Exception],
+                                     codeAttributes :: [AttributeInfo] }
                    | StackMapTable { entries :: [StackMapFrame] }
                    | Exceptions { exceptionIndexTable :: [Word16]}
                    | InnerClasses { classes :: [InnerClassInfo]}
@@ -389,9 +388,32 @@ attributesNamesMap = Map.fromList [("ConstantValue", constantValueAttribute),
                                    ("AnnotationDefault", annotationDefaultAttribute),
                                    ("BootstrapMethods", bootstrapMethodsAttribute)]
 
-constantValueAttribute = undefined
-codeAttribute = undefined
-stackMapTableAttribute = undefined
+constantValueAttribute pool len bytes = do
+  (bytes1, value) <- getBytes 2 bytes
+  return $ (bytes1, ConstantValue value)
+
+getExceptionTable bytes = do
+  (bytes1, startPc) <- getBytes 2 bytes
+  (bytes2, endPc) <- getBytes 2 bytes1
+  (bytes3, handlerPc) <- getBytes 2 bytes2
+  (bytes4, catchType) <- getBytes 2 bytes3
+  return $ (bytes4, Exception startPc endPc handlerPc catchType)
+codeAttribute pool len bytes = do
+  (bytes1, maxStack) <- getBytes 2 bytes
+  (bytes2, maxLocals) <- getBytes 2 bytes1
+  (bytes3, codeLength) <- getBytes 2 bytes2
+  (bytes4, code) <- takeBytes 2 bytes3
+  (bytes5, exceptionTableLength) <- getBytes 2 bytes4
+  (bytes6, exceptionTable) <- getNTimes getExceptionTable exceptionTableLength bytes5
+  (bytes7, attributesCount) <- getBytes 2 bytes6
+  (bytes8, attributesInfo) <- getNTimes (getAttribute pool) attributesCount bytes7
+  return $ (bytes8, CodeAttribute maxStack maxLocals code exceptionTable attributesInfo)
+
+getStackMapFrame bytes = undefined
+stackMapTableAttribute pool len bytes = do
+  (bytes1, entries) <- getNTimes getStackMapFrame len bytes
+  return $ (bytes1, StackMapTable entries)
+  
 exceptionsAttribute = undefined
 innerClassesAttribute = undefined
 enclosingMethodAttribute = undefined
@@ -412,18 +434,18 @@ annotationDefaultAttribute = undefined
 bootstrapMethodsAttribute = undefined
 
 
-
-
-parseAttribute :: String -> Word16 -> Parser AttributeInfo
-parseAttribute text length bytes = undefined
---define behavior when handler not registered - just skip bytes
+parseAttribute :: [Constant] -> String -> Word16 -> Parser AttributeInfo
+parseAttribute pool text len bytes = case Map.lookup text attributesNamesMap of
+  Just parser -> parser pool okLen bytes
+  Nothing -> Right (drop okLen bytes, UnknownAttribute $ take okLen bytes)
+  where okLen = fromIntegral len
 
 getAttribute :: [Constant] -> Parser AttributeInfo
 getAttribute pool bytes = do
   (bytes1, attributeNameIndex) <- getBytes 2 bytes
   (bytes2, attributeLength) <- getBytes 4 bytes1
   case getFromPool pool attributeNameIndex of
-    Just (Utf8Info text) -> parseAttribute text attributeLength bytes
+    Just (Utf8Info text) -> parseAttribute pool text attributeLength bytes2
     Just _ -> Left "some cake"
     Nothing -> Left "some other cake"
 
