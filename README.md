@@ -19,6 +19,8 @@ Haskell JVM
     * other details besides any kind of verification
 
   * validation, verification
+    * in place
+    * using spec
 
   * modification: store higher level data about class file
 
