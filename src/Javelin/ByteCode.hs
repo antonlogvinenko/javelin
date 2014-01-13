@@ -483,12 +483,38 @@ exceptionsAttribute pool len bytes = do
   (bytes1, numberOfExceptions) <- getBytes 2 bytes
   (bytes2, exceptions) <- getNTimes (getBytes 2) numberOfExceptions bytes1
   return $ (bytes2, Exceptions exceptions)
-innerClassesAttribute = undefined
-enclosingMethodAttribute = undefined
-syntheticAttribute = undefined
-signatureAttribute = undefined
-sourceFileAttribute = undefined
-sourceDebugExtensionAttribute = undefined
+
+innerClass bytes = do
+  (bytes1, innerClassInfo) <- getBytes 2 bytes
+  (bytes2, outerClassInfo) <- getBytes 2 bytes1
+  (bytes3, innerName) <- getBytes 2 bytes2
+  (bytes4, innerAccessFlagsBytes) <- getBytes 2 bytes3
+  let innerAccessFlags = foldMask innerAccessFlagsBytes innerClassAccessFlagsMap
+  return (bytes4, InnerClassInfo innerClassInfo outerClassInfo innerName innerAccessFlags)
+innerClassesAttribute pool len bytes = do
+  (bytes1, length) <- getBytes 4 bytes
+  (bytes2, classes) <- getNTimes innerClass length bytes1
+  return (bytes2, InnerClasses classes)
+
+enclosingMethodAttribute pool len bytes = do
+  (bytes1, classIndex) <- getBytes 2 bytes
+  (bytes2, methodIndex) <- getBytes 2 bytes1
+  return (bytes2, EnclosingMethod classIndex methodIndex)
+
+syntheticAttribute pool len bytes = Right (bytes, Synthetic)
+  
+signatureAttribute pool len bytes = do
+  (bytes1, signatureIndex) <- getBytes 2 bytes
+  return (bytes1, Signature signatureIndex)
+
+sourceFileAttribute pool len bytes = do
+  (bytes1, sourceFile) <- getBytes 2 bytes
+  return (bytes, SourceFile sourceFile)
+
+sourceDebugExtensionAttribute pool len bytes = do
+  (bytes1, stringBytes) <- getNTimes (getBytes 1) len bytes
+  return (bytes1, SourceDebugExtension $ bytesToString stringBytes)
+
 lineNumberTableAttribute = undefined
 localVariableTableAttribute = undefined
 localVariableTypeTableAttribute = undefined
