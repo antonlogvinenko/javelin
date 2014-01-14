@@ -90,16 +90,20 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
                    | SourceFile { sourceFileIndex :: Word16 }
                    | SourceDebugExtension { debugExtension :: String }
                    | LineNumberTable { lineNumberTable :: [LineNumber] }
-                   | LocalVariableTable { localVariableTable :: [LocalVariable] }
-                   | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableType] }
+                   | LocalVariableTable { localVariableTable :: [LocalVariableInfo] }
+                   | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableInfo] }
                    | Deprecated
                    | RuntimeVisibleAnnotations { annotations :: [Annotation] }
                    | RuntimeInvisibleAnnotations { annotations :: [Annotation] }
                    | RuntimeVisibleParameterAnnotations { parameterAnnotations :: [[Annotation]] }
                    | RuntimeInvisibleParameterAnnotations { parameterAnnotations :: [[Annotation]] }
                    | AnnotationDefault { defaultValue :: [Word8] }
-                   | BootstrapMethods {}
+                   | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
                    deriving (Show, Eq)
+
+data BootstrapMethod = BootstrapMethod { methodRef :: Word16,
+                                         arguments :: [Word16] }
+                     deriving (Show, Eq)                            
 
 data ElementValue = ElementConstValue { value :: Word16 }
                   | ElementEnumConstValue { typeNameIndex :: Word16,
@@ -174,15 +178,6 @@ data LocalVariableInfo = LocalVariableInfo { localVariableStartPc :: Word16,
                                              variableSignatureIndex :: Word16,
                                              localVariableIndex :: Word16
                                            } deriving (Show, Eq)
-
-data LocalVariable = LocalVariable { localVariableInfo :: LocalVariableInfo,
-                                     localVariableDescriptorIndex :: Word16
-                                   } deriving (Show, Eq)
-
-data LocalVariableType = LocalVariableType { localVariableTypeInfo :: LocalVariableInfo,
-                                             localVariableSignatureIndex :: Word16
-                                           } deriving (Show, Eq)
-
 
 
 -- Basic utility functions
@@ -546,22 +541,29 @@ localVariableInfoParser bytes = do
   (bytes4, signatureIndex) <- getWord bytes3
   (bytes5, index) <- getWord bytes4
   return (bytes5, LocalVariableInfo startPc lengthPc nameIndex signatureIndex index)
-localVariableParser bytes = do
-  (bytes1, info) <- localVariableInfoParser bytes
-  (bytes2, descriptorIndex) <- getWord bytes1
-  return (bytes2, LocalVariable info descriptorIndex)
 localVariableTableAttribute pool len bytes =
-  constrNTimes LocalVariableTable localVariableParser bytes
-  
-localVariableTypeTableAttribute = undefined
-deprecatedAttribute = undefined
+  constrNTimes LocalVariableTable localVariableInfoParser bytes
+localVariableTypeTableAttribute pool len bytes =
+  constrNTimes LocalVariableTypeTable localVariableInfoParser bytes
+
+deprecatedAttribute pool len bytes = return (bytes, Deprecated)
+
 runtimeVisibleAnnotationsAttribute = undefined
 runtimeInvisibleAnnotationsAttribute = undefined
 runtimeVisibleParameterAnnotationsAttribute = undefined
 runtimeInvisibleParameterAnnotationsAttribute = undefined
-annotationDefaultAttribute = undefined
-bootstrapMethodsAttribute = undefined
 
+annotationDefaultAttribute pool len bytes = do
+  (bytes1, elementValue) <- takeBytes (fromIntegral len) bytes
+  return (bytes1, AnnotationDefault elementValue)
+
+bootstrapMethodParser bytes = do
+  (bytes1, methodRef) <- getWord bytes
+  (bytes2, argumentsCount) <- getWord bytes
+  (bytes3, arguments) <- getNTimes getWord argumentsCount bytes2
+  return (bytes3, BootstrapMethod methodRef arguments)
+bootstrapMethodsAttribute pool len bytes =
+  constrNTimes BootstrapMethods bootstrapMethodParser bytes
 
 parseAttribute :: [Constant] -> String -> Word16 -> Parser AttributeInfo
 parseAttribute pool text len bytes = case Map.lookup text attributesNamesMap of
