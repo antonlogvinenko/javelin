@@ -112,6 +112,8 @@ data ElementValue = ElementConstValue { tag :: Char,
                                             constNameIndex :: Word16 }
                   | ElementClassInfoIndex { tag :: Char,
                                             classInfoIndex :: Word16 }
+                  | ElementAnnotationValue { tag :: Char,
+                                             annotation :: Annotation }
                   | ElementArrayValue { tag :: Char,
                                         elementValues :: [ElementValue] }
                   deriving (Show, Eq)
@@ -556,16 +558,28 @@ deprecatedAttribute pool len bytes = return (bytes, Deprecated)
 elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
                           ("c", parseClassValue), ("@", parseAnnotationValue),
                           ("[", parseArrayValue)]
-parseConstValue tag bytes = undefined
-parseEnumValue tag bytes = undefined
-parseClassValue tag bytes = undefined
-parseAnnotationValue tag bytes = undefined
-parseArrayValue tag bytes = undefined
+parseConstValue tag bytes = do
+  (bytes1, value) <- getWord bytes
+  return (bytes1, ElementConstValue tag value)
+parseEnumValue tag bytes = do
+  (bytes1, typeNameIndex) <- getWord bytes
+  (bytes2, constNameIndex) <- getWord bytes1
+  return (bytes2, ElementEnumConstValue tag typeNameIndex constNameIndex)
+parseClassValue tag bytes = do
+  (bytes1, classInfoIndex) <- getWord bytes
+  return (bytes1, ElementClassInfoIndex tag classInfoIndex)
+parseAnnotationValue tag bytes = do
+  (bytes1, annotationValue) <- parseAnnotationAttribute bytes
+  return (bytes1, ElementAnnotationValue tag annotationValue)
+parseArrayValue tag bytes = do
+  (bytes1, numValues) <- getWord bytes
+  (bytes2, elementValues) <- getNTimes elementValueParser numValues bytes1
+  return (bytes2, ElementArrayValue tag elementValues)
 elementValueParser bytes = do
   (bytes1, tag) <- takeBytes 1 bytes
-  let tagString = bytesToString tag !! 0
-  case take 1 $ filter (\strs -> elem tagString $ fst strs) elementValueParsersList of
-    [(_, parser)] -> parser tag bytes
+  let tagChar = bytesToString tag !! 0
+  case take 1 $ filter (\strs -> elem tagChar $ fst strs) elementValueParsersList of
+    [(_, parser)] -> parser tagChar bytes
     _ -> Left "AAAAA"
 elementValuePairParser bytes = do
   (bytes1, elementNameIndex) <- getWord bytes
