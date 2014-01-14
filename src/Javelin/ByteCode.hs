@@ -548,7 +548,11 @@ localVariableTypeTableAttribute pool len bytes =
 
 deprecatedAttribute pool len bytes = return (bytes, Deprecated)
 
-elementValuePairParser = undefined
+elementValueParser bytes = undefined
+elementValuePairParser bytes = do
+  (bytes1, elementNameIndex) <- getWord bytes
+  (bytes2, elementValue) <- elementValueParser bytes1
+  return (bytes2, ElementValuePair elementNameIndex elementValue)
 parseAnnotationAttribute bytes = do
   (bytes1, typeIndex) <- getWord bytes
   (bytes2, elementValuePairsNum) <- getWord bytes1
