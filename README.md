@@ -8,12 +8,12 @@ Haskell JVM
     * write missing parsers
       * attrributes
       * parse length in all attributes - it takes some bytes, for verification
-    * modules...
     * strings, number formats
-    * overall structure
+    * modules...
     * refactor parsers
       * common code for parsing tables
       * common code for getBytes n
+    * overall structure
     * change inheritance?
     * understand all structure, semantics
     * other details besides any kind of verification

@@ -171,6 +171,7 @@ data LineNumber = LineNumber { lineStartPc :: Word16,
 data LocalVariableInfo = LocalVariableInfo { localVariableStartPc :: Word16,
                                              localVariableLength :: Word16,
                                              localVariableNameIndex :: Word16,
+                                             variableSignatureIndex :: Word16,
                                              localVariableIndex :: Word16
                                            } deriving (Show, Eq)
 
@@ -187,7 +188,7 @@ data LocalVariableType = LocalVariableType { localVariableTypeInfo :: LocalVaria
 -- Basic utility functions
 getCountAndList :: (Word16 -> Parser [x]) -> [Word8] -> Either String ([Word8], [x])
 getCountAndList f bytes = do
-  (bytes1, count) <- getBytes 2 bytes
+  (bytes1, count) <- getWord bytes
   f count bytes1
 
 require :: Int -> [Word8] ->  a -> Either String a
@@ -200,6 +201,15 @@ getBytes count bs = require count bs $
                         low = bs !! 1
                         ver = (fromIntegral high) * 256 + fromIntegral low
                     in (drop count bs, ver)
+
+getByte :: Parser Word8
+getByte = getBytes 1
+
+getWord :: Parser Word16
+getWord = getBytes 2
+
+getDWord :: Parser Word32
+getDWord = getBytes 4
 
 takeBytes count bs = require count bs $ (drop count bs, take count bs)
                      
@@ -224,6 +234,13 @@ getNTimes parser n bytes = do
     (bytes2, objs) <- getNTimes parser (n - 1) bytes1
     return (bytes2, obj : objs)
 
+-- lineNumberTableAttribute - add parsing length
+constrNTimes :: ([a] -> b) -> Parser a -> Parser b
+constrNTimes f parser bytes = do
+  (bytes1, len) <- getWord bytes
+  (bytes2, object) <- getNTimes parser len bytes1
+  return (bytes2, f object)
+
 getFromPool :: [Constant] -> Word16 -> Maybe Constant
 getFromPool list idx = if okIdx < length list
                        then Just $ list !! okIdx
@@ -238,7 +255,7 @@ magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
                  else Left "Not a Java class format"
                         
 version :: Parser Word16
-version = getBytes 2
+version = getWord
 
 classFlagsList = Map.fromList [(0x0001, ClassPublic), (0x0010, ClassFinal), (0x0020, ClassSuper),
                                (0x0200, ClassInterface), (0x0400, ClassAbstract),
@@ -247,7 +264,7 @@ classFlagsList = Map.fromList [(0x0001, ClassPublic), (0x0010, ClassFinal), (0x0
 
 parseClassAccessFlags :: Parser [ClassAccessFlags]
 parseClassAccessFlags bytes = do
-  (bytes1, flagsBytes) <- getBytes 2 bytes
+  (bytes1, flagsBytes) <- getWord bytes
   let flags = foldMask flagsBytes classFlagsList
   return $ (bytes1, flags)
 
@@ -259,8 +276,8 @@ getConstantPool = getNTimes getConstant
 
 getConstant :: Parser Constant
 getConstant bytes = do
-  (bytes1, tag) <- getBytes 1 bytes
-  getConstantParser tag bytes1
+  (bytes1, tag) <- getByte bytes
+  getConstantParser (fromIntegral tag) bytes1
 
 getConstantParser :: Int -> Parser Constant
 getConstantParser idx = Map.findWithDefault failingConstParser idx constantTypeParser
@@ -276,8 +293,8 @@ failingConstParser _ = Left "Undefined constant"
 
 twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Parser Constant
 twoTwoBytesInfoParser constConstr bytes = do
-  (bytes1, firstWord16) <- getBytes 2 bytes
-  (bytes2, secondWord16) <- getBytes 2 bytes
+  (bytes1, firstWord16) <- getWord bytes
+  (bytes2, secondWord16) <- getWord bytes
   return $ (bytes2, constConstr firstWord16 secondWord16)
 
 twoFourBytesInfoParser :: (Word32 -> Word32 -> Constant) -> Parser Constant
@@ -288,7 +305,7 @@ twoFourBytesInfoParser constConstr bytes = do
 
 twoBytesInfoParser :: (Word16 -> Constant) -> Parser Constant
 twoBytesInfoParser constConstr bytes = do
-  (bytes1, twoBytes) <- getBytes 2 bytes
+  (bytes1, twoBytes) <- getWord bytes
   return $ (bytes1, constConstr twoBytes)
 
 fourBytesInfoParser :: (Word32 -> Constant) -> Parser Constant
@@ -310,15 +327,15 @@ doubleInfoParser = twoFourBytesInfoParser DoubleInfo
 bytesToString bytes = ""
 
 utf8InfoParser bytes = do
-  (bytes1, len) <- getBytes 2 bytes
+  (bytes1, len) <- getWord bytes
   (bytes2, lenBytes) <- takeBytes (fromIntegral len) bytes1
   return $ (bytes2, Utf8Info $ bytesToString lenBytes)
 methodHandleInfoParser bytes = do
-  (bytes1, kind) <- getBytes 1 bytes
-  (bytes2, index) <- getBytes 2 bytes1
+  (bytes1, kind) <- getByte bytes
+  (bytes2, index) <- getWord bytes1
   return $ (bytes2, MethodHandleInfo kind index)
 methodTypeInfoParser bytes = do
-  (bytes1, index) <- getBytes 2 bytes
+  (bytes1, index) <- getWord bytes
   return $ (bytes1, MethodTypeInfo index)
 invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
 
@@ -339,11 +356,11 @@ methodInfoAccessFlagsMap = Map.fromList [(0x0001, MethodPublic), (0x0002, Method
                                          (0x0800, MethodStrict), (0x1000, MethodSynthetic)]
 
 getFieldMethod pool accessFlagsMap constr bytes = do
-  (bytes1, flagBytes) <- getBytes 2 bytes
+  (bytes1, flagBytes) <- getWord bytes
   let accessFlags = foldMask flagBytes accessFlagsMap
-  (bytes2, nameIndex) <- getBytes 2 bytes1
-  (bytes3, descriptorIndex) <- getBytes 2 bytes2
-  (bytes4, attributesCount) <- getBytes 2 bytes3
+  (bytes2, nameIndex) <- getWord bytes1
+  (bytes3, descriptorIndex) <- getWord bytes2
+  (bytes4, attributesCount) <- getWord bytes3
   (bytesLast, attributes) <- (getNTimes $ getAttribute pool) attributesCount bytes4
   return $ (bytesLast, constr accessFlags nameIndex descriptorIndex attributes)
 
@@ -356,7 +373,7 @@ getMethod pool = getFieldMethod pool methodInfoAccessFlagsMap MethodInfo
 
 -- Interfaces
 getInterfaces :: RepeatingParser [Word16]
-getInterfaces = getNTimes $ getBytes 2
+getInterfaces = getNTimes $ getWord
 
 
 
@@ -388,23 +405,23 @@ attributesNamesMap = Map.fromList [("ConstantValue", constantValueAttribute),
                                    ("AnnotationDefault", annotationDefaultAttribute),
                                    ("BootstrapMethods", bootstrapMethodsAttribute)]
 constantValueAttribute pool len bytes = do
-  (bytes1, value) <- getBytes 2 bytes
+  (bytes1, value) <- getWord bytes
   return $ (bytes1, ConstantValue value)
 --code attribute
 getExceptionTable bytes = do
-  (bytes1, startPc) <- getBytes 2 bytes
-  (bytes2, endPc) <- getBytes 2 bytes1
-  (bytes3, handlerPc) <- getBytes 2 bytes2
-  (bytes4, catchType) <- getBytes 2 bytes3
+  (bytes1, startPc) <- getWord bytes
+  (bytes2, endPc) <- getWord bytes1
+  (bytes3, handlerPc) <- getWord bytes2
+  (bytes4, catchType) <- getWord bytes3
   return $ (bytes4, Exception startPc endPc handlerPc catchType)
 codeAttribute pool len bytes = do
-  (bytes1, maxStack) <- getBytes 2 bytes
-  (bytes2, maxLocals) <- getBytes 2 bytes1
-  (bytes3, codeLength) <- getBytes 2 bytes2
+  (bytes1, maxStack) <- getWord bytes
+  (bytes2, maxLocals) <- getWord bytes1
+  (bytes3, codeLength) <- getWord bytes2
   (bytes4, code) <- takeBytes 2 bytes3
-  (bytes5, exceptionTableLength) <- getBytes 2 bytes4
+  (bytes5, exceptionTableLength) <- getWord bytes4
   (bytes6, exceptionTable) <- getNTimes getExceptionTable exceptionTableLength bytes5
-  (bytes7, attributesCount) <- getBytes 2 bytes6
+  (bytes7, attributesCount) <- getWord bytes6
   (bytes8, attributesInfo) <- getNTimes (getAttribute pool) attributesCount bytes7
   return $ (bytes8, CodeAttribute maxStack maxLocals code exceptionTable attributesInfo)
 -- -> StackMapTable
@@ -423,13 +440,13 @@ doubleVariableInfo tag bytes = onlyTagByteInfo bytes DoubleVariableInfo
 nullVariableInfo tag bytes = onlyTagByteInfo bytes NullVariableInfo
 uninitializedThisVariableInfo tag bytes = onlyTagByteInfo bytes UninitializedThisVariableInfo
 objectVariableInfo tag bytes = do
-  (bytes1, cpoolIndex) <- getBytes 2 bytes
+  (bytes1, cpoolIndex) <- getWord bytes
   return $ (bytes1, ObjectVariableInfo cpoolIndex)
 uninitializedVariableInfo tag bytes = do
-  (bytes1, offset) <- getBytes 2 bytes
+  (bytes1, offset) <- getWord bytes
   return $ (bytes, UninitializedVariableInfo offset)
 parseVerificationTypeInfo bytes = do
-  (bytes1, tag) <- getBytes 1 bytes
+  (bytes1, tag) <- getByte bytes
   case take 1 . filter (\tags -> tag == fst tags) $ verificationTypeInfo of
     [(_, parser)] -> parser tag bytes1
     [] -> Left "Cake!"
@@ -446,24 +463,24 @@ sameLocals1StackItemFrame tag bytes = do
   (bytes1, typeInfo) <- parseVerificationTypeInfo bytes
   return (bytes1, SameLocals1StackItemFrame tag typeInfo)
 sameLocals1StackItemFrameExtended tag bytes = do
-  (bytes1, offsetData) <- getBytes 2 bytes
+  (bytes1, offsetData) <- getWord bytes
   (bytes2, typeInfo) <- parseVerificationTypeInfo bytes1
   return (bytes2, SameLocals1StackItemFrameExtended tag offsetData typeInfo)
 chopFrame tag bytes = do
-  (bytes1, offsetDelta) <- getBytes 2 bytes
+  (bytes1, offsetDelta) <- getWord bytes
   return (bytes1, ChopFrame tag offsetDelta)
 sameFrameExtended tag bytes = do
-  (bytes1, offsetDelta) <- getBytes 2 bytes
+  (bytes1, offsetDelta) <- getWord bytes
   return (bytes1, SameFrameExtended tag offsetDelta)
 appendFrame tag bytes = do
-  (bytes1, offsetDelta) <- getBytes 2 bytes
+  (bytes1, offsetDelta) <- getWord bytes
   (bytes2, locals) <- getNTimes parseVerificationTypeInfo ((fromIntegral tag) - 251) bytes1
   return (bytes, AppendFrame tag offsetDelta [])
 fullFrame tag bytes = do
-  (bytes1, offsetDelta) <- getBytes 2 bytes
-  (bytes2, localLength) <- getBytes 2 bytes1
+  (bytes1, offsetDelta) <- getWord bytes
+  (bytes2, localLength) <- getWord bytes1
   (bytes3, locals) <- getNTimes parseVerificationTypeInfo localLength bytes2
-  (bytes4, stackLength) <- getBytes 2 bytes3
+  (bytes4, stackLength) <- getWord bytes3
   (bytes5, stack) <- getNTimes parseVerificationTypeInfo stackLength bytes4
   return (bytes5, FullFrame tag offsetDelta locals stack)
 lookupFrameParser tag =
@@ -471,7 +488,7 @@ lookupFrameParser tag =
     [] -> Nothing
     (x:_) -> Just $ snd x
 getStackMapFrame bytes = do
-  (bytes1, tag) <- getBytes 1 bytes
+  (bytes1, tag) <- getByte bytes
   case lookupFrameParser tag of
     Just parser -> parser tag bytes1
     Nothing -> Left "Oooops"
@@ -480,15 +497,15 @@ stackMapTableAttribute pool len bytes = do
   return $ (bytes1, StackMapTable entries)
 -- -> StackMapTable  
 exceptionsAttribute pool len bytes = do
-  (bytes1, numberOfExceptions) <- getBytes 2 bytes
-  (bytes2, exceptions) <- getNTimes (getBytes 2) numberOfExceptions bytes1
+  (bytes1, numberOfExceptions) <- getWord bytes
+  (bytes2, exceptions) <- getNTimes (getWord) numberOfExceptions bytes1
   return $ (bytes2, Exceptions exceptions)
 
 innerClass bytes = do
-  (bytes1, innerClassInfo) <- getBytes 2 bytes
-  (bytes2, outerClassInfo) <- getBytes 2 bytes1
-  (bytes3, innerName) <- getBytes 2 bytes2
-  (bytes4, innerAccessFlagsBytes) <- getBytes 2 bytes3
+  (bytes1, innerClassInfo) <- getWord bytes
+  (bytes2, outerClassInfo) <- getWord bytes1
+  (bytes3, innerName) <- getWord bytes2
+  (bytes4, innerAccessFlagsBytes) <- getWord bytes3
   let innerAccessFlags = foldMask innerAccessFlagsBytes innerClassAccessFlagsMap
   return (bytes4, InnerClassInfo innerClassInfo outerClassInfo innerName innerAccessFlags)
 innerClassesAttribute pool len bytes = do
@@ -497,26 +514,45 @@ innerClassesAttribute pool len bytes = do
   return (bytes2, InnerClasses classes)
 
 enclosingMethodAttribute pool len bytes = do
-  (bytes1, classIndex) <- getBytes 2 bytes
-  (bytes2, methodIndex) <- getBytes 2 bytes1
+  (bytes1, classIndex) <- getWord bytes
+  (bytes2, methodIndex) <- getWord bytes1
   return (bytes2, EnclosingMethod classIndex methodIndex)
 
 syntheticAttribute pool len bytes = Right (bytes, Synthetic)
   
 signatureAttribute pool len bytes = do
-  (bytes1, signatureIndex) <- getBytes 2 bytes
+  (bytes1, signatureIndex) <- getWord bytes
   return (bytes1, Signature signatureIndex)
 
 sourceFileAttribute pool len bytes = do
-  (bytes1, sourceFile) <- getBytes 2 bytes
+  (bytes1, sourceFile) <- getWord bytes
   return (bytes, SourceFile sourceFile)
 
 sourceDebugExtensionAttribute pool len bytes = do
-  (bytes1, stringBytes) <- getNTimes (getBytes 1) len bytes
+  (bytes1, stringBytes) <- getNTimes getByte len bytes
   return (bytes1, SourceDebugExtension $ bytesToString stringBytes)
 
-lineNumberTableAttribute = undefined
-localVariableTableAttribute = undefined
+lineNumberParser bytes = do
+  (bytes1, startPc) <- getWord bytes
+  (bytes2, lineNumber) <- getWord bytes1
+  return (bytes2, LineNumber startPc lineNumber)
+lineNumberTableAttribute pool len bytes =
+  constrNTimes LineNumberTable lineNumberParser bytes
+
+localVariableInfoParser bytes = do
+  (bytes1, startPc) <- getWord bytes
+  (bytes2, lengthPc) <- getWord bytes1
+  (bytes3, nameIndex) <- getWord bytes2
+  (bytes4, signatureIndex) <- getWord bytes3
+  (bytes5, index) <- getWord bytes4
+  return (bytes5, LocalVariableInfo startPc lengthPc nameIndex signatureIndex index)
+localVariableParser bytes = do
+  (bytes1, info) <- localVariableInfoParser bytes
+  (bytes2, descriptorIndex) <- getWord bytes1
+  return (bytes2, LocalVariable info descriptorIndex)
+localVariableTableAttribute pool len bytes =
+  constrNTimes LocalVariableTable localVariableParser bytes
+  
 localVariableTypeTableAttribute = undefined
 deprecatedAttribute = undefined
 runtimeVisibleAnnotationsAttribute = undefined
@@ -535,7 +571,7 @@ parseAttribute pool text len bytes = case Map.lookup text attributesNamesMap of
 
 getAttribute :: [Constant] -> Parser AttributeInfo
 getAttribute pool bytes = do
-  (bytes1, attributeNameIndex) <- getBytes 2 bytes
+  (bytes1, attributeNameIndex) <- getWord bytes
   (bytes2, attributeLength) <- getBytes 4 bytes1
   case getFromPool pool attributeNameIndex of
     Just (Utf8Info text) -> parseAttribute pool text attributeLength bytes2
@@ -546,8 +582,8 @@ classBody :: Parser ClassBody
 classBody bytes = do
   (bytes1, pool) <- getCountAndList getConstantPool bytes
   (bytes2, flags) <- parseClassAccessFlags bytes1
-  (bytes3, this) <- getBytes 2 bytes2
-  (bytes4, super) <- getBytes 2 bytes3
+  (bytes3, this) <- getWord bytes2
+  (bytes4, super) <- getWord bytes3
   (bytes5, interfaces) <- getCountAndList getInterfaces bytes4
   (bytes6, fields) <- getCountAndList (getNTimes $ getField pool) bytes5
   (bytes7, methods) <- getCountAndList (getNTimes $ getMethod pool) bytes6
