@@ -105,11 +105,15 @@ data BootstrapMethod = BootstrapMethod { methodRef :: Word16,
                                          arguments :: [Word16] }
                      deriving (Show, Eq)                            
 
-data ElementValue = ElementConstValue { value :: Word16 }
-                  | ElementEnumConstValue { typeNameIndex :: Word16,
+data ElementValue = ElementConstValue { tag :: Char,
+                                        value :: Word16 }
+                  | ElementEnumConstValue { tag :: Char,
+                                            typeNameIndex :: Word16,
                                             constNameIndex :: Word16 }
-                  | ElementClassInfoIndex { classInfoIndex :: Word16 }
-                  | ElementArrayValue { elementValues :: [ElementValue] }
+                  | ElementClassInfoIndex { tag :: Char,
+                                            classInfoIndex :: Word16 }
+                  | ElementArrayValue { tag :: Char,
+                                        elementValues :: [ElementValue] }
                   deriving (Show, Eq)
 
 data ElementValuePair = ElementValuePair { elementNameIndex :: Word16,
@@ -548,7 +552,21 @@ localVariableTypeTableAttribute pool len bytes =
 
 deprecatedAttribute pool len bytes = return (bytes, Deprecated)
 
-elementValueParser bytes = undefined
+
+elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
+                          ("c", parseClassValue), ("@", parseAnnotationValue),
+                          ("[", parseArrayValue)]
+parseConstValue tag bytes = undefined
+parseEnumValue tag bytes = undefined
+parseClassValue tag bytes = undefined
+parseAnnotationValue tag bytes = undefined
+parseArrayValue tag bytes = undefined
+elementValueParser bytes = do
+  (bytes1, tag) <- takeBytes 1 bytes
+  let tagString = bytesToString tag !! 0
+  case take 1 $ filter (\strs -> elem tagString $ fst strs) elementValueParsersList of
+    [(_, parser)] -> parser tag bytes
+    _ -> Left "AAAAA"
 elementValuePairParser bytes = do
   (bytes1, elementNameIndex) <- getWord bytes
   (bytes2, elementValue) <- elementValueParser bytes1
