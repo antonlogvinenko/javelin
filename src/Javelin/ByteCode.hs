@@ -548,10 +548,22 @@ localVariableTypeTableAttribute pool len bytes =
 
 deprecatedAttribute pool len bytes = return (bytes, Deprecated)
 
-runtimeVisibleAnnotationsAttribute = undefined
-runtimeInvisibleAnnotationsAttribute = undefined
-runtimeVisibleParameterAnnotationsAttribute = undefined
-runtimeInvisibleParameterAnnotationsAttribute = undefined
+elementValuePairParser = undefined
+parseAnnotationAttribute bytes = do
+  (bytes1, typeIndex) <- getWord bytes
+  (bytes2, elementValuePairsNum) <- getWord bytes1
+  (bytes3, elementValuePairs) <- getNTimes elementValuePairParser elementValuePairsNum bytes2
+  return (bytes3, Annotation typeIndex elementValuePairs)
+runtimeVisibleAnnotationsAttribute pool len bytes =
+  constrNTimes RuntimeVisibleAnnotations parseAnnotationAttribute bytes
+runtimeInvisibleAnnotationsAttribute pool len bytes =
+  constrNTimes RuntimeInvisibleAnnotations parseAnnotationAttribute bytes
+runtimeVisibleParameterAnnotationsAttribute pool len bytes =
+  let annotationsListParser = constrNTimes id parseAnnotationAttribute
+  in constrNTimes RuntimeVisibleParameterAnnotations annotationsListParser bytes
+runtimeInvisibleParameterAnnotationsAttribute pool len bytes =
+  let annotationListParser = constrNTimes id parseAnnotationAttribute
+  in constrNTimes RuntimeInvisibleParameterAnnotations annotationListParser bytes
 
 annotationDefaultAttribute pool len bytes = do
   (bytes1, elementValue) <- takeBytes (fromIntegral len) bytes
