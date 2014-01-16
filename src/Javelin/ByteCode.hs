@@ -24,7 +24,7 @@ data ClassBody = ClassBody {constPool :: [Constant],
                            interfaces :: [Word16],
                            fields :: [FieldInfo],
                            methods :: [MethodInfo],
-                           attributes :: [AttributeInfo]}
+                           attributes :: [AttributeInfo] }
                  deriving (Show, Eq)
 
 data ClassAccessFlags = ClassPublic | ClassFinal
@@ -155,7 +155,7 @@ data StackMapFrame = SameFrame { frameType :: Word8 }
                                         offsetDelta :: Word16 }
                    | AppendFrame { frameType :: Word8,
                                    offsetDelta :: Word16,
-                                   locals :: [VerificationTypeInfo]}
+                                   locals :: [VerificationTypeInfo] }
                    | FullFrame { frameType :: Word8,
                                  offsetDelta :: Word16,
                                  locals :: [VerificationTypeInfo],
@@ -510,7 +510,7 @@ innerClass bytes = do
   let innerAccessFlags = foldMask innerAccessFlagsBytes innerClassAccessFlagsMap
   return (bytes4, InnerClassInfo innerClassInfo outerClassInfo innerName innerAccessFlags)
 innerClassesAttribute pool len bytes = do
-  (bytes1, length) <- getBytes 4 bytes
+  (bytes1, length) <- getBytes 2 bytes
   (bytes2, classes) <- getNTimes innerClass length bytes1
   return (bytes2, InnerClasses classes)
 
