@@ -7,7 +7,6 @@ import Javelin.ByteCode.Utils
 import Data.Word (Word32, Word16, Word8)
 import qualified Data.Map.Lazy as Map (fromList)
 
--- Class file header functions
 magicNumber :: Parser Int
 magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
                  then Right (drop 4 bs, 42)

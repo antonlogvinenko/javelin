@@ -10,7 +10,6 @@ import Data.Maybe
 import Data.List (lookup)
 import Javelin.ByteCode.Data
 
--- Basic utility functions
 getCountAndList :: (Word16 -> Parser [x]) -> [Word8] -> Either String ([Word8], [x])
 getCountAndList f bytes = do
   (bytes1, count) <- getWord bytes

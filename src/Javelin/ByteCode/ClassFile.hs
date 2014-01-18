@@ -10,10 +10,8 @@ import Javelin.ByteCode.ConstantPool
 import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
 
--- Interfaces
 getInterfaces :: RepeatingParser [Word16]
 getInterfaces = getNTimes $ getWord
-
 
 classBody :: Parser ClassBody
 classBody bytes = do
@@ -27,7 +25,6 @@ classBody bytes = do
   (bytesLast, attributes) <- getCountAndList (getNTimes $ getAttribute pool) bytes7
   return (bytesLast, ClassBody pool flags this super interfaces fields methods attributes)
 
--- Parser of all things alive
 parse :: [Word8] -> Either String ByteCode
 parse bytes = do
   (bytes0, _) <- magicNumber bytes

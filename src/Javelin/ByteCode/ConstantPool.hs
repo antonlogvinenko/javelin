@@ -7,7 +7,6 @@ import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..))
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 
--- Constant pool
 getConstantPool :: RepeatingParser [Constant]
 getConstantPool = getNTimes getConstant
 
