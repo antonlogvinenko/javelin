@@ -2,7 +2,7 @@ module Javelin.ByteCode.Test (byteCodeTest)
 where
 import Test.Tasty (testGroup, TestTree)
 import Test.Tasty.HUnit
-import Javelin.ByteCode
+import Javelin.ByteCode.ClassFile
 import Data.Word (Word16)
 
 byteCodeTest = testGroup "ByteCode parser test" [byteCodeParserTest,

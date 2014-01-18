@@ -16,7 +16,13 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:   Javelin.ByteCode
+  exposed-modules:   Javelin.ByteCode.Data,
+                     Javelin.ByteCode.Utils,
+                     Javelin.ByteCode.Header,
+                     Javelin.ByteCode.ConstantPool,
+                     Javelin.ByteCode.FieldMethod,
+                     Javelin.ByteCode.Attribute,
+                     Javelin.ByteCode.ClassFile
   -- ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
   hs-source-dirs:    src

@@ -1,4 +1,4 @@
-import Javelin.ByteCode (parse)
+import Javelin.ByteCode.ClassFile (parse)
     
 bytecode = [0xCA, 0xFE, 0xBA, 0xBE,
             0x00, 0x00,
