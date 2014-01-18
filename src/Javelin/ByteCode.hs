@@ -17,14 +17,14 @@ data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
 
 
 -- class body
-data ClassBody = ClassBody {constPool :: [Constant],
-                           classAccessFlags :: [ClassAccessFlags],
-                           this :: Word16,
-                           super :: Word16,
-                           interfaces :: [Word16],
-                           fields :: [FieldInfo],
-                           methods :: [MethodInfo],
-                           attributes :: [AttributeInfo] }
+data ClassBody = ClassBody { constPool :: [Constant],
+                             classAccessFlags :: [ClassAccessFlags],
+                             this :: Word16,
+                             super :: Word16,
+                             interfaces :: [Word16],
+                             fields :: [FieldInfo],
+                             methods :: [MethodInfo],
+                             attributes :: [AttributeInfo] }
                  deriving (Show, Eq)
 
 data ClassAccessFlags = ClassPublic | ClassFinal
