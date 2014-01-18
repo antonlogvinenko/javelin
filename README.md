@@ -5,14 +5,13 @@ Haskell JVM
 
 * javelin-2
   * bytecode
-    * write missing parsers
-      * attrributes
-      * parse length in all attributes - it takes some bytes, for verification
-    * strings, number formats
-    * modules...
+    * strings
+    * parse descriptors/methods/signatures etc
+    * parse numbers
     * refactor parsers
       * common code for parsing tables
       * common code for getBytes n
+    * parse length in all attributes - it takes some bytes, for verification
     * overall structure
     * change inheritance?
     * understand all structure, semantics
