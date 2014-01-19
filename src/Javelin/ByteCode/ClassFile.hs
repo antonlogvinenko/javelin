@@ -1,4 +1,4 @@
-module Javelin.ByteCode.ClassFile (parse, require, getBytes, magicNumber, version, classBody)
+module Javelin.ByteCode.ClassFile (parse, require, magicNumber, version, classBody)
 where
 
 import Data.Word (Word32, Word16, Word8)
@@ -9,6 +9,8 @@ import Javelin.ByteCode.Header
 import Javelin.ByteCode.ConstantPool
 import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
+import Control.Applicative
+import qualified Data.Binary.Get as G
 
 getInterfaces :: RepeatingParser [Word16]
 getInterfaces = getNTimes $ getWord
@@ -25,12 +27,22 @@ classBody bytes = do
   (bytesLast, attributes) <- getCountAndList (getNTimes $ getAttribute pool) bytes7
   return (bytesLast, ClassBody pool flags this super interfaces fields methods attributes)
 
-parse :: [Word8] -> Either String ByteCode
+classBody' :: G.Get ClassBody
+classBody' = undefined
+
+
+version :: G.Get Word16
+version = G.getWord16be
+
+parse' :: G.Get ByteCode
+parse' = ByteCode <$> version <*> version <*> classBody'
+
+parse :: Parser ByteCode  
 parse bytes = do
   (bytes0, _) <- magicNumber bytes
-  (bytes1, minor) <- version bytes0
-  (bytes2, major) <- version bytes1
+  (bytes1, minor) <- convert version $ bytes0
+  (bytes2, major) <- convert version $ bytes1
   (bytes3, body) <- classBody bytes2
   if length bytes3 == 0
     then Left "Bytes left"
-    else return $ ByteCode minor major body
+    else return (bytes3, ByteCode minor major body)

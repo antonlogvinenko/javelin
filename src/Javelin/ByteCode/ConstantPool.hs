@@ -35,8 +35,8 @@ twoTwoBytesInfoParser constConstr bytes = do
 
 twoFourBytesInfoParser :: (Word32 -> Word32 -> Constant) -> Parser Constant
 twoFourBytesInfoParser constConstr bytes = do
-  (bytes1, bytesHigh) <- getBytes 4 bytes
-  (bytes2, bytesLow) <- getBytes 4 bytes1
+  (bytes1, bytesHigh) <- getDWord bytes
+  (bytes2, bytesLow) <- getDWord bytes1
   return $ (bytes2, constConstr bytesHigh bytesLow)
 
 twoBytesInfoParser :: (Word16 -> Constant) -> Parser Constant
@@ -46,7 +46,7 @@ twoBytesInfoParser constConstr bytes = do
 
 fourBytesInfoParser :: (Word32 -> Constant) -> Parser Constant
 fourBytesInfoParser constConstr bytes = do
-  (bytes1, value) <- getBytes 4 bytes
+  (bytes1, value) <- getDWord bytes
   return $ (bytes1, constConstr value)
 
 fieldrefParser = twoTwoBytesInfoParser Fieldref

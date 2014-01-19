@@ -9,17 +9,12 @@ import Data.Bits
 import Data.Maybe
 import Data.List (lookup)
 import Javelin.ByteCode.Data
+
+import Control.Applicative
 import qualified Data.Binary.Get as G
 
-data Trade = Trade {timestamp :: Word16, price :: Word16} deriving (Show)
-getTrade :: G.Get Trade
-getTrade = do
-  timestamp <- G.getWord16le
-  price <- G.getWord16le
-  let a = 1
-  if a == 1
-    then fail "bla"
-    else return $ Trade timestamp price
+type Parser a = [Word8] -> Either String ([Word8], a)
+type RepeatingParser a = Word16 -> Parser a
 
 convert :: G.Get a -> Parser a
 convert get bytes = do
@@ -27,7 +22,7 @@ convert get bytes = do
     Left (bs, _, msg) -> Left msg
     Right (bs, _, value) -> Right (unpack bs, value)
 
-getCountAndList :: (Word16 -> Parser [x]) -> [Word8] -> Either String ([Word8], [x])
+getCountAndList :: (Word16 -> Parser [x]) -> Parser [x]
 getCountAndList f bytes = do
   (bytes1, count) <- getWord bytes
   f count bytes1
@@ -37,25 +32,15 @@ require len bs value = if length bs < len
                        then Left "Unexpected EOF"
                        else Right value
 
-getBytes count bs = require count bs $
-                    let high = bs !! 0
-                        low = bs !! 1
-                        ver = (fromIntegral high) * 256 + fromIntegral low
-                    in (drop count bs, ver)
+takeBytes count bs = require count bs $ (drop count bs, take count bs)
 
 getByte :: Parser Word8
-getByte = getBytes 1
-
+getByte = convert G.getWord8
 getWord :: Parser Word16
-getWord = getBytes 2
-
+getWord = convert G.getWord16be
 getDWord :: Parser Word32
-getDWord = getBytes 4
-
-takeBytes count bs = require count bs $ (drop count bs, take count bs)
+getDWord = convert G.getWord32be
                      
-type Parser a = [Word8] -> Either String ([Word8], a)
-type RepeatingParser a = Word16 -> Parser a
 
 addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]
 addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
@@ -63,8 +48,12 @@ addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
                                              else case Map.lookup mask flagsMap of
                                                Just x -> x : list
                                                Nothing -> list
+--todo remove after migration to Get !
 foldMask :: Word16 -> Map.Map Word16 a -> [a]
 foldMask bytes flagsMap = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
+
+foldMask' ::Map.Map Word16 a -> Word16 -> [a]
+foldMask' flagsMap bytes = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
 
 getNTimes :: Parser a -> RepeatingParser [a]
 getNTimes parser n bytes = do

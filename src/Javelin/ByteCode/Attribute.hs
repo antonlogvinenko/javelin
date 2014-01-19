@@ -141,7 +141,7 @@ innerClass bytes = do
   let innerAccessFlags = foldMask innerAccessFlagsBytes innerClassAccessFlagsMap
   return (bytes4, InnerClassInfo innerClassInfo outerClassInfo innerName innerAccessFlags)
 innerClassesAttribute pool len bytes = do
-  (bytes1, length) <- getBytes 2 bytes
+  (bytes1, length) <- getWord bytes
   (bytes2, classes) <- getNTimes innerClass length bytes1
   return (bytes2, InnerClasses classes)
 
@@ -253,7 +253,7 @@ parseAttribute pool text len bytes = case Map.lookup text attributesNamesMap of
 getAttribute :: [Constant] -> Parser AttributeInfo
 getAttribute pool bytes = do
   (bytes1, attributeNameIndex) <- getWord bytes
-  (bytes2, attributeLength) <- getBytes 4 bytes1
+  (bytes2, attributeLength) <- getWord bytes1
   case getFromPool pool attributeNameIndex of
     Just (Utf8Info text) -> parseAttribute pool text attributeLength bytes2
     Just _ -> Left "some cake"
