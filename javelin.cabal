@@ -18,7 +18,6 @@ cabal-version:       >=1.8
 library
   exposed-modules:   Javelin.ByteCode.Data,
                      Javelin.ByteCode.Utils,
-                     Javelin.ByteCode.Header,
                      Javelin.ByteCode.ConstantPool,
                      Javelin.ByteCode.FieldMethod,
                      Javelin.ByteCode.Attribute,
