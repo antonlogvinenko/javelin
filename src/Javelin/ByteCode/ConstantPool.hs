@@ -8,16 +8,16 @@ import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 import qualified Data.Binary.Get as G
 
-getConstantPool :: RepeatingParser [Constant]
-getConstantPool = getNTimes getConstant
-
 getConstantPool' :: Word16 -> G.Get [Constant]
-getConstantPool' = undefined
+getConstantPool' = getNTimes' getConstant'
 
-getConstant :: Parser Constant
-getConstant bytes = do
-  (bytes1, tag) <- getByte bytes
-  getConstantParser (fromIntegral tag) bytes1
+getConstant' :: G.Get Constant
+getConstant' = do
+  tag <- G.getWord8
+  getConstantParser' tag
+
+getConstantParser' :: Word8 -> G.Get Constant
+getConstantParser' = undefined
 
 getConstantParser :: Int -> Parser Constant
 getConstantParser idx = Map.findWithDefault failingConstParser idx constantTypeParser
