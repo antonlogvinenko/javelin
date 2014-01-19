@@ -1,7 +1,7 @@
 module Javelin.ByteCode.Utils
 where
 
-import Data.ByteString (ByteString, unpack)
+import Data.ByteString.Lazy (ByteString, unpack, pack)
 import Data.Word (Word32, Word16, Word8)
 import Control.Monad
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
@@ -9,6 +9,23 @@ import Data.Bits
 import Data.Maybe
 import Data.List (lookup)
 import Javelin.ByteCode.Data
+import qualified Data.Binary.Get as G
+
+data Trade = Trade {timestamp :: Word16, price :: Word16} deriving (Show)
+getTrade :: G.Get Trade
+getTrade = do
+  timestamp <- G.getWord16le
+  price <- G.getWord16le
+  let a = 1
+  if a == 1
+    then fail "bla"
+    else return $ Trade timestamp price
+
+convert :: G.Get a -> Parser a
+convert get bytes = do
+  case G.runGetOrFail get $ pack bytes of
+    Left (bs, _, msg) -> Left msg
+    Right (bs, _, value) -> Right (unpack bs, value)
 
 getCountAndList :: (Word16 -> Parser [x]) -> [Word8] -> Either String ([Word8], [x])
 getCountAndList f bytes = do

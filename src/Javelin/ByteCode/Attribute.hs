@@ -54,6 +54,8 @@ codeAttribute pool len bytes = do
   (bytes7, attributesCount) <- getWord bytes6
   (bytes8, attributesInfo) <- getNTimes (getAttribute pool) attributesCount bytes7
   return $ (bytes8, CodeAttribute maxStack maxLocals code exceptionTable attributesInfo)
+
+
 -- -> StackMapTable
 -- -> verification type info
 verificationTypeInfo = [(0, topVariableInfo), (1, integerVariableInfo),

@@ -3,6 +3,7 @@ where
 
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
+import Data.Binary.Get
 
 import Data.Word (Word32, Word16, Word8)
 import qualified Data.Map.Lazy as Map (fromList)
@@ -11,7 +12,18 @@ magicNumber :: Parser Int
 magicNumber bs = if take 4 bs == [0xCA, 0xFE, 0xBA, 0xBE]
                  then Right (drop 4 bs, 42)
                  else Left "Not a Java class format"
-                        
+
+magicNumber'' :: Parser Int
+magicNumber'' = convert magicNumber'
+
+magicNumber' :: Get Int
+magicNumber' = do
+  magic <- getWord32be
+  if magic == 1
+     then fail "Puke"
+     else return 42     
+          
+
 version :: Parser Word16
 version = getWord
 

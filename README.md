@@ -16,6 +16,7 @@ Haskell JVM
     * change inheritance?
     * understand all structure, semantics
     * other details besides any kind of verification
+    * test
 
   * validation, verification
     * in place
