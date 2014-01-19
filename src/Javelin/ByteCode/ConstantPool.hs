@@ -17,11 +17,24 @@ getConstant' = do
   getConstantParser' tag
 
 getConstantParser' :: Word8 -> G.Get Constant
-getConstantParser' = undefined
+getConstantParser' idx = Map.findWithDefault failingConstParser' idx constantTypeParser'
 
-getConstantParser :: Int -> Parser Constant
-getConstantParser idx = Map.findWithDefault failingConstParser idx constantTypeParser
-constantTypeParser :: Map.Map Int (Parser Constant)
+failingConstParser' :: G.Get Constant
+failingConstParser' = fail "Undefined constant"
+
+constantTypeParser' :: Map.Map Word8 (G.Get Constant)
+constantTypeParser' = Map.fromList
+                      [(1, utf8InfoParser')]
+                       --,(3, integerInfoParser), (4, floatInfoParser), (5, longInfoParser), (6, doubleInfoParser), (7, classInfoParser), (8, stringInfoParser), (9, fieldrefParser), (10, methodrefParser), (11, interfaceMethodrefParser), (12, nameAndTypeInfoParser), (15, identityParser), (16, identityParser), (18, identityParser)]
+
+utf8InfoParser' = undefined
+
+
+
+
+
+
+constantTypeParser :: Map.Map Word8 (Parser Constant)
 constantTypeParser = Map.fromList [(1, utf8InfoParser), (3, integerInfoParser), (4, floatInfoParser),
                                (5, longInfoParser), (6, doubleInfoParser), (7, classInfoParser),
                                (8, stringInfoParser), (9, fieldrefParser), (10, methodrefParser),
