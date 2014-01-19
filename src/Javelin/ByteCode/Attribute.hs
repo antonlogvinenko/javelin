@@ -7,6 +7,7 @@ import Javelin.ByteCode.Utils
 import Data.Word (Word32, Word16, Word8)
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
 import Data.Maybe
+import qualified Data.Binary.Get as G
 
 innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, InnerClassPrivate),
                                          (0x0004, InnerClassProtected), (0x0008, InnerClassStatic),
@@ -258,3 +259,6 @@ getAttribute pool bytes = do
     Just (Utf8Info text) -> parseAttribute pool text attributeLength bytes2
     Just _ -> Left "some cake"
     Nothing -> Left "some other cake"
+
+getAttribute' :: [Constant] -> G.Get AttributeInfo    
+getAttribute' = undefined

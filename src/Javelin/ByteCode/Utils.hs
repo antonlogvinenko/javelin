@@ -27,6 +27,9 @@ getCountAndList f bytes = do
   (bytes1, count) <- getWord bytes
   f count bytes1
 
+getCountAndList' :: (Word16 -> G.Get [x]) -> G.Get [x]
+getCountAndList' f = G.getWord16be >>= f
+
 require :: Int -> [Word8] ->  a -> Either String a
 require len bs value = if length bs < len
                        then Left "Unexpected EOF"
@@ -64,12 +67,28 @@ getNTimes parser n bytes = do
     (bytes2, objs) <- getNTimes parser (n - 1) bytes1
     return (bytes2, obj : objs)
 
+getNTimes' :: G.Get a -> Word16 -> G.Get [a]
+getNTimes' parser n =
+  if n == 0
+  then return []
+    else do
+         obj <- parser
+         objs <- getNTimes' parser (n - 1)
+         return (obj:objs)
+
 -- lineNumberTableAttribute - add parsing length
 constrNTimes :: ([a] -> b) -> Parser a -> Parser b
 constrNTimes f parser bytes = do
   (bytes1, len) <- getWord bytes
   (bytes2, object) <- getNTimes parser len bytes1
   return (bytes2, f object)
+
+constrNTimes' :: ([a] -> b) -> G.Get a -> G.Get b
+constrNTimes' f parser = do
+  len <- G.getWord16be
+  object <- getNTimes' parser len
+  return $ f object
+
 
 getFromPool :: [Constant] -> Word16 -> Maybe Constant
 getFromPool list idx = if okIdx < length list

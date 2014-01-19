@@ -6,6 +6,7 @@ import qualified Data.Map.Lazy as Map (fromList, Map(..))
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 import Javelin.ByteCode.Attribute
+import qualified Data.Binary.Get as G
 
 fieldInfoAccessFlagsMap = Map.fromList [(0x0001, FieldPublic), (0x0002, FieldPrivate),
                                       (0x0004, FieldProtected), (0x0008, FieldStatic),
@@ -34,3 +35,9 @@ getField pool = getFieldMethod pool fieldInfoAccessFlagsMap FieldInfo
 
 getMethod :: [Constant] -> Parser MethodInfo
 getMethod pool = getFieldMethod pool methodInfoAccessFlagsMap MethodInfo
+
+getField' :: [Constant] -> G.Get FieldInfo
+getField' = undefined
+
+getMethod' :: [Constant] -> G.Get MethodInfo
+getMethod' = undefined

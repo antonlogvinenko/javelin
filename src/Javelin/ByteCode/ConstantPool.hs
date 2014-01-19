@@ -1,4 +1,4 @@
-module Javelin.ByteCode.ConstantPool (getConstantPool)
+module Javelin.ByteCode.ConstantPool
 where
 
 import Data.Word (Word32, Word16, Word8)
@@ -6,9 +6,13 @@ import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..))
 
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
+import qualified Data.Binary.Get as G
 
 getConstantPool :: RepeatingParser [Constant]
 getConstantPool = getNTimes getConstant
+
+getConstantPool' :: Word16 -> G.Get [Constant]
+getConstantPool' = undefined
 
 getConstant :: Parser Constant
 getConstant bytes = do
