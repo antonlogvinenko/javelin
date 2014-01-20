@@ -14,7 +14,7 @@ import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
 
 getInterfaces :: Word16 -> Get [Word16]
-getInterfaces = getNTimes getWord
+getInterfaces = nTimes getWord
 
 classBody :: Get ClassBody
 classBody = do
@@ -22,9 +22,9 @@ classBody = do
   ClassBody pool
     <$> parseClassAccessFlags <*> getWord <*> getWord
     <*> getCountAndList getInterfaces
-    <*> getCountAndList (getNTimes $ getField pool)
-    <*> getCountAndList (getNTimes $ getMethod pool)
-    <*> getCountAndList (getNTimes $ getAttribute pool)
+    <*> getCountAndList (nTimes $ getField pool)
+    <*> getCountAndList (nTimes $ getMethod pool)
+    <*> getCountAndList (nTimes $ getAttribute pool)
 
 magicNumber :: Get Int
 magicNumber = do

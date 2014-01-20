@@ -27,10 +27,10 @@ getFieldMethod :: [Constant] -> Map Word16 flag ->
                    ([flag] -> Word16 -> Word16 -> [AttributeInfo] -> x) -> Get x
 getFieldMethod pool accessFlagsMap constr =
   constr
-  <$> (getWord >>= (\c -> return $ foldMask accessFlagsMap c))
+  <$> (foldMask accessFlagsMap <$> getWord)
   <*> getWord
   <*> getWord
-  <*> (getWord >>= (\c -> (getNTimes $ getAttribute pool) c))
+  <*> (severalTimes $ getAttribute pool)
   
 getField :: [Constant] -> Get FieldInfo
 getField pool = getFieldMethod pool fieldInfoAccessFlagsMap FieldInfo

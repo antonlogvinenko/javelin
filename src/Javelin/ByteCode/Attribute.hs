@@ -42,9 +42,9 @@ getExceptionTable = Exception <$>
                      getWord <*> getWord <*> getWord <*> getWord
 codeAttribute pool len = CodeAttribute
                          <$> getWord <*> getWord
-                         <*> constrNTimes id getByte
-                         <*> constrNTimes id getExceptionTable
-                         <*> constrNTimes id (getAttribute pool)
+                         <*> severalTimes getByte
+                         <*> severalTimes getExceptionTable
+                         <*> severalTimes (getAttribute pool)
 
 -- -> StackMapTable
 
@@ -78,10 +78,10 @@ chopFrame tag = ChopFrame tag <$> getWord
 sameFrameExtended tag = SameFrameExtended tag <$> getWord  
 appendFrame tag = AppendFrame tag
                    <$> getWord
-                   <*> getNTimes parseVerificationTypeInfo ((fromIntegral tag) - 251)
+                   <*> nTimes parseVerificationTypeInfo ((fromIntegral tag) - 251)
 fullFrame tag = FullFrame tag <$> getWord
-                <*> constrNTimes id parseVerificationTypeInfo
-                <*> constrNTimes id parseVerificationTypeInfo
+                <*> severalTimes parseVerificationTypeInfo
+                <*> severalTimes parseVerificationTypeInfo
 failingStackMapFrame tag = fail "AAAAAAAA!!!!1111"
 findWithDefault dft tag m =
   case take 1 . filter (elem tag . fst) $ m of
@@ -90,26 +90,26 @@ findWithDefault dft tag m =
 getStackMapFrame = do
   tag <- getByte
   findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
-stackMapTableAttribute pool len = StackMapTable <$> getNTimes getStackMapFrame len
+stackMapTableAttribute pool len = StackMapTable <$> nTimes getStackMapFrame len
 -- -> StackMapTable  
 
-exceptionsAttribute pool len = Exceptions <$> constrNTimes id getWord
+exceptionsAttribute pool len = Exceptions <$> severalTimes getWord
 innerClass = InnerClassInfo <$> getWord <*> getWord <*> getWord
               <*> (foldMask innerClassAccessFlagsMap <$> getWord)
-innerClassesAttribute pool len = InnerClasses <$> getNTimes innerClass len
+innerClassesAttribute pool len = InnerClasses <$> nTimes innerClass len
 enclosingMethodAttribute pool len = EnclosingMethod <$> getWord <*> getWord
 syntheticAttribute pool len = return Synthetic
 signatureAttribute pool len = Signature <$> getWord
 sourceFileAttribute pool len = SourceFile <$> getWord
 sourceDebugExtensionAttribute pool len =
-  SourceDebugExtension <$> (bytesToString <$> getNTimes getWord len)
+  SourceDebugExtension <$> (bytesToString <$> nTimes getWord len)
 lineNumberParser = LineNumber <$> getWord <*> getWord
-lineNumberTableAttribute pool len = constrNTimes LineNumberTable lineNumberParser
+lineNumberTableAttribute pool len = LineNumberTable <$> severalTimes lineNumberParser
 localVariableInfoParser= LocalVariableInfo <$> getWord <*> getWord <*> getWord <*> getWord <*> getWord
 localVariableTableAttribute pool len =
-  constrNTimes LocalVariableTable localVariableInfoParser
+  LocalVariableTable <$> severalTimes localVariableInfoParser
 localVariableTypeTableAttribute pool len =
-  constrNTimes LocalVariableTypeTable localVariableInfoParser
+  LocalVariableTypeTable <$> severalTimes localVariableInfoParser
 deprecatedAttribute pool len = return Deprecated
 
 -- --> annotations
@@ -120,7 +120,7 @@ parseConstValue tag = ElementConstValue tag <$> getWord
 parseEnumValue tag = ElementEnumConstValue tag <$> getWord <*> getWord
 parseClassValue tag = ElementClassInfoIndex tag <$> getWord
 parseAnnotationValue tag = ElementAnnotationValue tag <$> parseAnnotationAttribute
-parseArrayValue tag = ElementArrayValue tag <$> constrNTimes id elementValueParser  
+parseArrayValue tag = ElementArrayValue tag <$> severalTimes elementValueParser  
 elementValueParser = do
   tag <- getByteString 1
   let tagChar = bytesToString tag !! 0
@@ -130,29 +130,28 @@ elementValueParser = do
 
 elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
 parseAnnotationAttribute =
-  Annotation <$> getWord <*> constrNTimes id elementValuePairParser
+  Annotation <$> getWord <*> severalTimes elementValuePairParser
 
 runtimeVisibleAnnotationsAttribute pool len =
-  constrNTimes RuntimeVisibleAnnotations parseAnnotationAttribute
+  RuntimeVisibleAnnotations <$> severalTimes  parseAnnotationAttribute
 
 runtimeInvisibleAnnotationsAttribute pool len =
-  constrNTimes RuntimeInvisibleAnnotations parseAnnotationAttribute
+  RuntimeInvisibleAnnotations <$> severalTimes parseAnnotationAttribute
 
 runtimeVisibleParameterAnnotationsAttribute pool len =
-  RuntimeVisibleParameterAnnotations <$>
-  getNTimes (constrNTimes id parseAnnotationAttribute) len
+  RuntimeVisibleParameterAnnotations <$> nTimes (severalTimes parseAnnotationAttribute) len
 
 runtimeInvisibleParameterAnnotationsAttribute pool len =
   RuntimeInvisibleParameterAnnotations <$>
-  getNTimes (constrNTimes id parseAnnotationAttribute) len
+  nTimes (severalTimes parseAnnotationAttribute) len
 
 annotationDefaultAttribute pool len = AnnotationDefault <$>
                                        (unpack <$> getByteString (fromIntegral len))
 -- <-- annotations
 
 
-bootstrapMethodParser = BootstrapMethod <$> getWord <*> constrNTimes id getWord
-bootstrapMethodsAttribute pool len = constrNTimes BootstrapMethods bootstrapMethodParser
+bootstrapMethodParser = BootstrapMethod <$> getWord <*> severalTimes getWord
+bootstrapMethodsAttribute pool len = BootstrapMethods <$> severalTimes bootstrapMethodParser
 
 parseAttribute :: [Constant] -> String -> Word16 -> Get AttributeInfo
 parseAttribute pool text len = case Map.lookup text attributesNamesMap of

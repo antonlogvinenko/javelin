@@ -11,7 +11,7 @@ import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 
 getConstantPool :: Word16 -> Get [Constant]
-getConstantPool = getNTimes getConstant
+getConstantPool = nTimes getConstant
 
 getConstant :: Get Constant
 getConstant = do
