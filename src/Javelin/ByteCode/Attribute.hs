@@ -88,43 +88,42 @@ stackMapFrameList =  [([0..63], sameFrameParser),
                       ([251], sameFrameExtended),
                       ([252..254], appendFrame),
                       ([255], fullFrame)]
-sameFrameParser tag bytes = return (bytes, SameFrame tag)
-sameLocals1StackItemFrame tag bytes = do
-  (bytes1, typeInfo) <- parseVerificationTypeInfo bytes
-  return (bytes1, SameLocals1StackItemFrame tag typeInfo)
-sameLocals1StackItemFrameExtended tag bytes = do
-  (bytes1, offsetData) <- getWord bytes
-  (bytes2, typeInfo) <- parseVerificationTypeInfo bytes1
-  return (bytes2, SameLocals1StackItemFrameExtended tag offsetData typeInfo)
-chopFrame tag bytes = do
-  (bytes1, offsetDelta) <- getWord bytes
-  return (bytes1, ChopFrame tag offsetDelta)
-sameFrameExtended tag bytes = do
-  (bytes1, offsetDelta) <- getWord bytes
-  return (bytes1, SameFrameExtended tag offsetDelta)
-appendFrame tag bytes = do
-  (bytes1, offsetDelta) <- getWord bytes
-  (bytes2, locals) <- getNTimes parseVerificationTypeInfo ((fromIntegral tag) - 251) bytes1
-  return (bytes, AppendFrame tag offsetDelta [])
-fullFrame tag bytes = do
-  (bytes1, offsetDelta) <- getWord bytes
-  (bytes2, localLength) <- getWord bytes1
-  (bytes3, locals) <- getNTimes parseVerificationTypeInfo localLength bytes2
-  (bytes4, stackLength) <- getWord bytes3
-  (bytes5, stack) <- getNTimes parseVerificationTypeInfo stackLength bytes4
-  return (bytes5, FullFrame tag offsetDelta locals stack)
-lookupFrameParser tag =
-  case take 1 . filter (\tags -> elem tag $ fst tags) $ stackMapFrameList of
-    [] -> Nothing
-    (x:_) -> Just $ snd x
-getStackMapFrame bytes = do
-  (bytes1, tag) <- getByte bytes
-  case lookupFrameParser tag of
-    Just parser -> parser tag bytes1
-    Nothing -> Left "Oooops"
-stackMapTableAttribute pool len bytes = do
-  (bytes1, entries) <- getNTimes getStackMapFrame len bytes
-  return $ (bytes1, StackMapTable entries)
+stackMapFrameList' = [([0..63], sameFrameParser'),
+                      ([64..127], sameLocals1StackItemFrame'),
+                      ([247], sameLocals1StackItemFrameExtended'),
+                      ([248..250], chopFrame'),
+                      ([251], sameFrameExtended'),
+                      ([252..254], appendFrame'),
+                      ([255], fullFrame')]
+sameFrameParser tag = convert $ sameFrameParser' tag
+sameFrameParser' tag = return $ SameFrame tag
+sameLocals1StackItemFrame tag = convert $ sameLocals1StackItemFrame' tag
+sameLocals1StackItemFrame' tag = SameLocals1StackItemFrame tag <$> parseVerificationTypeInfo'
+sameLocals1StackItemFrameExtended tag = convert $ sameLocals1StackItemFrameExtended' tag
+sameLocals1StackItemFrameExtended' tag =
+  SameLocals1StackItemFrameExtended tag <$> G.getWord16be <*> parseVerificationTypeInfo'
+chopFrame tag = convert $ chopFrame' tag
+chopFrame' tag = ChopFrame tag <$> G.getWord16be
+sameFrameExtended tag = convert $ sameFrameExtended' tag
+sameFrameExtended' tag = SameFrameExtended tag <$> G.getWord16be  
+appendFrame tag = convert $ appendFrame' tag
+appendFrame' tag = AppendFrame tag
+                   <$> G.getWord16be
+                   <*> getNTimes' parseVerificationTypeInfo' ((fromIntegral tag) - 251)
+fullFrame tag = convert $ fullFrame' tag
+fullFrame' tag = FullFrame tag <$> G.getWord16be
+                <*> constrNTimes' id parseVerificationTypeInfo'
+                <*> constrNTimes' id parseVerificationTypeInfo'
+failingStackMapFrame tag = fail "AAAAAAAA!!!!1111"
+findWithDefault' dft tag m =
+  case take 1 . filter (elem tag . fst) $ m of
+    [(_, f)] -> f
+    _ -> dft
+getStackMapFrame' = do
+  tag <- G.getWord8
+  findWithDefault' failingStackMapFrame tag stackMapFrameList' $ tag
+stackMapTableAttribute pool len = convert $ stackMapTableAttribute' pool len
+stackMapTableAttribute' pool len = StackMapTable <$> getNTimes' getStackMapFrame' len
 -- -> StackMapTable  
 
 exceptionsAttribute pool len = convert $ exceptionsAttribute' pool len
