@@ -15,39 +15,52 @@ innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, In
                                          (0x0004, InnerClassProtected), (0x0008, InnerClassStatic),
                                          (0x0010, InnerClassFinal), (0x0200, InnerClassInterface),
                                          (0x0400, InnerClassAbstract), (0x1000, InnerClassSynthetic),
-                                         (0x2000, InnerClassAnnotation), (0x4000, InnerClassEnum)]
+                                         (0x2000, InnerClassAnn), (0x4000, InnerClassEnum)]
 
-attributesNamesMap = Map.fromList [("ConstantValue", constantValueAttribute),
-                                   ("CodeAttribute", codeAttribute),
-                                   ("StackMapTableAttribute", stackMapTableAttribute),
-                                   ("Exceptions", exceptionsAttribute),
-                                   ("InnerClasses", innerClassesAttribute),
-                                   ("EnclosingMethod", enclosingMethodAttribute),
-                                   ("Synthetic", syntheticAttribute),
-                                   ("Signature", signatureAttribute),
-                                   ("SourceFile", sourceFileAttribute),
-                                   ("SourceDebugExtension", sourceDebugExtensionAttribute),
-                                   ("LineNumberTable", lineNumberTableAttribute),
-                                   ("LocalVariableTable", localVariableTableAttribute),
-                                   ("LocalVariableTypeTable", localVariableTypeTableAttribute),
-                                   ("Deprecated", deprecatedAttribute),
-                                   ("RuntimeVisibleAnnotations", runtimeVisibleAnnotationsAttribute),
-                                   ("RuntimeInvisibleAnnotations", runtimeInvisibleAnnotationsAttribute),
-                                   ("RuntimeVisibleParameterAnnotations", runtimeVisibleParameterAnnotationsAttribute),
-                                   ("RuntimeInvisibleParameterAnnotations", runtimeInvisibleParameterAnnotationsAttribute),
-                                   ("AnnotationDefault", annotationDefaultAttribute),
-                                   ("BootstrapMethods", bootstrapMethodsAttribute)]
-constantValueAttribute pool len = ConstantValue <$> getWord
-getExceptionTable = Exception <$>
-                     getWord <*> getWord <*> getWord <*> getWord
-codeAttribute pool len = CodeAttribute
-                         <$> getWord <*> getWord
+getAttr :: [Constant] -> Get AttrInfo    
+getAttr pool = do
+  attrNameIndex <- getWord
+  attrLength <- getWord
+  case getFromPool pool attrNameIndex of
+    Just (Utf8Info text) -> parseAttr pool text attrLength
+    Just _ -> fail "some cake"
+    Nothing -> fail "another cake"
+
+parseAttr :: [Constant] -> String -> Word16 -> Get AttrInfo
+parseAttr pool text len = case Map.lookup text attrsNamesMap of
+  Just parser -> parser pool len
+  Nothing -> UnknownAttr <$> getByteString (fromIntegral len)
+
+attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
+                                   ("CodeAttr", codeAttr),
+                                   ("StackMapTableAttr", stackMapTableAttr),
+                                   ("Exceptions", exceptionsAttr),
+                                   ("InnerClasses", innerClassesAttr),
+                                   ("EnclosingMethod", enclosingMethodAttr),
+                                   ("Synthetic", syntheticAttr),
+                                   ("Signature", signatureAttr),
+                                   ("SourceFile", sourceFileAttr),
+                                   ("SourceDebugExtension", sourceDebugExtensionAttr),
+                                   ("LineNumberTable", lineNumberTableAttr),
+                                   ("LocalVariableTable", localVariableTableAttr),
+                                   ("LocalVariableTypeTable", localVariableTypeTableAttr),
+                                   ("Deprecated", deprecatedAttr),
+                                   ("RTVisibleAnns", rtVisibleAnnsAttr),
+                                   ("RTInvisibleAnns", rtInvisibleAnnsAttr),
+                                   ("RTVisibleParameterAnns", rtVisibleParameterAnnsAttr),
+                                   ("RTInvisibleParameterAnns", rtInvisibleParameterAnnsAttr),
+                                   ("AnnDefault", annotationDefaultAttr),
+                                   ("BootstrapMethods", bootstrapMethodsAttr)]
+
+constantValueAttr pool len = ConstantValue <$> getWord
+
+getExceptionTable = Exception <$> getWord <*> getWord <*> getWord <*> getWord
+codeAttr pool len = CodeAttr <$> getWord <*> getWord
                          <*> severalTimes getByte
                          <*> severalTimes getExceptionTable
-                         <*> severalTimes (getAttribute pool)
+                         <*> severalTimes (getAttr pool)
 
 -- -> StackMapTable
-
 -- -> verification type info
 verificationTypeInfo :: Map.Map Word8 (Get VerificationTypeInfo)
 verificationTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return IntegerVariableInfo),
@@ -90,36 +103,45 @@ findWithDefault dft tag m =
 getStackMapFrame = do
   tag <- getByte
   findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
-stackMapTableAttribute pool len = StackMapTable <$> nTimes getStackMapFrame len
--- -> StackMapTable  
+stackMapTableAttr pool len = StackMapTable <$> nTimes getStackMapFrame len
+-- -> StackMapTable
 
-exceptionsAttribute pool len = Exceptions <$> severalTimes getWord
+exceptionsAttr pool len = Exceptions <$> severalTimes getWord
+
 innerClass = InnerClassInfo <$> getWord <*> getWord <*> getWord
               <*> (foldMask innerClassAccessFlagsMap <$> getWord)
-innerClassesAttribute pool len = InnerClasses <$> nTimes innerClass len
-enclosingMethodAttribute pool len = EnclosingMethod <$> getWord <*> getWord
-syntheticAttribute pool len = return Synthetic
-signatureAttribute pool len = Signature <$> getWord
-sourceFileAttribute pool len = SourceFile <$> getWord
-sourceDebugExtensionAttribute pool len =
+innerClassesAttr pool len = InnerClasses <$> nTimes innerClass len
+
+enclosingMethodAttr pool len = EnclosingMethod <$> getWord <*> getWord
+
+syntheticAttr pool len = return Synthetic
+
+signatureAttr pool len = Signature <$> getWord
+
+sourceFileAttr pool len = SourceFile <$> getWord
+
+sourceDebugExtensionAttr pool len =
   SourceDebugExtension <$> (bytesToString <$> nTimes getWord len)
-lineNumberParser = LineNumber <$> getWord <*> getWord
-lineNumberTableAttribute pool len = LineNumberTable <$> severalTimes lineNumberParser
+
+lineNumberTableAttr pool len = LineNumberTable
+                                    <$> severalTimes (LineNumber <$> getWord <*> getWord)
+
 localVariableInfoParser= LocalVariableInfo <$> getWord <*> getWord <*> getWord <*> getWord <*> getWord
-localVariableTableAttribute pool len =
+localVariableTableAttr pool len =
   LocalVariableTable <$> severalTimes localVariableInfoParser
-localVariableTypeTableAttribute pool len =
+localVariableTypeTableAttr pool len =
   LocalVariableTypeTable <$> severalTimes localVariableInfoParser
-deprecatedAttribute pool len = return Deprecated
+
+deprecatedAttr pool len = return Deprecated
 
 -- --> annotations
 elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
-                            ("c", parseClassValue), ("@", parseAnnotationValue),
+                            ("c", parseClassValue), ("@", parseAnnValue),
                             ("[", parseArrayValue)]
 parseConstValue tag = ElementConstValue tag <$> getWord
 parseEnumValue tag = ElementEnumConstValue tag <$> getWord <*> getWord
 parseClassValue tag = ElementClassInfoIndex tag <$> getWord
-parseAnnotationValue tag = ElementAnnotationValue tag <$> parseAnnotationAttribute
+parseAnnValue tag = ElementAnnValue tag <$> parseAnnAttr
 parseArrayValue tag = ElementArrayValue tag <$> severalTimes elementValueParser  
 elementValueParser = do
   tag <- getByteString 1
@@ -129,42 +151,22 @@ elementValueParser = do
     _ -> fail "Aaaa"
 
 elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
-parseAnnotationAttribute =
-  Annotation <$> getWord <*> severalTimes elementValuePairParser
+parseAnnAttr = Ann <$> getWord <*> severalTimes elementValuePairParser
 
-runtimeVisibleAnnotationsAttribute pool len =
-  RuntimeVisibleAnnotations <$> severalTimes  parseAnnotationAttribute
+rtVisibleAnnsAttr pool len = RTVisibleAnns <$> severalTimes  parseAnnAttr
 
-runtimeInvisibleAnnotationsAttribute pool len =
-  RuntimeInvisibleAnnotations <$> severalTimes parseAnnotationAttribute
+rtInvisibleAnnsAttr pool len = RTInvisibleAnns <$> severalTimes parseAnnAttr
 
-runtimeVisibleParameterAnnotationsAttribute pool len =
-  RuntimeVisibleParameterAnnotations <$> nTimes (severalTimes parseAnnotationAttribute) len
+rtVisibleParameterAnnsAttr pool len =
+  RTVisibleParameterAnns <$> nTimes (severalTimes parseAnnAttr) len
 
-runtimeInvisibleParameterAnnotationsAttribute pool len =
-  RuntimeInvisibleParameterAnnotations <$>
-  nTimes (severalTimes parseAnnotationAttribute) len
+rtInvisibleParameterAnnsAttr pool len =
+  RTInvisibleParameterAnns <$>
+  nTimes (severalTimes parseAnnAttr) len
 
-annotationDefaultAttribute pool len = AnnotationDefault <$>
+annotationDefaultAttr pool len = AnnDefault <$>
                                        (unpack <$> getByteString (fromIntegral len))
 -- <-- annotations
 
-
-bootstrapMethodParser = BootstrapMethod <$> getWord <*> severalTimes getWord
-bootstrapMethodsAttribute pool len = BootstrapMethods <$> severalTimes bootstrapMethodParser
-
-parseAttribute :: [Constant] -> String -> Word16 -> Get AttributeInfo
-parseAttribute pool text len = case Map.lookup text attributesNamesMap of
-  Just parser -> parser pool len
-  Nothing -> UnknownAttribute <$> getByteString (fromIntegral len)
-  
-
-getAttribute :: [Constant] -> Get AttributeInfo    
-getAttribute pool = do
-  attributeNameIndex <- getWord
-  attributeLength <- getWord
-  case getFromPool pool attributeNameIndex of
-    Just (Utf8Info text) -> parseAttribute pool text attributeLength
-    Just _ -> fail "some cake"
-    Nothing -> fail "another cake"
-      
+bootstrapMethodsAttr pool len = BootstrapMethods <$>
+                                     severalTimes (BootstrapMethod <$> getWord <*> severalTimes getWord)

@@ -13,18 +13,17 @@ import Javelin.ByteCode.ConstantPool
 import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
 
-getInterfaces :: Word16 -> Get [Word16]
-getInterfaces = nTimes getWord
+getInterface = getWord
 
 classBody :: Get ClassBody
 classBody = do
-  pool <- getCountAndList getConstantPool
+  pool <- severalTimes getConstant
   ClassBody pool
     <$> parseClassAccessFlags <*> getWord <*> getWord
-    <*> getCountAndList getInterfaces
-    <*> getCountAndList (nTimes $ getField pool)
-    <*> getCountAndList (nTimes $ getMethod pool)
-    <*> getCountAndList (nTimes $ getAttribute pool)
+    <*> severalTimes getInterface
+    <*> severalTimes (getField pool)
+    <*> severalTimes (getMethod pool)
+    <*> severalTimes (getAttr pool)
 
 magicNumber :: Get Int
 magicNumber = do
@@ -35,7 +34,7 @@ magicNumber = do
 
 classFlagsList = fromList [(0x0001, ClassPublic), (0x0010, ClassFinal), (0x0020, ClassSuper),
                            (0x0200, ClassInterface), (0x0400, ClassAbstract),
-                           (0x1000, ClassSynthetic), (0x2000, ClassAnnotation),
+                           (0x1000, ClassSynthetic), (0x2000, ClassAnn),
                            (0x4000, ClassEnum)]
 
 parseClassAccessFlags :: Get [ClassAccessFlags]

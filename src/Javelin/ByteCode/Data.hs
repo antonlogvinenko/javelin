@@ -14,12 +14,12 @@ data ClassBody = ClassBody { constPool :: [Constant],
                              interfaces :: [Word16],
                              fields :: [FieldInfo],
                              methods :: [MethodInfo],
-                             attributes :: [AttributeInfo] }
+                             attrs :: [AttrInfo] }
                  deriving (Show, Eq)
 
 data ClassAccessFlags = ClassPublic | ClassFinal
                       | ClassSuper | ClassInterface | ClassAbstract
-                      | ClassSynthetic | ClassAnnotation | ClassEnum deriving (Show, Eq)
+                      | ClassSynthetic | ClassAnn | ClassEnum deriving (Show, Eq)
 
 data Constant = Utf8Info { stringValue :: String }
               | IntegerInfo {bytes :: Word32 }
@@ -39,7 +39,7 @@ data Constant = Utf8Info { stringValue :: String }
 data FieldInfo = FieldInfo { fieldAccessFlags :: [FieldInfoAccessFlag],
                              fieldNameIndex :: Word16,
                              fieldDescriptorIndex :: Word16,
-                             fieldAttributes :: [AttributeInfo]
+                             fieldAttrs :: [AttrInfo]
                            } deriving (Show, Eq)
 
 data FieldInfoAccessFlag = FieldPublic | FieldPrivate | FieldProtected
@@ -57,17 +57,17 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
 data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodNameIndex :: Word16,
                                methodInfoDescriptorIndex :: Word16,
-                               methodAttributes :: [AttributeInfo]
+                               methodAttrs :: [AttrInfo]
                              } deriving (Show, Eq)
 
 
-data AttributeInfo = UnknownAttribute { unknownBytes :: ByteString }
+data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
                    | ConstantValue { constantValueIndex :: Word16 }
-                   | CodeAttribute { maxStack :: Word16,
+                   | CodeAttr { maxStack :: Word16,
                                      maxLocals :: Word16,
                                      code :: [Word8],
                                      exceptionTable :: [Exception],
-                                     codeAttributes :: [AttributeInfo] }
+                                     codeAttrs :: [AttrInfo] }
                    | StackMapTable { entries :: [StackMapFrame] }
                    | Exceptions { exceptionIndexTable :: [Word16] }
                    | InnerClasses { classes :: [InnerClassInfo] }
@@ -81,11 +81,11 @@ data AttributeInfo = UnknownAttribute { unknownBytes :: ByteString }
                    | LocalVariableTable { localVariableTable :: [LocalVariableInfo] }
                    | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableInfo] }
                    | Deprecated
-                   | RuntimeVisibleAnnotations { annotations :: [Annotation] }
-                   | RuntimeInvisibleAnnotations { annotations :: [Annotation] }
-                   | RuntimeVisibleParameterAnnotations { parameterAnnotations :: [[Annotation]] }
-                   | RuntimeInvisibleParameterAnnotations { parameterAnnotations :: [[Annotation]] }
-                   | AnnotationDefault { defaultValue :: [Word8] }
+                   | RTVisibleAnns { annotations :: [Ann] }
+                   | RTInvisibleAnns { annotations :: [Ann] }
+                   | RTVisibleParameterAnns { parameterAnns :: [[Ann]] }
+                   | RTInvisibleParameterAnns { parameterAnns :: [[Ann]] }
+                   | AnnDefault { defaultValue :: [Word8] }
                    | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
                    deriving (Show, Eq)
 
@@ -100,8 +100,8 @@ data ElementValue = ElementConstValue { tag :: Char,
                                             constNameIndex :: Word16 }
                   | ElementClassInfoIndex { tag :: Char,
                                             classInfoIndex :: Word16 }
-                  | ElementAnnotationValue { tag :: Char,
-                                             annotation :: Annotation }
+                  | ElementAnnValue { tag :: Char,
+                                             annotation :: Ann }
                   | ElementArrayValue { tag :: Char,
                                         elementValues :: [ElementValue] }
                   deriving (Show, Eq)
@@ -110,7 +110,7 @@ data ElementValuePair = ElementValuePair { elementNameIndex :: Word16,
                                            elementValue :: ElementValue
                                          } deriving (Show, Eq)
 
-data Annotation = Annotation { typeIndex :: Word16,
+data Ann = Ann { typeIndex :: Word16,
                                elementValuePairs :: [ElementValuePair]
                              } deriving (Show, Eq)
 
@@ -159,7 +159,7 @@ data InnerClassInfo = InnerClassInfo { innerClassInfoIndex :: Word16,
 data InnerClassAccessFlags = InnerClassPublic | InnerClassPrivate | InnerClassProtected
                            | InnerClassStatic | InnerClassFinal | InnerClassInterface
                            | InnerClassAbstract | InnerClassSynthetic
-                           | InnerClassAnnotation | InnerClassEnum
+                           | InnerClassAnn | InnerClassEnum
                            deriving (Show, Eq)
 
 data LineNumber = LineNumber { lineStartPc :: Word16,

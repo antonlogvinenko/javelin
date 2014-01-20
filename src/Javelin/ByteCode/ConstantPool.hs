@@ -10,16 +10,10 @@ import Data.Binary.Get
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 
-getConstantPool :: Word16 -> Get [Constant]
-getConstantPool = nTimes getConstant
-
 getConstant :: Get Constant
 getConstant = do
   tag <- getByte
-  getConstantParser tag
-
-getConstantParser :: Word8 -> Get Constant
-getConstantParser idx = findWithDefault failingConstParser idx constantTypeParser
+  findWithDefault failingConstParser tag constantTypeParser
 
 failingConstParser :: Get Constant
 failingConstParser = fail "Undefined constant"
@@ -37,24 +31,18 @@ utf8InfoParser :: Get Constant
 utf8InfoParser = do
   byteStringLen <- getWord
   byteString <- getByteString $ fromIntegral byteStringLen
-  let string = bytesToString2 byteString
-  return $ Utf8Info string
+  return $ Utf8Info $ bytesToString byteString
 
 identityParser :: Get Constant
 identityParser = return $ Utf8Info ""
 
-bytesToString2 :: ByteString -> String
-bytesToString2 = undefined
-
 twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Get Constant
 twoTwoBytesInfoParser constConstr = constConstr <$> getWord <*> getWord
-
 twoFourBytesInfoParser :: (Word32 -> Word32 -> Constant) -> Get Constant
 twoFourBytesInfoParser constConstr = constConstr <$> getDWord <*> getDWord
 
 twoBytesInfoParser :: (Word16 -> Constant) -> Get Constant
 twoBytesInfoParser constConstr = constConstr <$> getWord
-
 fourBytesInfoParser :: (Word32 -> Constant) -> Get Constant
 fourBytesInfoParser constConstr = constConstr <$> getDWord
 
@@ -68,7 +56,6 @@ integerInfoParser = fourBytesInfoParser IntegerInfo
 floatInfoParser = fourBytesInfoParser FloatInfo
 longInfoParser = twoFourBytesInfoParser LongInfo
 doubleInfoParser = twoFourBytesInfoParser DoubleInfo
-
 methodHandleInfoParser = MethodHandleInfo <$> getByte <*> getWord
 methodTypeInfoParser = MethodTypeInfo <$> getWord
 invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
