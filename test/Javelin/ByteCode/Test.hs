@@ -5,18 +5,7 @@ import Test.Tasty.HUnit
 import Javelin.ByteCode.ClassFile
 import Data.Word (Word16)
 
-byteCodeTest = testGroup "ByteCode parser test" [byteCodeParserTest,
-                                                requireTest
-                                                 ]
-
-requireTest = let t = "bla"
-              in testGroup "require" [
-                      testCase "required" $
-                               require 2 [0x00, 0x00] t @=? Right t,
-                      testCase "nope" $
-                               require 3 [0x00, 0x00] t @=? Left "Unexpected EOF"
-               ]
-
+byteCodeTest = testGroup "ByteCode parser test" [byteCodeParserTest]
 
 byteCodeParserTest = testGroup "ByteCode parser" [
                       testCase "parse" $

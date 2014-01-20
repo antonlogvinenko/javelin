@@ -14,31 +14,9 @@ import Control.Applicative
 import qualified Data.Binary.Get as G
 
 type Parser a = [Word8] -> Either String ([Word8], a)
-type RepeatingParser a = Word16 -> Parser a
-
-convert :: G.Get a -> Parser a
-convert get bytes = do
-  case G.runGetOrFail get $ pack bytes of
-    Left (bs, _, msg) -> Left msg
-    Right (bs, _, value) -> Right (unpack bs, value)
 
 getCountAndList :: (Word16 -> G.Get [x]) -> G.Get [x]
 getCountAndList f = G.getWord16be >>= f
-
-require :: Int -> [Word8] ->  a -> Either String a
-require len bs value = if length bs < len
-                       then Left "Unexpected EOF"
-                       else Right value
-
-takeBytes count bs = require count bs $ (drop count bs, take count bs)
-
-getByte :: Parser Word8
-getByte = convert G.getWord8
-getWord :: Parser Word16
-getWord = convert G.getWord16be
-getDWord :: Parser Word32
-getDWord = convert G.getWord32be
-                     
 
 addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]
 addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0

@@ -1,4 +1,4 @@
-module Javelin.ByteCode.ClassFile (parse, require, magicNumber, version, classBody)
+module Javelin.ByteCode.ClassFile (parse, magicNumber, version, classBody)
 where
 
 import Data.Word (Word32, Word16, Word8)
