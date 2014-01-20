@@ -14,17 +14,17 @@ import Control.Applicative
 import qualified Data.Binary.Get as G
 
 getInterfaces :: Word16 -> G.Get [Word16]
-getInterfaces = getNTimes' G.getWord16be
+getInterfaces = getNTimes G.getWord16be
 
 classBody :: G.Get ClassBody
 classBody = do
-  pool <- getCountAndList' getConstantPool'
+  pool <- getCountAndList getConstantPool
   ClassBody pool
     <$> parseClassAccessFlags <*> G.getWord16be <*> G.getWord16be
-    <*> getCountAndList' getInterfaces
-    <*> getCountAndList' (getNTimes' $ getField' pool)
-    <*> getCountAndList' (getNTimes' $ getMethod' pool)
-    <*> getCountAndList' (getNTimes' $ getAttribute' pool)
+    <*> getCountAndList getInterfaces
+    <*> getCountAndList (getNTimes $ getField pool)
+    <*> getCountAndList (getNTimes $ getMethod pool)
+    <*> getCountAndList (getNTimes $ getAttribute pool)
 
 magicNumber :: G.Get Int
 magicNumber = do
@@ -39,7 +39,7 @@ classFlagsList = Map.fromList [(0x0001, ClassPublic), (0x0010, ClassFinal), (0x0
                                (0x4000, ClassEnum)]
 
 parseClassAccessFlags :: G.Get [ClassAccessFlags]
-parseClassAccessFlags = foldMask' classFlagsList <$> G.getWord16be
+parseClassAccessFlags = foldMask classFlagsList <$> G.getWord16be
 
 version :: G.Get Word16
 version = G.getWord16be

@@ -63,7 +63,7 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                              } deriving (Show, Eq)
 
 
-data AttributeInfo = UnknownAttribute { unknownBytes :: [Word8] }
+data AttributeInfo = UnknownAttribute { unknownBytes :: ByteString }
                    | ConstantValue { constantValueIndex :: Word16 }
                    | CodeAttribute { maxStack :: Word16,
                                      maxLocals :: Word16,

@@ -22,17 +22,17 @@ methodInfoAccessFlagsMap = fromList [(0x0001, MethodPublic), (0x0002, MethodPriv
                                      (0x0100, MethodNative), (0x0400, MethodAbstract),
                                      (0x0800, MethodStrict), (0x1000, MethodSynthetic)]
 
-getFieldMethod' :: [Constant] -> Map Word16 flag ->
+getFieldMethod :: [Constant] -> Map Word16 flag ->
                    ([flag] -> Word16 -> Word16 -> [AttributeInfo] -> x) -> Get x
-getFieldMethod' pool accessFlagsMap constr =
+getFieldMethod pool accessFlagsMap constr =
   constr
-  <$> (getWord16be >>= (\c -> return $ foldMask' accessFlagsMap c))
+  <$> (getWord16be >>= (\c -> return $ foldMask accessFlagsMap c))
   <*> getWord16be
   <*> getWord16be
-  <*> (getWord16be >>= (\c -> (getNTimes' $ getAttribute' pool) c))
+  <*> (getWord16be >>= (\c -> (getNTimes $ getAttribute pool) c))
   
-getField' :: [Constant] -> Get FieldInfo
-getField' pool = getFieldMethod' pool fieldInfoAccessFlagsMap FieldInfo
+getField :: [Constant] -> Get FieldInfo
+getField pool = getFieldMethod pool fieldInfoAccessFlagsMap FieldInfo
 
-getMethod' :: [Constant] -> Get MethodInfo
-getMethod' pool = getFieldMethod' pool methodInfoAccessFlagsMap MethodInfo
+getMethod :: [Constant] -> Get MethodInfo
+getMethod pool = getFieldMethod pool methodInfoAccessFlagsMap MethodInfo

@@ -22,13 +22,8 @@ convert get bytes = do
     Left (bs, _, msg) -> Left msg
     Right (bs, _, value) -> Right (unpack bs, value)
 
-getCountAndList :: (Word16 -> Parser [x]) -> Parser [x]
-getCountAndList f bytes = do
-  (bytes1, count) <- getWord bytes
-  f count bytes1
-
-getCountAndList' :: (Word16 -> G.Get [x]) -> G.Get [x]
-getCountAndList' f = G.getWord16be >>= f
+getCountAndList :: (Word16 -> G.Get [x]) -> G.Get [x]
+getCountAndList f = G.getWord16be >>= f
 
 require :: Int -> [Word8] ->  a -> Either String a
 require len bs value = if length bs < len
@@ -52,45 +47,27 @@ addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
                                                Just x -> x : list
                                                Nothing -> list
 --todo remove after migration to Get !
-foldMask :: Word16 -> Map.Map Word16 a -> [a]
-foldMask bytes flagsMap = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
 
-foldMask' ::Map.Map Word16 a -> Word16 -> [a]
-foldMask' flagsMap bytes = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
+foldMask ::Map.Map Word16 a -> Word16 -> [a]
+foldMask flagsMap bytes = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
 
-getNTimes :: Parser a -> RepeatingParser [a]
-getNTimes parser n bytes = do
-  if n == 1
-    then Right (bytes, [])
-    else do
-    (bytes1, obj) <- parser bytes
-    (bytes2, objs) <- getNTimes parser (n - 1) bytes1
-    return (bytes2, obj : objs)
-
-getNTimes' :: G.Get a -> Word16 -> G.Get [a]
-getNTimes' parser n =
+getNTimes :: G.Get a -> Word16 -> G.Get [a]
+getNTimes parser n =
   if n == 0
   then return []
     else do
          obj <- parser
-         objs <- getNTimes' parser (n - 1)
+         objs <- getNTimes parser (n - 1)
          return (obj:objs)
 
--- lineNumberTableAttribute - add parsing length
-constrNTimes :: ([a] -> b) -> Parser a -> Parser b
-constrNTimes f parser bytes = do
-  (bytes1, len) <- getWord bytes
-  (bytes2, object) <- getNTimes parser len bytes1
-  return (bytes2, f object)
-
-constrNTimes' :: ([a] -> b) -> G.Get a -> G.Get b
-constrNTimes' f parser = do
+constrNTimes :: ([a] -> b) -> G.Get a -> G.Get b
+constrNTimes f parser = do
   len <- G.getWord16be
-  object <- getNTimes' parser len
+  object <- getNTimes parser len
   return $ f object
 
 
-getFromPool :: [Constant] -> Word16 -> Maybe Constant
+getFromPool :: [x] -> Word16 -> Maybe x
 getFromPool list idx = if okIdx < length list
                        then Just $ list !! okIdx
                        else Nothing
