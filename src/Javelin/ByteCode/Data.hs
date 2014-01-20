@@ -83,8 +83,8 @@ data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
                    | Deprecated
                    | RTVisibleAnns { annotations :: [Ann] }
                    | RTInvisibleAnns { annotations :: [Ann] }
-                   | RTVisibleParameterAnns { parameterAnns :: [[Ann]] }
-                   | RTInvisibleParameterAnns { parameterAnns :: [[Ann]] }
+                   | RTVisibleParamAnns { paramAnns :: [[Ann]] }
+                   | RTInvisibleParamAnns { paramAnns :: [[Ann]] }
                    | AnnDefault { defaultValue :: [Word8] }
                    | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
                    deriving (Show, Eq)

@@ -47,8 +47,8 @@ attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
                                    ("Deprecated", deprecatedAttr),
                                    ("RTVisibleAnns", rtVisibleAnnsAttr),
                                    ("RTInvisibleAnns", rtInvisibleAnnsAttr),
-                                   ("RTVisibleParameterAnns", rtVisibleParameterAnnsAttr),
-                                   ("RTInvisibleParameterAnns", rtInvisibleParameterAnnsAttr),
+                                   ("RTVisibleParamAnns", rtVisibleParamAnnsAttr),
+                                   ("RTInvisibleParamAnns", rtInvisibleParamAnnsAttr),
                                    ("AnnDefault", annotationDefaultAttr),
                                    ("BootstrapMethods", bootstrapMethodsAttr)]
 
@@ -138,8 +138,8 @@ deprecatedAttr pool len = return Deprecated
 -- --> Annotations
 rtVisibleAnnsAttr pool len = RTVisibleAnns <$> several  parseAnnAttr
 rtInvisibleAnnsAttr pool len = RTInvisibleAnns <$> several parseAnnAttr
-rtVisibleParameterAnnsAttr pool len = RTVisibleParameterAnns <$> times (several parseAnnAttr) len
-rtInvisibleParameterAnnsAttr pool len = RTInvisibleParameterAnns <$> times (several parseAnnAttr) len
+rtVisibleParamAnnsAttr pool len = RTVisibleParamAnns <$> times (several parseAnnAttr) len
+rtInvisibleParamAnnsAttr pool len = RTInvisibleParamAnns <$> times (several parseAnnAttr) len
 
 parseAnnAttr = Ann <$> getWord <*> several elementValuePairParser
 elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
