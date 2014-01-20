@@ -4,6 +4,10 @@ where
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 
+import qualified Data.ByteString.Lazy as BS (ByteString, unpack)
+
+import qualified Data.ByteString as BS2 (unpack)
+
 import Data.Word (Word32, Word16, Word8)
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
 import Data.Maybe
@@ -122,64 +126,50 @@ stackMapTableAttribute pool len bytes = do
   (bytes1, entries) <- getNTimes getStackMapFrame len bytes
   return $ (bytes1, StackMapTable entries)
 -- -> StackMapTable  
-exceptionsAttribute pool len bytes = do
-  (bytes1, numberOfExceptions) <- getWord bytes
-  (bytes2, exceptions) <- getNTimes (getWord) numberOfExceptions bytes1
-  return $ (bytes2, Exceptions exceptions)
 
-innerClass bytes = do
-  (bytes1, innerClassInfo) <- getWord bytes
-  (bytes2, outerClassInfo) <- getWord bytes1
-  (bytes3, innerName) <- getWord bytes2
-  (bytes4, innerAccessFlagsBytes) <- getWord bytes3
-  let innerAccessFlags = foldMask innerAccessFlagsBytes innerClassAccessFlagsMap
-  return (bytes4, InnerClassInfo innerClassInfo outerClassInfo innerName innerAccessFlags)
-innerClassesAttribute pool len bytes = do
-  (bytes1, length) <- getWord bytes
-  (bytes2, classes) <- getNTimes innerClass length bytes1
-  return (bytes2, InnerClasses classes)
+exceptionsAttribute pool len = convert $ exceptionsAttribute' pool len
+exceptionsAttribute' pool len = Exceptions <$> constrNTimes' id G.getWord16be
 
-enclosingMethodAttribute pool len bytes = do
-  (bytes1, classIndex) <- getWord bytes
-  (bytes2, methodIndex) <- getWord bytes1
-  return (bytes2, EnclosingMethod classIndex methodIndex)
+innerClass = convert innerClass'
+innerClass' = InnerClassInfo <$> G.getWord16be <*> G.getWord16be <*> G.getWord16be
+              <*> (foldMask' innerClassAccessFlagsMap <$> G.getWord16be)
 
-syntheticAttribute pool len bytes = Right (bytes, Synthetic)
-  
-signatureAttribute pool len bytes = do
-  (bytes1, signatureIndex) <- getWord bytes
-  return (bytes1, Signature signatureIndex)
+innerClassesAttribute pool len = convert $ innerClassesAttribute' pool len
+innerClassesAttribute' pool len = InnerClasses <$> getNTimes' innerClass' len
 
-sourceFileAttribute pool len bytes = do
-  (bytes1, sourceFile) <- getWord bytes
-  return (bytes, SourceFile sourceFile)
+enclosingMethodAttribute' pool len = EnclosingMethod <$> G.getWord16be <*> G.getWord16be
+enclosingMethodAttribute pool len = convert $ enclosingMethodAttribute' pool len
 
-sourceDebugExtensionAttribute pool len bytes = do
-  (bytes1, stringBytes) <- getNTimes getByte len bytes
-  return (bytes1, SourceDebugExtension $ bytesToString stringBytes)
+syntheticAttribute pool len = convert $ syntheticAttribute' pool len
+syntheticAttribute' pool len = return Synthetic
 
-lineNumberParser bytes = do
-  (bytes1, startPc) <- getWord bytes
-  (bytes2, lineNumber) <- getWord bytes1
-  return (bytes2, LineNumber startPc lineNumber)
-lineNumberTableAttribute pool len bytes =
-  constrNTimes LineNumberTable lineNumberParser bytes
+signatureAttribute' pool len = Signature <$> G.getWord16be
+signatureAttribute pool len = convert $ signatureAttribute' pool len
 
-localVariableInfoParser bytes = do
-  (bytes1, startPc) <- getWord bytes
-  (bytes2, lengthPc) <- getWord bytes1
-  (bytes3, nameIndex) <- getWord bytes2
-  (bytes4, signatureIndex) <- getWord bytes3
-  (bytes5, index) <- getWord bytes4
-  return (bytes5, LocalVariableInfo startPc lengthPc nameIndex signatureIndex index)
-localVariableTableAttribute pool len bytes =
-  constrNTimes LocalVariableTable localVariableInfoParser bytes
-localVariableTypeTableAttribute pool len bytes =
-  constrNTimes LocalVariableTypeTable localVariableInfoParser bytes
+sourceFileAttribute pool len = convert $ sourceFileAttribute' pool len
+sourceFileAttribute' pool len = SourceFile <$> G.getWord16be
 
-deprecatedAttribute pool len bytes = return (bytes, Deprecated)
+sourceDebugExtensionAttribute' pool len =
+  SourceDebugExtension <$> (bytesToString <$> getNTimes' G.getWord16be len)
+sourceDebugExtensionAttribute pool len = convert $ sourceDebugExtensionAttribute' pool len
 
+lineNumberParser' = LineNumber <$> G.getWord16be <*> G.getWord16be
+lineNumberTableAttribute' pool len = constrNTimes' LineNumberTable lineNumberParser'
+lineNumberTableAttribute pool len = convert $ lineNumberTableAttribute' pool len
 
+localVariableInfoParser'= LocalVariableInfo <$> G.getWord16be <*> G.getWord16be <*> G.getWord16be <*> G.getWord16be <*> G.getWord16be
+localVariableTableAttribute pool len = convert $ localVariableTableAttribute' pool len
+localVariableTableAttribute' pool len =
+  constrNTimes' LocalVariableTable localVariableInfoParser'
+localVariableTypeTableAttribute pool len =
+  convert $ localVariableTypeTableAttribute' pool len
+localVariableTypeTableAttribute' pool len =
+  constrNTimes' LocalVariableTypeTable localVariableInfoParser'
+
+deprecatedAttribute' pool len = return Deprecated
+deprecatedAttribute pool len = convert $ deprecatedAttribute' pool len
+
+-- --> annotations
 elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
                           ("c", parseClassValue), ("@", parseAnnotationValue),
                           ("[", parseArrayValue)]
@@ -200,43 +190,57 @@ parseArrayValue tag bytes = do
   (bytes1, numValues) <- getWord bytes
   (bytes2, elementValues) <- getNTimes elementValueParser numValues bytes1
   return (bytes2, ElementArrayValue tag elementValues)
+elementValueParser' = undefined
 elementValueParser bytes = do
   (bytes1, tag) <- takeBytes 1 bytes
   let tagChar = bytesToString tag !! 0
   case take 1 $ filter (\strs -> elem tagChar $ fst strs) elementValueParsersList of
     [(_, parser)] -> parser tagChar bytes
     _ -> Left "AAAAA"
-elementValuePairParser bytes = do
-  (bytes1, elementNameIndex) <- getWord bytes
-  (bytes2, elementValue) <- elementValueParser bytes1
-  return (bytes2, ElementValuePair elementNameIndex elementValue)
-parseAnnotationAttribute bytes = do
-  (bytes1, typeIndex) <- getWord bytes
-  (bytes2, elementValuePairsNum) <- getWord bytes1
-  (bytes3, elementValuePairs) <- getNTimes elementValuePairParser elementValuePairsNum bytes2
-  return (bytes3, Annotation typeIndex elementValuePairs)
-runtimeVisibleAnnotationsAttribute pool len bytes =
-  constrNTimes RuntimeVisibleAnnotations parseAnnotationAttribute bytes
-runtimeInvisibleAnnotationsAttribute pool len bytes =
-  constrNTimes RuntimeInvisibleAnnotations parseAnnotationAttribute bytes
-runtimeVisibleParameterAnnotationsAttribute pool len bytes =
-  let annotationsListParser = constrNTimes id parseAnnotationAttribute
-  in constrNTimes RuntimeVisibleParameterAnnotations annotationsListParser bytes
-runtimeInvisibleParameterAnnotationsAttribute pool len bytes =
-  let annotationListParser = constrNTimes id parseAnnotationAttribute
-  in constrNTimes RuntimeInvisibleParameterAnnotations annotationListParser bytes
 
-annotationDefaultAttribute pool len bytes = do
-  (bytes1, elementValue) <- takeBytes (fromIntegral len) bytes
-  return (bytes1, AnnotationDefault elementValue)
+elementValuePairParser' = ElementValuePair <$> G.getWord16be <*> elementValueParser'
+elementValuePairParser = convert elementValuePairParser'
 
-bootstrapMethodParser bytes = do
-  (bytes1, methodRef) <- getWord bytes
-  (bytes2, argumentsCount) <- getWord bytes
-  (bytes3, arguments) <- getNTimes getWord argumentsCount bytes2
-  return (bytes3, BootstrapMethod methodRef arguments)
-bootstrapMethodsAttribute pool len bytes =
-  constrNTimes BootstrapMethods bootstrapMethodParser bytes
+parseAnnotationAttribute = convert parseAnnotationAttribute'
+parseAnnotationAttribute' =
+  Annotation <$> G.getWord16be <*> constrNTimes' id elementValuePairParser'
+
+runtimeVisibleAnnotationsAttribute' pool len =
+  constrNTimes' RuntimeVisibleAnnotations parseAnnotationAttribute'
+runtimeVisibleAnnotationsAttribute pool len =
+  convert $ runtimeVisibleAnnotationsAttribute' pool len
+
+runtimeInvisibleAnnotationsAttribute' pool len =
+  constrNTimes' RuntimeInvisibleAnnotations parseAnnotationAttribute'
+runtimeInvisibleAnnotationsAttribute pool len =
+  convert $ runtimeInvisibleAnnotationsAttribute' pool len
+
+runtimeVisibleParameterAnnotationsAttribute' pool len =
+  RuntimeVisibleParameterAnnotations <$>
+  getNTimes' (constrNTimes' id parseAnnotationAttribute') len
+runtimeVisibleParameterAnnotationsAttribute pool len =
+  convert $ runtimeVisibleParameterAnnotationsAttribute' pool len
+
+runtimeInvisibleParameterAnnotationsAttribute' pool len =
+  RuntimeInvisibleParameterAnnotations <$>
+  getNTimes' (constrNTimes' id parseAnnotationAttribute') len
+runtimeInvisibleParameterAnnotationsAttribute pool len =
+  convert $ runtimeInvisibleParameterAnnotationsAttribute' pool len
+
+annotationDefaultAttribute' pool len = AnnotationDefault <$>
+                                       (BS2.unpack <$> G.getByteString (fromIntegral len))
+annotationDefaultAttribute pool len = convert $ annotationDefaultAttribute' pool len
+-- <-- annotations
+
+
+bootstrapMethodParser' = BootstrapMethod <$> G.getWord16be <*> constrNTimes' id G.getWord16be
+bootstrapMethodsAttribute' pool len = constrNTimes' BootstrapMethods bootstrapMethodParser'
+bootstrapMethodsAttribute pool len = convert $ bootstrapMethodsAttribute' pool len
+
+
+
+
+
 
 parseAttribute :: [Constant] -> String -> Word16 -> Parser AttributeInfo
 parseAttribute pool text len bytes = case Map.lookup text attributesNamesMap of
