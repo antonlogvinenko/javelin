@@ -5,16 +5,14 @@ Haskell JVM
 
 * javelin-2
   * bytecode
+    * code attribute and pool passing - codeAttr function is special, remove from map
     * strings
     * parse descriptors/methods/signatures etc
     * parse numbers
-    * refactor parsers
-      * common code for parsing tables
-      * common code for getBytes n
     * parse length in all attributes - it takes some bytes, for verification
     * overall structure
     * change inheritance?
-    * understand all structure, semantics
+    * understand the whole structure, semantics
     * other details besides any kind of verification
     * test
 
