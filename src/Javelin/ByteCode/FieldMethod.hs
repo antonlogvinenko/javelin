@@ -3,11 +3,12 @@ where
 
 import Data.Map.Lazy (Map, fromList)
 import Data.Word (Word16)
+import Control.Applicative
+import Data.Binary.Get
+
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 import Javelin.ByteCode.Attribute
-import Control.Applicative
-import Data.Binary.Get
 
 fieldInfoAccessFlagsMap = fromList [(0x0001, FieldPublic), (0x0002, FieldPrivate),
                                     (0x0004, FieldProtected), (0x0008, FieldStatic),
@@ -26,10 +27,10 @@ getFieldMethod :: [Constant] -> Map Word16 flag ->
                    ([flag] -> Word16 -> Word16 -> [AttributeInfo] -> x) -> Get x
 getFieldMethod pool accessFlagsMap constr =
   constr
-  <$> (getWord16be >>= (\c -> return $ foldMask accessFlagsMap c))
-  <*> getWord16be
-  <*> getWord16be
-  <*> (getWord16be >>= (\c -> (getNTimes $ getAttribute pool) c))
+  <$> (getWord >>= (\c -> return $ foldMask accessFlagsMap c))
+  <*> getWord
+  <*> getWord
+  <*> (getWord >>= (\c -> (getNTimes $ getAttribute pool) c))
   
 getField :: [Constant] -> Get FieldInfo
 getField pool = getFieldMethod pool fieldInfoAccessFlagsMap FieldInfo

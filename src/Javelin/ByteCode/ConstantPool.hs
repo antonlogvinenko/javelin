@@ -3,19 +3,19 @@ where
 
 import Data.Word (Word32, Word16, Word8)
 import Data.Map.Lazy (findWithDefault, fromList, Map(..))
-
 import Control.Applicative
 import Data.ByteString (ByteString)
+import Data.Binary.Get
+
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
-import Data.Binary.Get
 
 getConstantPool :: Word16 -> Get [Constant]
 getConstantPool = getNTimes getConstant
 
 getConstant :: Get Constant
 getConstant = do
-  tag <- getWord8
+  tag <- getByte
   getConstantParser tag
 
 getConstantParser :: Word8 -> Get Constant
@@ -35,7 +35,7 @@ constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser),
 
 utf8InfoParser :: Get Constant
 utf8InfoParser = do
-  byteStringLen <- getWord16be
+  byteStringLen <- getWord
   byteString <- getByteString $ fromIntegral byteStringLen
   let string = bytesToString2 byteString
   return $ Utf8Info string
@@ -47,16 +47,16 @@ bytesToString2 :: ByteString -> String
 bytesToString2 = undefined
 
 twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Get Constant
-twoTwoBytesInfoParser constConstr = constConstr <$> getWord16be <*> getWord16be
+twoTwoBytesInfoParser constConstr = constConstr <$> getWord <*> getWord
 
 twoFourBytesInfoParser :: (Word32 -> Word32 -> Constant) -> Get Constant
-twoFourBytesInfoParser constConstr = constConstr <$> getWord32be <*> getWord32be
+twoFourBytesInfoParser constConstr = constConstr <$> getDWord <*> getDWord
 
 twoBytesInfoParser :: (Word16 -> Constant) -> Get Constant
-twoBytesInfoParser constConstr = constConstr <$> getWord16be
+twoBytesInfoParser constConstr = constConstr <$> getWord
 
 fourBytesInfoParser :: (Word32 -> Constant) -> Get Constant
-fourBytesInfoParser constConstr = constConstr <$> getWord32be
+fourBytesInfoParser constConstr = constConstr <$> getDWord
 
 fieldrefParser = twoTwoBytesInfoParser Fieldref
 methodrefParser = twoTwoBytesInfoParser Methodref
@@ -69,6 +69,6 @@ floatInfoParser = fourBytesInfoParser FloatInfo
 longInfoParser = twoFourBytesInfoParser LongInfo
 doubleInfoParser = twoFourBytesInfoParser DoubleInfo
 
-methodHandleInfoParser = MethodHandleInfo <$> getWord8 <*> getWord16be
-methodTypeInfoParser = MethodTypeInfo <$> getWord16be
+methodHandleInfoParser = MethodHandleInfo <$> getByte <*> getWord
+methodTypeInfoParser = MethodTypeInfo <$> getWord
 invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo

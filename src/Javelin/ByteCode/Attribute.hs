@@ -1,15 +1,15 @@
 module Javelin.ByteCode.Attribute
 where
 
-import Javelin.ByteCode.Data
-import Javelin.ByteCode.Utils
-
 import Data.ByteString (unpack)
 import Data.Word (Word32, Word16, Word8)
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map, lookup)
 import Data.Maybe
 import Data.Binary.Get
 import Control.Applicative
+
+import Javelin.ByteCode.Data
+import Javelin.ByteCode.Utils
 
 innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, InnerClassPrivate),
                                          (0x0004, InnerClassProtected), (0x0008, InnerClassStatic),
@@ -37,12 +37,12 @@ attributesNamesMap = Map.fromList [("ConstantValue", constantValueAttribute),
                                    ("RuntimeInvisibleParameterAnnotations", runtimeInvisibleParameterAnnotationsAttribute),
                                    ("AnnotationDefault", annotationDefaultAttribute),
                                    ("BootstrapMethods", bootstrapMethodsAttribute)]
-constantValueAttribute pool len = ConstantValue <$> getWord16be
+constantValueAttribute pool len = ConstantValue <$> getWord
 getExceptionTable = Exception <$>
-                     getWord16be <*> getWord16be <*> getWord16be <*> getWord16be
+                     getWord <*> getWord <*> getWord <*> getWord
 codeAttribute pool len = CodeAttribute
-                         <$> getWord16be <*> getWord16be
-                         <*> constrNTimes id getWord8
+                         <$> getWord <*> getWord
+                         <*> constrNTimes id getByte
                          <*> constrNTimes id getExceptionTable
                          <*> constrNTimes id (getAttribute pool)
 
@@ -56,11 +56,11 @@ verificationTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return Int
                                      (6, return UninitializedThisVariableInfo),
                                      (7, objectVariableInfo),
                                      (8, uninitializedVariableInfo)]
-objectVariableInfo = ObjectVariableInfo <$> getWord16be
-uninitializedVariableInfo = UninitializedVariableInfo <$> getWord16be
+objectVariableInfo = ObjectVariableInfo <$> getWord
+uninitializedVariableInfo = UninitializedVariableInfo <$> getWord
 failingVerificationInfo = fail "Unknown verification info"
 parseVerificationTypeInfo = do
-  tag <- getWord8
+  tag <- getByte
   Map.findWithDefault failingVerificationInfo tag verificationTypeInfo
 -- <-- verification type info
 stackMapFrameList = [([0..63], sameFrameParser),
@@ -73,13 +73,13 @@ stackMapFrameList = [([0..63], sameFrameParser),
 sameFrameParser tag = return $ SameFrame tag
 sameLocals1StackItemFrame tag = SameLocals1StackItemFrame tag <$> parseVerificationTypeInfo
 sameLocals1StackItemFrameExtended tag =
-  SameLocals1StackItemFrameExtended tag <$> getWord16be <*> parseVerificationTypeInfo
-chopFrame tag = ChopFrame tag <$> getWord16be
-sameFrameExtended tag = SameFrameExtended tag <$> getWord16be  
+  SameLocals1StackItemFrameExtended tag <$> getWord <*> parseVerificationTypeInfo
+chopFrame tag = ChopFrame tag <$> getWord
+sameFrameExtended tag = SameFrameExtended tag <$> getWord  
 appendFrame tag = AppendFrame tag
-                   <$> getWord16be
+                   <$> getWord
                    <*> getNTimes parseVerificationTypeInfo ((fromIntegral tag) - 251)
-fullFrame tag = FullFrame tag <$> getWord16be
+fullFrame tag = FullFrame tag <$> getWord
                 <*> constrNTimes id parseVerificationTypeInfo
                 <*> constrNTimes id parseVerificationTypeInfo
 failingStackMapFrame tag = fail "AAAAAAAA!!!!1111"
@@ -88,24 +88,24 @@ findWithDefault dft tag m =
     [(_, f)] -> f
     _ -> dft
 getStackMapFrame = do
-  tag <- getWord8
+  tag <- getByte
   findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
 stackMapTableAttribute pool len = StackMapTable <$> getNTimes getStackMapFrame len
 -- -> StackMapTable  
 
-exceptionsAttribute pool len = Exceptions <$> constrNTimes id getWord16be
-innerClass = InnerClassInfo <$> getWord16be <*> getWord16be <*> getWord16be
-              <*> (foldMask innerClassAccessFlagsMap <$> getWord16be)
+exceptionsAttribute pool len = Exceptions <$> constrNTimes id getWord
+innerClass = InnerClassInfo <$> getWord <*> getWord <*> getWord
+              <*> (foldMask innerClassAccessFlagsMap <$> getWord)
 innerClassesAttribute pool len = InnerClasses <$> getNTimes innerClass len
-enclosingMethodAttribute pool len = EnclosingMethod <$> getWord16be <*> getWord16be
+enclosingMethodAttribute pool len = EnclosingMethod <$> getWord <*> getWord
 syntheticAttribute pool len = return Synthetic
-signatureAttribute pool len = Signature <$> getWord16be
-sourceFileAttribute pool len = SourceFile <$> getWord16be
+signatureAttribute pool len = Signature <$> getWord
+sourceFileAttribute pool len = SourceFile <$> getWord
 sourceDebugExtensionAttribute pool len =
-  SourceDebugExtension <$> (bytesToString <$> getNTimes getWord16be len)
-lineNumberParser = LineNumber <$> getWord16be <*> getWord16be
+  SourceDebugExtension <$> (bytesToString <$> getNTimes getWord len)
+lineNumberParser = LineNumber <$> getWord <*> getWord
 lineNumberTableAttribute pool len = constrNTimes LineNumberTable lineNumberParser
-localVariableInfoParser= LocalVariableInfo <$> getWord16be <*> getWord16be <*> getWord16be <*> getWord16be <*> getWord16be
+localVariableInfoParser= LocalVariableInfo <$> getWord <*> getWord <*> getWord <*> getWord <*> getWord
 localVariableTableAttribute pool len =
   constrNTimes LocalVariableTable localVariableInfoParser
 localVariableTypeTableAttribute pool len =
@@ -116,9 +116,9 @@ deprecatedAttribute pool len = return Deprecated
 elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
                             ("c", parseClassValue), ("@", parseAnnotationValue),
                             ("[", parseArrayValue)]
-parseConstValue tag = ElementConstValue tag <$> getWord16be
-parseEnumValue tag = ElementEnumConstValue tag <$> getWord16be <*> getWord16be
-parseClassValue tag = ElementClassInfoIndex tag <$> getWord16be
+parseConstValue tag = ElementConstValue tag <$> getWord
+parseEnumValue tag = ElementEnumConstValue tag <$> getWord <*> getWord
+parseClassValue tag = ElementClassInfoIndex tag <$> getWord
 parseAnnotationValue tag = ElementAnnotationValue tag <$> parseAnnotationAttribute
 parseArrayValue tag = ElementArrayValue tag <$> constrNTimes id elementValueParser  
 elementValueParser = do
@@ -128,9 +128,9 @@ elementValueParser = do
     [(_, parser)] -> parser tagChar
     _ -> fail "Aaaa"
 
-elementValuePairParser = ElementValuePair <$> getWord16be <*> elementValueParser
+elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
 parseAnnotationAttribute =
-  Annotation <$> getWord16be <*> constrNTimes id elementValuePairParser
+  Annotation <$> getWord <*> constrNTimes id elementValuePairParser
 
 runtimeVisibleAnnotationsAttribute pool len =
   constrNTimes RuntimeVisibleAnnotations parseAnnotationAttribute
@@ -151,7 +151,7 @@ annotationDefaultAttribute pool len = AnnotationDefault <$>
 -- <-- annotations
 
 
-bootstrapMethodParser = BootstrapMethod <$> getWord16be <*> constrNTimes id getWord16be
+bootstrapMethodParser = BootstrapMethod <$> getWord <*> constrNTimes id getWord
 bootstrapMethodsAttribute pool len = constrNTimes BootstrapMethods bootstrapMethodParser
 
 parseAttribute :: [Constant] -> String -> Word16 -> Get AttributeInfo
@@ -162,8 +162,8 @@ parseAttribute pool text len = case Map.lookup text attributesNamesMap of
 
 getAttribute :: [Constant] -> Get AttributeInfo    
 getAttribute pool = do
-  attributeNameIndex <- getWord16be
-  attributeLength <- getWord16be
+  attributeNameIndex <- getWord
+  attributeLength <- getWord
   case getFromPool pool attributeNameIndex of
     Just (Utf8Info text) -> parseAttribute pool text attributeLength
     Just _ -> fail "some cake"
