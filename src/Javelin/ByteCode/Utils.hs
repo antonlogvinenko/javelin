@@ -21,7 +21,6 @@ addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
                                              else case Map.lookup mask flagsMap of
                                                Just x -> x : list
                                                Nothing -> list
---todo remove after migration to Get !
 
 foldMask ::Map.Map Word16 a -> Word16 -> [a]
 foldMask flagsMap bytes = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
