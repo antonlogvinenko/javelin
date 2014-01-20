@@ -3,13 +3,10 @@ where
 
 import Data.ByteString.Lazy (ByteString, unpack, pack)
 import Data.Word (Word32, Word16, Word8)
-import Control.Monad
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
 import Data.Bits
 import Data.Maybe
-import Data.List (lookup)
 import Javelin.ByteCode.Data
-
 import Control.Applicative
 import qualified Data.Binary.Get as G
 
@@ -43,7 +40,6 @@ constrNTimes f parser = do
   len <- G.getWord16be
   object <- getNTimes parser len
   return $ f object
-
 
 getFromPool :: [x] -> Word16 -> Maybe x
 getFromPool list idx = if okIdx < length list

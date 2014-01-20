@@ -1,7 +1,7 @@
 module Javelin.ByteCode.FieldMethod
 where
 
-import Data.Map.Lazy
+import Data.Map.Lazy (Map, fromList)
 import Data.Word (Word16)
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils

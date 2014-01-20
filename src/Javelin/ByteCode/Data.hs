@@ -1,10 +1,8 @@
 module Javelin.ByteCode.Data
 where
   
-import Data.ByteString (ByteString, unpack)
+import Data.ByteString (ByteString)
 import Data.Word (Word32, Word16, Word8)
-import Data.Bits
-import Data.Maybe
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
                 deriving (Show, Eq)
