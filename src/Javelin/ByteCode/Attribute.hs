@@ -8,6 +8,7 @@ import Data.Word (Word32, Word16, Word8)
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
 import Data.Maybe
 import qualified Data.Binary.Get as G
+import Control.Applicative
 
 innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, InnerClassPrivate),
                                          (0x0004, InnerClassProtected), (0x0008, InnerClassStatic),
@@ -58,32 +59,24 @@ codeAttribute pool len bytes = do
 
 
 -- -> StackMapTable
+
 -- -> verification type info
-verificationTypeInfo = [(0, topVariableInfo), (1, integerVariableInfo),
-                        (2, floatVariableInfo), (3, longVariableInfo),
-                        (4, doubleVariableInfo), (5, nullVariableInfo),
-                        (6, uninitializedThisVariableInfo), (7, objectVariableInfo),
-                        (8, uninitializedVariableInfo)]
-onlyTagByteInfo bytes constr = return (bytes, constr)
-topVariableInfo tag bytes = onlyTagByteInfo bytes TopVariableInfo
-integerVariableInfo tag bytes = onlyTagByteInfo bytes IntegerVariableInfo
-floatVariableInfo tag bytes = onlyTagByteInfo bytes FloatVariableInfo
-longVariableInfo tag bytes = onlyTagByteInfo bytes LongVariableInfo
-doubleVariableInfo tag bytes = onlyTagByteInfo bytes DoubleVariableInfo
-nullVariableInfo tag bytes = onlyTagByteInfo bytes NullVariableInfo
-uninitializedThisVariableInfo tag bytes = onlyTagByteInfo bytes UninitializedThisVariableInfo
-objectVariableInfo tag bytes = do
-  (bytes1, cpoolIndex) <- getWord bytes
-  return $ (bytes1, ObjectVariableInfo cpoolIndex)
-uninitializedVariableInfo tag bytes = do
-  (bytes1, offset) <- getWord bytes
-  return $ (bytes, UninitializedVariableInfo offset)
-parseVerificationTypeInfo bytes = do
-  (bytes1, tag) <- getByte bytes
-  case take 1 . filter (\tags -> tag == fst tags) $ verificationTypeInfo of
-    [(_, parser)] -> parser tag bytes1
-    [] -> Left "Cake!"
+verificationTypeInfo :: Map.Map Word8 (G.Get VerificationTypeInfo)
+verificationTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return IntegerVariableInfo),
+                                     (2, return FloatVariableInfo), (3, return LongVariableInfo),
+                                     (4, return DoubleVariableInfo), (5, return NullVariableInfo),
+                                     (6, return UninitializedThisVariableInfo),
+                                     (7, objectVariableInfo),
+                                     (8, uninitializedVariableInfo)]
+objectVariableInfo = ObjectVariableInfo <$> G.getWord16be
+uninitializedVariableInfo = UninitializedVariableInfo <$> G.getWord16be
+failingVerificationInfo = fail "Unknown verification info"
+parseVerificationTypeInfo' = do
+  tag <- G.getWord8
+  Map.findWithDefault failingVerificationInfo tag verificationTypeInfo
+parseVerificationTypeInfo = convert parseVerificationTypeInfo'
 -- <-- verification type info
+
 stackMapFrameList =  [([0..63], sameFrameParser),
                       ([64..127], sameLocals1StackItemFrame),
                       ([247], sameLocals1StackItemFrameExtended),

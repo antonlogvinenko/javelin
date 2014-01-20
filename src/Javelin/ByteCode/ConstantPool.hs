@@ -37,7 +37,7 @@ constantTypeParser' = Map.fromList
 utf8InfoParser' :: G.Get Constant
 utf8InfoParser' = do
   byteStringLen <- G.getWord16be
-  byteString <- G.getByteString (fromIntegral byteStringLen)
+  byteString <- G.getByteString $ fromIntegral byteStringLen
   let string = bytesToString2 byteString
   return $ Utf8Info string
 
