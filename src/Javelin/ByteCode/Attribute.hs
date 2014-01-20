@@ -32,26 +32,26 @@ parseAttr pool text len = case Map.lookup text attrsNamesMap of
   Nothing -> UnknownAttr <$> getByteString (fromIntegral len)
 
 attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
-                                   ("CodeAttr", codeAttr),
-                                   ("StackMapTableAttr", stackMapTableAttr),
-                                   ("Exceptions", exceptionsAttr),
-                                   ("InnerClasses", innerClassesAttr),
-                                   ("EnclosingMethod", enclosingMethodAttr),
-                                   ("Synthetic", syntheticAttr),
-                                   ("Signature", signatureAttr),
-                                   ("SourceFile", sourceFileAttr),
-                                   ("SourceDebugExtension", sourceDebugExtensionAttr),
-                                   ("LineNumberTable", lineNumberTableAttr),
-                                   ("LocalVariableTable", localVariableTableAttr),
-                                   ("LocalVariableTypeTable", localVariableTypeTableAttr),
-                                   ("Deprecated", deprecatedAttr),
-                                   ("RTVisibleAnns", rtVisibleAnnsAttr),
-                                   ("RTInvisibleAnns", rtInvisibleAnnsAttr),
-                                   ("RTVisibleParamAnns", rtVisibleParamAnnsAttr),
-                                   ("RTInvisibleParamAnns", rtInvisibleParamAnnsAttr),
-                                   ("AnnDefault", annotationDefaultAttr),
-                                   ("BootstrapMethods", bootstrapMethodsAttr)]
-
+                              ("CodeAttr", codeAttr),
+                              ("StackMapTableAttr", stackMapTableAttr),
+                              ("Exceptions", exceptionsAttr),
+                              ("InnerClasses", innerClassesAttr),
+                              ("EnclosingMethod", enclosingMethodAttr),
+                              ("Synthetic", syntheticAttr),
+                              ("Signature", signatureAttr),
+                              ("SourceFile", sourceFileAttr),
+                              ("SourceDebugExtension", sourceDebugExtensionAttr),
+                              ("LineNumberTable", lineNumberTableAttr),
+                              ("LocalVariableTable", localVariableTableAttr),
+                              ("LocalVariableTypeTable", localVariableTypeTableAttr),
+                              ("Deprecated", deprecatedAttr),
+                              ("RTVisibleAnns", rtVisibleAnnsAttr),
+                              ("RTInvisibleAnns", rtInvisibleAnnsAttr),
+                              ("RTVisibleParamAnns", rtVisibleParamAnnsAttr),
+                              ("RTInvisibleParamAnns", rtInvisibleParamAnnsAttr),
+                              ("AnnDefault", annotationDefaultAttr),
+                              ("BootstrapMethods", bootstrapMethodsAttr)]
+                
 constantValueAttr pool len = ConstantValue <$> getWord
 
 getExceptionTable = Exception <$> getWord <*> getWord <*> getWord <*> getWord
