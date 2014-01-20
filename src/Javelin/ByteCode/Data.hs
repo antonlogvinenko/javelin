@@ -120,7 +120,7 @@ data Exception = Exception { startPc :: Word16,
                              catchType :: Word16
                            } deriving (Show, Eq)
 
-data VerificationTypeInfo = TopVariableInfo
+data VerifTypeInfo = TopVariableInfo
                           | IntegerVariableInfo
                           | FloatVariableInfo
                           | LongVariableInfo
@@ -133,21 +133,21 @@ data VerificationTypeInfo = TopVariableInfo
 
 data StackMapFrame = SameFrame { frameType :: Word8 }
                    | SameLocals1StackItemFrame { frameType :: Word8,
-                                                 stackItem :: VerificationTypeInfo }
+                                                 stackItem :: VerifTypeInfo }
                    | SameLocals1StackItemFrameExtended { frameType :: Word8,
                                                          offsetData :: Word16,
-                                                         stackItem :: VerificationTypeInfo }
+                                                         stackItem :: VerifTypeInfo }
                    | ChopFrame { frameType :: Word8,
                                  offsetDelta :: Word16 }
                    | SameFrameExtended {frameType :: Word8,
                                         offsetDelta :: Word16 }
                    | AppendFrame { frameType :: Word8,
                                    offsetDelta :: Word16,
-                                   locals :: [VerificationTypeInfo] }
+                                   locals :: [VerifTypeInfo] }
                    | FullFrame { frameType :: Word8,
                                  offsetDelta :: Word16,
-                                 locals :: [VerificationTypeInfo],
-                                 stack :: [VerificationTypeInfo] }
+                                 locals :: [VerifTypeInfo],
+                                 stack :: [VerifTypeInfo] }
                    deriving (Show, Eq)
 
 data InnerClassInfo = InnerClassInfo { innerClassInfoIndex :: Word16,

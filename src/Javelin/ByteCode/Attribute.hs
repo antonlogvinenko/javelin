@@ -61,9 +61,38 @@ codeAttr pool len = CodeAttr <$> getWord <*> getWord
                          <*> severalTimes (getAttr pool)
 
 -- -> StackMapTable
--- -> verification type info
-verificationTypeInfo :: Map.Map Word8 (Get VerificationTypeInfo)
-verificationTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return IntegerVariableInfo),
+stackMapTableAttr pool len = StackMapTable <$> nTimes getStackMapFrame len
+getStackMapFrame = do
+  tag <- getByte
+  findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
+findWithDefault dft tag m =
+  case take 1 . filter (elem tag . fst) $ m of
+    [(_, f)] -> f
+    _ -> dft
+stackMapFrameList = [([0..63], sameFrameParser),
+                     ([64..127], sameLocals1StackItemFrame),
+                     ([247], sameLocals1StackItemFrameExtended),
+                     ([248..250], chopFrame),
+                     ([251], sameFrameExtended),
+                     ([252..254], appendFrame),
+                     ([255], fullFrame)]
+failingStackMapFrame tag = fail "AAAAAAAA!!!!1111"
+
+sameFrameParser tag = return $ SameFrame tag
+sameLocals1StackItemFrame tag = SameLocals1StackItemFrame tag <$> parseVerifTypeInfo
+sameLocals1StackItemFrameExtended tag =
+  SameLocals1StackItemFrameExtended tag <$> getWord <*> parseVerifTypeInfo
+chopFrame tag = ChopFrame tag <$> getWord
+sameFrameExtended tag = SameFrameExtended tag <$> getWord  
+appendFrame tag = AppendFrame tag
+                   <$> getWord
+                   <*> nTimes parseVerifTypeInfo ((fromIntegral tag) - 251)
+fullFrame tag = FullFrame tag <$> getWord
+                <*> severalTimes parseVerifTypeInfo
+                <*> severalTimes parseVerifTypeInfo
+--   -> VerifTypeInfo
+verifTypeInfo :: Map.Map Word8 (Get VerifTypeInfo)
+verifTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return IntegerVariableInfo),
                                      (2, return FloatVariableInfo), (3, return LongVariableInfo),
                                      (4, return DoubleVariableInfo), (5, return NullVariableInfo),
                                      (6, return UninitializedThisVariableInfo),
@@ -71,40 +100,12 @@ verificationTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return Int
                                      (8, uninitializedVariableInfo)]
 objectVariableInfo = ObjectVariableInfo <$> getWord
 uninitializedVariableInfo = UninitializedVariableInfo <$> getWord
-failingVerificationInfo = fail "Unknown verification info"
-parseVerificationTypeInfo = do
+failingVerifInfo = fail "Unknown verif info"
+parseVerifTypeInfo = do
   tag <- getByte
-  Map.findWithDefault failingVerificationInfo tag verificationTypeInfo
--- <-- verification type info
-stackMapFrameList = [([0..63], sameFrameParser),
-                      ([64..127], sameLocals1StackItemFrame),
-                      ([247], sameLocals1StackItemFrameExtended),
-                      ([248..250], chopFrame),
-                      ([251], sameFrameExtended),
-                      ([252..254], appendFrame),
-                      ([255], fullFrame)]
-sameFrameParser tag = return $ SameFrame tag
-sameLocals1StackItemFrame tag = SameLocals1StackItemFrame tag <$> parseVerificationTypeInfo
-sameLocals1StackItemFrameExtended tag =
-  SameLocals1StackItemFrameExtended tag <$> getWord <*> parseVerificationTypeInfo
-chopFrame tag = ChopFrame tag <$> getWord
-sameFrameExtended tag = SameFrameExtended tag <$> getWord  
-appendFrame tag = AppendFrame tag
-                   <$> getWord
-                   <*> nTimes parseVerificationTypeInfo ((fromIntegral tag) - 251)
-fullFrame tag = FullFrame tag <$> getWord
-                <*> severalTimes parseVerificationTypeInfo
-                <*> severalTimes parseVerificationTypeInfo
-failingStackMapFrame tag = fail "AAAAAAAA!!!!1111"
-findWithDefault dft tag m =
-  case take 1 . filter (elem tag . fst) $ m of
-    [(_, f)] -> f
-    _ -> dft
-getStackMapFrame = do
-  tag <- getByte
-  findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
-stackMapTableAttr pool len = StackMapTable <$> nTimes getStackMapFrame len
--- -> StackMapTable
+  Map.findWithDefault failingVerifInfo tag verifTypeInfo
+--   <-- VerifTypeInfo
+-- <- StackMapTable
 
 exceptionsAttr pool len = Exceptions <$> severalTimes getWord
 
@@ -134,15 +135,14 @@ localVariableTypeTableAttr pool len =
 
 deprecatedAttr pool len = return Deprecated
 
--- --> annotations
-elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
-                            ("c", parseClassValue), ("@", parseAnnValue),
-                            ("[", parseArrayValue)]
-parseConstValue tag = ElementConstValue tag <$> getWord
-parseEnumValue tag = ElementEnumConstValue tag <$> getWord <*> getWord
-parseClassValue tag = ElementClassInfoIndex tag <$> getWord
-parseAnnValue tag = ElementAnnValue tag <$> parseAnnAttr
-parseArrayValue tag = ElementArrayValue tag <$> severalTimes elementValueParser  
+-- --> Annotations
+rtVisibleAnnsAttr pool len = RTVisibleAnns <$> severalTimes  parseAnnAttr
+rtInvisibleAnnsAttr pool len = RTInvisibleAnns <$> severalTimes parseAnnAttr
+rtVisibleParameterAnnsAttr pool len = RTVisibleParameterAnns <$> nTimes (severalTimes parseAnnAttr) len
+rtInvisibleParameterAnnsAttr pool len = RTInvisibleParameterAnns <$> nTimes (severalTimes parseAnnAttr) len
+
+parseAnnAttr = Ann <$> getWord <*> severalTimes elementValuePairParser
+elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
 elementValueParser = do
   tag <- getByteString 1
   let tagChar = bytesToString tag !! 0
@@ -150,23 +150,17 @@ elementValueParser = do
     [(_, parser)] -> parser tagChar
     _ -> fail "Aaaa"
 
-elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
-parseAnnAttr = Ann <$> getWord <*> severalTimes elementValuePairParser
+elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
+                            ("c", parseClassValue), ("@", parseAnnValue),
+                            ("[", parseArrayValue)]
+parseConstValue tag = ElementConstValue tag <$> getWord
+parseEnumValue tag = ElementEnumConstValue tag <$> getWord <*> getWord
+parseClassValue tag = ElementClassInfoIndex tag <$> getWord
+parseAnnValue tag = ElementAnnValue tag <$> parseAnnAttr
+parseArrayValue tag = ElementArrayValue tag <$> severalTimes elementValueParser
+-- <-- Annotations
 
-rtVisibleAnnsAttr pool len = RTVisibleAnns <$> severalTimes  parseAnnAttr
-
-rtInvisibleAnnsAttr pool len = RTInvisibleAnns <$> severalTimes parseAnnAttr
-
-rtVisibleParameterAnnsAttr pool len =
-  RTVisibleParameterAnns <$> nTimes (severalTimes parseAnnAttr) len
-
-rtInvisibleParameterAnnsAttr pool len =
-  RTInvisibleParameterAnns <$>
-  nTimes (severalTimes parseAnnAttr) len
-
-annotationDefaultAttr pool len = AnnDefault <$>
-                                       (unpack <$> getByteString (fromIntegral len))
--- <-- annotations
+annotationDefaultAttr pool len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
 
 bootstrapMethodsAttr pool len = BootstrapMethods <$>
                                      severalTimes (BootstrapMethod <$> getWord <*> severalTimes getWord)
