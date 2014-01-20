@@ -23,17 +23,17 @@ data ClassAccessFlags = ClassPublic | ClassFinal
                       | ClassSuper | ClassInterface | ClassAbstract
                       | ClassSynthetic | ClassAnnotation | ClassEnum deriving (Show, Eq)
 
-data Constant = Utf8Info { stringValue :: String}
-              | IntegerInfo {bytes :: Word32}
-              | FloatInfo {bytes :: Word32}
-              | LongInfo {highBytes :: Word32, lowBytes :: Word32}
-              | DoubleInfo {highBytes :: Word32, lowBytes :: Word32}
-              | ClassInfo {nameIndex :: Word16}
-              | StringInfo {stringIndex :: Word16}
-              | Fieldref {classIndex :: Word16, nameAndTypeIndex :: Word16}
-              | Methodref {classIndex :: Word16, nameAndTypeIndex :: Word16}
-              | InterfaceMethodref {classIndex :: Word16, nameAndTypeIndex :: Word16}
-              | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16}
+data Constant = Utf8Info { stringValue :: String }
+              | IntegerInfo {bytes :: Word32 }
+              | FloatInfo {bytes :: Word32 }
+              | LongInfo {highBytes :: Word32, lowBytes :: Word32 }
+              | DoubleInfo {highBytes :: Word32, lowBytes :: Word32 }
+              | ClassInfo {nameIndex :: Word16 }
+              | StringInfo {stringIndex :: Word16 }
+              | Fieldref {classIndex :: Word16, nameAndTypeIndex :: Word16 }
+              | Methodref {classIndex :: Word16, nameAndTypeIndex :: Word16 }
+              | InterfaceMethodref {classIndex :: Word16, nameAndTypeIndex :: Word16 }
+              | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16 }
               | MethodHandleInfo { referenceKind :: Word8, refereneIndex :: Word16 }
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
               | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Show, Eq)
