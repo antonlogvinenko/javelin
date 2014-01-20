@@ -49,7 +49,7 @@ attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
                               ("RTInvisibleAnns", rtInvisibleAnnsAttr),
                               ("RTVisibleParamAnns", rtVisibleParamAnnsAttr),
                               ("RTInvisibleParamAnns", rtInvisibleParamAnnsAttr),
-                              ("AnnDefault", annotationDefaultAttr),
+                              ("AnnDefault", annDefaultAttr),
                               ("BootstrapMethods", bootstrapMethodsAttr)]
                 
 constantValueAttr pool len = ConstantValue <$> getWord
@@ -160,7 +160,7 @@ parseAnnValue tag = ElementAnnValue tag <$> parseAnnAttr
 parseArrayValue tag = ElementArrayValue tag <$> several elementValueParser
 -- <-- Annotations
 
-annotationDefaultAttr pool len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
+annDefaultAttr pool len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
 
 bootstrapMethodsAttr pool len = BootstrapMethods <$>
                                      several (BootstrapMethod <$> getWord <*> several getWord)
