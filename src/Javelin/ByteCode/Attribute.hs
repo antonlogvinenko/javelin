@@ -56,12 +56,12 @@ constantValueAttr pool len = ConstantValue <$> getWord
 
 getExceptionTable = Exception <$> getWord <*> getWord <*> getWord <*> getWord
 codeAttr pool len = CodeAttr <$> getWord <*> getWord
-                         <*> severalTimes getByte
-                         <*> severalTimes getExceptionTable
-                         <*> severalTimes (getAttr pool)
+                         <*> several getByte
+                         <*> several getExceptionTable
+                         <*> several (getAttr pool)
 
 -- -> StackMapTable
-stackMapTableAttr pool len = StackMapTable <$> nTimes getStackMapFrame len
+stackMapTableAttr pool len = StackMapTable <$> times getStackMapFrame len
 getStackMapFrame = do
   tag <- getByte
   findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
@@ -86,10 +86,10 @@ chopFrame tag = ChopFrame tag <$> getWord
 sameFrameExtended tag = SameFrameExtended tag <$> getWord  
 appendFrame tag = AppendFrame tag
                    <$> getWord
-                   <*> nTimes parseVerifTypeInfo ((fromIntegral tag) - 251)
+                   <*> times parseVerifTypeInfo ((fromIntegral tag) - 251)
 fullFrame tag = FullFrame tag <$> getWord
-                <*> severalTimes parseVerifTypeInfo
-                <*> severalTimes parseVerifTypeInfo
+                <*> several parseVerifTypeInfo
+                <*> several parseVerifTypeInfo
 --   -> VerifTypeInfo
 verifTypeInfo :: Map.Map Word8 (Get VerifTypeInfo)
 verifTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return IntegerVariableInfo),
@@ -107,11 +107,11 @@ parseVerifTypeInfo = do
 --   <-- VerifTypeInfo
 -- <- StackMapTable
 
-exceptionsAttr pool len = Exceptions <$> severalTimes getWord
+exceptionsAttr pool len = Exceptions <$> several getWord
 
 innerClass = InnerClassInfo <$> getWord <*> getWord <*> getWord
               <*> (foldMask innerClassAccessFlagsMap <$> getWord)
-innerClassesAttr pool len = InnerClasses <$> nTimes innerClass len
+innerClassesAttr pool len = InnerClasses <$> times innerClass len
 
 enclosingMethodAttr pool len = EnclosingMethod <$> getWord <*> getWord
 
@@ -122,26 +122,26 @@ signatureAttr pool len = Signature <$> getWord
 sourceFileAttr pool len = SourceFile <$> getWord
 
 sourceDebugExtensionAttr pool len =
-  SourceDebugExtension <$> (bytesToString <$> nTimes getWord len)
+  SourceDebugExtension <$> (bytesToString <$> times getWord len)
 
 lineNumberTableAttr pool len = LineNumberTable
-                                    <$> severalTimes (LineNumber <$> getWord <*> getWord)
+                                    <$> several (LineNumber <$> getWord <*> getWord)
 
 localVariableInfoParser= LocalVariableInfo <$> getWord <*> getWord <*> getWord <*> getWord <*> getWord
 localVariableTableAttr pool len =
-  LocalVariableTable <$> severalTimes localVariableInfoParser
+  LocalVariableTable <$> several localVariableInfoParser
 localVariableTypeTableAttr pool len =
-  LocalVariableTypeTable <$> severalTimes localVariableInfoParser
+  LocalVariableTypeTable <$> several localVariableInfoParser
 
 deprecatedAttr pool len = return Deprecated
 
 -- --> Annotations
-rtVisibleAnnsAttr pool len = RTVisibleAnns <$> severalTimes  parseAnnAttr
-rtInvisibleAnnsAttr pool len = RTInvisibleAnns <$> severalTimes parseAnnAttr
-rtVisibleParameterAnnsAttr pool len = RTVisibleParameterAnns <$> nTimes (severalTimes parseAnnAttr) len
-rtInvisibleParameterAnnsAttr pool len = RTInvisibleParameterAnns <$> nTimes (severalTimes parseAnnAttr) len
+rtVisibleAnnsAttr pool len = RTVisibleAnns <$> several  parseAnnAttr
+rtInvisibleAnnsAttr pool len = RTInvisibleAnns <$> several parseAnnAttr
+rtVisibleParameterAnnsAttr pool len = RTVisibleParameterAnns <$> times (several parseAnnAttr) len
+rtInvisibleParameterAnnsAttr pool len = RTInvisibleParameterAnns <$> times (several parseAnnAttr) len
 
-parseAnnAttr = Ann <$> getWord <*> severalTimes elementValuePairParser
+parseAnnAttr = Ann <$> getWord <*> several elementValuePairParser
 elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
 elementValueParser = do
   tag <- getByteString 1
@@ -151,16 +151,16 @@ elementValueParser = do
     _ -> fail "Aaaa"
 
 elementValueParsersList = [("BCDFIJSZs", parseConstValue), ("e", parseEnumValue),
-                            ("c", parseClassValue), ("@", parseAnnValue),
-                            ("[", parseArrayValue)]
+                           ("c", parseClassValue), ("@", parseAnnValue),
+                           ("[", parseArrayValue)]
 parseConstValue tag = ElementConstValue tag <$> getWord
 parseEnumValue tag = ElementEnumConstValue tag <$> getWord <*> getWord
 parseClassValue tag = ElementClassInfoIndex tag <$> getWord
 parseAnnValue tag = ElementAnnValue tag <$> parseAnnAttr
-parseArrayValue tag = ElementArrayValue tag <$> severalTimes elementValueParser
+parseArrayValue tag = ElementArrayValue tag <$> several elementValueParser
 -- <-- Annotations
 
 annotationDefaultAttr pool len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
 
 bootstrapMethodsAttr pool len = BootstrapMethods <$>
-                                     severalTimes (BootstrapMethod <$> getWord <*> severalTimes getWord)
+                                     several (BootstrapMethod <$> getWord <*> several getWord)

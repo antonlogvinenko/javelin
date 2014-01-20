@@ -32,7 +32,7 @@ getFieldMethod pool accessFlags constr =
   <$> (foldMask accessFlags <$> getWord)
   <*> getWord
   <*> getWord
-  <*> (severalTimes $ getAttr pool)
+  <*> (several $ getAttr pool)
   
 getField :: [Constant] -> Get FieldInfo
 getField pool = getFieldMethod pool fieldInfoAF FieldInfo

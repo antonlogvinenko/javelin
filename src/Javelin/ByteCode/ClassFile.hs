@@ -17,13 +17,13 @@ getInterface = getWord
 
 classBody :: Get ClassBody
 classBody = do
-  pool <- severalTimes getConstant
+  pool <- several getConstant
   ClassBody pool
     <$> parseClassAccessFlags <*> getWord <*> getWord
-    <*> severalTimes getInterface
-    <*> severalTimes (getField pool)
-    <*> severalTimes (getMethod pool)
-    <*> severalTimes (getAttr pool)
+    <*> several getInterface
+    <*> several (getField pool)
+    <*> several (getMethod pool)
+    <*> several (getAttr pool)
 
 magicNumber :: Get Int
 magicNumber = do

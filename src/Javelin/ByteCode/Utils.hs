@@ -15,14 +15,14 @@ getByte = getWord8
 getWord = getWord16be
 getDWord = getWord32be
 
-nTimes :: Get a -> Word16 -> Get [a]
-nTimes _ 0 = return []
-nTimes get n = (:) <$> get <*> nTimes get (n - 1)
+times :: Get a -> Word16 -> Get [a]
+times _ 0 = return []
+times get n = (:) <$> get <*> times get (n - 1)
     
-severalTimes :: Get a -> Get [a]
-severalTimes get = do
+several :: Get a -> Get [a]
+several get = do
   len <- getWord
-  nTimes get len
+  times get len
 
 addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]
 addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
