@@ -93,13 +93,11 @@ fullFrame tag = FullFrame tag <$> getWord
 --   -> VerifTypeInfo
 verifTypeInfo :: Map.Map Word8 (Get VerifTypeInfo)
 verifTypeInfo = Map.fromList [(0, return TopVariableInfo), (1, return IntegerVariableInfo),
-                                     (2, return FloatVariableInfo), (3, return LongVariableInfo),
-                                     (4, return DoubleVariableInfo), (5, return NullVariableInfo),
-                                     (6, return UninitializedThisVariableInfo),
-                                     (7, objectVariableInfo),
-                                     (8, uninitializedVariableInfo)]
-objectVariableInfo = ObjectVariableInfo <$> getWord
-uninitializedVariableInfo = UninitializedVariableInfo <$> getWord
+                              (2, return FloatVariableInfo), (3, return LongVariableInfo),
+                              (4, return DoubleVariableInfo), (5, return NullVariableInfo),
+                              (6, return UninitializedThisVariableInfo),
+                              (7, ObjectVariableInfo <$> getWord),
+                              (8, UninitializedVariableInfo <$> getWord)]
 failingVerifInfo = fail "Unknown verif info"
 parseVerifTypeInfo = do
   tag <- getByte
