@@ -27,12 +27,12 @@ getAttr pool = do
     Nothing -> fail "another cake"
 
 parseAttr :: [Constant] -> String -> Word16 -> Get AttrInfo
+parseAttr pool "CodeAttr" len = codeAttr pool len
 parseAttr pool text len = case Map.lookup text attrsNamesMap of
-  Just parser -> parser pool len
+  Just parser -> parser len
   Nothing -> UnknownAttr <$> getByteString (fromIntegral len)
 
 attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
-                              ("CodeAttr", codeAttr),
                               ("StackMapTableAttr", stackMapTableAttr),
                               ("Exceptions", exceptionsAttr),
                               ("InnerClasses", innerClassesAttr),
@@ -52,7 +52,7 @@ attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
                               ("AnnDefault", annDefaultAttr),
                               ("BootstrapMethods", bootstrapMethodsAttr)]
                 
-constantValueAttr pool len = ConstantValue <$> getWord
+constantValueAttr len = ConstantValue <$> getWord
 
 getExceptionTable = Exception <$> getWord <*> getWord <*> getWord <*> getWord
 codeAttr pool len = CodeAttr <$> getWord <*> getWord
@@ -61,7 +61,7 @@ codeAttr pool len = CodeAttr <$> getWord <*> getWord
                          <*> several (getAttr pool)
 
 -- -> StackMapTable
-stackMapTableAttr pool len = StackMapTable <$> times getStackMapFrame len
+stackMapTableAttr len = StackMapTable <$> times getStackMapFrame len
 getStackMapFrame = do
   tag <- getByte
   findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
@@ -107,39 +107,39 @@ parseVerifTypeInfo = do
 --   <-- VerifTypeInfo
 -- <- StackMapTable
 
-exceptionsAttr pool len = Exceptions <$> several getWord
+exceptionsAttr len = Exceptions <$> several getWord
 
 innerClass = InnerClassInfo <$> getWord <*> getWord <*> getWord
               <*> (foldMask innerClassAccessFlagsMap <$> getWord)
-innerClassesAttr pool len = InnerClasses <$> times innerClass len
+innerClassesAttr len = InnerClasses <$> times innerClass len
 
-enclosingMethodAttr pool len = EnclosingMethod <$> getWord <*> getWord
+enclosingMethodAttr len = EnclosingMethod <$> getWord <*> getWord
 
-syntheticAttr pool len = return Synthetic
+syntheticAttr len = return Synthetic
 
-signatureAttr pool len = Signature <$> getWord
+signatureAttr len = Signature <$> getWord
 
-sourceFileAttr pool len = SourceFile <$> getWord
+sourceFileAttr len = SourceFile <$> getWord
 
-sourceDebugExtensionAttr pool len =
+sourceDebugExtensionAttr len =
   SourceDebugExtension <$> (bytesToString <$> times getWord len)
 
-lineNumberTableAttr pool len = LineNumberTable
+lineNumberTableAttr len = LineNumberTable
                                     <$> several (LineNumber <$> getWord <*> getWord)
 
 localVariableInfoParser= LocalVariableInfo <$> getWord <*> getWord <*> getWord <*> getWord <*> getWord
-localVariableTableAttr pool len =
+localVariableTableAttr len =
   LocalVariableTable <$> several localVariableInfoParser
-localVariableTypeTableAttr pool len =
+localVariableTypeTableAttr len =
   LocalVariableTypeTable <$> several localVariableInfoParser
 
-deprecatedAttr pool len = return Deprecated
+deprecatedAttr len = return Deprecated
 
 -- --> Annotations
-rtVisibleAnnsAttr pool len = RTVisibleAnns <$> several  parseAnnAttr
-rtInvisibleAnnsAttr pool len = RTInvisibleAnns <$> several parseAnnAttr
-rtVisibleParamAnnsAttr pool len = RTVisibleParamAnns <$> times (several parseAnnAttr) len
-rtInvisibleParamAnnsAttr pool len = RTInvisibleParamAnns <$> times (several parseAnnAttr) len
+rtVisibleAnnsAttr len = RTVisibleAnns <$> several  parseAnnAttr
+rtInvisibleAnnsAttr len = RTInvisibleAnns <$> several parseAnnAttr
+rtVisibleParamAnnsAttr len = RTVisibleParamAnns <$> times (several parseAnnAttr) len
+rtInvisibleParamAnnsAttr len = RTInvisibleParamAnns <$> times (several parseAnnAttr) len
 
 parseAnnAttr = Ann <$> getWord <*> several elementValuePairParser
 elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
@@ -160,7 +160,7 @@ parseAnnValue tag = ElementAnnValue tag <$> parseAnnAttr
 parseArrayValue tag = ElementArrayValue tag <$> several elementValueParser
 -- <-- Annotations
 
-annDefaultAttr pool len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
+annDefaultAttr len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
 
-bootstrapMethodsAttr pool len = BootstrapMethods <$>
+bootstrapMethodsAttr len = BootstrapMethods <$>
                                      several (BootstrapMethod <$> getWord <*> several getWord)
