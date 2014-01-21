@@ -122,7 +122,7 @@ signatureAttr len = Signature <$> getWord
 sourceFileAttr len = SourceFile <$> getWord
 
 sourceDebugExtensionAttr len =
-  SourceDebugExtension <$> (bytesToString <$> times getWord len)
+  SourceDebugExtension <$> (bytesToString <$> getByteString (fromIntegral len))
 
 lineNumberTableAttr len = LineNumberTable
                                     <$> several (LineNumber <$> getWord <*> getWord)

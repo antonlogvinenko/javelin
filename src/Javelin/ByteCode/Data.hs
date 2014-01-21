@@ -5,7 +5,7 @@ import Data.ByteString (ByteString)
 import Data.Word (Word32, Word16, Word8)
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
-                deriving (Show, Eq)
+              deriving (Show, Eq)
 
 data ClassBody = ClassBody { constPool :: [Constant],
                              classAccessFlags :: [ClassAccessFlags],
@@ -19,7 +19,8 @@ data ClassBody = ClassBody { constPool :: [Constant],
 
 data ClassAccessFlags = ClassPublic | ClassFinal
                       | ClassSuper | ClassInterface | ClassAbstract
-                      | ClassSynthetic | ClassAnn | ClassEnum deriving (Show, Eq)
+                      | ClassSynthetic | ClassAnn | ClassEnum
+                      deriving (Show, Eq)
 
 data Constant = Utf8Info { stringValue :: String }
               | IntegerInfo {bytes :: Word32 }
@@ -53,7 +54,7 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodBridge | MethodVarargs | MethodNative
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
-  
+                                   
 data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodNameIndex :: Word16,
                                methodInfoDescriptorIndex :: Word16,
@@ -62,37 +63,37 @@ data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
 
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
-                   | ConstantValue { constantValueIndex :: Word16 }
-                   | CodeAttr { maxStack :: Word16,
-                                     maxLocals :: Word16,
-                                     code :: [Word8],
-                                     exceptionTable :: [Exception],
-                                     codeAttrs :: [AttrInfo] }
-                   | StackMapTable { entries :: [StackMapFrame] }
-                   | Exceptions { exceptionIndexTable :: [Word16] }
-                   | InnerClasses { classes :: [InnerClassInfo] }
-                   | EnclosingMethod { enclosingClassIndex :: Word16,
-                                       enclosingMethodIndex :: Word16 }
-                   | Synthetic
-                   | Signature { signatureIndex :: Word16 }
-                   | SourceFile { sourceFileIndex :: Word16 }
-                   | SourceDebugExtension { debugExtension :: String }
-                   | LineNumberTable { lineNumberTable :: [LineNumber] }
-                   | LocalVariableTable { localVariableTable :: [LocalVariableInfo] }
-                   | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableInfo] }
-                   | Deprecated
-                   | RTVisibleAnns { annotations :: [Ann] }
-                   | RTInvisibleAnns { annotations :: [Ann] }
-                   | RTVisibleParamAnns { paramAnns :: [[Ann]] }
-                   | RTInvisibleParamAnns { paramAnns :: [[Ann]] }
-                   | AnnDefault { defaultValue :: [Word8] }
-                   | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
-                   deriving (Show, Eq)
+              | ConstantValue { constantValueIndex :: Word16 }
+              | CodeAttr { maxStack :: Word16,
+                           maxLocals :: Word16,
+                           code :: [Word8],
+                           exceptionTable :: [Exception],
+                           codeAttrs :: [AttrInfo] }
+              | StackMapTable { entries :: [StackMapFrame] }
+              | Exceptions { exceptionIndexTable :: [Word16] }
+              | InnerClasses { classes :: [InnerClassInfo] }
+              | EnclosingMethod { enclosingClassIndex :: Word16,
+                                  enclosingMethodIndex :: Word16 }
+              | Synthetic
+              | Signature { signatureIndex :: Word16 }
+              | SourceFile { sourceFileIndex :: Word16 }
+              | SourceDebugExtension { debugExtension :: String }
+              | LineNumberTable { lineNumberTable :: [LineNumber] }
+              | LocalVariableTable { localVariableTable :: [LocalVariableInfo] }
+              | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableInfo] }
+              | Deprecated
+              | RTVisibleAnns { annotations :: [Ann] }
+              | RTInvisibleAnns { annotations :: [Ann] }
+              | RTVisibleParamAnns { paramAnns :: [[Ann]] }
+              | RTInvisibleParamAnns { paramAnns :: [[Ann]] }
+              | AnnDefault { defaultValue :: [Word8] }
+              | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
+              deriving (Show, Eq)
 
 data BootstrapMethod = BootstrapMethod { methodRef :: Word16,
                                          arguments :: [Word16] }
                      deriving (Show, Eq)                            
-
+                              
 data ElementValue = ElementConstValue { tag :: Char,
                                         value :: Word16 }
                   | ElementEnumConstValue { tag :: Char,
@@ -111,8 +112,8 @@ data ElementValuePair = ElementValuePair { elementNameIndex :: Word16,
                                          } deriving (Show, Eq)
 
 data Ann = Ann { typeIndex :: Word16,
-                               elementValuePairs :: [ElementValuePair]
-                             } deriving (Show, Eq)
+                 elementValuePairs :: [ElementValuePair]
+               } deriving (Show, Eq)
 
 data Exception = Exception { startPc :: Word16,
                              endPc :: Word16,
@@ -121,15 +122,15 @@ data Exception = Exception { startPc :: Word16,
                            } deriving (Show, Eq)
 
 data VerifTypeInfo = TopVariableInfo
-                          | IntegerVariableInfo
-                          | FloatVariableInfo
-                          | LongVariableInfo
-                          | DoubleVariableInfo
-                          | NullVariableInfo
-                          | UninitializedThisVariableInfo
-                          | ObjectVariableInfo { cpoolIndex :: Word16 }
-                          | UninitializedVariableInfo { offset :: Word16 }
-                          deriving (Show, Eq)
+                   | IntegerVariableInfo
+                   | FloatVariableInfo
+                   | LongVariableInfo
+                   | DoubleVariableInfo
+                   | NullVariableInfo
+                   | UninitializedThisVariableInfo
+                   | ObjectVariableInfo { cpoolIndex :: Word16 }
+                   | UninitializedVariableInfo { offset :: Word16 }
+                   deriving (Show, Eq)
 
 data StackMapFrame = SameFrame { frameType :: Word8 }
                    | SameLocals1StackItemFrame { frameType :: Word8,

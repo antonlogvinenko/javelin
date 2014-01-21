@@ -5,7 +5,6 @@ Haskell JVM
 
 * javelin-2
   * bytecode
-    * code attribute and pool passing - codeAttr function is special, remove from map
     * strings
     * parse descriptors/methods/signatures etc
     * parse numbers
