@@ -5,7 +5,6 @@ Haskell JVM
 
 * javelin-2
   * bytecode
-    * strings
     * parse descriptors/methods/signatures etc
     * parse numbers
     * parse length in all attributes - it takes some bytes, for verification

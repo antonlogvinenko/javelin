@@ -23,11 +23,11 @@ methodInfoAF = fromList [(0x0001, MethodPublic), (0x0002, MethodPrivate),
                          (0x0100, MethodNative), (0x0400, MethodAbstract),
                          (0x0800, MethodStrict), (0x1000, MethodSynthetic)]
 
-getFieldMethod :: [Constant] ->
-                  Map Word16 flag ->
-                  ([flag] -> Word16 -> Word16 -> [AttrInfo] -> x)
+getFieldMethod :: Map Word16 flag ->
+                  ([flag] -> Word16 -> Word16 -> [AttrInfo] -> x) ->
+                  [Constant]
                   -> Get x
-getFieldMethod pool accessFlags constr =
+getFieldMethod accessFlags constr pool =
   constr
   <$> (foldMask accessFlags <$> getWord)
   <*> getWord
@@ -35,7 +35,7 @@ getFieldMethod pool accessFlags constr =
   <*> (several $ getAttr pool)
   
 getField :: [Constant] -> Get FieldInfo
-getField pool = getFieldMethod pool fieldInfoAF FieldInfo
+getField = getFieldMethod fieldInfoAF FieldInfo
 
 getMethod :: [Constant] -> Get MethodInfo
-getMethod pool = getFieldMethod pool methodInfoAF MethodInfo
+getMethod = getFieldMethod methodInfoAF MethodInfo
