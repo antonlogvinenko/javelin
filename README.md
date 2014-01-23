@@ -2,21 +2,19 @@ javelin
 =======
 
 Haskell JVM
-
-* javelin-2
-  * bytecode
-    * parse descriptors/methods/signatures etc
+* bytecode parser
+  * deserialize
+    * parse descriptors/methods/signatures etc - use parsec here
     * parse numbers
     * parse length in all attributes - it takes some bytes, for verification
     * overall structure
     * change inheritance?
     * understand the whole structure, semantics
     * other details besides any kind of verification
-    * test
-
+    * verification in place
+    * unit testing, acceptantce testing
   * validation, verification
-    * in place
-    * using spec
+    * using spec, 200 pages of verification...
 
   * modification: store higher level data about class file
 
