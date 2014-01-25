@@ -43,3 +43,25 @@ getFromPool list idx = if okIdx < length list
 
 bytesToString :: ByteString -> String
 bytesToString = toString
+
+type FullName = [String]
+type UnqualifiedName = String
+data FieldType = BaseType 
+               | ObjectType { className :: FullName }
+               | ArrayType { componentType :: FieldType }
+               deriving (Show, Eq)
+data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
+              deriving (Show, Eq)
+
+
+data FieldDescriptor = FieldDescriptor { fieldType :: FieldType }
+                     deriving (Show, Eq)
+
+
+data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
+                                           returnDescr :: ReturnDescriptor }
+                        deriving (Show, Eq)
+data ReturnDescriptor = FieldType | VoidDescriptor deriving (Show, Eq)
+
+
+--data ClassSignature = 
