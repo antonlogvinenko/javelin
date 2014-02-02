@@ -46,7 +46,8 @@ bytesToString = toString
 
 type FullName = [String]
 type UnqualifiedName = String
-data FieldType = BaseType 
+
+data FieldType = BaseType { baseType :: BaseType }
                | ObjectType { className :: FullName }
                | ArrayType { componentType :: FieldType }
                deriving (Show, Eq)
@@ -54,14 +55,28 @@ data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | Boole
               deriving (Show, Eq)
 
 
+-- FieldDescriptor
 data FieldDescriptor = FieldDescriptor { fieldType :: FieldType }
                      deriving (Show, Eq)
 
-
+-- MethodDescriptor
 data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
                                            returnDescr :: ReturnDescriptor }
                         deriving (Show, Eq)
 data ReturnDescriptor = FieldType | VoidDescriptor deriving (Show, Eq)
 
 
---data ClassSignature = 
+-- ClassSignature
+data ClassSignature = ClassSignature { formalTypeParameters :: [FormalTypeParameter],
+                                       superclassSignature :: ClassTypeSignature,
+                                       superinterfaceSignature :: ClassTypeSignature }
+                    deriving (Show, Eq)
+data FormalTypeParameter = FormalTypeParameter { identifier :: String,
+                                                 classBound :: [FieldTypeSignature],
+                                                 interfaceBound :: [FieldTypeSignature] }
+                           deriving (Show, Eq)
+data FieldTypeSignature = ClassTypeSignature
+                        | ArrayTypeSignature
+                        | TypeVariableSignature
+
+                          
