@@ -12,7 +12,9 @@ Long term
 Short term
 * bytecode parser
   * deserialize
-    * parse descriptors/methods/signatures etc - use parsec here
+    * parse descriptors/methods/signatures etc
+      * data definition
+      * parsec
     * parse numbers
     * parse length in all attributes - it takes some bytes, for verification
     * overall structure

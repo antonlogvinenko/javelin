@@ -1,6 +1,7 @@
 module Javelin.ByteCode.DescSign
 where
 
+-- Fundamental definitions
 type FullName = [String]
 type UnqualifiedName = String
 
@@ -16,11 +17,13 @@ data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | Boole
 data FieldDescriptor = FieldDescriptor { fieldType :: FieldType }
                      deriving (Show, Eq)
 
+
 -- MethodDescriptor
 data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
                                            returnDescr :: ReturnDescriptor }
                         deriving (Show, Eq)
-data ReturnDescriptor = FieldType | VoidDescriptor deriving (Show, Eq)
+data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType }
+                      | VoidDescriptor deriving (Show, Eq)
 
 
 -- ClassSignature
@@ -29,25 +32,30 @@ data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParamet
                                        superinterfaceSignature :: ClassTypeSignature }
                     deriving (Show, Eq)
 data FormalTypeParameter = FormalTypeParameter { ftId :: String,
-                                                 classBound :: [FieldTypeSignature],
+                                                 classBound :: FieldTypeSignature,
                                                  interfaceBound :: [FieldTypeSignature] }
                            deriving (Show, Eq)
-data FieldTypeSignature = ClassTypeSignature { packageSpecifier :: [String],
+data FieldTypeSignature = ClassFieldType { classTypeSignature :: ClassTypeSignature }
+                        | ArrayFieldType { signatures :: [TypeSignature] }
+                        | TypeVariable { typeVariableSignature :: TypeVariableSignature }
+                        deriving (Show, Eq)
+data TypeVariableSignature = TypeVariableSignature { tvId :: String } deriving (Show, Eq)                                
+data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: [String],
                                                simpleSignature :: SimpleClassTypeSignature,
                                                suffix :: [SimpleClassTypeSignature] }
-                        | ArrayTypeSignature { signatures :: [TypeSignature] }
-                        | TypeVariableSignature { tvId :: String }
                         deriving (Show, Eq)
 data SimpleClassTypeSignature = SimpleClassTypeSignature { sctId :: String,
                                                            typeArguments :: [TypeArgument] }
                               deriving (Show, Eq)
 data TypeArgument = TypeArgument { indicator :: WildcardIndicator,
-                                   signature :: FieldTypeSignature }
-                    deriving (Show, Eq)
+                                   typeArgumentSignature :: FieldTypeSignature }
+                  | Asterisk
+                  deriving (Show, Eq)
 data WildcardIndicator = Plus | Minus deriving (Show, Eq)
 data TypeSignature = FieldTypeTypeSignature { fieldTypeSignature :: FieldTypeSignature }
                    | BaseTypeTypeSignature { baseTypeSignature :: BaseType }
                    deriving (Show, Eq)
+
 
 --MethodTypeSignature
 data MethodTypeSignature = MethodTypeSignature { methodTypeParameters :: [FormalTypeParameter],
@@ -58,5 +66,6 @@ data MethodTypeSignature = MethodTypeSignature { methodTypeParameters :: [Formal
 data ReturnType = ReturnTypeSignature { typeSignature :: TypeSignature }
                 | VoidTypeSignature
                 deriving (Show, Eq)
-                          
-
+data ThrowsSignature = ThrowsSignature { classType :: ClassTypeSignature,
+                                         typeVariable :: TypeVariableSignature }
+                       deriving (Show, Eq)
