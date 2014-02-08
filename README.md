@@ -1,7 +1,15 @@
 javelin
 =======
-
 Haskell JVM
+
+Long term
+* bytecode parser
+* runtime
+* linking
+* verification (optional)
+* garbage collection (optional)
+
+Short term
 * bytecode parser
   * deserialize
     * parse descriptors/methods/signatures etc - use parsec here
@@ -13,13 +21,10 @@ Haskell JVM
     * other details besides any kind of verification
     * verification in place
     * unit testing, acceptantce testing
-  * validation, verification
-    * using spec, 200 pages of verification...
-
+  * simple validation based on bytecode definition
   * modification: store higher level data about class file
-
-  * test
-
+  * tests
+  
 Haskell:
 * sandbox
 * read, use quickcheck, hunit, tasty, hspec?, write tests

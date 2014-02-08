@@ -21,7 +21,8 @@ library
                      Javelin.ByteCode.ConstantPool,
                      Javelin.ByteCode.FieldMethod,
                      Javelin.ByteCode.Attribute,
-                     Javelin.ByteCode.ClassFile
+                     Javelin.ByteCode.ClassFile,
+                     Javelin.ByteCode.DescSign
   -- ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
   hs-source-dirs:    src
