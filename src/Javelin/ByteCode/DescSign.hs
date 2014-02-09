@@ -1,6 +1,11 @@
 module Javelin.ByteCode.DescSign
 where
 
+import Text.ParserCombinators.Parsec.Prim
+import Text.ParserCombinators.Parsec.Char
+import Text.Parsec.Error
+import Control.Applicative ((<$), (<$>))
+  
 -- Fundamental definitions
 type FullName = [String]
 type UnqualifiedName = String
@@ -9,16 +14,37 @@ data FieldType = BaseType { baseType :: BaseType }
                | ObjectType { className :: FullName }
                | ArrayType { componentType :: FieldType }
                deriving (Show, Eq)
+parseFieldType :: String -> FieldType
+parseFieldType = undefined
+
+
+
+
 data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
               deriving (Show, Eq)
+parseBaseType :: String -> Either ParseError BaseType
+parseBaseType s = parse baseType "" s
+                  where baseType = ByteT <$ (char 'B')
+                          <|> CharT <$ (char 'C')
+                          <|> DoubleT <$ (char 'D')
+                          <|> FloatT <$ (char 'F')
+                          <|> IntT <$ (char 'I')
+                          <|> LongT <$ (char 'J')
+                          <|> ShortT <$ (char 'S')
+                          <|> BooleanT <$ (char 'Z')
+                          <?> "BaseType"
 
 
 -- FieldDescriptor
+parseFieldDescriptor :: String -> FieldDescriptor
+parseFieldDescriptor = undefined
 data FieldDescriptor = FieldDescriptor { fieldType :: FieldType }
                      deriving (Show, Eq)
 
 
 -- MethodDescriptor
+parseMethodDescriptor :: String -> MethodDescriptor
+parseMethodDescriptor = undefined
 data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
                                            returnDescr :: ReturnDescriptor }
                         deriving (Show, Eq)
@@ -27,6 +53,8 @@ data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType 
 
 
 -- ClassSignature
+parseClassSignature :: String -> ClassSignature
+parseClassSignature = undefined
 data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
                                        superclassSignature :: ClassTypeSignature,
                                        superinterfaceSignature :: ClassTypeSignature }
@@ -39,7 +67,8 @@ data FieldTypeSignature = ClassFieldType { classTypeSignature :: ClassTypeSignat
                         | ArrayFieldType { signatures :: [TypeSignature] }
                         | TypeVariable { typeVariableSignature :: TypeVariableSignature }
                         deriving (Show, Eq)
-data TypeVariableSignature = TypeVariableSignature { tvId :: String } deriving (Show, Eq)                                
+data TypeVariableSignature = TypeVariableSignature { tvId :: String } deriving (Show, Eq)
+
 data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: [String],
                                                simpleSignature :: SimpleClassTypeSignature,
                                                suffix :: [SimpleClassTypeSignature] }
@@ -58,6 +87,8 @@ data TypeSignature = FieldTypeTypeSignature { fieldTypeSignature :: FieldTypeSig
 
 
 --MethodTypeSignature
+parseMethoSdypeignature :: String -> MethodTypeSignature
+parseMethoSdypeignature = undefined
 data MethodTypeSignature = MethodTypeSignature { methodTypeParameters :: [FormalTypeParameter],
                                                  typeSignatures :: [TypeSignature],
                                                  returnType :: ReturnType,

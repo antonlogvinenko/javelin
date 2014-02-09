@@ -31,8 +31,8 @@ library
                      bytestring ==0.10.*,
                      containers ==0.5.3.1,
                      binary ==0.7.1.0,
-                     utf8-string ==0.3.7
-
+                     utf8-string ==0.3.7,
+                     parsec ==3.1.5
 test-suite test
   hs-source-dirs:    test
   main-is:           Main.hs
@@ -56,4 +56,5 @@ executable javelin
                        bytestring ==0.10.*,
                        containers ==0.5.3.1,
                        binary ==0.7.1.0,
-                       utf8-string ==0.3.7
+                       utf8-string ==0.3.7,
+                       parsec ==3.1.5

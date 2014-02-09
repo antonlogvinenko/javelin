@@ -6,21 +6,17 @@ Long term
 * bytecode parser
 * runtime
 * linking
-* verification (optional)
-* garbage collection (optional)
+* garbage collection
+* bytecode verification (optional)
 
 Short term
 * bytecode parser
   * deserialize
     * parse descriptors/methods/signatures etc
-      * data definition
-      * parsec
+      * parser implementation, how?
     * parse numbers
     * parse length in all attributes - it takes some bytes, for verification
     * overall structure
-    * change inheritance?
-    * understand the whole structure, semantics
-    * other details besides any kind of verification
     * verification in place
     * unit testing, acceptantce testing
   * simple validation based on bytecode definition
