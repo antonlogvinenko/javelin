@@ -12,6 +12,7 @@ parseFieldType = parse fieldTypeParser ""
 parseBaseType = parse baseTypeParser ""
 parseFieldDescriptor = parse fieldDescriptorParser ""
 parseMethodDescriptor = parse methodDescriptorParser ""
+parseMethodTypeSignature = parse methodTypeSignatureParser ""
 
 
 -- Fundamental definitions
@@ -63,8 +64,9 @@ data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType 
                       | VoidDescriptor deriving (Show, Eq)
 methodDescriptorParser = MethodDescriptor <$> (many fieldTypeParser) <*> returnDescriptorParser
 returnDescriptorParser = (FieldTypeDescriptor <$> fieldTypeParser)
-                         <|> (VoidDescriptor <$ (char 'v'))
+                         <|> VoidDescriptor <$ voidDescriptorParser
                          <?> "ReturnDescriptor"
+voidDescriptorParser = char 'v'
 
 
 -- ClassSignature
@@ -102,8 +104,6 @@ data TypeSignature = FieldTypeTypeSignature { fieldTypeSignature :: FieldTypeSig
 
 
 --MethodTypeSignature
-parseMethoSdypeignature :: String -> MethodTypeSignature
-parseMethoSdypeignature = undefined
 data MethodTypeSignature = MethodTypeSignature { methodTypeParameters :: [FormalTypeParameter],
                                                  typeSignatures :: [TypeSignature],
                                                  returnType :: ReturnType,
@@ -115,3 +115,17 @@ data ReturnType = ReturnTypeSignature { typeSignature :: TypeSignature }
 data ThrowsSignature = ThrowsSignature { classType :: ClassTypeSignature,
                                          typeVariable :: TypeVariableSignature }
                        deriving (Show, Eq)
+
+methodTypeSignatureParser :: StringParser MethodTypeSignature
+methodTypeSignatureParser = MethodTypeSignature
+                            <$> (many formalTypeParameterParser)
+                            <*> (many typeSignatureParser)
+                            <*> returnTypeParser
+                            <*> (many throwsSignatureParser)
+formalTypeParameterParser = undefined
+typeSignatureParser = undefined
+returnTypeParser = ReturnTypeSignature <$> typeSignatureParser
+                   <|> VoidTypeSignature <$ voidDescriptorParser
+                   <?> "ReturnType"
+throwsSignatureParser = undefined
+
