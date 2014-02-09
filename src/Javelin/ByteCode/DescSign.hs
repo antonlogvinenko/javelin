@@ -4,7 +4,7 @@ where
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Char
 import Text.Parsec.Error
-import Control.Applicative ((<$), (<$>), (<*), (<*>))
+import Control.Applicative ((<$), (<$>), (<*), (<*>), (*>))
 import Text.ParserCombinators.Parsec.Combinator (endBy, sepBy)
 
 
@@ -33,7 +33,8 @@ fieldTypeParser = baseFieldTypeParser
                   <|> arrayFieldTypeParser
                   <?> "FieldType"
 baseFieldTypeParser = BaseType <$> baseTypeParser
-objectFieldTypeParser = ObjectType <$> qualifiedNameParser <* (char 'L')
+objectFieldTypeParser = ObjectType <$>
+                        ((char 'L') *> qualifiedNameParser <* (char ';'))
 arrayFieldTypeParser = ArrayType <$> fieldTypeParser <* (char '[')
 
 data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
