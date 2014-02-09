@@ -65,8 +65,8 @@ data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
                         deriving (Show, Eq)
 data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType }
                       | VoidDescriptor deriving (Show, Eq)
-methodDescriptorParser = MethodDescriptor <$> (many fieldTypeParser) <*> returnDescriptorParser
-returnDescriptorParser = (FieldTypeDescriptor <$> fieldTypeParser)
+methodDescriptorParser = MethodDescriptor <$> many fieldTypeParser <*> returnDescriptorParser
+returnDescriptorParser = FieldTypeDescriptor <$> fieldTypeParser
                          <|> VoidDescriptor <$ voidDescriptorParser
                          <?> "ReturnDescriptor"
 voidDescriptorParser = char 'v'
@@ -79,7 +79,7 @@ data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParamet
                     deriving (Show, Eq)
 classSignatureParser :: StringParser ClassSignature
 classSignatureParser = ClassSignature
-                       <$> (many formalTypeParameterParser)
+                       <$> many formalTypeParameterParser
                        <*> classTypeSignatureParser
                        <*> classTypeSignatureParser
   
@@ -90,7 +90,7 @@ data FormalTypeParameter = FormalTypeParameter { ftId :: UnqualifiedName,
 formalTypeParameterParser = FormalTypeParameter
                             <$> unqualifiedNameParser
                             <*> fieldTypeSignatureParser
-                            <*> (many fieldTypeSignatureParser)
+                            <*> many fieldTypeSignatureParser
                                     
 data FieldTypeSignature = ClassFieldType { classTypeSignature :: ClassTypeSignature }
                         | ArrayFieldType { signatures :: [TypeSignature] }
@@ -98,7 +98,7 @@ data FieldTypeSignature = ClassFieldType { classTypeSignature :: ClassTypeSignat
                         deriving (Show, Eq)
 fieldTypeSignatureParser :: StringParser FieldTypeSignature
 fieldTypeSignatureParser = ClassFieldType <$> classTypeSignatureParser
-                           <|> ArrayFieldType <$> (many typeSignatureParser)
+                           <|> ArrayFieldType <$> many typeSignatureParser
                            <|> TypeVariable <$> typeVariableSignatureParser
                            <?> "Field Type Signature"
 
@@ -112,13 +112,13 @@ data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: [UnqualifiedN
                         deriving (Show, Eq)
 classTypeSignatureParser :: StringParser ClassTypeSignature
 classTypeSignatureParser = ClassTypeSignature
-                           <$> (many unqualifiedNameParser)
+                           <$> many unqualifiedNameParser
                            <*> simpleClassTypeSignatureParser
-                           <*> (many simpleClassTypeSignatureParser)
+                           <*> many simpleClassTypeSignatureParser
 data SimpleClassTypeSignature = SimpleClassTypeSignature { sctId :: String,
                                                            typeArguments :: [TypeArgument] }
                               deriving (Show, Eq)
-simpleClassTypeSignatureParser = SimpleClassTypeSignature <$> unqualifiedNameParser <*> (many typeArgumentParser)
+simpleClassTypeSignatureParser = SimpleClassTypeSignature <$> unqualifiedNameParser <*> many typeArgumentParser
                                        
 data TypeArgument = TypeArgument { indicator :: WildcardIndicator,
                                    typeArgumentSignature :: FieldTypeSignature }
@@ -126,12 +126,12 @@ data TypeArgument = TypeArgument { indicator :: WildcardIndicator,
                   deriving (Show, Eq)
 typeArgumentParser :: StringParser TypeArgument
 typeArgumentParser = TypeArgument <$> wildCardIndicatorParser <*> fieldTypeSignatureParser
-                     <|> Asterisk <$ (char '*')
+                     <|> Asterisk <$ char '*'
                      <?> "TypeArgument"
                            
 data WildcardIndicator = Plus | Minus deriving (Show, Eq)
-wildCardIndicatorParser = Plus <$ (char '+')
-                          <|> Minus <$ (char '-')
+wildCardIndicatorParser = Plus <$ char '+'
+                          <|> Minus <$ char '-'
                           <?> "wildcard indicator"
 data TypeSignature = FieldTypeTypeSignature { fieldTypeSignature :: FieldTypeSignature }
                    | BaseTypeTypeSignature { baseTypeSignature :: BaseType }
@@ -156,10 +156,10 @@ data ThrowsSignature = ThrowsSignature { classType :: ClassTypeSignature,
 
 methodTypeSignatureParser :: StringParser MethodTypeSignature
 methodTypeSignatureParser = MethodTypeSignature
-                            <$> (many formalTypeParameterParser)
-                            <*> (many typeSignatureParser)
+                            <$> many formalTypeParameterParser
+                            <*> many typeSignatureParser
                             <*> returnTypeParser
-                            <*> (many throwsSignatureParser)
+                            <*> many throwsSignatureParser
 returnTypeParser = ReturnTypeSignature <$> typeSignatureParser
                    <|> VoidTypeSignature <$ voidDescriptorParser
                    <?> "ReturnType"
