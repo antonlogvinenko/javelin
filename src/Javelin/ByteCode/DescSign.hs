@@ -35,8 +35,7 @@ fieldTypeParser = baseFieldTypeParser
                   <|> arrayFieldTypeParser
                   <?> "FieldType"
 baseFieldTypeParser = BaseType <$> baseTypeParser
-objectFieldTypeParser = ObjectType <$>
-                        ((char 'L') *> qualifiedNameParser <* (char ';'))
+objectFieldTypeParser = ObjectType <$> (char 'L' *> qualifiedNameParser <* char ';')
 arrayFieldTypeParser = ArrayType <$> fieldTypeParser <* (char '[')
 
 data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
