@@ -74,23 +74,34 @@ voidDescriptorParser = char 'v'
 
 
 -- ClassSignature
-classSignatureParser :: StringParser ClassSignature
-classSignatureParser = undefined
-formalTypeParameterParser = undefined
 data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
                                        superclassSignature :: ClassTypeSignature,
                                        superinterfaceSignature :: ClassTypeSignature }
                     deriving (Show, Eq)
-data FormalTypeParameter = FormalTypeParameter { ftId :: String,
+classSignatureParser :: StringParser ClassSignature
+classSignatureParser = ClassSignature
+                       <$> (many formalTypeParameterParser)
+                       <*> classTypeSignatureParser
+                       <*> classTypeSignatureParser
+  
+data FormalTypeParameter = FormalTypeParameter { ftId :: UnqualifiedName,
                                                  classBound :: FieldTypeSignature,
                                                  interfaceBound :: [FieldTypeSignature] }
                            deriving (Show, Eq)
+formalTypeParameterParser = FormalTypeParameter
+                            <$> unqualifiedNameParser
+                            <*> fieldTypeSignatureParser
+                            <*> (many fieldTypeSignatureParser)
+                                    
 data FieldTypeSignature = ClassFieldType { classTypeSignature :: ClassTypeSignature }
                         | ArrayFieldType { signatures :: [TypeSignature] }
                         | TypeVariable { typeVariableSignature :: TypeVariableSignature }
                         deriving (Show, Eq)
 fieldTypeSignatureParser :: StringParser FieldTypeSignature
-fieldTypeSignatureParser = undefined
+fieldTypeSignatureParser = ClassFieldType <$> classTypeSignatureParser
+                           <|> ArrayFieldType <$> (many typeSignatureParser)
+                           <|> TypeVariable <$> typeVariableSignatureParser
+                           <?> "Field Type Signature"
 
 data TypeVariableSignature = TypeVariableSignature { tvId :: UnqualifiedName } deriving (Show, Eq)
 typeVariableSignatureParser :: StringParser TypeVariableSignature
