@@ -18,21 +18,19 @@ parseFieldType :: String -> FieldType
 parseFieldType = undefined
 
 
-
-
 data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
               deriving (Show, Eq)
 parseBaseType :: String -> Either ParseError BaseType
-parseBaseType s = parse baseType "" s
-                  where baseType = ByteT <$ (char 'B')
-                          <|> CharT <$ (char 'C')
-                          <|> DoubleT <$ (char 'D')
-                          <|> FloatT <$ (char 'F')
-                          <|> IntT <$ (char 'I')
-                          <|> LongT <$ (char 'J')
-                          <|> ShortT <$ (char 'S')
-                          <|> BooleanT <$ (char 'Z')
-                          <?> "BaseType"
+parseBaseType = parse baseType ""
+                where baseType = ByteT <$ (char 'B')
+                                 <|> CharT <$ (char 'C')
+                                 <|> DoubleT <$ (char 'D')
+                                 <|> FloatT <$ (char 'F')
+                                 <|> IntT <$ (char 'I')
+                                 <|> LongT <$ (char 'J')
+                                 <|> ShortT <$ (char 'S')
+                                 <|> BooleanT <$ (char 'Z')
+                                 <?> "BaseType"
 
 
 -- FieldDescriptor
