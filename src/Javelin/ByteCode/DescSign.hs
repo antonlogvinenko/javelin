@@ -4,50 +4,67 @@ where
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Char
 import Text.Parsec.Error
-import Control.Applicative ((<$), (<$>))
-  
+import Control.Applicative ((<$), (<$>), (<*), (<*>))
+import Text.ParserCombinators.Parsec.Combinator (endBy, sepBy)
+
+
+parseFieldType = parse fieldTypeParser ""
+parseBaseType = parse baseTypeParser ""
+parseFieldDescriptor = parse fieldDescriptorParser ""
+parseMethodDescriptor = parse methodDescriptorParser ""
+
+
 -- Fundamental definitions
-type FullName = [String]
+type StringParser a = CharParser () a
+
+type QualifiedName = [String]
 type UnqualifiedName = String
+qualifiedNameParser = endBy classPartsParser (char ';')
+classPartsParser = sepBy anyChar (char '/')
 
 data FieldType = BaseType { baseType :: BaseType }
-               | ObjectType { className :: FullName }
+               | ObjectType { className :: QualifiedName }
                | ArrayType { componentType :: FieldType }
                deriving (Show, Eq)
-parseFieldType :: String -> FieldType
-parseFieldType = undefined
-
+fieldTypeParser = baseFieldTypeParser
+                  <|> objectFieldTypeParser
+                  <|> arrayFieldTypeParser
+                  <?> "FieldType"
+baseFieldTypeParser = BaseType <$> baseTypeParser
+objectFieldTypeParser = ObjectType <$> qualifiedNameParser <* (char 'L')
+arrayFieldTypeParser = ArrayType <$> fieldTypeParser <* (char '[')
 
 data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
               deriving (Show, Eq)
-parseBaseType :: String -> Either ParseError BaseType
-parseBaseType = parse baseType ""
-                where baseType = ByteT <$ (char 'B')
-                                 <|> CharT <$ (char 'C')
-                                 <|> DoubleT <$ (char 'D')
-                                 <|> FloatT <$ (char 'F')
-                                 <|> IntT <$ (char 'I')
-                                 <|> LongT <$ (char 'J')
-                                 <|> ShortT <$ (char 'S')
-                                 <|> BooleanT <$ (char 'Z')
-                                 <?> "BaseType"
+
+baseTypeParser :: StringParser BaseType
+baseTypeParser = ByteT <$ (char 'B')
+                 <|> CharT <$ (char 'C')
+                 <|> DoubleT <$ (char 'D')
+                 <|> FloatT <$ (char 'F')
+                 <|> IntT <$ (char 'I')
+                 <|> LongT <$ (char 'J')
+                 <|> ShortT <$ (char 'S')
+                 <|> BooleanT <$ (char 'Z')
+                 <?> "BaseType"
 
 
 -- FieldDescriptor
-parseFieldDescriptor :: String -> FieldDescriptor
-parseFieldDescriptor = undefined
 data FieldDescriptor = FieldDescriptor { fieldType :: FieldType }
                      deriving (Show, Eq)
+fieldDescriptorParser = FieldDescriptor <$> fieldTypeParser
 
 
 -- MethodDescriptor
-parseMethodDescriptor :: String -> MethodDescriptor
-parseMethodDescriptor = undefined
 data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
                                            returnDescr :: ReturnDescriptor }
                         deriving (Show, Eq)
 data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType }
                       | VoidDescriptor deriving (Show, Eq)
+methodDescriptorParser = MethodDescriptor <$> (many fieldTypeParser) <*> returnDescriptorParser
+returnDescriptorParser = (FieldTypeDescriptor <$> fieldTypeParser)
+                         <|> (VoidDescriptor <$ (char 'v'))
+                         <?> "ReturnDescriptor"
 
 
 -- ClassSignature

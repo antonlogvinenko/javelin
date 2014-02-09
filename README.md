@@ -14,6 +14,7 @@ Short term
   * deserialize
     * parse descriptors/methods/signatures using Parsec
     * parse numbers
+    * parse UTF-8
     * parse length in all attributes - it takes some bytes, for verification
     * overall structure
     * verification in place
