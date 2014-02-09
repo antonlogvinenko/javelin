@@ -21,6 +21,8 @@ type StringParser a = CharParser () a
 
 type QualifiedName = [String]
 type UnqualifiedName = String
+unqualifiedNameParser :: StringParser UnqualifiedName
+unqualifiedNameParser = undefined
 qualifiedNameParser = endBy classPartsParser (char ';')
 classPartsParser = sepBy anyChar (char '/')
 
@@ -75,9 +77,6 @@ voidDescriptorParser = char 'v'
 classSignatureParser :: StringParser ClassSignature
 classSignatureParser = undefined
 formalTypeParameterParser = undefined
-typeSignatureParser = undefined
-classTypeSignatureParser = undefined
-typeVariableSignatureParser = undefined
 data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
                                        superclassSignature :: ClassTypeSignature,
                                        superinterfaceSignature :: ClassTypeSignature }
@@ -90,23 +89,46 @@ data FieldTypeSignature = ClassFieldType { classTypeSignature :: ClassTypeSignat
                         | ArrayFieldType { signatures :: [TypeSignature] }
                         | TypeVariable { typeVariableSignature :: TypeVariableSignature }
                         deriving (Show, Eq)
-data TypeVariableSignature = TypeVariableSignature { tvId :: String } deriving (Show, Eq)
+fieldTypeSignatureParser :: StringParser FieldTypeSignature
+fieldTypeSignatureParser = undefined
 
-data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: [String],
+data TypeVariableSignature = TypeVariableSignature { tvId :: UnqualifiedName } deriving (Show, Eq)
+typeVariableSignatureParser :: StringParser TypeVariableSignature
+typeVariableSignatureParser = TypeVariableSignature <$> unqualifiedNameParser
+
+data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: [UnqualifiedName],
                                                simpleSignature :: SimpleClassTypeSignature,
                                                suffix :: [SimpleClassTypeSignature] }
                         deriving (Show, Eq)
+classTypeSignatureParser :: StringParser ClassTypeSignature
+classTypeSignatureParser = ClassTypeSignature
+                           <$> (many unqualifiedNameParser)
+                           <*> simpleClassTypeSignatureParser
+                           <*> (many simpleClassTypeSignatureParser)
 data SimpleClassTypeSignature = SimpleClassTypeSignature { sctId :: String,
                                                            typeArguments :: [TypeArgument] }
                               deriving (Show, Eq)
+simpleClassTypeSignatureParser = SimpleClassTypeSignature <$> unqualifiedNameParser <*> (many typeArgumentParser)
+                                       
 data TypeArgument = TypeArgument { indicator :: WildcardIndicator,
                                    typeArgumentSignature :: FieldTypeSignature }
                   | Asterisk
                   deriving (Show, Eq)
+typeArgumentParser :: StringParser TypeArgument
+typeArgumentParser = TypeArgument <$> wildCardIndicatorParser <*> fieldTypeSignatureParser
+                     <|> Asterisk <$ (char '*')
+                     <?> "TypeArgument"
+                           
 data WildcardIndicator = Plus | Minus deriving (Show, Eq)
+wildCardIndicatorParser = Plus <$ (char '+')
+                          <|> Minus <$ (char '-')
+                          <?> "wildcard indicator"
 data TypeSignature = FieldTypeTypeSignature { fieldTypeSignature :: FieldTypeSignature }
                    | BaseTypeTypeSignature { baseTypeSignature :: BaseType }
                    deriving (Show, Eq)
+typeSignatureParser = FieldTypeTypeSignature <$> fieldTypeSignatureParser
+                      <|> BaseTypeTypeSignature <$> baseTypeParser
+                      <?> "TypeSignature"
 
 
 --MethodTypeSignature
