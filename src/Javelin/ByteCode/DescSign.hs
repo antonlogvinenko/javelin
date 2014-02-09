@@ -13,6 +13,7 @@ parseBaseType = parse baseTypeParser ""
 parseFieldDescriptor = parse fieldDescriptorParser ""
 parseMethodDescriptor = parse methodDescriptorParser ""
 parseMethodTypeSignature = parse methodTypeSignatureParser ""
+parseClassSignature = parse classSignatureParser ""
 
 
 -- Fundamental definitions
@@ -70,8 +71,12 @@ voidDescriptorParser = char 'v'
 
 
 -- ClassSignature
-parseClassSignature :: String -> ClassSignature
-parseClassSignature = undefined
+classSignatureParser :: StringParser ClassSignature
+classSignatureParser = undefined
+formalTypeParameterParser = undefined
+typeSignatureParser = undefined
+classTypeSignatureParser = undefined
+typeVariableSignatureParser = undefined
 data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
                                        superclassSignature :: ClassTypeSignature,
                                        superinterfaceSignature :: ClassTypeSignature }
@@ -122,10 +127,7 @@ methodTypeSignatureParser = MethodTypeSignature
                             <*> (many typeSignatureParser)
                             <*> returnTypeParser
                             <*> (many throwsSignatureParser)
-formalTypeParameterParser = undefined
-typeSignatureParser = undefined
 returnTypeParser = ReturnTypeSignature <$> typeSignatureParser
                    <|> VoidTypeSignature <$ voidDescriptorParser
                    <?> "ReturnType"
-throwsSignatureParser = undefined
-
+throwsSignatureParser = ThrowsSignature <$> classTypeSignatureParser <*> typeVariableSignatureParser
