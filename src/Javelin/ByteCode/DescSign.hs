@@ -36,15 +36,15 @@ arrayFieldTypeP = ArrayType <$> fieldTypeP <* (char '[')
 
 baseTypeP :: StringParser BaseType
 baseTypeP = ByteT <$ (char 'B')
-                 <|> CharT <$ (char 'C')
-                 <|> DoubleT <$ (char 'D')
-                 <|> FloatT <$ (char 'F')
-                 <|> IntT <$ (char 'I')
-                 <|> LongT <$ (char 'J')
-                 <|> ShortT <$ (char 'S')
-                 <|> BooleanT <$ (char 'Z')
-                 <?> "BaseType"
-
+            <|> CharT <$ (char 'C')
+            <|> DoubleT <$ (char 'D')
+            <|> FloatT <$ (char 'F')
+            <|> IntT <$ (char 'I')
+            <|> LongT <$ (char 'J')
+            <|> ShortT <$ (char 'S')
+            <|> BooleanT <$ (char 'Z')
+            <?> "BaseType"
+            
 -- FieldDescriptor
 fieldDescriptorP = FieldDescriptor <$> fieldTypeP
 
