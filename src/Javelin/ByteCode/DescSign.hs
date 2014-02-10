@@ -1,6 +1,8 @@
 module Javelin.ByteCode.DescSign
 where
 
+import Javelin.ByteCode.Data
+  
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Char
 import Text.Parsec.Error
@@ -8,41 +10,32 @@ import Control.Applicative ((<$), (<$>), (<*), (<*>), (*>))
 import Text.ParserCombinators.Parsec.Combinator (endBy, sepBy)
 
 
-parseFieldType = parse fieldTypeParser ""
-parseBaseType = parse baseTypeParser ""
-parseFieldDescriptor = parse fieldDescriptorParser ""
-parseMethodDescriptor = parse methodDescriptorParser ""
-parseMethodTypeSignature = parse methodTypeSignatureParser ""
-parseClassSignature = parse classSignatureParser ""
+parseFieldType = parse fieldTypeP ""
+parseBaseType = parse baseTypeP ""
+parseFieldDescriptor = parse fieldDescriptorP ""
+parseMethodDescriptor = parse methodDescriptorP ""
+parseMethodTypeSignature = parse methodTypeSignatureP ""
+parseClassSignature = parse classSignatureP ""
 
 
 -- Fundamental definitions
 type StringParser a = CharParser () a
 
-type QualifiedName = [String]
-type UnqualifiedName = String
-unqualifiedNameParser :: StringParser UnqualifiedName
-unqualifiedNameParser = undefined
-qualifiedNameParser = endBy classPartsParser (char ';')
-classPartsParser = sepBy anyChar (char '/')
+unqualifiedNameP :: StringParser UnqualifiedName
+unqualifiedNameP = undefined
+qualifiedNameP = endBy classPartsP (char ';')
+classPartsP = sepBy anyChar (char '/')
 
-data FieldType = BaseType { baseType :: BaseType }
-               | ObjectType { className :: QualifiedName }
-               | ArrayType { componentType :: FieldType }
-               deriving (Show, Eq)
-fieldTypeParser = baseFieldTypeParser
-                  <|> objectFieldTypeParser
-                  <|> arrayFieldTypeParser
-                  <?> "FieldType"
-baseFieldTypeParser = BaseType <$> baseTypeParser
-objectFieldTypeParser = ObjectType <$> (char 'L' *> qualifiedNameParser <* char ';')
-arrayFieldTypeParser = ArrayType <$> fieldTypeParser <* (char '[')
+fieldTypeP = baseFieldTypeP
+             <|> objectFieldTypeP
+             <|> arrayFieldTypeP
+             <?> "FieldType"
+baseFieldTypeP = BaseType <$> baseTypeP
+objectFieldTypeP = ObjectType <$> (char 'L' *> qualifiedNameP <* char ';')
+arrayFieldTypeP = ArrayType <$> fieldTypeP <* (char '[')
 
-data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
-              deriving (Show, Eq)
-
-baseTypeParser :: StringParser BaseType
-baseTypeParser = ByteT <$ (char 'B')
+baseTypeP :: StringParser BaseType
+baseTypeP = ByteT <$ (char 'B')
                  <|> CharT <$ (char 'C')
                  <|> DoubleT <$ (char 'D')
                  <|> FloatT <$ (char 'F')
@@ -52,115 +45,60 @@ baseTypeParser = ByteT <$ (char 'B')
                  <|> BooleanT <$ (char 'Z')
                  <?> "BaseType"
 
-
 -- FieldDescriptor
-data FieldDescriptor = FieldDescriptor { fieldType :: FieldType }
-                     deriving (Show, Eq)
-fieldDescriptorParser = FieldDescriptor <$> fieldTypeParser
-
+fieldDescriptorP = FieldDescriptor <$> fieldTypeP
 
 -- MethodDescriptor
-data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
-                                           returnDescr :: ReturnDescriptor }
-                        deriving (Show, Eq)
-data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType }
-                      | VoidDescriptor deriving (Show, Eq)
-methodDescriptorParser = MethodDescriptor <$> many fieldTypeParser <*> returnDescriptorParser
-returnDescriptorParser = FieldTypeDescriptor <$> fieldTypeParser
-                         <|> VoidDescriptor <$ voidDescriptorParser
-                         <?> "ReturnDescriptor"
-voidDescriptorParser = char 'v'
-
+methodDescriptorP = MethodDescriptor <$> many fieldTypeP <*> returnDescriptorP
+returnDescriptorP = FieldTypeDescriptor <$> fieldTypeP
+                    <|> VoidDescriptor <$ voidDescriptorP
+                    <?> "ReturnDescriptor"
+voidDescriptorP = char 'v'
 
 -- ClassSignature
-data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
-                                       superclassSignature :: ClassTypeSignature,
-                                       superinterfaceSignature :: ClassTypeSignature }
-                    deriving (Show, Eq)
-classSignatureParser :: StringParser ClassSignature
-classSignatureParser = ClassSignature
-                       <$> many formalTypeParameterParser
-                       <*> classTypeSignatureParser
-                       <*> classTypeSignatureParser
+classSignatureP :: StringParser ClassSignature
+classSignatureP = ClassSignature <$> many formalTypeParameterP
+                  <*> classTypeSignatureP
+                  <*> classTypeSignatureP
   
-data FormalTypeParameter = FormalTypeParameter { ftId :: UnqualifiedName,
-                                                 classBound :: FieldTypeSignature,
-                                                 interfaceBound :: [FieldTypeSignature] }
-                           deriving (Show, Eq)
-formalTypeParameterParser = FormalTypeParameter
-                            <$> unqualifiedNameParser
-                            <*> fieldTypeSignatureParser
-                            <*> many fieldTypeSignatureParser
+formalTypeParameterP = FormalTypeParameter <$> unqualifiedNameP
+                       <*> fieldTypeSignatureP
+                       <*> many fieldTypeSignatureP
                                     
-data FieldTypeSignature = ClassFieldType { classTypeSignature :: ClassTypeSignature }
-                        | ArrayFieldType { signatures :: [TypeSignature] }
-                        | TypeVariable { typeVariableSignature :: TypeVariableSignature }
-                        deriving (Show, Eq)
-fieldTypeSignatureParser :: StringParser FieldTypeSignature
-fieldTypeSignatureParser = ClassFieldType <$> classTypeSignatureParser
-                           <|> ArrayFieldType <$> many typeSignatureParser
-                           <|> TypeVariable <$> typeVariableSignatureParser
-                           <?> "Field Type Signature"
+fieldTypeSignatureP :: StringParser FieldTypeSignature
+fieldTypeSignatureP = ClassFieldType <$> classTypeSignatureP
+                      <|> ArrayFieldType <$> many typeSignatureP
+                      <|> TypeVariable <$> typeVariableSignatureP
+                      <?> "Field Type Signature"
 
-data TypeVariableSignature = TypeVariableSignature { tvId :: UnqualifiedName } deriving (Show, Eq)
-typeVariableSignatureParser :: StringParser TypeVariableSignature
-typeVariableSignatureParser = TypeVariableSignature <$> unqualifiedNameParser
+typeVariableSignatureP :: StringParser TypeVariableSignature
+typeVariableSignatureP = TypeVariableSignature <$> unqualifiedNameP
 
-data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: [UnqualifiedName],
-                                               simpleSignature :: SimpleClassTypeSignature,
-                                               suffix :: [SimpleClassTypeSignature] }
-                        deriving (Show, Eq)
-classTypeSignatureParser :: StringParser ClassTypeSignature
-classTypeSignatureParser = ClassTypeSignature
-                           <$> many unqualifiedNameParser
-                           <*> simpleClassTypeSignatureParser
-                           <*> many simpleClassTypeSignatureParser
-data SimpleClassTypeSignature = SimpleClassTypeSignature { sctId :: String,
-                                                           typeArguments :: [TypeArgument] }
-                              deriving (Show, Eq)
-simpleClassTypeSignatureParser = SimpleClassTypeSignature <$> unqualifiedNameParser <*> many typeArgumentParser
+classTypeSignatureP :: StringParser ClassTypeSignature
+classTypeSignatureP = ClassTypeSignature <$> many unqualifiedNameP
+                      <*> simpleClassTypeSignatureP
+                      <*> many simpleClassTypeSignatureP
+simpleClassTypeSignatureP = SimpleClassTypeSignature <$> unqualifiedNameP <*> many typeArgumentP
                                        
-data TypeArgument = TypeArgument { indicator :: WildcardIndicator,
-                                   typeArgumentSignature :: FieldTypeSignature }
-                  | Asterisk
-                  deriving (Show, Eq)
-typeArgumentParser :: StringParser TypeArgument
-typeArgumentParser = TypeArgument <$> wildCardIndicatorParser <*> fieldTypeSignatureParser
-                     <|> Asterisk <$ char '*'
-                     <?> "TypeArgument"
-                           
-data WildcardIndicator = Plus | Minus deriving (Show, Eq)
-wildCardIndicatorParser = Plus <$ char '+'
-                          <|> Minus <$ char '-'
-                          <?> "wildcard indicator"
-data TypeSignature = FieldTypeTypeSignature { fieldTypeSignature :: FieldTypeSignature }
-                   | BaseTypeTypeSignature { baseTypeSignature :: BaseType }
-                   deriving (Show, Eq)
-typeSignatureParser = FieldTypeTypeSignature <$> fieldTypeSignatureParser
-                      <|> BaseTypeTypeSignature <$> baseTypeParser
-                      <?> "TypeSignature"
+typeArgumentP :: StringParser TypeArgument
+typeArgumentP = TypeArgument <$> wildCardIndicatorP <*> fieldTypeSignatureP
+                <|> Asterisk <$ char '*'
+                <?> "TypeArgument"
 
+wildCardIndicatorP = Plus <$ char '+'
+                     <|> Minus <$ char '-'
+                     <?> "wildcard indicator"
+typeSignatureP = FieldTypeTypeSignature <$> fieldTypeSignatureP
+                 <|> BaseTypeTypeSignature <$> baseTypeP
+                 <?> "TypeSignature"
 
 --MethodTypeSignature
-data MethodTypeSignature = MethodTypeSignature { methodTypeParameters :: [FormalTypeParameter],
-                                                 typeSignatures :: [TypeSignature],
-                                                 returnType :: ReturnType,
-                                                 throwsSignature :: [ThrowsSignature]
-                                               } deriving (Show, Eq)
-data ReturnType = ReturnTypeSignature { typeSignature :: TypeSignature }
-                | VoidTypeSignature
-                deriving (Show, Eq)
-data ThrowsSignature = ThrowsSignature { classType :: ClassTypeSignature,
-                                         typeVariable :: TypeVariableSignature }
-                       deriving (Show, Eq)
-
-methodTypeSignatureParser :: StringParser MethodTypeSignature
-methodTypeSignatureParser = MethodTypeSignature
-                            <$> many formalTypeParameterParser
-                            <*> many typeSignatureParser
-                            <*> returnTypeParser
-                            <*> many throwsSignatureParser
-returnTypeParser = ReturnTypeSignature <$> typeSignatureParser
-                   <|> VoidTypeSignature <$ voidDescriptorParser
-                   <?> "ReturnType"
-throwsSignatureParser = ThrowsSignature <$> classTypeSignatureParser <*> typeVariableSignatureParser
+methodTypeSignatureP :: StringParser MethodTypeSignature
+methodTypeSignatureP = MethodTypeSignature <$> many formalTypeParameterP
+                       <*> many typeSignatureP
+                       <*> returnTypeP
+                       <*> many throwsSignatureP
+returnTypeP = ReturnTypeSignature <$> typeSignatureP
+              <|> VoidTypeSignature <$ voidDescriptorP
+              <?> "ReturnType"
+throwsSignatureP = ThrowsSignature <$> classTypeSignatureP <*> typeVariableSignatureP
