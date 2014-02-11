@@ -9,14 +9,12 @@ import Text.Parsec.Error
 import Control.Applicative ((<$), (<$>), (<*), (<*>), (*>))
 import Text.ParserCombinators.Parsec.Combinator (endBy, sepBy)
 
-
 parseFieldType = parse fieldTypeP ""
 parseBaseType = parse baseTypeP ""
 parseFieldDescriptor = parse fieldDescriptorP ""
 parseMethodDescriptor = parse methodDescriptorP ""
 parseMethodTypeSignature = parse methodTypeSignatureP ""
 parseClassSignature = parse classSignatureP ""
-
 
 -- Fundamental definitions
 type StringParser a = CharParser () a
@@ -26,23 +24,20 @@ unqualifiedNameP = undefined
 qualifiedNameP = endBy classPartsP (char ';')
 classPartsP = sepBy anyChar (char '/')
 
-fieldTypeP = baseFieldTypeP
-             <|> objectFieldTypeP
-             <|> arrayFieldTypeP
+fieldTypeP = BaseType <$> baseTypeP
+             <|> ObjectType <$> (char 'L' *> qualifiedNameP <* char ';')
+             <|> ArrayType <$> fieldTypeP <* char '['
              <?> "FieldType"
-baseFieldTypeP = BaseType <$> baseTypeP
-objectFieldTypeP = ObjectType <$> (char 'L' *> qualifiedNameP <* char ';')
-arrayFieldTypeP = ArrayType <$> fieldTypeP <* (char '[')
 
 baseTypeP :: StringParser BaseType
-baseTypeP = ByteT <$ (char 'B')
-            <|> CharT <$ (char 'C')
-            <|> DoubleT <$ (char 'D')
-            <|> FloatT <$ (char 'F')
-            <|> IntT <$ (char 'I')
-            <|> LongT <$ (char 'J')
-            <|> ShortT <$ (char 'S')
-            <|> BooleanT <$ (char 'Z')
+baseTypeP = ByteT <$ char 'B'
+            <|> CharT <$ char 'C'
+            <|> DoubleT <$ char 'D'
+            <|> FloatT <$ char 'F'
+            <|> IntT <$ char 'I'
+            <|> LongT <$ char 'J'
+            <|> ShortT <$ char 'S'
+            <|> BooleanT <$ char 'Z'
             <?> "BaseType"
             
 -- FieldDescriptor
