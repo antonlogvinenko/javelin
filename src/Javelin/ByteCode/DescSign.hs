@@ -20,9 +20,10 @@ parseClassSignature = parse classSignatureP ""
 type StringParser a = CharParser () a
 
 unqualifiedNameP :: StringParser UnqualifiedName
-unqualifiedNameP = undefined
+nameSymbol = (noneOf ".;[/")
+unqualifiedNameP = many nameSymbol
 qualifiedNameP = endBy classPartsP (char ';')
-classPartsP = sepBy anyChar (char '/')
+classPartsP = sepBy nameSymbol (char '/')
 
 fieldTypeP = BaseType <$> baseTypeP
              <|> ObjectType <$> (char 'L' *> qualifiedNameP <* char ';')
