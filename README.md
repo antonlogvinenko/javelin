@@ -12,8 +12,6 @@ Long term
 Short term
 * bytecode parser
   * deserialize
-    * parse numbers (int, long, double, float)
-    * parse UTF-8
     * parse length in all attributes - it takes some bytes, for verification
     * overall structure
     * verification in place

@@ -3,7 +3,7 @@ where
   
 import Data.ByteString (ByteString)
 import Data.Word (Word32, Word16, Word8)
-
+import Data.Int (Int32, Int64)
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
               deriving (Show, Eq)
@@ -23,14 +23,14 @@ data ClassAccessFlags = ClassPublic | ClassFinal
                       deriving (Show, Eq)
 
 data Constant = Utf8Info { stringValue :: String }
-              | IntegerInfo {bytes :: Word32 }
-              | FloatInfo {bytes :: Word32 }
-              | LongInfo {highBytes :: Word32, lowBytes :: Word32 }
-              | DoubleInfo {highBytes :: Word32, lowBytes :: Word32 }
-              | ClassInfo {nameIndex :: Word16 }
-              | StringInfo {stringIndex :: Word16 }
-              | Fieldref {classIndex :: Word16, nameAndTypeIndex :: Word16 }
-              | Methodref {classIndex :: Word16, nameAndTypeIndex :: Word16 }
+              | IntegerInfo { integer :: Int32 }
+              | FloatInfo { float :: Float }
+              | LongInfo { long :: Int64 }
+              | DoubleInfo { double :: Double }
+              | ClassInfo { nameIndex :: Word16 }
+              | StringInfo { stringIndex :: Word16 }
+              | Fieldref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
+              | Methodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | InterfaceMethodref {classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16 }
               | MethodHandleInfo { referenceKind :: Word8, refereneIndex :: Word16 }

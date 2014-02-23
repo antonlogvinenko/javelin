@@ -6,6 +6,7 @@ import Data.Map.Lazy (findWithDefault, fromList, Map(..))
 import Control.Applicative
 import Data.ByteString (ByteString)
 import Data.Binary.Get
+import Unsafe.Coerce
 
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
@@ -52,10 +53,12 @@ interfaceMethodrefParser = twoTwoBytesInfoParser InterfaceMethodref
 nameAndTypeInfoParser = twoTwoBytesInfoParser NameAndTypeInfo
 classInfoParser = twoBytesInfoParser ClassInfo
 stringInfoParser = twoBytesInfoParser StringInfo
-integerInfoParser = fourBytesInfoParser IntegerInfo
-floatInfoParser = fourBytesInfoParser FloatInfo
-longInfoParser = twoFourBytesInfoParser LongInfo
-doubleInfoParser = twoFourBytesInfoParser DoubleInfo
+
+integerInfoParser = IntegerInfo <$> unsafeCoerce <$> getDWord
+floatInfoParser = FloatInfo <$> unsafeCoerce <$> getDWord
+longInfoParser = LongInfo <$> unsafeCoerce <$> getDDWord
+doubleInfoParser = DoubleInfo <$> unsafeCoerce <$> getDDWord
+
 methodHandleInfoParser = MethodHandleInfo <$> getByte <*> getWord
 methodTypeInfoParser = MethodTypeInfo <$> getWord
 invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo

@@ -15,6 +15,7 @@ import Javelin.ByteCode.Data
 getByte = getWord8
 getWord = getWord16be
 getDWord = getWord32be
+getDDWord = getWord64be
 
 times :: Get a -> Word16 -> Get [a]
 times _ 0 = return []
