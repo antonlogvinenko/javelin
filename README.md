@@ -11,14 +11,11 @@ Long term
 
 Short term
 * bytecode parser
-  * deserialize
-    * overall structure
-      * attributes
-      * MethodHandleInfo, MethodTypeInfo, InvokeDynamicInfo
-    * unit testing, acceptantce testing
+  * overall structure
+    * attributes
+    * MethodHandleInfo, MethodTypeInfo, InvokeDynamicInfo
+  * acceptance testing, unit testing
   * simple validation based on bytecode definition
-  * modification: store higher level data about class file
-  * tests
   
 Haskell:
 * sandbox
