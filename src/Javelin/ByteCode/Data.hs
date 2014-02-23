@@ -31,7 +31,7 @@ data Constant = Utf8Info { stringValue :: String }
               | StringInfo { stringIndex :: Word16 }
               | Fieldref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | Methodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
-              | InterfaceMethodref {classIndex :: Word16, nameAndTypeIndex :: Word16 }
+              | InterfaceMethodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16 }
               | MethodHandleInfo { referenceKind :: Word8, refereneIndex :: Word16 }
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
@@ -49,18 +49,17 @@ data FieldInfoAccessFlag = FieldPublic | FieldPrivate | FieldProtected
                          | FieldEnum
                          deriving (Show, Eq)
 
-data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
-                          | MethodStatic | MethodFinal | MethodSynchronized
-                          | MethodBridge | MethodVarargs | MethodNative
-                          | MethodAbstract | MethodStrict | MethodSynthetic
-                          deriving (Show, Eq)
-                                   
 data MethodInfo = MethodInfo { methodAccessFlags :: [MethodInfoAccessFlag],
                                methodNameIndex :: Word16,
                                methodInfoDescriptorIndex :: Word16,
                                methodAttrs :: [AttrInfo]
                              } deriving (Show, Eq)
 
+data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
+                          | MethodStatic | MethodFinal | MethodSynchronized
+                          | MethodBridge | MethodVarargs | MethodNative
+                          | MethodAbstract | MethodStrict | MethodSynthetic
+                          deriving (Show, Eq)
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
               | ConstantValue { constantValueIndex :: Word16 }
@@ -106,11 +105,9 @@ data ElementValue = ElementConstValue { tag :: Char,
                   | ElementArrayValue { tag :: Char,
                                         elementValues :: [ElementValue] }
                   deriving (Show, Eq)
-
 data ElementValuePair = ElementValuePair { elementNameIndex :: Word16,
                                            elementValue :: ElementValue
                                          } deriving (Show, Eq)
-
 data Ann = Ann { typeIndex :: Word16,
                  elementValuePairs :: [ElementValuePair]
                } deriving (Show, Eq)

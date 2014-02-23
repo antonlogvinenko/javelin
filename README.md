@@ -13,8 +13,8 @@ Short term
 * bytecode parser
   * deserialize
     * overall structure
-      * parse length in all attributes - it takes some bytes, for verification
-      * verification in place
+      * attributes
+      * MethodHandleInfo, MethodTypeInfo, InvokeDynamicInfo
     * unit testing, acceptantce testing
   * simple validation based on bytecode definition
   * modification: store higher level data about class file
