@@ -12,9 +12,9 @@ Long term
 Short term
 * bytecode parser
   * deserialize
-    * parse length in all attributes - it takes some bytes, for verification
     * overall structure
-    * verification in place
+      * parse length in all attributes - it takes some bytes, for verification
+      * verification in place
     * unit testing, acceptantce testing
   * simple validation based on bytecode definition
   * modification: store higher level data about class file
