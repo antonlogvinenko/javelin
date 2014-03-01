@@ -29,11 +29,11 @@ data Constant = Utf8Info { stringValue :: String }
               | DoubleInfo { double :: Double }
               | ClassInfo { nameIndex :: Word16 }
               | StringInfo { stringIndex :: Word16 }
+              | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16 }
               | Fieldref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | Methodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | InterfaceMethodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
-              | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16 }
-              | MethodHandleInfo { referenceKind :: Word8, refereneIndex :: Word16 }
+              | MethodHandleInfo { referenceKind :: Word8, referenceIndex :: Word16 }
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
               | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Show, Eq)
 

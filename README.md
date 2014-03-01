@@ -4,18 +4,15 @@ Haskell JVM
 
 Long term
 * bytecode parser
-* runtime
-* linking
+* runtime data structures
+* linking/loading
+* execution (everything but invokedynamic & verification)
 * garbage collection
-* bytecode verification (optional)
+* bytecode verification, invokedynamic (optional)
 
 Short term
 * bytecode parser
-  * overall structure
-    * attributes
-    * MethodHandleInfo, MethodTypeInfo, InvokeDynamicInfo
   * acceptance testing, unit testing
-  * simple validation based on bytecode definition
   
 Haskell:
 * sandbox
