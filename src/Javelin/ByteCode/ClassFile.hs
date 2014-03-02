@@ -5,7 +5,7 @@ import Data.Word (Word32, Word16, Word8)
 import Data.Map (fromList)
 import Control.Applicative
 import Data.Binary.Get
-import qualified Data.ByteString.Lazy as BS (unpack, pack, length)
+import qualified Data.ByteString.Lazy as BS (unpack, pack, length, ByteString)
 
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
@@ -46,10 +46,6 @@ version = getWord
 parseByteCode :: Get ByteCode
 parseByteCode = magicNumber >> ByteCode <$> version <*> version <*> classBody
 
-parse :: [Word8] -> Either String ByteCode
+parse :: [Word8] -> Either (BS.ByteString, ByteOffset, String) (BS.ByteString, ByteOffset, ByteCode)
 parse bytes = do
-  case runGetOrFail parseByteCode $ BS.pack bytes of
-    Left (bs, _, msg) -> Left msg
-    Right (bs, _, value) -> if BS.length bs == 0
-                            then Right value
-                            else Left "Bytes left"
+  runGetOrFail parseByteCode $ BS.pack bytes

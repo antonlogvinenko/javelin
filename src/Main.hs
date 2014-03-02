@@ -2,8 +2,9 @@
 --import Data.ByteString.Lazy (pack)
 import Javelin.ByteCode.Utils
 import Data.Binary.Get
-import Javelin.ByteCode.DescSign
+import Javelin.ByteCode.ClassFile (parse)
 import Text.Parsec.Error
+import qualified Data.ByteString as BS (readFile, unpack)
 
 bytecode = [0xCA, 0xFE, 0xBA, 0xBE, 0x90, 0x87, 0x90, 0x87, 0x90, 0x87
            ]
@@ -17,13 +18,14 @@ bytecode = [0xCA, 0xFE, 0xBA, 0xBE, 0x90, 0x87, 0x90, 0x87, 0x90, 0x87
 --  putStrLn "Complete"
 
 
-parser = parseBaseType
-
 main = do
-  let p = parser "C"
-  case p of
-    Right t -> putStrLn $ show t
-    Left e -> putStrLn $ show e
+  bytestring <- BS.readFile  "Main.class"
+  let words = BS.unpack bytestring
+  let p = parse words
+  putStrLn $ concat [show $ length words, "\n", show words, "\n", show p]
+  -- case p of
+  --   Right t -> putStrLn $ show t
+  --   Left e -> putStrLn $ show e
 
 --main = do
 --  let input = pack bytecode
