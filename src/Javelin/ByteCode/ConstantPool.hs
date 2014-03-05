@@ -11,6 +11,8 @@ import Unsafe.Coerce
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 
+import Debug.Trace
+
 getConstant :: Get Constant
 getConstant = do
   tag <- getByte
@@ -28,10 +30,11 @@ constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser),
                                (12, nameAndTypeInfoParser), (15, identityParser),
                                (16, identityParser), (18, identityParser)]
 
+
 utf8InfoParser :: Get Constant
 utf8InfoParser = do
   byteStringLen <- getWord
-  byteString <- getByteString $ fromIntegral byteStringLen
+  byteString <- getByteString $ fromIntegral $ byteStringLen
   return $ Utf8Info $ bytesToString byteString
 
 identityParser :: Get Constant

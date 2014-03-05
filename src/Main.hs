@@ -9,29 +9,14 @@ import qualified Data.ByteString as BS (readFile, unpack)
 bytecode = [0xCA, 0xFE, 0xBA, 0xBE, 0x90, 0x87, 0x90, 0x87, 0x90, 0x87
            ]
 
--- | JVM entry point
---main = do
---  let c = parse bytecode
---  case c of
---    Right cd -> putStrLn $ "Parsed ok :)" ++ (show cd)
---    Left msg -> putStrLn $ "Failed with error: " ++ msg
---  putStrLn "Complete"
-
 
 main = do
   bytestring <- BS.readFile  "Main.class"
   let words = BS.unpack bytestring
-  let p = parse words
-  putStrLn $ concat [show $ length words, "\n", show words, "\n", show p]
-  -- case p of
-  --   Right t -> putStrLn $ show t
-  --   Left e -> putStrLn $ show e
-
---main = do
---  let input = pack bytecode
---  let trades = runGetOrFail getTrade input
---  case trades of
---    Left x -> print x
---    Right x -> print x
---  print trades
-
+  case parse words of
+    Right (bs, off, v) -> putStrLn $ show off
+    Left (bs, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
+                                            show (take ((fromIntegral off) + 5) words),
+                                            "\n",
+                                            show (words !! ((fromIntegral off) - 1)),
+                                            "\n"]

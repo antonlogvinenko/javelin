@@ -20,13 +20,13 @@ innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, In
 getAttr :: [Constant] -> Get AttrInfo    
 getAttr pool = do
   attrNameIndex <- getWord
-  attrLength <- getWord
-  case getFromPool pool attrNameIndex of
+  attrLength <- getDWord
+  case debug (getFromPool (debug pool) (debug attrNameIndex)) of
     Just (Utf8Info text) -> parseAttr pool text attrLength
     Just _ -> fail "some cake"
     Nothing -> fail "another cake"
 
-parseAttr :: [Constant] -> String -> Word16 -> Get AttrInfo
+parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
 parseAttr pool "CodeAttr" len = codeAttr pool len
 parseAttr pool text len = case Map.lookup text attrsNamesMap of
   Just parser -> parser len
@@ -122,8 +122,11 @@ sourceFileAttr len = SourceFile <$> getWord
 sourceDebugExtensionAttr len =
   SourceDebugExtension <$> (bytesToString <$> getByteString (fromIntegral len))
 
-lineNumberTableAttr len = LineNumberTable
-                                    <$> several (LineNumber <$> getWord <*> getWord)
+lineNumberTableAttr len = LineNumberTable <$> several lineNumberAttr
+lineNumberAttr = do
+  pc <- getWord
+  line <- getWord
+  return $ LineNumber pc line
 
 localVariableInfoParser= LocalVariableInfo <$> getWord <*> getWord <*> getWord <*> getWord <*> getWord
 localVariableTableAttr len =

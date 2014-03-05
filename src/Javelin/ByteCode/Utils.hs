@@ -11,6 +11,7 @@ import Data.Binary.Get
 import Data.ByteString.UTF8 (toString)
 
 import Javelin.ByteCode.Data
+import Debug.Trace
 
 getByte = getWord8
 getWord = getWord16be
@@ -33,7 +34,7 @@ addFlagIfMatches number flagsMap list mask = if (mask .&. number) == 0
                                                Just x -> x : list
                                                Nothing -> list
 
-foldMask ::Map.Map Word16 a -> Word16 -> [a]
+foldMask :: Map.Map Word16 a -> Word16 -> [a]
 foldMask flagsMap bytes = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
 
 getFromPool :: [x] -> Word16 -> Maybe x
@@ -41,6 +42,10 @@ getFromPool list idx = if okIdx < length list
                        then Just $ list !! okIdx
                        else Nothing
   where okIdx = fromIntegral idx
+
+say x = traceShow x x
+debug x = seq (say x) x
+return' x = seq (say x) (return x)
 
 bytesToString :: ByteString -> String
 bytesToString = toString

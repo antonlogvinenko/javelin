@@ -13,17 +13,28 @@ import Javelin.ByteCode.ConstantPool
 import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
 
+import Debug.Trace (trace)
+
 getInterface = getWord
 
 classBody :: Get ClassBody
 classBody = do
-  pool <- several getConstant
-  ClassBody pool
-    <$> parseClassAccessFlags <*> getWord <*> getWord
-    <*> several getInterface
-    <*> several (getField pool)
-    <*> several (getMethod pool)
-    <*> several (getAttr pool)
+  poolLength <- getWord
+  pool <- times getConstant $ poolLength - 1
+  flags <- parseClassAccessFlags
+  thisClass <- getWord
+  superClass <- getWord
+  interfaces <- several getInterface
+  fields <- several $ getField pool
+  methods <- several $ getMethod pool
+  attributes <- several $ getAttr pool
+  return $ ClassBody pool flags thisClass superClass interfaces fields methods attributes
+  -- ClassBody pool
+  --   <$> parseClassAccessFlags <*> getWord <*> getWord
+  --   <*> several getInterface
+  --   <*> several (getField pool)
+  --   <*> several (getMethod pool)
+  --   <*> several (getAttr pool)
 
 magicNumber :: Get Int
 magicNumber = do
