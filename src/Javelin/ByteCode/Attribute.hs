@@ -23,8 +23,8 @@ getAttr pool = do
   attrLength <- getDWord
   case getFromPool pool attrNameIndex of
     Just (Utf8Info text) -> parseAttr pool text attrLength
-    Just x -> fail "some cake"
-    Nothing -> fail "another cake"
+    Just x -> fail $ "Utf8Info expected for attribute, but found " ++ (show x)
+    Nothing -> fail "Utf8Info expected for attribute, found nothing. X_X"
 
 parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
 parseAttr pool "Code" len = codeAttr pool len

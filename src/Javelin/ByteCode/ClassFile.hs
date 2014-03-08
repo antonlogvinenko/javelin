@@ -20,7 +20,7 @@ getInterface = getWord
 classBody :: Get ClassBody
 classBody = do
   poolLength <- getWord
-  pool <- times getConstant $ poolLength - 1
+  pool <- getConstants poolLength
   flags <- parseClassAccessFlags
   thisClass <- getWord
   superClass <- getWord
@@ -49,7 +49,13 @@ version :: Get Word16
 version = getWord
 
 parseByteCode :: Get ByteCode
-parseByteCode = magicNumber >> ByteCode <$> version <*> version <*> classBody
+--parseByteCode = magicNumber >> ByteCode <$> version <*> version <*> classBody
+parseByteCode = do
+  magicNumber
+  minor <- version
+  major <- version
+  body <- classBody
+  return $ ByteCode minor major body
 
 parse :: [Word8] -> Either (BS.ByteString, ByteOffset, String) (BS.ByteString, ByteOffset, ByteCode)
 parse bytes = do

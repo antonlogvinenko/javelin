@@ -1,4 +1,4 @@
-module Javelin.ByteCode.ConstantPool
+module Javelin.ByteCode.ConstantPool (getConstants)
 where
 
 import Data.Word (Word32, Word16, Word8)
@@ -13,13 +13,30 @@ import Javelin.ByteCode.Utils
 
 import Debug.Trace
 
+--getConstants len = times getConstant $ len - 1
+
+getConstants 1 = return []
+getConstants len = do
+  constant <- getConstant
+  case constant of
+    LongInfo _ -> do
+      constants <- getConstants $ len - 2
+      return $ constant : constant : constants
+    DoubleInfo _ -> do
+      constants <- getConstants $ len - 2
+      return $ constant : constant : constants
+    otherwise -> do
+      constants <- getConstants $ len - 1
+      return $ constant : constants
+
 getConstant :: Get Constant
 getConstant = do
   tag <- getByte
-  findWithDefault failingConstParser tag constantTypeParser
+  findWithDefault (failingConstParser tag) tag constantTypeParser
 
-failingConstParser :: Get Constant
-failingConstParser = fail "Undefined constant"
+
+failingConstParser :: Word8 -> Get Constant
+failingConstParser x = fail $ "Undefined constant with index " ++ (show x) ++ "\n"
 
 constantTypeParser :: Map Word8 (Get Constant)
 constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser),
@@ -27,18 +44,14 @@ constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser),
                                (6, doubleInfoParser), (7, classInfoParser),
                                (8, stringInfoParser), (9, fieldrefParser),
                                (10, methodrefParser), (11, interfaceMethodrefParser),
-                               (12, nameAndTypeInfoParser), (15, identityParser),
-                               (16, identityParser), (18, identityParser)]
-
+                               (12, nameAndTypeInfoParser), (15, methodHandleInfoParser),
+                               (16, methodTypeInfoParser), (18, invokeDynamicInfoParser)]
 
 utf8InfoParser :: Get Constant
 utf8InfoParser = do
   byteStringLen <- getWord
   byteString <- getByteString $ fromIntegral $ byteStringLen
   return $ Utf8Info $ bytesToString byteString
-
-identityParser :: Get Constant
-identityParser = return $ Utf8Info ""
 
 twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Get Constant
 twoTwoBytesInfoParser constConstr = constConstr <$> getWord <*> getWord
@@ -51,7 +64,11 @@ fourBytesInfoParser :: (Word32 -> Constant) -> Get Constant
 fourBytesInfoParser constConstr = constConstr <$> getDWord
 
 fieldrefParser = twoTwoBytesInfoParser Fieldref
-methodrefParser = twoTwoBytesInfoParser Methodref
+methodrefParser = do
+  a <- getWord
+  b <- getWord
+  return $ Methodref a b
+
 interfaceMethodrefParser = twoTwoBytesInfoParser InterfaceMethodref
 nameAndTypeInfoParser = twoTwoBytesInfoParser NameAndTypeInfo
 classInfoParser = twoBytesInfoParser ClassInfo

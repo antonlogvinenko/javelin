@@ -13,7 +13,7 @@ main = do
   case parse words of
     Right (bs, off, v) -> putStrLn $ show v
     Left (bs, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
-                                            show (take ((fromIntegral off) + 5) words),
+                                           -- show (take ((fromIntegral off) + 5) words),
                                             "\n",
-                                            show (words !! ((fromIntegral off) - 1)),
+                                           -- show (words !! ((fromIntegral off) - 1)),
                                             "\n"]

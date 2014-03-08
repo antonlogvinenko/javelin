@@ -50,6 +50,9 @@ say x = traceShow x x
 debug x = seq (say x) x
 debug' m x = seq (say m) x
 return' x = seq (say x) (return x)
+debugM m = do
+  v <- m
+  return' v
 
 bytesToString :: ByteString -> String
 bytesToString = toString
