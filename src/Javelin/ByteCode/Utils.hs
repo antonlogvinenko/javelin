@@ -20,7 +20,11 @@ getDDWord = getWord64be
 
 times :: Get a -> Word16 -> Get [a]
 times _ 0 = return []
-times get n = (:) <$> get <*> times get (n - 1)
+--times get n = (:) <$> get <*> times get (n - 1)
+times get n = do
+  x <- get
+  xs <- times get (n - 1)
+  return $ x : xs
     
 several :: Get a -> Get [a]
 several get = do
@@ -38,13 +42,14 @@ foldMask :: Map.Map Word16 a -> Word16 -> [a]
 foldMask flagsMap bytes = foldl (addFlagIfMatches bytes flagsMap) [] (Map.keys flagsMap)
 
 getFromPool :: [x] -> Word16 -> Maybe x
-getFromPool list idx = if okIdx < length list
-                       then Just $ list !! okIdx
+getFromPool list idx = if okIdx <= length list
+                       then Just $ list !! (okIdx - 1)
                        else Nothing
   where okIdx = fromIntegral idx
 
 say x = traceShow x x
 debug x = seq (say x) x
+debug' m x = seq (say m) x
 return' x = seq (say x) (return x)
 
 bytesToString :: ByteString -> String

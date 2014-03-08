@@ -22,8 +22,9 @@ library
                      Javelin.ByteCode.FieldMethod,
                      Javelin.ByteCode.Attribute,
                      Javelin.ByteCode.ClassFile,
-                     Javelin.ByteCode.DescSign
-  -- ghc-options:       -Wall
+                     Javelin.ByteCode.DescSign,
+                     Javelin.Main
+-- ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
   hs-source-dirs:    src
   build-depends:     base ==4.6.*,

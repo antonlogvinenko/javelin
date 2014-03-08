@@ -27,13 +27,15 @@ getFieldMethod :: Map Word16 flag ->
                   ([flag] -> Word16 -> Word16 -> [AttrInfo] -> x) ->
                   [Constant]
                   -> Get x
-getFieldMethod accessFlags constr pool =
-  constr
-  <$> (foldMask accessFlags <$> getWord)
-  <*> getWord
-  <*> getWord
-  <*> (several $ getAttr pool)
-  
+getFieldMethod accessFlags constr pool = do
+  maskBytes <- getWord
+  let mask = foldMask accessFlags (debug maskBytes)
+  nameIndex <- getWord
+  descriptorIndex <- getWord
+  attrsCount <- getWord
+  attributes <- times (getAttr pool) attrsCount
+  return $ constr mask nameIndex descriptorIndex attributes
+
 getField :: [Constant] -> Get FieldInfo
 getField = getFieldMethod fieldInfoAF FieldInfo
 

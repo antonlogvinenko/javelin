@@ -23,11 +23,11 @@ getAttr pool = do
   attrLength <- getDWord
   case getFromPool pool attrNameIndex of
     Just (Utf8Info text) -> parseAttr pool text attrLength
-    Just _ -> fail "some cake"
+    Just x -> fail "some cake"
     Nothing -> fail "another cake"
 
 parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
-parseAttr pool "CodeAttr" len = codeAttr pool len
+parseAttr pool "Code" len = codeAttr pool len
 parseAttr pool text len = case Map.lookup text attrsNamesMap of
   Just parser -> parser (fromIntegral len)
   Nothing -> UnknownAttr <$> getByteString (fromIntegral len)
@@ -55,10 +55,19 @@ attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
 constantValueAttr len = ConstantValue <$> getWord
 
 getExceptionTable = Exception <$> getWord <*> getWord <*> getWord <*> getWord
-codeAttr pool len = CodeAttr <$> getWord <*> getWord
-                         <*> several getByte
-                         <*> several getExceptionTable
-                         <*> several (getAttr pool)
+-- codeAttr pool len = CodeAttr <$> getWord <*> getWord
+--                          <*> several getByte
+--                          <*> several getExceptionTable
+--                          <*> several (getAttr pool)
+
+codeAttr pool len = do
+  maxStack <- getWord
+  maxLocals <- getWord
+  codeLength <- getDWord
+  code <- times getByte (fromIntegral codeLength)
+  exceptionTable <- several getExceptionTable
+  attributes <- several (getAttr pool)
+  return $ CodeAttr maxStack maxLocals code exceptionTable attributes
 
 -- -> StackMapTable
 stackMapTableAttr len = do

@@ -12,7 +12,6 @@ Long term
 
 Short term
 * bytecode parser
-  * fix attributes
   * make parse a few classes
   * set up functional tests
   * set up unit testing
@@ -20,13 +19,6 @@ Short term
 Deferred:
 * need more unit testing for bytecode parser
 
-
-stackMapTableAttr
-innerClassAttr
-sourceDebugExtension
-lineNumber
-paramAnnsAttr
-annDefaultAttr
 
 Haskell:
 * sandbox

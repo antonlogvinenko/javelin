@@ -29,12 +29,6 @@ classBody = do
   methods <- several $ getMethod pool
   attributes <- several $ getAttr pool
   return $ ClassBody pool flags thisClass superClass interfaces fields methods attributes
-  -- ClassBody pool
-  --   <$> parseClassAccessFlags <*> getWord <*> getWord
-  --   <*> several getInterface
-  --   <*> several (getField pool)
-  --   <*> several (getMethod pool)
-  --   <*> several (getAttr pool)
 
 magicNumber :: Get Int
 magicNumber = do
