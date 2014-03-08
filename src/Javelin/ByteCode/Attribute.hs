@@ -55,10 +55,6 @@ attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
 constantValueAttr len = ConstantValue <$> getWord
 
 getExceptionTable = Exception <$> getWord <*> getWord <*> getWord <*> getWord
--- codeAttr pool len = CodeAttr <$> getWord <*> getWord
---                          <*> several getByte
---                          <*> several getExceptionTable
---                          <*> several (getAttr pool)
 
 codeAttr pool len = do
   maxStack <- getWord

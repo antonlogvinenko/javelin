@@ -20,7 +20,6 @@ getDDWord = getWord64be
 
 times :: Get a -> Word16 -> Get [a]
 times _ 0 = return []
---times get n = (:) <$> get <*> times get (n - 1)
 times get n = do
   x <- get
   xs <- times get (n - 1)
