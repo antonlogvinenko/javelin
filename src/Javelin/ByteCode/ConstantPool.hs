@@ -13,27 +13,20 @@ import Javelin.ByteCode.Utils
 
 import Debug.Trace
 
---getConstants len = times getConstant $ len - 1
-
 getConstants 1 = return []
 getConstants len = do
   constant <- getConstant
+  let double = ([constant, constant] ++) <$> (getConstants $ len - 2)
+      single = (constant :) <$> (getConstants $ len - 1)
   case constant of
-    LongInfo _ -> do
-      constants <- getConstants $ len - 2
-      return $ constant : constant : constants
-    DoubleInfo _ -> do
-      constants <- getConstants $ len - 2
-      return $ constant : constant : constants
-    otherwise -> do
-      constants <- getConstants $ len - 1
-      return $ constant : constants
+    LongInfo _ -> double
+    DoubleInfo _ -> double
+    otherwise -> single
 
 getConstant :: Get Constant
 getConstant = do
   tag <- getByte
   findWithDefault (failingConstParser tag) tag constantTypeParser
-
 
 failingConstParser :: Word8 -> Get Constant
 failingConstParser x = fail $ "Undefined constant with index " ++ (show x) ++ "\n"
