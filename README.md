@@ -12,10 +12,12 @@ Long term
 
 Short term
 * bytecode parser
-  * make parse a few classes
+  * make parse a few more lcasses
   * set up functional tests
   * set up unit testing
-  * more and more complicated classes
+  * add more complicated classes to functional testing, foundation for unit testing
+  * refactor, rewrite with do-notation instead of applicative notation
+  * what's next?
 
 Deferred:
 * need more unit testing for bytecode parser
