@@ -15,6 +15,7 @@ Short term
   * make parse a few classes
   * set up functional tests
   * set up unit testing
+  * more and more complicated classes
 
 Deferred:
 * need more unit testing for bytecode parser

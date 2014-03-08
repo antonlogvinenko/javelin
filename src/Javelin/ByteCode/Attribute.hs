@@ -30,10 +30,12 @@ parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
 parseAttr pool "Code" len = codeAttr pool len
 parseAttr pool text len = case Map.lookup text attrsNamesMap of
   Just parser -> parser (fromIntegral len)
-  Nothing -> UnknownAttr <$> getByteString (fromIntegral len)
+  Nothing -> do
+    byteString <- getByteString (fromIntegral len)
+    return $ UnknownAttr byteString
 
 attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
-                              ("StackMapTableAttr", stackMapTableAttr),
+                              ("StackMapTable", stackMapTableAttr),
                               ("Exceptions", exceptionsAttr),
                               ("InnerClasses", innerClassesAttr),
                               ("EnclosingMethod", enclosingMethodAttr),
@@ -45,10 +47,10 @@ attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
                               ("LocalVariableTable", localVariableTableAttr),
                               ("LocalVariableTypeTable", localVariableTypeTableAttr),
                               ("Deprecated", deprecatedAttr),
-                              ("RTVisibleAnns", rtVisibleAnnsAttr),
-                              ("RTInvisibleAnns", rtInvisibleAnnsAttr),
-                              ("RTVisibleParamAnns", rtVisibleParamAnnsAttr),
-                              ("RTInvisibleParamAnns", rtInvisibleParamAnnsAttr),
+                              ("RuntimeVisibleAnnotations", rtVisibleAnnsAttr),
+                              ("RuntimeInvisibleAnnotations", rtInvisibleAnnsAttr),
+                              ("RuntimeVisibleParameterAnnotations", rtVisibleParamAnnsAttr),
+                              ("RuntimeInvisibleParameterAnnotations", rtInvisibleParamAnnsAttr),
                               ("AnnDefault", annDefaultAttr),
                               ("BootstrapMethods", bootstrapMethodsAttr)]
                 
