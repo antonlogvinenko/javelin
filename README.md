@@ -12,8 +12,22 @@ Long term
 
 Short term
 * bytecode parser
-  * acceptance testing, unit testing
-  
+  * fix attributes
+  * make parse a few classes
+  * set up functional tests
+  * set up unit testing
+
+Deferred:
+* need more unit testing for bytecode parser
+
+
+stackMapTableAttr
+innerClassAttr
+sourceDebugExtension
+lineNumber
+paramAnnsAttr
+annDefaultAttr
+
 Haskell:
 * sandbox
 * read, use quickcheck, hunit, tasty, hspec?, write tests

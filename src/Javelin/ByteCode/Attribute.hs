@@ -21,7 +21,7 @@ getAttr :: [Constant] -> Get AttrInfo
 getAttr pool = do
   attrNameIndex <- getWord
   attrLength <- getDWord
-  case debug (getFromPool (debug pool) (debug attrNameIndex)) of
+  case getFromPool pool attrNameIndex of
     Just (Utf8Info text) -> parseAttr pool text attrLength
     Just _ -> fail "some cake"
     Nothing -> fail "another cake"
@@ -29,7 +29,7 @@ getAttr pool = do
 parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
 parseAttr pool "CodeAttr" len = codeAttr pool len
 parseAttr pool text len = case Map.lookup text attrsNamesMap of
-  Just parser -> parser len
+  Just parser -> parser (fromIntegral len)
   Nothing -> UnknownAttr <$> getByteString (fromIntegral len)
 
 attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
@@ -61,7 +61,10 @@ codeAttr pool len = CodeAttr <$> getWord <*> getWord
                          <*> several (getAttr pool)
 
 -- -> StackMapTable
-stackMapTableAttr len = StackMapTable <$> times getStackMapFrame len
+stackMapTableAttr len = do
+  frames <- several getStackMapFrame
+  return $ StackMapTable frames
+
 getStackMapFrame = do
   tag <- getByte
   findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
@@ -109,7 +112,9 @@ exceptionsAttr len = Exceptions <$> several getWord
 
 innerClass = InnerClassInfo <$> getWord <*> getWord <*> getWord
               <*> (foldMask innerClassAccessFlagsMap <$> getWord)
-innerClassesAttr len = InnerClasses <$> times innerClass len
+innerClassesAttr len = do
+  innerClasses <- several innerClass
+  return $ InnerClasses innerClasses
 
 enclosingMethodAttr len = EnclosingMethod <$> getWord <*> getWord
 
@@ -119,10 +124,14 @@ signatureAttr len = Signature <$> getWord
 
 sourceFileAttr len = SourceFile <$> getWord
 
-sourceDebugExtensionAttr len =
-  SourceDebugExtension <$> (bytesToString <$> getByteString (fromIntegral len))
+sourceDebugExtensionAttr len = do
+  byteString <- getByteString (fromIntegral len)
+  let string = bytesToString byteString
+  return $ SourceDebugExtension string
 
-lineNumberTableAttr len = LineNumberTable <$> several lineNumberAttr
+lineNumberTableAttr len = do
+  attrs <- several lineNumberAttr
+  return $ LineNumberTable attrs
 lineNumberAttr = do
   pc <- getWord
   line <- getWord
@@ -139,8 +148,14 @@ deprecatedAttr len = return Deprecated
 -- --> Annotations
 rtVisibleAnnsAttr len = RTVisibleAnns <$> several  parseAnnAttr
 rtInvisibleAnnsAttr len = RTInvisibleAnns <$> several parseAnnAttr
-rtVisibleParamAnnsAttr len = RTVisibleParamAnns <$> times (several parseAnnAttr) len
-rtInvisibleParamAnnsAttr len = RTInvisibleParamAnns <$> times (several parseAnnAttr) len
+rtVisibleParamAnnsAttr len = do
+  numParameters <- getByte
+  annAttrs <- times  (several parseAnnAttr) (fromIntegral numParameters)
+  return $ RTVisibleParamAnns annAttrs
+rtInvisibleParamAnnsAttr len = do
+  numParameters <- getByte
+  annAttrs <- times (several parseAnnAttr) (fromIntegral numParameters)
+  return $ RTInvisibleParamAnns annAttrs
 
 parseAnnAttr = Ann <$> getWord <*> several elementValuePairParser
 elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
@@ -162,6 +177,10 @@ parseArrayValue tag = ElementArrayValue tag <$> several elementValueParser
 -- <-- Annotations
 
 annDefaultAttr len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
+addDefauktAttr len = do
+  value <- getByteString $ len
+  let bytes = unpack value
+  return $ AnnDefault bytes
 
 bootstrapMethodsAttr len = BootstrapMethods <$>
                                      several (BootstrapMethod <$> getWord <*> several getWord)
