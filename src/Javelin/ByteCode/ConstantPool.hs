@@ -19,9 +19,9 @@ getConstants len = do
   let double = ([constant, constant] ++) <$> (getConstants $ len - 2)
       single = (constant :) <$> (getConstants $ len - 1)
   case constant of
-    LongInfo _ -> double
-    DoubleInfo _ -> double
-    otherwise -> single
+    LongInfo _ -> timesr 2
+    DoubleInfo _ -> timesr 2
+    otherwise -> timesr 1
 
 getConstant :: Get Constant
 getConstant = do
@@ -57,10 +57,7 @@ fourBytesInfoParser :: (Word32 -> Constant) -> Get Constant
 fourBytesInfoParser constConstr = constConstr <$> getDWord
 
 fieldrefParser = twoTwoBytesInfoParser Fieldref
-methodrefParser = do
-  a <- getWord
-  b <- getWord
-  return $ Methodref a b
+methodrefParser = Methodref <$> getWord <*> getWord
 
 interfaceMethodrefParser = twoTwoBytesInfoParser InterfaceMethodref
 nameAndTypeInfoParser = twoTwoBytesInfoParser NameAndTypeInfo

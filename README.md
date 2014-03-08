@@ -12,11 +12,13 @@ Long term
 
 Short term
 * bytecode parser
-  * make parse a few more lcasses
-  * set up functional tests
-  * set up unit testing
-  * add more complicated classes to functional testing, foundation for unit testing
-  * refactor, rewrite with do-notation instead of applicative notation
+  * bug finder
+    * gather a lot of classes
+    * code to run on all files, fail on the first one
+  * set up for functional testing, add a few tens of large classes
+  * foundation for unit testing
+  * refactor, rewrite with do-notation instead of applicative notation where appropriate
+  * make a function to pretty print constant pool, entry per line, with indices
   * what's next?
 
 Deferred:
