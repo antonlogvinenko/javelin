@@ -30,10 +30,8 @@ main = do
     else putStrLn "Not enough arguments"
 
 validate className = case className of
-    Right (_, _, _) ->
-      " ok"
-    Left (bs, off, v) ->
-      " failed"
+    Right (_, _, _) -> True
+    Left (bs, off, v) -> False
 
 searchBugs :: FilePath -> IO ()
 searchBugs path = do
@@ -42,6 +40,7 @@ searchBugs path = do
               filter (`notElem` [".", ".."]) $
               files
   parsed <- sequence .
-            map (liftM parse . liftM BS.unpack . BS.readFile) $
+            map (liftM validate . liftM parse . liftM BS.unpack . BS.readFile) $
             names
-  sequence_ $ (map $ putStrLn . show) . zip names . map validate $ parsed
+  sequence_ $ (map $ putStrLn . show) . zip names  $ parsed
+  putStrLn $ "All files passed: " ++ (show . foldl (&&) True $ parsed)

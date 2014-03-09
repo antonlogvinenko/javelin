@@ -13,8 +13,6 @@ Long term
 Short term
 * bytecode parser
   * bug finder
-    * gather a lot of classes
-    * code to run on all files
     * fail on the first one
     * find errors, fix
   * set up for functional testing, add a few tens of large classes
