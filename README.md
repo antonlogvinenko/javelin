@@ -14,8 +14,11 @@ Short term
 * bytecode parser
   * bug finder
     * gather a lot of classes
-    * code to run on all files, fail on the first one
+    * code to run on all files
+    * fail on the first one
+    * find errors, fix
   * set up for functional testing, add a few tens of large classes
+  * descriptors string parsers
   * foundation for unit testing
   * refactor, rewrite with do-notation instead of applicative notation where appropriate
   * make a function to pretty print constant pool, entry per line, with indices

@@ -19,9 +19,9 @@ getConstants len = do
   let double = ([constant, constant] ++) <$> (getConstants $ len - 2)
       single = (constant :) <$> (getConstants $ len - 1)
   case constant of
-    LongInfo _ -> timesr 2
-    DoubleInfo _ -> timesr 2
-    otherwise -> timesr 1
+    LongInfo _ -> double
+    DoubleInfo _ -> double
+    otherwise -> single
 
 getConstant :: Get Constant
 getConstant = do
