@@ -12,9 +12,6 @@ Long term
 
 Short term
 * bytecode parser
-  * bug finder
-    * fail on the first one
-    * find errors, fix
   * set up for functional testing, add a few tens of large classes
   * descriptors string parsers
   * foundation for unit testing
