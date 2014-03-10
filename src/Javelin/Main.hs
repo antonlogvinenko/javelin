@@ -34,7 +34,7 @@ main1 = do
 -- (IDLjava/lang/Thread;)Ljava/lang/Object;
 main = do
   a <- getArgs
-  putStrLn $ show $ parseX $ a !! 0
+  putStrLn $ show $ parseClassSignature $ a !! 0
 
 validate className = case className of
     Right _ -> True

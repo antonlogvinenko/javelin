@@ -14,9 +14,9 @@ Short term
 * bytecode parser
   * descriptors string parsers
     * unit tests for descriptors/signatures
-    * where to use?
-    * redefine types
-    * test on all classes, again
+    * where to use them, redefine types
+    * run on all classes, again, find bugs
+  * Main.hs - switch between research modes
   * set up for functional testing, add a few tens of large classes
   * foundation for unit testing
   * what's next?
