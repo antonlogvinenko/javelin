@@ -13,11 +13,10 @@ Long term
 Short term
 * bytecode parser
   * descriptors string parsers
-    * class
-    * method exceptions
+    * unit tests for descriptors/signatures
     * where to use?
     * redefine types
-    * test on all classes
+    * test on all classes, again
   * set up for functional testing, add a few tens of large classes
   * foundation for unit testing
   * what's next?

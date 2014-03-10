@@ -50,16 +50,9 @@ returnDescriptorP = FieldTypeDescriptor <$> fieldTypeP
                     <?> "ReturnDescriptor"
 voidDescriptorP = char 'v'
 
--- ClassSignature
+
+-- Signature types
 identifierP = many $ noneOf ".;[/<>:"
-
-classSignatureP :: StringParser ClassSignature
-classSignatureP = ClassSignature
-                  <$> formalTypeParametersP
-                  <*> classTypeSignatureP
-                  <*> many classTypeSignatureP
-
-
 
 formalTypeParametersP = char '<' *> many1 formalTypeParameterP <* char '>'
                         <|> return []
@@ -67,19 +60,20 @@ formalTypeParameterP = FormalTypeParameter
                        <$> identifierP
                        <*> classBoundP
                        <*> many interfaceBoundP
-
 classBoundP = char ':' *> fieldTypeSignatureP
 interfaceBoundP = char ':' *> fieldTypeSignatureP
-fieldTypeSignatureP :: StringParser FieldTypeSignature
+
+typeSignatureP = FieldTypeTypeSignature <$> fieldTypeSignatureP
+                 <|> BaseTypeTypeSignature <$> baseTypeP
+                 <?> "TypeSignature"
+
 fieldTypeSignatureP = ClassFieldType <$> classTypeSignatureP
                       <|> ArrayFieldType <$> (char '[' *> many typeSignatureP)
                       <|> TypeVariable <$> typeVariableSignatureP
                       <?> "Field Type Signature"
 
-typeVariableSignatureP :: StringParser TypeVariableSignature
 typeVariableSignatureP = TypeVariableSignature <$> (char 'T' *> identifierP <* char ';')
 
-classTypeSignatureP :: StringParser ClassTypeSignature
 classTypeSignatureP = (char 'L') *> (ClassTypeSignature
                       <$> packageSpecifierP
                       <*> simpleClassTypeSignatureP
@@ -87,31 +81,26 @@ classTypeSignatureP = (char 'L') *> (ClassTypeSignature
                       <* (char ';')
 packageP = identifierP <* char '/'
 packageSpecifierP = manyTill packageP (try (notFollowedBy packageP))
-
-                      
 simpleClassTypeSignatureP = SimpleClassTypeSignature
                             <$> identifierP
                             <*> (typeArgumentsP <|> return [])
-typeArgumentsP = char '<' *> many1 typeArgumentP <* char '>'
-                                       
-typeArgumentP :: StringParser TypeArgument
+typeArgumentsP = char '<' *> many1 typeArgumentP <* char '>'                                       
 typeArgumentP = TypeArgumentWithIndicator <$> wildCardIndicatorP <*> fieldTypeSignatureP
                 <|> TypeArgument <$> fieldTypeSignatureP
                 <|> Asterisk <$ char '*'
                 <?> "TypeArgument"
-
 wildCardIndicatorP = Plus <$ char '+'
                      <|> Minus <$ char '-'
                      <?> "wildcard indicator"
-typeSignatureP = FieldTypeTypeSignature <$> fieldTypeSignatureP
-                 <|> BaseTypeTypeSignature <$> baseTypeP
-                 <?> "TypeSignature"
 
 
-parseX = parse methodTypeSignatureP ""
+-- Signatures
+classSignatureP :: StringParser ClassSignature
+classSignatureP = ClassSignature
+                  <$> formalTypeParametersP
+                  <*> classTypeSignatureP
+                  <*> many classTypeSignatureP
 
-
---MethodTypeSignature
 methodTypeSignatureP :: StringParser MethodTypeSignature
 methodTypeSignatureP = MethodTypeSignature
                        <$> formalTypeParametersP
@@ -124,4 +113,3 @@ returnTypeP = ReturnTypeSignature <$> typeSignatureP
 throwsSignatureP = ThrowsSignature
                    <$> (char '^' *> classTypeSignatureP)
                    <*> (char '^' *> typeVariableSignatureP)
-
