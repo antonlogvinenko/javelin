@@ -2,6 +2,7 @@ module Javelin.Main
 where
 
 import Javelin.ByteCode.Utils
+import Javelin.ByteCode.DescSign
 import Data.Binary.Get
 import Javelin.ByteCode.ClassFile (parse)
 import Text.Parsec.Error
@@ -12,7 +13,8 @@ import System.IO
 import Control.Monad
 
 main0 = do
-  bytestring <- BS.readFile  "Main.class"
+  path <- getArgs
+  bytestring <- BS.readFile (concat path)
   let words = BS.unpack bytestring
   case parse words of
     Right (bs, off, v) -> putStrLn $ show v
@@ -22,12 +24,17 @@ main0 = do
                                            -- show (words !! ((fromIntegral off) - 1)),
                                             "\n"]
 
-main = do
+main1 = do
   path <- getArgs
   let len = length path
   if len > 0
     then searchBugs $ path !! 0
     else putStrLn "Not enough arguments"
+
+-- (IDLjava/lang/Thread;)Ljava/lang/Object;
+main = do
+  a <- getArgs
+  putStrLn $ show $ parseX $ a !! 0
 
 validate className = case className of
     Right _ -> True

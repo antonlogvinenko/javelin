@@ -195,7 +195,7 @@ data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType 
 -- ClassSignature
 data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
                                        superclassSignature :: ClassTypeSignature,
-                                       superinterfaceSignature :: ClassTypeSignature }
+                                       superinterfaceSignature :: [ClassTypeSignature] }
                     deriving (Show, Eq)
 data FormalTypeParameter = FormalTypeParameter { ftId :: UnqualifiedName,
                                                  classBound :: FieldTypeSignature,
@@ -206,15 +206,16 @@ data FieldTypeSignature = ClassFieldType { fieldClassType :: ClassTypeSignature 
                         | TypeVariable { signature :: TypeVariableSignature }
                         deriving (Show, Eq)
 data TypeVariableSignature = TypeVariableSignature { tvId :: UnqualifiedName } deriving (Show, Eq)
-data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: [UnqualifiedName],
+data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: QualifiedName,
                                                simpleSignature :: SimpleClassTypeSignature,
                                                suffix :: [SimpleClassTypeSignature] }
                         deriving (Show, Eq)
 data SimpleClassTypeSignature = SimpleClassTypeSignature { sctId :: String,
                                                            typeArguments :: [TypeArgument] }
                               deriving (Show, Eq)
-data TypeArgument = TypeArgument { indicator :: WildcardIndicator,
+data TypeArgument = TypeArgumentWithIndicator { indicator :: WildcardIndicator,
                                    typeArgumentSignature :: FieldTypeSignature }
+                  | TypeArgument { typeArgumentSignature :: FieldTypeSignature }
                   | Asterisk
                   deriving (Show, Eq)
 data WildcardIndicator = Plus | Minus deriving (Show, Eq)
