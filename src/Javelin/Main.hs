@@ -16,8 +16,8 @@ validate className = case className of
     Right _ -> True
     Left _ -> False
 
-runClasses :: FilePath -> IO ()
-runClasses path = do
+testClasses :: FilePath -> IO ([String], Bool)
+testClasses path = do
   files <- getDirectoryContents path
   let names = map (path ++) .
               filter (`notElem` [".", ".."]) $
@@ -25,8 +25,13 @@ runClasses path = do
   parsed <- sequence .
             map (liftM validate . liftM parse . liftM BS.unpack . BS.readFile) $
             names
-  sequence_ $ (map $ putStrLn . show) . zip names  $ parsed
-  putStrLn $ ("All files passed: " ++) . show . foldl (&&) True $ parsed
+  return (map show $ zip names parsed, foldl (&&) True $ parsed)
+
+runClasses :: FilePath -> IO ()
+runClasses path = do
+  (io, result) <- testClasses path
+  sequence_ $ map (putStrLn . show) io
+  putStrLn $ ("All files passed: " ++) . show $ result
 
 runClass path = do
   bytestring <- BS.readFile path
