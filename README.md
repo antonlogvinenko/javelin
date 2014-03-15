@@ -2,7 +2,7 @@ javelin
 =======
 Haskell JVM
 
-Long term
+*Long term*
 * Bytecode parser [**Done**]
 * Runtime data structures [**In progress**]
 * Linking/loading
@@ -10,7 +10,7 @@ Long term
 * Garbage collection
 * Bytecode verification, invokedynamic
 
-Short term: **Runtime data structures**
+*Short term: Runtime data structures*
 * "What's that?" =)
 
 Javeling deferred tasks:
