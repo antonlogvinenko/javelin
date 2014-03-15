@@ -12,36 +12,12 @@ import System.Environment
 import System.IO
 import Control.Monad
 
-main0 = do
-  path <- getArgs
-  bytestring <- BS.readFile (concat path)
-  let words = BS.unpack bytestring
-  case parse words of
-    Right (bs, off, v) -> putStrLn $ show v
-    Left (bs, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
-                                           -- show (take ((fromIntegral off) + 5) words),
-                                            "\n",
-                                           -- show (words !! ((fromIntegral off) - 1)),
-                                            "\n"]
-
-main1 = do
-  path <- getArgs
-  let len = length path
-  if len > 0
-    then searchBugs $ path !! 0
-    else putStrLn "Not enough arguments"
-
--- (IDLjava/lang/Thread;)Ljava/lang/Object;
-main = do
-  a <- getArgs
-  putStrLn $ show $ parseClassSignature $ a !! 0
-
 validate className = case className of
     Right _ -> True
     Left _ -> False
 
-searchBugs :: FilePath -> IO ()
-searchBugs path = do
+runClasses :: FilePath -> IO ()
+runClasses path = do
   files <- getDirectoryContents path
   let names = map (path ++) .
               filter (`notElem` [".", ".."]) $
@@ -51,3 +27,28 @@ searchBugs path = do
             names
   sequence_ $ (map $ putStrLn . show) . zip names  $ parsed
   putStrLn $ ("All files passed: " ++) . show . foldl (&&) True $ parsed
+
+runClass path = do
+  bytestring <- BS.readFile path
+  let words = BS.unpack bytestring
+  case parse words of
+    Right (bs, off, v) -> putStrLn $ show v
+    Left (bs, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
+                                           -- show (take ((fromIntegral off) + 5) words),
+                                            "\n",
+                                           -- show (words !! ((fromIntegral off) - 1)),
+                                            "\n"]
+
+runFunction arg = do
+  putStrLn $ show $ parseClassSignature arg
+
+main = do
+  args <- getArgs
+  if length args < 2
+    then putStrLn "Specify running mode: [f|c|cs] for function/class/classes and mode argument"
+    else let arg0 = args !! 0
+             arg1 = args !! 1
+         in case arg0 of
+           "f" -> runFunction arg1
+           "c" -> runClass arg1
+           "cs" -> runClasses arg1
