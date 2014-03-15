@@ -3,8 +3,8 @@ javelin
 Haskell JVM
 
 Long term
-* Bytecode parser [*Done*]
-* Runtime data structures [In progress]
+* Bytecode parser [**Done**]
+* Runtime data structures [*In progress*]
 * Linking/loading
 * Execution (everything but invokedynamic & verification)
 * Garbage collection
@@ -12,6 +12,7 @@ Long term
 
 Short term
 * Runtime data structures
+  * What's that? =)
 
 Javeling deferred tasks:
 * need more unit testing for bytecode parser
