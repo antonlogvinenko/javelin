@@ -13,10 +13,10 @@ Haskell JVM
 *Short term: Runtime data structures*
 * "What's that?" =)
 
-Javeling deferred tasks:
+*Javeling deferred tasks*
 * need more unit testing for bytecode parser
 
-Haskell deferred tasks:
+*Haskell deferred tasks*
 * cabal sandboxing
 * quickcheck/hunit/tasty/hspec
 * emacs modes
