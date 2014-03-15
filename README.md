@@ -3,7 +3,7 @@ javelin
 Haskell JVM
 
 Long term
-* Bytecode parser [Done]
+* Bytecode parser [*Done*]
 * Runtime data structures [In progress]
 * Linking/loading
 * Execution (everything but invokedynamic & verification)
