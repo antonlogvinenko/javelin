@@ -11,10 +11,16 @@ Haskell JVM
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* "What's that?" =)
+* Reread chapters 1, 2, 3 from JVM spec
+* Start defining data structures and logic reqiured
+* Next?
 
-*Javeling deferred tasks*
+*Javelin deferred tasks*
 * need more unit testing for bytecode parser
+
+*Possible offspring projects"
+* UI for viewing bytecode
+* Disassembling
 
 *Haskell deferred tasks*
 * cabal sandboxing
