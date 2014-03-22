@@ -20,10 +20,12 @@ Haskell JVM
 
 *Possible offspring projects"
 * UI for viewing bytecode
-* Disassembling
+* Disassembler
+* Decompiler?
 
 *Haskell deferred tasks*
 * cabal sandboxing
 * quickcheck/hunit/tasty/hspec
+* checkSpec, htest
 * emacs modes
 * hlint
