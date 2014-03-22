@@ -85,9 +85,19 @@ data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
               | RTInvisibleAnns { annotations :: [Ann] }
               | RTVisibleParamAnns { paramAnns :: [[Ann]] }
               | RTInvisibleParamAnns { paramAnns :: [[Ann]] }
+              | RTVisibleTypeAnns { typeAnns :: [TypeAnn] }
+              | RTInvisibleTypeAnns { typeAnns :: [TypeAnn] }
               | AnnDefault { defaultValue :: [Word8] }
               | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
+              | MethodParameters { parameters :: [MethodParameter] }
               deriving (Show, Eq)
+
+data MethodParameter = MethodParameter { parameterNameIndex :: Word16,
+                                         parameterAccessFlags :: [ParameterAccessFlag] }
+                       deriving (Show, Eq)
+
+data ParameterAccessFlag = ACC_FINAL | ACC_SYNTHETIC | ACC_MANDATED
+                         deriving (Show, Eq)
 
 data BootstrapMethod = BootstrapMethod { methodRef :: Word16,
                                          arguments :: [Word16] }
@@ -111,6 +121,42 @@ data ElementValuePair = ElementValuePair { elementNameIndex :: Word16,
 data Ann = Ann { typeIndex :: Word16,
                  elementValuePairs :: [ElementValuePair]
                } deriving (Show, Eq)
+
+data TypeAnn = TypeAnn { targetType :: TypeTargetType,
+                         targetInfo :: TypeTargetInfo,
+                         targetPath :: [TypePathElem],
+                         typeAnnotation :: Ann }
+             deriving (Show, Eq)
+data TypePathElem = TypePathElem { typePathKind :: Word8,
+                                   typeArgumentIndex :: Word8 }
+                  deriving (Show, Eq)
+data TypeTargetType = GenericClassInterface | MethodConstructor
+                    | ClassInterfaceExtendsImplements
+                    | ClassInterfaceBound | MethodConstructorBound
+                    | Field | ReturnConstructed | MethodConstructorReceiver | MethodConstructorLambda
+                    | Throws
+                    | LocalVar | ResourceVar
+                    | ExceptionParameter
+                    | InstanceOf | New | NewReference | MethodReference
+                    | CastExpr | NewArgType | MethodArgType | NewRefArg | MethodRefArg
+                    deriving (Show, Eq)
+data TypeTargetInfo = TypeParameterTarget { typeParameterIndex :: Word8}
+                    | SupertypeTarget { superTypeIndex :: Word16 }
+                    | TypeParameterBoundTarget { typeParameterIndex :: Word8,
+                                                 boundIndex :: Word8 }
+                    | EmptyTarget {}
+                    | FormalParameterTarget { formalParameterIndex :: Word8 }
+                    | ThrowsTarget { throwsTypeIndex :: Word16 }
+                    | LocalvarTarget { localvarTargetTable :: [LocalVarTargetElem] }
+                    | CatchTarget { exceptionTableIndex :: Word16 }
+                    | OffsetTarget { offsetTarget :: Word16 }
+                    | TypeArgumentTarget { offsetTarget :: Word16,
+                                           typeArgumentTargetIndex :: Word8 }
+                    deriving (Show, Eq)
+data LocalVarTargetElem = LocalVarTargetElem { varStartPc :: Word16,
+                                               varLen :: Word16,
+                                               varIndex :: Word16 }
+                        deriving (Show, Eq)
 
 data Exception = Exception { startPc :: Word16,
                              endPc :: Word16,
@@ -172,7 +218,7 @@ data LocalVariableInfo = LocalVariableInfo { localVariableStartPc :: Word16,
                                            } deriving (Show, Eq)
 
 
--- Signature
+-- Signatures
 type QualifiedName = [String]
 type UnqualifiedName = String
 data FieldType = BaseType { baseType :: BaseType }
@@ -192,20 +238,19 @@ data MethodDescriptor = MethodDescriptor { parameterDescrs :: [FieldType],
 data ReturnDescriptor = FieldTypeDescriptor { returnTypeDescriptor :: FieldType }
                       | VoidDescriptor deriving (Show, Eq)
 
--- ClassSignature
-data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
-                                       superclassSignature :: ClassTypeSignature,
-                                       superinterfaceSignature :: [ClassTypeSignature] }
-                    deriving (Show, Eq)
-data FormalTypeParameter = FormalTypeParameter { ftId :: UnqualifiedName,
-                                                 classBound :: FieldTypeSignature,
-                                                 interfaceBound :: [FieldTypeSignature] }
-                           deriving (Show, Eq)
-data FieldTypeSignature = ClassFieldType { fieldClassType :: ClassTypeSignature }
-                        | ArrayFieldType { signatures :: [TypeSignature] }
-                        | TypeVariable { signature :: TypeVariableSignature }
-                        deriving (Show, Eq)
-data TypeVariableSignature = TypeVariableSignature { tvId :: UnqualifiedName } deriving (Show, Eq)
+
+-- JavaTypeSignature
+data JavaTypeSignature = FromReferenceTypeSignature { fieldTypeSignature :: ReferenceTypeSignature }
+                       | FromBaseTypeSignature { baseTypeSignature :: BaseType }
+                       deriving (Show, Eq)
+
+-- ReferenceTypeSignature
+data ReferenceTypeSignature = FromClassTypeSignature { fieldClassType :: ClassTypeSignature }
+                            | ArrayTypeSignature { signatures :: [JavaTypeSignature] }
+                            | FromTypeVariableSignature { signature :: TypeVariableSignature }
+                            deriving (Show, Eq)
+
+-- ClassTypeSignature
 data ClassTypeSignature = ClassTypeSignature { packageSpecifier :: QualifiedName,
                                                simpleSignature :: SimpleClassTypeSignature,
                                                suffix :: [SimpleClassTypeSignature] }
@@ -214,24 +259,38 @@ data SimpleClassTypeSignature = SimpleClassTypeSignature { sctId :: String,
                                                            typeArguments :: [TypeArgument] }
                               deriving (Show, Eq)
 data TypeArgument = TypeArgumentWithIndicator { indicator :: WildcardIndicator,
-                                   typeArgumentSignature :: FieldTypeSignature }
-                  | TypeArgument { typeArgumentSignature :: FieldTypeSignature }
+                                                typeArgumentSignature :: ReferenceTypeSignature }
+                  | TypeArgument { typeArgumentSignature :: ReferenceTypeSignature }
                   | Asterisk
                   deriving (Show, Eq)
 data WildcardIndicator = Plus | Minus deriving (Show, Eq)
-data TypeSignature = FieldTypeTypeSignature { fieldTypeSignature :: FieldTypeSignature }
-                   | BaseTypeTypeSignature { baseTypeSignature :: BaseType }
-                   deriving (Show, Eq)
+data TypeVariableSignature = TypeVariableSignature { tvId :: UnqualifiedName } deriving (Show, Eq)
 
---MethodTypeSignature
-data MethodTypeSignature = MethodTypeSignature { methodTypeParameters :: [FormalTypeParameter],
-                                                 typeSignatures :: [TypeSignature],
-                                                 methodReturnType :: ReturnType,
-                                                 throwsTypeSignature :: [ThrowsSignature]
-                                               } deriving (Show, Eq)
-data ReturnType = ReturnTypeSignature { returnTypeSignature :: TypeSignature }
+
+-- ClassSignature
+data ClassSignature = ClassSignature { classTypeParameters :: [FormalTypeParameter],
+                                       superclassSignature :: ClassTypeSignature,
+                                       superinterfaceSignature :: [ClassTypeSignature] }
+                    deriving (Show, Eq)
+data FormalTypeParameter = FormalTypeParameter { ftId :: UnqualifiedName,
+                                                 classBound :: ReferenceTypeSignature,
+                                                 interfaceBound :: [ReferenceTypeSignature] }
+                           deriving (Show, Eq)
+
+
+--MethodSignature
+data MethodSignature = MethodSignature { methodTypeParameters :: [FormalTypeParameter],
+                                         typeSignatures :: [JavaTypeSignature],
+                                         methodReturnType :: ReturnType,
+                                         throwsTypeSignature :: [ThrowsSignature]
+                                       } deriving (Show, Eq)
+data ReturnType = ReturnTypeSignature { returnTypeSignature :: JavaTypeSignature }
                 | VoidTypeSignature
                 deriving (Show, Eq)
 data ThrowsSignature = ThrowsSignature { throwsClassType :: ClassTypeSignature,
                                          typeVariable :: TypeVariableSignature }
                        deriving (Show, Eq)
+
+
+-- FieldSignature
+data FieldSignature = FieldSignature { referenceType :: ReferenceTypeSignature }

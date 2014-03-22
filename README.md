@@ -29,3 +29,9 @@ Haskell JVM
 * checkSpec, htest
 * emacs modes
 * hlint
+
+*Java 7 -> 8 bytecode changes*
+* 4.7.24, MethodParameters attribute (new)
+* 4.7.20, RuntimeVisibleTypeAnnotations (new)
+* 4.7.21, RuntimeInvisibleTypeAnnotations (new)
+* Changes in descriptor and signatures terminology (refactoring)

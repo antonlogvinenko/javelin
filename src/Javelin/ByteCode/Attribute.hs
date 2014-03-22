@@ -52,7 +52,10 @@ attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
                               ("RuntimeVisibleParameterAnnotations", rtVisibleParamAnnsAttr),
                               ("RuntimeInvisibleParameterAnnotations", rtInvisibleParamAnnsAttr),
                               ("AnnDefault", annDefaultAttr),
-                              ("BootstrapMethods", bootstrapMethodsAttr)]
+                              ("BootstrapMethods", bootstrapMethodsAttr),
+                              ("MethodParameters", methodParametersAttr),
+                              ("RuntimeVisibleTypeAnnotations", rtVisibleTypeAnnotationsAttr),
+                              ("RuntimeInvisibleTypeAnnotations", rtInvisibleTypeAnnotationsAttr)]
                 
 constantValueAttr len = ConstantValue <$> getWord
 
@@ -86,7 +89,7 @@ stackMapFrameList = [([0..63], sameFrameParser),
                      ([251], sameFrameExtended),
                      ([252..254], appendFrame),
                      ([255], fullFrame)]
-failingStackMapFrame tag = fail "AAAAAAAA!!!!1111"
+failingStackMapFrame tag = fail "Failed to identify StackMapFrame item based on a tag"
 
 sameFrameParser tag = return $ SameFrame tag
 sameLocals1StackItemFrame tag = SameLocals1StackItemFrame tag <$> parseVerifTypeInfo
@@ -191,3 +194,64 @@ addDefauktAttr len = do
 
 bootstrapMethodsAttr len = BootstrapMethods <$>
                                      several (BootstrapMethod <$> getWord <*> several getWord)
+
+methodParametersAttr len = MethodParameters <$> several methodParameterAttr
+methodParametersAccessFlagsMap = Map.fromList [(0x0010, ACC_FINAL),
+                                               (0x1000, ACC_SYNTHETIC),
+                                               (0x8000, ACC_MANDATED)]
+methodParameterAttr = do
+  nameIndex <- getWord
+  accessFlags <- getWord
+  let accessFlagsList = foldMask methodParametersAccessFlagsMap accessFlags
+  return $ MethodParameter nameIndex accessFlagsList
+  
+rtVisibleTypeAnnotationsAttr len = RTVisibleTypeAnns <$> several parseTypeAnnAttr
+rtInvisibleTypeAnnotationsAttr len = RTInvisibleTypeAnns <$> several parseTypeAnnAttr
+parseTypeAnnAttr = do
+  targetType <- getTargetType
+  targetInfo <- findWithDefault failingTypeTargetInfo targetType typeTargetInfo
+  typePath <- getTypePath
+  annotation <- parseAnnAttr
+  return $ TypeAnn targetType targetInfo typePath annotation
+getTargetType = do
+  tag <- getByte
+  case Map.lookup tag typeTargetType of
+    Nothing -> fail "Illegal tag for type target info"
+    Just x -> return x
+getTypePath = do
+  len <- getByte
+  times getTypePathElem $ fromIntegral len
+    where getTypePathElem = TypePathElem <$> getByte <*> getByte
+typeTargetType :: Map.Map Word8 TypeTargetType
+typeTargetType = Map.fromList [(0x00, GenericClassInterface), (0x01, MethodConstructor),
+                               (0x10, ClassInterfaceExtendsImplements),
+                               (0x11, ClassInterfaceBound), (0x12, MethodConstructorBound),
+                               (0x13, Field), (0x14, ReturnConstructed), (0x15, MethodConstructorReceiver), (0x16, MethodConstructorLambda),
+                               (0x17, Throws),
+                               (0x40, LocalVar), (0x41, ResourceVar),
+                               (0x42, ExceptionParameter),
+                               (0x43, InstanceOf), (0x44, New), (0x45, NewReference), (0x46, MethodReference),
+                               (0x47, CastExpr), (0x48, NewArgType), (0x49, MethodArgType), (0x4A, NewRefArg), (0x4b, MethodRefArg)]
+typeTargetInfo :: [([TypeTargetType], Get TypeTargetInfo)]
+typeTargetInfo = [([GenericClassInterface, MethodConstructor], typeParameterTargetInfo),
+                  ([ClassInterfaceExtendsImplements], supertypeTargetInfo),
+                  ([ClassInterfaceBound, MethodConstructorBound], typeParameterBoundTargetInfo),
+                  ([Field, ReturnConstructed, MethodConstructorReceiver], emptyTargetInfo),
+                  ([MethodConstructorLambda], formalParameterTargetInfo),
+                  ([Throws], throwsTargetInfo),
+                  ([LocalVar, ResourceVar], localvarTargetInfo),
+                  ([ExceptionParameter], catchTargetInfo),
+                  ([InstanceOf, New, NewReference, MethodReference], offsetTargetInfo),
+                  ([CastExpr, NewArgType, MethodArgType, NewRefArg, MethodRefArg], typeArgumentTargetInfo)]
+failingTypeTargetInfo = fail "Unknown type target tag"
+typeParameterTargetInfo = TypeParameterTarget <$> getByte
+supertypeTargetInfo = SupertypeTarget <$> getWord
+typeParameterBoundTargetInfo = TypeParameterBoundTarget <$> getByte <*> getByte
+emptyTargetInfo = return EmptyTarget
+formalParameterTargetInfo = FormalParameterTarget <$> getByte
+throwsTargetInfo = ThrowsTarget <$> getWord
+localvarTargetInfo = LocalvarTarget <$> several localVarTargetElem
+  where localVarTargetElem = LocalVarTargetElem <$> getWord <*> getWord <*> getWord
+catchTargetInfo = CatchTarget <$> getWord
+offsetTargetInfo = OffsetTarget <$> getWord
+typeArgumentTargetInfo = TypeArgumentTarget <$> getWord <*> getByte

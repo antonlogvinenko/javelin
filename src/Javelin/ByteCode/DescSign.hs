@@ -11,16 +11,17 @@ import Text.ParserCombinators.Parsec.Combinator (endBy, sepBy)
 
 parseFieldDescriptor = parse fieldDescriptorP ""
 parseMethodDescriptor = parse methodDescriptorP ""
-parseMethodTypeSignature = parse methodTypeSignatureP ""
+parseMethodSignature = parse methodSignatureP ""
 parseClassSignature = parse classSignatureP ""
+parseFieldSignature = parse fieldSignatureP ""
 
--- Fundamental definitions
+-- Fundamentals
 type StringParser a = CharParser () a
 
-unqualifiedNameP :: StringParser UnqualifiedName
 nameSymbol = noneOf ".;[/"
 unqualifiedNameP = many nameSymbol
 qualifiedNameP = sepBy unqualifiedNameP (char '/')
+unqualifiedNameP :: StringParser UnqualifiedName
 
 fieldTypeP = BaseType <$> baseTypeP
              <|> ObjectType <$> (char 'L' *> qualifiedNameP <* char ';')
@@ -51,65 +52,78 @@ returnDescriptorP = FieldTypeDescriptor <$> fieldTypeP
 voidDescriptorP = char 'v'
 
 
--- Signature types
+-- JavaTypeSignature
 identifierP = many $ noneOf ".;[/<>:"
-
-formalTypeParametersP = char '<' *> many1 formalTypeParameterP <* char '>'
-                        <|> return []
-formalTypeParameterP = FormalTypeParameter
-                       <$> identifierP
-                       <*> classBoundP
-                       <*> many interfaceBoundP
-classBoundP = char ':' *> fieldTypeSignatureP
-interfaceBoundP = char ':' *> fieldTypeSignatureP
-
-typeSignatureP = FieldTypeTypeSignature <$> fieldTypeSignatureP
-                 <|> BaseTypeTypeSignature <$> baseTypeP
+javaTypeSignatureP = FromReferenceTypeSignature <$> referenceTypeSignatureP
+                 <|> FromBaseTypeSignature <$> baseTypeP
                  <?> "TypeSignature"
 
-fieldTypeSignatureP = ClassFieldType <$> classTypeSignatureP
-                      <|> ArrayFieldType <$> (char '[' *> many typeSignatureP)
-                      <|> TypeVariable <$> typeVariableSignatureP
+
+-- ReferenceTypeSignature
+referenceTypeSignatureP = FromClassTypeSignature <$> classTypeSignatureP
+                      <|> ArrayTypeSignature <$> (char '[' *> many javaTypeSignatureP)
+                      <|> FromTypeVariableSignature <$> typeVariableSignatureP
                       <?> "Field Type Signature"
 
-typeVariableSignatureP = TypeVariableSignature <$> (char 'T' *> identifierP <* char ';')
 
+-- ClassTypeSignature
 classTypeSignatureP = (char 'L') *> (ClassTypeSignature
                       <$> packageSpecifierP
                       <*> simpleClassTypeSignatureP
                       <*> many (char '.' *> simpleClassTypeSignatureP))
                       <* (char ';')
+
 packageP = identifierP <* char '/'
 packageSpecifierP = manyTill packageP (try (notFollowedBy packageP))
+
 simpleClassTypeSignatureP = SimpleClassTypeSignature
                             <$> identifierP
                             <*> (typeArgumentsP <|> return [])
+
 typeArgumentsP = char '<' *> many1 typeArgumentP <* char '>'                                       
-typeArgumentP = TypeArgumentWithIndicator <$> wildCardIndicatorP <*> fieldTypeSignatureP
-                <|> TypeArgument <$> fieldTypeSignatureP
+typeArgumentP = TypeArgumentWithIndicator <$> wildCardIndicatorP <*> referenceTypeSignatureP
+                <|> TypeArgument <$> referenceTypeSignatureP
                 <|> Asterisk <$ char '*'
                 <?> "TypeArgument"
+
 wildCardIndicatorP = Plus <$ char '+'
                      <|> Minus <$ char '-'
                      <?> "wildcard indicator"
 
+typeVariableSignatureP = TypeVariableSignature <$> (char 'T' *> identifierP <* char ';')
 
--- Signatures
+
+-- ClassSignature
 classSignatureP :: StringParser ClassSignature
 classSignatureP = ClassSignature
-                  <$> formalTypeParametersP
+                  <$> typeParametersP
                   <*> classTypeSignatureP
                   <*> many classTypeSignatureP
 
-methodTypeSignatureP :: StringParser MethodTypeSignature
-methodTypeSignatureP = MethodTypeSignature
-                       <$> formalTypeParametersP
-                       <*> (char '(' *> many typeSignatureP <* char ')')
-                       <*> returnTypeP
-                       <*> many throwsSignatureP
-returnTypeP = ReturnTypeSignature <$> typeSignatureP
+typeParametersP = char '<' *> many1 formalTypeParameterP <* char '>'
+                        <|> return []
+formalTypeParameterP = FormalTypeParameter
+                       <$> identifierP
+                       <*> classBoundP
+                       <*> many interfaceBoundP
+classBoundP = char ':' *> referenceTypeSignatureP
+interfaceBoundP = char ':' *> referenceTypeSignatureP
+
+
+-- MethodSignature
+methodSignatureP :: StringParser MethodSignature
+methodSignatureP = MethodSignature
+                   <$> typeParametersP
+                   <*> (char '(' *> many javaTypeSignatureP <* char ')')
+                   <*> resultP
+                   <*> many throwsSignatureP
+resultP = ReturnTypeSignature <$> javaTypeSignatureP
               <|> VoidTypeSignature <$ voidDescriptorP
               <?> "ReturnType"
 throwsSignatureP = ThrowsSignature
                    <$> (char '^' *> classTypeSignatureP)
                    <*> (char '^' *> typeVariableSignatureP)
+
+
+-- FieldSignature
+fieldSignatureP = referenceTypeSignatureP
