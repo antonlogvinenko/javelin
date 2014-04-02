@@ -14,7 +14,7 @@ byteCodeTest = testGroup "ByteCode parser test"
 byteCodeParserTest = 
   testCase "functional" $
   do
-    (io, result) <- testClasses "/Users/anton/dev/haskell/javelin/acceptance/"
+    (io, result) <- testClasses "./acceptance/"
 --    sequence_ $ map (putStrLn . show) io
     result @=? True
 

@@ -11,7 +11,7 @@ Haskell JVM
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* Reread chapters 1, 2, 3 from JVM spec
+* Reread chapters 2, 3 from JVM spec
 * Start defining data structures and logic reqiured
 * Next?
 
