@@ -29,9 +29,9 @@ getAttr pool = do
 parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
 parseAttr pool "Code" len = codeAttr pool len
 parseAttr pool text len = case Map.lookup text attrsNamesMap of
-  Just parser -> parser (fromIntegral len)
+  Just parser -> parser $ fromIntegral len
   Nothing -> do
-    byteString <- getByteString (fromIntegral len)
+    byteString <- getByteString $ fromIntegral len
     return $ UnknownAttr byteString
 
 attrsNamesMap = Map.fromList [("ConstantValue", constantValueAttr),
@@ -160,7 +160,7 @@ rtVisibleAnnsAttr len = RTVisibleAnns <$> several  parseAnnAttr
 rtInvisibleAnnsAttr len = RTInvisibleAnns <$> several parseAnnAttr
 rtVisibleParamAnnsAttr len = do
   numParameters <- getByte
-  annAttrs <- times  (several parseAnnAttr) (fromIntegral numParameters)
+  annAttrs <- times (several parseAnnAttr) (fromIntegral numParameters)
   return $ RTVisibleParamAnns annAttrs
 rtInvisibleParamAnnsAttr len = do
   numParameters <- getByte
@@ -193,7 +193,7 @@ addDefauktAttr len = do
   return $ AnnDefault bytes
 
 bootstrapMethodsAttr len = BootstrapMethods <$>
-                                     several (BootstrapMethod <$> getWord <*> several getWord)
+                           several (BootstrapMethod <$> getWord <*> several getWord)
 
 methodParametersAttr len = MethodParameters <$> several methodParameterAttr
 methodParametersAccessFlagsMap = Map.fromList [(0x0010, ACC_FINAL),
