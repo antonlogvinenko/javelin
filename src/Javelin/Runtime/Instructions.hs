@@ -5,7 +5,7 @@ import Javelin.Runtime.Thread (Thread(..),
                                Frame, Locals, Operands, ConstantPool, ProgramCounter,
                                FrameStack, Memory,
                                pool, operands, locals)
-import qualified Data.Map.Lazy as Map (fromList, Map(..), union, map)
+import qualified Data.Map.Lazy as Map (fromList, Map(..), union, map, (!))
 import Data.Word (Word8)
 
 
@@ -20,7 +20,9 @@ threadLift instr = \mem pc frames -> let frame1 = head frames
 
 instructions :: Map.Map Word8 ThreadInstruction
 instructions = Map.union threadInstructions $ Map.map threadLift frameInstructions
--- TODO: find in any array, convert if required
+
+instruction :: Word8 -> ThreadInstruction
+instruction opcode = instructions Map.! opcode
 
 
 
