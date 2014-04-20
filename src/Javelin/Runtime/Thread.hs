@@ -8,8 +8,11 @@ data Thread = Thread { pc :: Integer,
                        frames :: [Frame] }
               deriving (Show, Eq)
 
-data Frame = Frame { locals :: [Word8],
-                     operands :: [Word8],
-                     pool :: [Constant] }
+type Locals = [Word8]
+type Operands = [Word8]
+type ConstantPool = [Constant]
+data Frame = Frame { locals :: Locals,
+                     operands :: Operands,
+                     pool :: ConstantPool }
              deriving (Show, Eq)
 

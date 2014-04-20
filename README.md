@@ -11,9 +11,9 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* Reread chapters 2, 3 from JVM spec
-* Start defining data structures and logic reqiured
-* Next?
+* Memory access for instructions
+* Record pattern matching syntax
+* Chapters 3, 5 from JVM spec
 
 *Javelin deferred tasks*
 * need more unit testing for bytecode parser
