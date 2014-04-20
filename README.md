@@ -1,6 +1,6 @@
-javelin
+Javelin
 =======
-Haskell JVM
+JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Long term*
 * Bytecode parser [**Done**]
