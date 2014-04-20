@@ -14,6 +14,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Memory access for instructions
 * Record pattern matching syntax
 * Chapters 3, 5 from JVM spec
+* MVP: run a trivial main class
 
 *Javelin deferred tasks*
 * need more unit testing for bytecode parser
