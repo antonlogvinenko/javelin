@@ -23,6 +23,8 @@ library
                      Javelin.ByteCode.Attribute,
                      Javelin.ByteCode.ClassFile,
                      Javelin.ByteCode.DescSign,
+                     Javelin.Runtime.Instructions,
+                     Javelin.Runtime.Thread,
                      Javelin.Main
 -- ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
