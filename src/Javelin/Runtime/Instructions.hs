@@ -19,12 +19,12 @@ threadLift instr mem pc frames = let frame1 = head frames
                                  in (mem2, Thread pc $ frame2 : tail frames)
 
 instructions :: Word8 -> ThreadInstruction
-instructions = undefined
+instructions idx = undefined
 -- TODO: find in any array, convert if required
 
 
 
--- Frame Instructions: locals -> stack -> pool -> newFrame
+-- Frame Instructions
 frameInstructions :: Map Word8 FrameInstruction
 frameInstructions = fromList [(0x32, aaload), (0x53, aastore), (0x01, aconstNull)]
 

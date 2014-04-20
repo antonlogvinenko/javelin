@@ -15,6 +15,10 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Record pattern matching syntax
 * Chapters 3, 5 from JVM spec
 * MVP: run a trivial main class
+** Write java Main class, compile, find out commands
+** Program commands
+** Program execution of commands
+** Write trivial class loading and what it takes to execute a static main method
 
 *Javelin deferred tasks*
 * need more unit testing for bytecode parser
