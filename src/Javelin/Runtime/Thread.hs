@@ -3,9 +3,15 @@ where
 
 import Data.Word (Word8)
 import Javelin.ByteCode.Data (Constant)
-  
-data Thread = Thread { pc :: Integer,
-                       frames :: [Frame] }
+
+data Memory = Memory
+            deriving (Show, Eq)
+
+type ProgramCounter = Integer
+type FrameStack = [Frame]
+
+data Thread = Thread { pc :: ProgramCounter,
+                       frames :: FrameStack }
               deriving (Show, Eq)
 
 type Locals = [Word8]
