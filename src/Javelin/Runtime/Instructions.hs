@@ -46,4 +46,4 @@ threadInstructions :: Map.Map Word8 ThreadInstruction
 threadInstructions = Map.fromList [(0xba, invokedynamic)]
 
 invokedynamic :: ThreadInstruction
-invokedynamic = undefined
+invokedynamic mem pc frames = undefined
