@@ -14,9 +14,9 @@ type ThreadInstruction = Memory -> ProgramCounter -> FrameStack -> (Memory, Thre
 type FrameInstruction = Memory -> Locals -> Operands -> ConstantPool -> (Memory, Frame)
 
 threadLift :: FrameInstruction -> ThreadInstruction
-threadLift instr = \mem pc frames -> let frame1 = head frames
-                                         (mem2, frame2) = instr mem (locals frame1) (operands frame1) (pool frame1)
-                                     in (mem2, Thread pc $ frame2 : tail frames)
+threadLift instr mem pc frames = let frame1 = head frames
+                                     (mem2, frame2) = instr mem (locals frame1) (operands frame1) (pool frame1)
+                                 in (mem2, Thread pc $ frame2 : tail frames)
 
 instructions :: Map.Map Word8 ThreadInstruction
 instructions = Map.union threadInstructions $ Map.map threadLift frameInstructions
