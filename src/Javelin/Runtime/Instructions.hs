@@ -61,11 +61,26 @@ instructions :: Map.Map Word8 (Int, Instruction)
 instructions = Map.fromList [
 
   -- Constants
-  (0x00, (0, nop)), (0x01, (0, aconst_null)), (0x02, (0, iconst_null)), (0x03, (0, iconst_null)),
-  (0x04, (0, nop)), (0x05, (0, nop)), (0x06, (0, nop)), (0x07, (0, nop)),
-  (0x08, (0, nop)), (0x09, (0, nop)), (0x0a, (0, nop)), (0x0b, (0, nop)),
-  (0x0c, (0, nop)), (0x0d, (0, nop)), (0x0e, (0, nop)), (0x0f, (0, nop)),
-  (0x10, (0, nop)), (0x11, (0, nop)), (0x12, (0, nop)), (0x13, (0, nop)),
+  (0x00, (0, nop)),
+  (0x01, (0, aconst_null)),
+  (0x02, (0, iconst_null)),
+  (0x03, (0, iconst_null)),
+  (0x04, (0, nop)),
+  (0x05, (0, nop)),
+  (0x06, (0, nop)),
+  (0x07, (0, nop)),
+  (0x08, (0, nop)),
+  (0x09, (0, nop)),
+  (0x0a, (0, nop)),
+  (0x0b, (0, nop)),
+  (0x0c, (0, nop)),
+  (0x0d, (0, nop)),
+  (0x0e, (0, nop)),
+  (0x0f, (0, nop)),
+  (0x10, (0, nop)),
+  (0x11, (0, nop)),
+  (0x12, (0, nop)),
+  (0x13, (0, nop)),
   (0x14, (0, nop)),
   
   -- Loads
@@ -73,8 +88,15 @@ instructions = Map.fromList [
   -- Stores
 
   -- Stack
-  (0x57, (0, pop1)), (0x58, (0, pop2)), (0x59, (0, dup)), (0x5a, (0, dup_x1)), (0x5b, (0, dup_x2)),
-  (0x5c, (0, dup2)), (0x5d, (0, dup2_x1)), (0x5e, (0, dup2_x2)), (0x5f, (0, swap)),
+  (0x57, (0, pop1)),
+  (0x58, (0, pop2)),
+  (0x59, (0, dup)),
+  (0x5a, (0, dup_x1)),
+  (0x5b, (0, dup_x2)),
+  (0x5c, (0, dup2)),
+  (0x5d, (0, dup2_x1)),
+  (0x5e, (0, dup2_x2)),
+  (0x5f, (0, swap)),
 
   -- Math
 
