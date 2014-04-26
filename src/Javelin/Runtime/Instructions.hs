@@ -1,11 +1,13 @@
 module Javelin.Runtime.Instructions
 where
 
+import Control.Monad.State.Lazy (State, state)
 import Javelin.Runtime.Thread (Thread(..),
                                Frame(..), Locals, Operands, ConstantPool, ProgramCounter,
                                FrameStack, Memory,
                                pool, operands, locals)
 import qualified Data.Map.Lazy as Map (fromList, Map(..), union, map, (!))
+import Data.Array.IArray (Array, (//), (!))
 import Data.Word (Word8, Word32, Word64)
 
 
@@ -24,6 +26,24 @@ instructions = Map.union threadInstructions $ Map.map threadLift frameInstructio
 instruction :: Word8 -> ThreadInstruction
 instruction opcode = instructions Map.! opcode
 
+type Instruction a = State Thread a
+
+popElem :: Instruction Word64
+popElem = state $ \t -> let frames1 = frames t
+                            operands1 = operands $ frames1 !! 0
+                        in (operands1 !! 0, t)
+
+pushElem :: Word64 -> Instruction ()
+pushElem val = state $ \t -> let frames1 = frames t
+                                 operands1 = operands (frames1 !! 0)
+                             in ((), Thread 0 [Frame undefined (val:operands1) undefined])
+
+addOp :: State Thread ()
+addOp = do
+  op1 <- popElem
+  op2 <- popElem
+  pushElem $ stackElem $ (bytes2Int op1) + (bytes2Int op2)
+  
 
 
 -- Frame Instructions
@@ -53,7 +73,8 @@ iload_2 = undefined
 iload_3 = undefined
 
 istore = undefined
-istore_0 = undefined
+istore_0 mem locals (op:stack) pool = let locals2 = locals // [(0, localsElem $ bytes2Int $ op)]
+                                      in (mem, Frame locals2 stack pool)
 istore_1 = undefined
 istore_2 = undefined
 istore_3 = undefined
@@ -65,8 +86,11 @@ bytes2Int = fromIntegral
 bytes2Short :: Word64 -> Integer
 bytes2Short = fromIntegral
 
+localsElem :: Integer -> Word32
+localsElem = fromIntegral
+
 stackElem :: Integer -> Word64
-stackElem = undefined
+stackElem = fromIntegral
 
 -- Thread Instrutions
 threadInstructions :: Map.Map Word8 ThreadInstruction

@@ -36,7 +36,8 @@ library
                      binary ==0.7.1.0,
                      utf8-string ==0.3.7,
                      parsec ==3.1.5,
-                     directory ==1.2.0.1
+                     directory ==1.2.0.1,
+                     array ==0.4.0.1
 test-suite test
   hs-source-dirs:    test
   main-is:           Main.hs
@@ -62,4 +63,5 @@ executable javelin
                        binary ==0.7.1.0,
                        utf8-string ==0.3.7,
                        parsec ==3.1.5,
-                       directory ==1.2.0.1
+                       directory ==1.2.0.1,
+                       array ==0.4.0.1
