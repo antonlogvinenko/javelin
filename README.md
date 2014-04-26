@@ -12,6 +12,8 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Short term: Runtime data structures*
 * Record pattern matching syntax
+* More instructions, primitives
+
 * Memory access for instructions
 * Reference type, operations stack element size
 * Chapters 3, 5 from JVM spec

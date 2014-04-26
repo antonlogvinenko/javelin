@@ -12,72 +12,53 @@ import Data.Word (Word8, Word32, Word64)
 
 
 
-type ThreadInstruction = Memory -> ProgramCounter -> FrameStack -> (Memory, Thread)
-type FrameInstruction = Memory -> Locals -> Operands -> ConstantPool -> (Memory, Frame)
+type ThreadOperation a = State Thread a
+type Instruction a = [Word8] -> ThreadOperation a
 
-threadLift :: FrameInstruction -> ThreadInstruction
-threadLift instr mem pc frames = let frame1 = head frames
-                                     (mem2, frame2) = instr mem (locals frame1) (operands frame1) (pool frame1)
-                                 in (mem2, Thread pc $ frame2 : tail frames)
-
-instructions :: Map.Map Word8 ThreadInstruction
-instructions = Map.union threadInstructions $ Map.map threadLift frameInstructions
-
-instruction :: Word8 -> ThreadInstruction
-instruction opcode = instructions Map.! opcode
-
-type Instruction a = State Thread a
-
-popElem :: Instruction Word64
+popElem :: ThreadOperation Word64
 popElem = state $ \t -> let frames1 = frames t
                             operands1 = operands $ frames1 !! 0
                         in (operands1 !! 0, t)
 
-pushElem :: Word64 -> Instruction ()
+pushElem :: Word64 -> ThreadOperation ()
 pushElem val = state $ \t -> let frames1 = frames t
                                  operands1 = operands (frames1 !! 0)
                              in ((), Thread 0 [Frame undefined (val:operands1) undefined])
 
-addOp :: State Thread ()
-addOp = do
-  op1 <- popElem
-  op2 <- popElem
-  pushElem $ stackElem $ (bytes2Int op1) + (bytes2Int op2)
-  
+load :: Word8 -> ThreadOperation Integer
+load idx = state $ \t -> (42, t)
 
+store :: Word8 -> ThreadOperation ()
+store idx = state $ \t -> ((), t)
 
 -- Frame Instructions
-frameInstructions :: Map.Map Word8 FrameInstruction
-frameInstructions = Map.fromList [(0x32, aaload), (0x53, aastore), (0x01, aconstNull),
-
+frameInstructions = Map.fromList [(0x60, iadd),
+                                  
                                   (0x19, iload), (0x2a, iload_0), (0x2b, iload_1),
                                   (0x2c, iload_2), (0x2d, iload_3),
 
                                   (0x3a, istore), (0x4b, istore_0), (0x4c, istore_1),
-                                  (0x4d, istore_2), (0x4e, istore_3),
+                                  (0x4d, istore_2), (0x4e, istore_3)]
 
-                                  (0x93, i2s), (0x60, iadd)]
+iadd args = do
+  op1 <- popElem
+  op2 <- popElem
+  pushElem $ stackElem $ (bytes2Int op1) + (bytes2Int op2)
 
-aaload mem locals stack pool = undefined
-aastore mem locals stack pool = undefined
-aconstNull mem locals stack pool = undefined
-iadd mem locals (op1:op2:stack) pool = let sum = stackElem $ (bytes2Int op1) + (bytes2Int op2)
-                                       in (mem, Frame locals (sum:stack) pool)
-i2s mem locals (op:stack) pool = let intOp = stackElem . bytes2Short $ op
-                                 in (mem, Frame locals (intOp:stack) pool)
+iload (idx:args) = do
+  var <- load idx
+  pushElem $ stackElem var
 
-iload = undefined
-iload_0 = undefined
-iload_1 = undefined
-iload_2 = undefined
-iload_3 = undefined
+iload_0 args = undefined
+iload_1 args = undefined
+iload_2 args = undefined
+iload_3 args = undefined
 
-istore = undefined
-istore_0 mem locals (op:stack) pool = let locals2 = locals // [(0, localsElem $ bytes2Int $ op)]
-                                      in (mem, Frame locals2 stack pool)
-istore_1 = undefined
-istore_2 = undefined
-istore_3 = undefined
+istore args = undefined
+istore_0 args = undefined
+istore_1 args = undefined
+istore_2 args = undefined
+istore_3 args = undefined
 
 
 bytes2Int :: Word64 -> Integer
@@ -93,8 +74,5 @@ stackElem :: Integer -> Word64
 stackElem = fromIntegral
 
 -- Thread Instrutions
-threadInstructions :: Map.Map Word8 ThreadInstruction
 threadInstructions = Map.fromList [(0xba, invokedynamic)]
-
-invokedynamic :: ThreadInstruction
 invokedynamic mem pc frames = undefined
