@@ -7,13 +7,12 @@ import Javelin.Runtime.Thread (Thread(..),
                                FrameStack, Memory,
                                pool, operands, locals)
 import qualified Data.Map.Lazy as Map (fromList, Map(..), union, map, (!))
-import Data.Array.IArray (Array, (//), (!))
 import Data.Word (Word8, Word32, Word64)
 
 
 
 type ThreadOperation a = State Thread a
-type Instruction a = [Word8] -> ThreadOperation a
+type Instruction = [Word8] -> ThreadOperation ()
 
 pop :: ThreadOperation Word64
 pop = state $ \t -> let frames1 = frames t
@@ -31,14 +30,21 @@ load idx = state $ \t -> (42, t)
 store :: Word8 -> ThreadOperation ()
 store idx = state $ \t -> ((), t)
 
--- Frame Instructions
-frameInstructions = Map.fromList [(0x60, iadd),
+same = state $ \t -> ((), t)
+
+instructions :: Map.Map Word8 Instruction
+instructions = Map.fromList [(0x60, iadd),
                                   
                                   (0x19, iload), (0x2a, iload_0), (0x2b, iload_1),
                                   (0x2c, iload_2), (0x2d, iload_3),
 
                                   (0x3a, istore), (0x4b, istore_0), (0x4c, istore_1),
                                   (0x4d, istore_2), (0x4e, istore_3)]
+
+popElem :: Instruction
+popElem args = do
+  a <- pop
+  same
 
 iadd args = do
   op1 <- pop
@@ -72,7 +78,3 @@ localsElem = fromIntegral
 
 stackElem :: Integer -> Word64
 stackElem = fromIntegral
-
--- Thread Instrutions
-threadInstructions = Map.fromList [(0xba, invokedynamic)]
-invokedynamic mem pc frames = undefined
