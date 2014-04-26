@@ -32,14 +32,51 @@ store idx = state $ \t -> ((), t)
 
 same = state $ \t -> ((), t)
 
-instructions :: Map.Map Word8 Instruction
-instructions = Map.fromList [(0x60, iadd),
-                                  
-                                  (0x19, iload), (0x2a, iload_0), (0x2b, iload_1),
-                                  (0x2c, iload_2), (0x2d, iload_3),
+instructions :: Map.Map Word8 (Int, Instruction)
+instructions = Map.fromList [
 
-                                  (0x3a, istore), (0x4b, istore_0), (0x4c, istore_1),
-                                  (0x4d, istore_2), (0x4e, istore_3)]
+  -- Constants
+  (0x00, (0, nop)), (0x01, (0, aconst_null)), (0x02, (0, iconst_null)), (0x03, (0, iconst_null)),
+  (0x04, (0, nop)), (0x05, (0, nop)), (0x06, (0, nop)), (0x07, (0, nop)),
+  (0x08, (0, nop)), (0x09, (0, nop)), (0x0a, (0, nop)), (0x0b, (0, nop)),
+  (0x0c, (0, nop)), (0x0d, (0, nop)), (0x0e, (0, nop)), (0x0f, (0, nop)),
+  (0x10, (0, nop)), (0x11, (0, nop)), (0x12, (0, nop)), (0x13, (0, nop)),
+  (0x14, (0, nop)),
+  
+  -- Loads
+
+  -- Stores
+
+  -- Stack
+
+  -- Math
+
+  -- Conversions
+
+  -- Comparisons
+
+  -- References
+
+  -- Control
+
+  -- Extended
+
+  -- Reserved
+
+  
+  (0x60, (0, iadd)),
+
+  (0x19, (0, iload)), (0x2a, (0, iload_0)), (0x2b, (0, iload_1)),
+  (0x2c, (0, iload_2)), (0x2d, (0, iload_3)),
+  
+  (0x3a, (0, istore)), (0x4b, (0, istore_0)), (0x4c, (0, istore_1)),
+  (0x4d, (0, istore_2)), (0x4e, (0, istore_3))]
+               
+-- Constants
+nop args = undefined
+aconst_null args = undefined
+iconst_null args = undefined
+
 
 popElem :: Instruction
 popElem args = do
