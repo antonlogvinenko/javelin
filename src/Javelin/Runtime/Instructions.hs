@@ -15,15 +15,15 @@ import Data.Word (Word8, Word32, Word64)
 type ThreadOperation a = State Thread a
 type Instruction a = [Word8] -> ThreadOperation a
 
-popElem :: ThreadOperation Word64
-popElem = state $ \t -> let frames1 = frames t
-                            operands1 = operands $ frames1 !! 0
-                        in (operands1 !! 0, t)
+pop :: ThreadOperation Word64
+pop = state $ \t -> let frames1 = frames t
+                        operands1 = operands $ frames1 !! 0
+                    in (operands1 !! 0, t)
 
-pushElem :: Word64 -> ThreadOperation ()
-pushElem val = state $ \t -> let frames1 = frames t
-                                 operands1 = operands (frames1 !! 0)
-                             in ((), Thread 0 [Frame undefined (val:operands1) undefined])
+push :: Word64 -> ThreadOperation ()
+push val = state $ \t -> let frames1 = frames t
+                             operands1 = operands (frames1 !! 0)
+                         in ((), Thread 0 [Frame undefined (val:operands1) undefined])
 
 load :: Word8 -> ThreadOperation Integer
 load idx = state $ \t -> (42, t)
@@ -41,24 +41,24 @@ frameInstructions = Map.fromList [(0x60, iadd),
                                   (0x4d, istore_2), (0x4e, istore_3)]
 
 iadd args = do
-  op1 <- popElem
-  op2 <- popElem
-  pushElem $ stackElem $ (bytes2Int op1) + (bytes2Int op2)
+  op1 <- pop
+  op2 <- pop
+  push $ stackElem $ (bytes2Int op1) + (bytes2Int op2)
 
 iload (idx:args) = do
   var <- load idx
-  pushElem $ stackElem var
+  push $ stackElem var
 
-iload_0 args = undefined
-iload_1 args = undefined
-iload_2 args = undefined
-iload_3 args = undefined
+iload_0 args = iload [0]
+iload_1 args = iload [1]
+iload_2 args = iload [2]
+iload_3 args = iload [3]
 
 istore args = undefined
-istore_0 args = undefined
-istore_1 args = undefined
-istore_2 args = undefined
-istore_3 args = undefined
+istore_0 args = istore [0]
+istore_1 args = istore [1]
+istore_2 args = istore [2]
+istore_3 args = istore [3]
 
 
 bytes2Int :: Word64 -> Integer
