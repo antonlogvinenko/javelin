@@ -11,6 +11,8 @@ import Data.Word (Word8, Word32, Word64)
 
 
 
+-- Instructions DSL
+
 type ThreadOperation a = State Thread a
 type Instruction = [Word8] -> ThreadOperation ()
 
@@ -24,6 +26,11 @@ pop = state $ \t -> let frames1 = frames t
                         operands1 = operands $ frames1 !! 0
                     in (operands1 !! 0, t)
 
+popn :: ThreadOperation [Word64]
+popn = state $ \t -> let frames1 = frames t
+                         operands1 = operands $ frames1 !! 0
+                     in (operands1, t)
+
 remove :: ThreadOperation ()
 remove = state $ \t -> let frames1 = frames t
                            operands1 = operands $ frames1 !! 0
@@ -34,12 +41,21 @@ push val = state $ \t -> let frames1 = frames t
                              operands1 = operands (frames1 !! 0)
                          in ((), Thread 0 [Frame undefined (val:operands1) undefined])
 
+pushn :: [Word64] -> ThreadOperation ()
+pushn val = state $ \t -> let frames1 = frames t
+                              operands1 = operands (frames1 !! 0)
+                          in ((), Thread 0 [Frame undefined (val ++ operands1) undefined])
+
+
 load :: Word8 -> ThreadOperation Integer
 load idx = state $ \t -> (42, t)
 
 store :: Word8 -> ThreadOperation ()
 store idx = state $ \t -> ((), t)
 
+
+
+-- Instruction listing
 
 instructions :: Map.Map Word8 (Int, Instruction)
 instructions = Map.fromList [
@@ -57,8 +73,8 @@ instructions = Map.fromList [
   -- Stores
 
   -- Stack
-  (0x57, (0, pop1)), (0x58, (0, pop1)), (0x59, (0, pop1)), (0x5a, (0, pop1)), (0x5b, (0, pop1)),
-  (0x5c, (0, pop1)), (0x5d, (0, pop1)), (0x5e, (0, pop1)), (0x5f, (0, pop1)),
+  (0x57, (0, pop1)), (0x58, (0, pop2)), (0x59, (0, dup)), (0x5a, (0, dup_x1)), (0x5b, (0, dup_x2)),
+  (0x5c, (0, dup2)), (0x5d, (0, dup2_x1)), (0x5e, (0, dup2_x2)), (0x5f, (0, swap)),
 
   -- Math
 
@@ -73,7 +89,6 @@ instructions = Map.fromList [
   -- Extended
 
   -- Reserved
-
   
   (0x60, (0, iadd)),
 
@@ -82,24 +97,48 @@ instructions = Map.fromList [
   
   (0x3a, (0, istore)), (0x4b, (0, istore_0)), (0x4c, (0, istore_1)),
   (0x4d, (0, istore_2)), (0x4e, (0, istore_3))]
-               
+
+
+
+-- Instructions implementation
+
 -- Constants
+
 nop args = undefined
 aconst_null args = undefined
 iconst_null args = undefined
 
-pop1 :: Instruction
-pop1 args = remove
 
-pop2 :: Instruction
+-- Stack
+
+pop1 args = do
+  remove
 pop2 args = do
   remove
   remove
-
 dup args = do
   op <- peek
   push op
-  
+dup_x1 args = do
+  (op1:op2:_) <- popn
+  pushn [op1, op2, op1]
+dup_x2 args = do
+  (op1:op2:op3:_) <- popn
+  pushn [op1, op3, op2, op1]
+dup2 args = do
+  (op1:op2:_) <- popn
+  pushn [op2, op1, op2, op1]
+dup2_x1 args = do
+  (op1:op2:op3:_) <- popn
+  pushn [op2, op1, op3, op2, op1]
+dup2_x2 args = do
+  (op1:op2:op3:op4:_) <- popn
+  pushn [op2, op1, op4, op3, op2, op1]
+swap args = do
+  (op1:op2:_) <- popn
+  pushn [op2, op1]
+
+
 
 iadd args = do
   op1 <- pop
