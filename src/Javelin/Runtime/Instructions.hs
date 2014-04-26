@@ -14,10 +14,20 @@ import Data.Word (Word8, Word32, Word64)
 type ThreadOperation a = State Thread a
 type Instruction = [Word8] -> ThreadOperation ()
 
+peek :: ThreadOperation Word64
+peek = state $ \t -> let frames1 = frames t
+                         operands1 = operands $ frames1 !! 0
+                     in (operands1 !! 0, t)
+
 pop :: ThreadOperation Word64
 pop = state $ \t -> let frames1 = frames t
                         operands1 = operands $ frames1 !! 0
                     in (operands1 !! 0, t)
+
+remove :: ThreadOperation ()
+remove = state $ \t -> let frames1 = frames t
+                           operands1 = operands $ frames1 !! 0
+                       in ((), t)
 
 push :: Word64 -> ThreadOperation ()
 push val = state $ \t -> let frames1 = frames t
@@ -30,7 +40,6 @@ load idx = state $ \t -> (42, t)
 store :: Word8 -> ThreadOperation ()
 store idx = state $ \t -> ((), t)
 
-same = state $ \t -> ((), t)
 
 instructions :: Map.Map Word8 (Int, Instruction)
 instructions = Map.fromList [
@@ -48,6 +57,8 @@ instructions = Map.fromList [
   -- Stores
 
   -- Stack
+  (0x57, (0, pop1)), (0x58, (0, pop1)), (0x59, (0, pop1)), (0x5a, (0, pop1)), (0x5b, (0, pop1)),
+  (0x5c, (0, pop1)), (0x5d, (0, pop1)), (0x5e, (0, pop1)), (0x5f, (0, pop1)),
 
   -- Math
 
@@ -77,11 +88,18 @@ nop args = undefined
 aconst_null args = undefined
 iconst_null args = undefined
 
+pop1 :: Instruction
+pop1 args = remove
 
-popElem :: Instruction
-popElem args = do
-  a <- pop
-  same
+pop2 :: Instruction
+pop2 args = do
+  remove
+  remove
+
+dup args = do
+  op <- peek
+  push op
+  
 
 iadd args = do
   op1 <- pop
