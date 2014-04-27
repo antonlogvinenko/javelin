@@ -11,6 +11,7 @@ import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
 
 
+
 -- Primitive types
 data Representation = Narrow { narrow :: Word32 }
                     | Wide { wide :: Word64 }
@@ -20,7 +21,6 @@ cake32 x = 42
 
 cake64 :: (Num a) => a -> Word64
 cake64 x = 42
-
 
 type JByte  =   Int8
 type JShort =   Int16
@@ -72,6 +72,7 @@ jdouble :: Word64 -> JDouble
 jdouble repr = undefined
 
 
+
 -- Instructions DSL
 
 type ThreadOperation a = State Thread a
@@ -106,10 +107,10 @@ pop f = state $ \t -> let frames1 = frames t
                           operands1 = operands $ frames1 !! 0
                       in (f $ operands1 !! 0, t)
 
-popn :: (JType j) => (Word64 -> j) -> ThreadOperation [j]
-popn f = state $ \t -> let frames1 = frames t
-                           operands1 = operands $ frames1 !! 0
-                       in (map f operands1, t)
+popn :: (JType j) => (Word64 -> j) -> Int -> ThreadOperation [j]
+popn f n = state $ \t -> let frames1 = frames t
+                             operands1 = operands $ frames1 !! 0
+                         in (take n $ map f operands1, t)
 
 store :: (JType j) => j -> Word8 -> ThreadOperation ()
 store j idx = state $ \t -> ((), t)
@@ -233,22 +234,22 @@ dup args = do
   op <- peek jraw
   push op
 dup_x1 args = do
-  (op1:op2:_) <- popn jraw
+  (op1:op2:_) <- popn jraw 2
   pushn [op1, op2, op1]
 dup_x2 args = do
-  (op1:op2:op3:_) <- popn jraw
+  (op1:op2:op3:_) <- popn jraw 3
   pushn [op1, op3, op2, op1]
 dup2 args = do
-  (op1:op2:_) <- popn jraw
+  (op1:op2:_) <- popn jraw 2
   pushn [op2, op1, op2, op1]
 dup2_x1 args = do
-  (op1:op2:op3:_) <- popn jraw
+  (op1:op2:op3:_) <- popn jraw 3
   pushn [op2, op1, op3, op2, op1]
 dup2_x2 args = do
-  (op1:op2:op3:op4:_) <- popn jraw
+  (op1:op2:op3:op4:_) <- popn jraw 4
   pushn [op2, op1, op4, op3, op2, op1]
 swap args = do
-  (op1:op2:_) <- popn jraw
+  (op1:op2:_) <- popn jraw 2
   pushn [op2, op1]
 
 
