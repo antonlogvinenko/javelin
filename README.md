@@ -13,7 +13,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term: Runtime data structures*
 * Record pattern matching syntax
 * Real DSL implementations
-* Constants, math, conversions, comparisons, extended,  reserved
+* Constants, loads, stores, math, conversions, comparisons, extended, reserved
 
 * Control, references, loads, stores
 return

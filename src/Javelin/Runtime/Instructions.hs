@@ -97,8 +97,8 @@ push j = state $ \t -> let frames1 = frames t
                              Wide x -> undefined
                        in ((), Thread 0 [Frame undefined (val:operands1) undefined])
 
-arg :: Int -> ThreadOperation Word8
-arg n = state $ \t -> (42, t)
+arg :: (JType j) => (Word64 -> j) -> Int -> Int -> ThreadOperation j
+arg f n len = state $ \t -> (f 42, t)
 
 pushn :: (JType j) => [j] -> ThreadOperation ()
 pushn val = state $ \t -> let frames1 = frames t
@@ -115,10 +115,10 @@ popn f n = state $ \t -> let frames1 = frames t
                              operands1 = operands $ frames1 !! 0
                          in (take n $ map f operands1, t)
 
-store :: (JType j) => j -> Word8 -> ThreadOperation ()
+store :: (JType j) => j -> Word16 -> ThreadOperation ()
 store j idx = state $ \t -> ((), t)
 
-load :: (JType j) => (Word64 -> j) -> Word8 -> ThreadOperation j
+load :: (JType j) => (Word64 -> j) -> Word16 -> ThreadOperation j
 load f idx = state $ \t -> (undefined, t)
 
 fff :: Representation -> Word64
@@ -205,6 +205,8 @@ int64 x = fromIntegral x
 nop = state $ \t -> ((), t)
 iconst x = push (x :: JInt)
 lconst x = push (x :: JLong)
+fconst x = push (x :: JFloat)
+dconst x = push (x :: JDouble)
 aconst_null = iconst 0
 iconst_m1 = iconst (-1)
 iconst_0 = iconst 0
@@ -215,12 +217,13 @@ iconst_4 = iconst 4
 iconst_5 = iconst 5
 lconst_0 = lconst 0
 lconst_1 = lconst 1
-fconst_0 = push (0 :: JFloat)
-fconst_1 = push (1 :: JFloat)
-fconst_2 = push (2 :: JFloat)
-dconst_0 = push (0 :: JDouble)
-dconst_1 = push (0 :: JDouble)
+fconst_0 = fconst 0
+fconst_1 = fconst 1
+fconst_2 = fconst 2
+dconst_0 = dconst 0
+dconst_1 = dconst 1
 bipush = undefined
+  
 sipush = undefined
 ldc = undefined
 ldc_w = undefined
@@ -265,7 +268,7 @@ iloadFrom idx = do
   var <- load jint idx
   push var
 iload = do
-  idx <- arg 0
+  idx <- arg jchar 0 2
   iloadFrom idx
 iload_0 = iloadFrom 0
 iload_1 = iloadFrom 1
@@ -275,7 +278,7 @@ istoreAt idx  = do
   op <- pop jint
   store op idx
 istore = do
-  idx <- arg 0
+  idx <- arg jchar 0 2
   istoreAt idx
 istore_0 = istoreAt 0
 istore_1 = istoreAt 1
