@@ -76,7 +76,7 @@ jdouble repr = undefined
 -- Instructions DSL
 
 type ThreadOperation a = State Thread a
-type Instruction = [Word8] -> ThreadOperation ()
+type Instruction = ThreadOperation ()
 
 
 remove :: ThreadOperation ()
@@ -96,6 +96,9 @@ push j = state $ \t -> let frames1 = frames t
                              Narrow x -> undefined
                              Wide x -> undefined
                        in ((), Thread 0 [Frame undefined (val:operands1) undefined])
+
+arg :: Int -> ThreadOperation Word8
+arg n = state $ \t -> (42, t)
 
 pushn :: (JType j) => [j] -> ThreadOperation ()
 pushn val = state $ \t -> let frames1 = frames t
@@ -199,76 +202,82 @@ instructions = Map.fromList [
 int64 :: (Integral a) => a -> Int64
 int64 x = fromIntegral x
 
-nop args = state $ \t -> ((), t)
+nop = state $ \t -> ((), t)
 iconst x = push (x :: JInt)
 lconst x = push (x :: JLong)
-aconst_null args = iconst 0
-iconst_m1 args = iconst (-1)
-iconst_0 args = iconst 0
-iconst_1 args = iconst 1
-iconst_2 args = iconst 2
-iconst_3 args = iconst 3
-iconst_4 args = iconst 4
-iconst_5 args = iconst 5
-lconst_0 args = lconst 0
-lconst_1 args = lconst 1
-fconst_0 args = push (0 :: JFloat)
-fconst_1 args = push (1 :: JFloat)
-fconst_2 args = push (2 :: JFloat)
-dconst_0 args = push (0 :: JDouble)
-dconst_1 args = push (0 :: JDouble)
-bipush args = undefined
-sipush args = undefined
-ldc args = undefined
-ldc_w args = undefined
-ldc2_w args = undefined
+aconst_null = iconst 0
+iconst_m1 = iconst (-1)
+iconst_0 = iconst 0
+iconst_1 = iconst 1
+iconst_2 = iconst 2
+iconst_3 = iconst 3
+iconst_4 = iconst 4
+iconst_5 = iconst 5
+lconst_0 = lconst 0
+lconst_1 = lconst 1
+fconst_0 = push (0 :: JFloat)
+fconst_1 = push (1 :: JFloat)
+fconst_2 = push (2 :: JFloat)
+dconst_0 = push (0 :: JDouble)
+dconst_1 = push (0 :: JDouble)
+bipush = undefined
+sipush = undefined
+ldc = undefined
+ldc_w = undefined
+ldc2_w = undefined
 
 -- Stack
 
-pop1 args = do
+pop1 = do
   remove
-pop2 args = do
+pop2 = do
   remove
   remove
-dup args = do
+dup = do
   op <- peek jraw
   push op
-dup_x1 args = do
+dup_x1 = do
   [op1, op2] <- popn jraw 2
   pushn [op1, op2, op1]
-dup_x2 args = do
+dup_x2 = do
   [op1, op2, op3] <- popn jraw 3
   pushn [op1, op3, op2, op1]
-dup2 args = do
+dup2 = do
   [op1, op2] <- popn jraw 2
   pushn [op2, op1, op2, op1]
-dup2_x1 args = do
+dup2_x1 = do
   [op1, op2, op3] <- popn jraw 3
   pushn [op2, op1, op3, op2, op1]
-dup2_x2 args = do
+dup2_x2 = do
   [op1, op2, op3, op4] <- popn jraw 4
   pushn [op2, op1, op4, op3, op2, op1]
-swap args = do
+swap = do
   [op1, op2] <- popn jraw 2
   pushn [op2, op1]
 
 
 
-iadd args = do
+iadd = do
   op1 <- pop jint
   op2 <- pop jint
   push $ op1 + op2
-iload (idx:args) = do
+iloadFrom idx = do
   var <- load jint idx
   push var
-iload_0 args = iload [0]
-iload_1 args = iload [1]
-iload_2 args = iload [2]
-iload_3 args = iload [3]
-istore [idx] = do
+iload = do
+  idx <- arg 0
+  iloadFrom idx
+iload_0 = iloadFrom 0
+iload_1 = iloadFrom 1
+iload_2 = iloadFrom 2
+iload_3 = iloadFrom 3
+istoreAt idx  = do
   op <- pop jint
   store op idx
-istore_0 args = istore [0]
-istore_1 args = istore [1]
-istore_2 args = istore [2]
-istore_3 args = istore [3]
+istore = do
+  idx <- arg 0
+  istoreAt idx
+istore_0 = istoreAt 0
+istore_1 = istoreAt 1
+istore_2 = istoreAt 2
+istore_3 = istoreAt 3
