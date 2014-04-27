@@ -272,16 +272,3 @@ istore_0 args = istore [0]
 istore_1 args = istore [1]
 istore_2 args = istore [2]
 istore_3 args = istore [3]
-
-
-bytes2Int :: Word64 -> Integer
-bytes2Int = fromIntegral
-
-bytes2Short :: Word64 -> Integer
-bytes2Short = fromIntegral
-
-localsElem :: Integer -> Word32
-localsElem = fromIntegral
-
-stackElem :: Integer -> Word64
-stackElem = fromIntegral
