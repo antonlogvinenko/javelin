@@ -6,7 +6,7 @@ import Javelin.Runtime.Thread (Thread(..),
                                Frame(..), Locals, Operands, ConstantPool, ProgramCounter,
                                FrameStack, Memory,
                                pool, operands, locals)
-import qualified Data.Map.Lazy as Map (fromList, Map(..), union, map, (!))
+import qualified Data.Map.Lazy as Map (fromList, Map)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
 
