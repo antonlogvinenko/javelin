@@ -234,22 +234,22 @@ dup args = do
   op <- peek jraw
   push op
 dup_x1 args = do
-  (op1:op2:_) <- popn jraw 2
+  [op1, op2] <- popn jraw 2
   pushn [op1, op2, op1]
 dup_x2 args = do
-  (op1:op2:op3:_) <- popn jraw 3
+  [op1, op2, op3] <- popn jraw 3
   pushn [op1, op3, op2, op1]
 dup2 args = do
-  (op1:op2:_) <- popn jraw 2
+  [op1, op2] <- popn jraw 2
   pushn [op2, op1, op2, op1]
 dup2_x1 args = do
-  (op1:op2:op3:_) <- popn jraw 3
+  [op1, op2, op3] <- popn jraw 3
   pushn [op2, op1, op3, op2, op1]
 dup2_x2 args = do
-  (op1:op2:op3:op4:_) <- popn jraw 4
+  [op1, op2, op3, op4] <- popn jraw 4
   pushn [op2, op1, op4, op3, op2, op1]
 swap args = do
-  (op1:op2:_) <- popn jraw 2
+  [op1, op2] <- popn jraw 2
   pushn [op2, op1]
 
 
@@ -258,16 +258,13 @@ iadd args = do
   op1 <- pop jint
   op2 <- pop jint
   push $ op1 + op2
-
 iload (idx:args) = do
   var <- load jint idx
   push var
-
 iload_0 args = iload [0]
 iload_1 args = iload [1]
 iload_2 args = iload [2]
 iload_3 args = iload [3]
-
 istore [idx] = do
   op <- pop jint
   store op idx
