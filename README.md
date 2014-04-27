@@ -11,19 +11,15 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* Constants, math, conversions, comparisons, extended,  reserved
 * Record pattern matching syntax
 * Real DSL implementations
+* Constants, math, conversions, comparisons, extended,  reserved
 
 * Control, references, loads, stores
-
-* More instructions, primitives: record patterns, data types, real implementations
 return
 exceptions
 monitors
 memory access
-types of jvm and types of haskell (to correctly interpret arithmetics)
-
 * Memory access for instructions
 * Reference type, operations stack element size
 * Chapters 3, 5 from JVM spec
