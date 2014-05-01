@@ -111,7 +111,7 @@ peek f = state $ \t -> (f 0 . (!!0) . getStack $ t, t)
 
 push :: (JType j) => j -> ThreadOperation ()
 push j = state $ \t -> let elem = jToStackElement j
-                       in ((), updStack t $ \s -> elem : s)
+                       in ((), updStack t (elem:))
 
 jToStackElement :: (JType j) => j -> StackElement
 jToStackElement j = StackElement $ case represent j of
@@ -123,7 +123,7 @@ arg f n = state $ \t -> (f n $ getLocals t, t)
 
 pushn :: (JType j) => [j] -> ThreadOperation ()
 pushn js = state $ \t -> let vals = map jToStackElement js
-                         in ((), updStack t $ \s -> vals ++ s)
+                         in ((), updStack t (vals ++))
 
 pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 pop f = state $ \t -> let nElems = getStack t !! 0
