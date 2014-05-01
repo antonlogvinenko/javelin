@@ -136,7 +136,12 @@ popn f n = state $ \t -> let frames1 = frames t
                          in (map (f 0) operands1, t)
 
 store :: (JType j) => j -> Word16 -> ThreadOperation ()
-store j idx = state $ \t -> ((), t)
+store j idx = state $ \t -> let index = fromIntegral idx
+                                r = represent j
+                                v = case r of
+                                  Narrow x -> undefined
+                                  Wide x -> undefined
+                            in ((), updLocals t $ undefined)
 
 load :: (JType j) => (Int -> Locals -> j) -> Word16 -> ThreadOperation j
 load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)
