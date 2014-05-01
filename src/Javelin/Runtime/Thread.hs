@@ -2,7 +2,7 @@ module Javelin.Runtime.Thread
 where
 
 import Data.Word (Word8, Word32, Word64)
-import Data.Array.IArray (Array, array)
+import Data.Array.IArray (Array, array, (!))
 import Javelin.ByteCode.Data (Constant)
 import Data.Binary.Put
 import Data.Binary.Get (getWord64be, runGet)
@@ -35,12 +35,12 @@ argumentToWord64 bs = let normalized = (take (8 - length bs) bs) ++ bs
                       
 
 
-data Locals = Locals { localVariables :: [Word32] } deriving (Show, Eq)
+data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
 instance BytesContainer Locals where
-  getBytes c idx len = let vars = localVariables c
+  getBytes c idx len = let arr = vars c
                        in if len <= 4
-                          then localToWord64 [0, vars !! 0]
-                          else localToWord64 [vars !! idx, vars !! (idx + 1)]
+                          then localToWord64 [0, arr ! 0]
+                          else localToWord64 [arr ! idx, arr ! (idx + 1)]
 
 localToWord64 :: [Word32] -> Word64
 localToWord64 bs = runGet getWord64be $ runPut $ putWord32be (bs !! 0) >> putWord32be (bs !! 1)

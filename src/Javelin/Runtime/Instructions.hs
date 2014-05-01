@@ -4,12 +4,13 @@ where
 import Control.Monad.State.Lazy (State, state)
 import Javelin.Runtime.Thread (Thread(..),
                                Frame(..), ConstantPool, ProgramCounter,
-                               FrameStack, Memory, StackElement(..), Locals,
+                               FrameStack, Memory, StackElement(..), Locals(..),
                                BytesContainer,
                                pool, operands, locals, stackElement, getBytes)
 import qualified Data.Map.Lazy as Map (fromList, Map)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
+import Data.Array.IArray (Array, array, (!), (//))
 
 
 
@@ -98,9 +99,9 @@ updStack t@(Thread {frames = (tframe@(Frame {operands = toperands}):tframes)}) f
 getLocals :: Thread -> Locals
 getLocals = locals . getFrame
 
-updLocals :: Thread -> (Locals -> Locals) -> Thread
-updLocals t@(Thread {frames = (tframe@(Frame {locals = tlocals}) : tframes)}) f =
-  t {frames = (tframe {locals = f tlocals}):tframes} 
+updLocals :: Thread -> (Array Int Word32 -> Array Int Word32) -> Thread
+updLocals t@(Thread {frames = (tframe@(Frame {locals = Locals {vars = tvars}}) : tframes)}) f =
+  t {frames = (tframe {locals = Locals $ f tvars}):tframes} 
 
 
 remove :: ThreadOperation ()
@@ -134,12 +135,13 @@ popn f n = state $ \t -> let nElems = take n $ getStack t
                          in (map (f 0) nElems, updStack t $ drop n)
 
 store :: (JType j) => j -> Word16 -> ThreadOperation ()
-store j idx = state $ \t -> let index = fromIntegral idx
+store j idx = state $ \t -> let idx = fromIntegral idx
+                                arr = vars $ getLocals t
                                 r = represent j
-                                v = case r of
-                                  Narrow x -> undefined
-                                  Wide x -> undefined
-                            in ((), updLocals t $ undefined)
+                                newLocals = case r of
+                                  Narrow x -> arr // [(idx, x)]
+                                  Wide x -> arr // [(idx, 0), (idx+1, 0)]
+                            in ((), updLocals t $ \_ -> arr)
 
 load :: (JType j) => (Int -> Locals -> j) -> Word16 -> ThreadOperation j
 load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)
