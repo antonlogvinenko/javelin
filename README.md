@@ -11,8 +11,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* jchar, jint signatures
-* Real DSL implementations
+* Real DSL implementations - store
 * Overview DSL design, ins and outs
 * Record pattern matching syntax
 

@@ -119,7 +119,7 @@ jToStackElement j = StackElement $ case represent j of
   Wide x -> x
 
 arg :: (JType j) => (Int -> Locals -> j) -> Int -> ThreadOperation j
-arg f n = state $ \t -> (undefined, t)
+arg f n = state $ \t -> (f n $ getLocals t, t)
 
 pushn :: (JType j) => [j] -> ThreadOperation ()
 pushn js = state $ \t -> let vals = map jToStackElement js
@@ -139,10 +139,7 @@ store :: (JType j) => j -> Word16 -> ThreadOperation ()
 store j idx = state $ \t -> ((), t)
 
 load :: (JType j) => (Int -> Locals -> j) -> Word16 -> ThreadOperation j
-load f idx = state $ \t -> (undefined, t)
-
-fff :: Representation -> Word64
-fff = undefined
+load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)
 
 
 
