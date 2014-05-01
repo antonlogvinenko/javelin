@@ -35,8 +35,8 @@ argumentToWord64 bs = let normalized = (take (8 - length bs) bs) ++ bs
                       
 
 
-data LocalVars = LocalVars { localVariables :: [Word32] } deriving (Show, Eq)
-instance BytesContainer LocalVars where
+data Locals = Locals { localVariables :: [Word32] } deriving (Show, Eq)
+instance BytesContainer Locals where
   getBytes c idx len = let vars = localVariables c
                        in if len <= 4
                           then localToWord64 [0, vars !! 0]
@@ -55,7 +55,7 @@ instance BytesContainer StackElement where
 
 
 type ConstantPool = [Constant]
-data Frame = Frame { locals :: LocalVars,
+data Frame = Frame { locals :: Locals,
                      operands :: [StackElement],
                      pool :: ConstantPool }
              deriving (Show, Eq)

@@ -4,7 +4,7 @@ where
 import Control.Monad.State.Lazy (State, state)
 import Javelin.Runtime.Thread (Thread(..),
                                Frame(..), ConstantPool, ProgramCounter,
-                               FrameStack, Memory, StackElement(..), LocalVars,
+                               FrameStack, Memory, StackElement(..), Locals,
                                BytesContainer,
                                pool, operands, locals, stackElement, getBytes)
 import qualified Data.Map.Lazy as Map (fromList, Map)
@@ -82,6 +82,14 @@ jdouble = fetchBytes 8
 type ThreadOperation a = State Thread a
 type Instruction = ThreadOperation ()
 
+curFrame :: Thread -> Frame
+curFrame = (!!0) . frames
+
+curStack :: Thread -> [StackElement]
+curStack = operands . curFrame
+
+curLocals :: Thread -> Locals
+curLocals = locals . curFrame
 
 remove :: ThreadOperation ()
 remove = state $ \t -> let frames1 = frames t
@@ -101,7 +109,7 @@ push j = state $ \t -> let frames1 = frames t
                              Wide x -> undefined
                        in ((), Thread 0 [Frame undefined (val:operands1) undefined])
 
-arg :: (JType j) => (Int -> LocalVars -> j) -> Int -> ThreadOperation j
+arg :: (JType j) => (Int -> Locals -> j) -> Int -> ThreadOperation j
 arg f n = state $ \t -> (undefined, t)
 
 pushn :: (JType j) => [j] -> ThreadOperation ()
@@ -126,7 +134,7 @@ popn f n = state $ \t -> let frames1 = frames t
 store :: (JType j) => j -> Word16 -> ThreadOperation ()
 store j idx = state $ \t -> ((), t)
 
-load :: (JType j) => (Int -> LocalVars -> j) -> Word16 -> ThreadOperation j
+load :: (JType j) => (Int -> Locals -> j) -> Word16 -> ThreadOperation j
 load f idx = state $ \t -> (undefined, t)
 
 fff :: Representation -> Word64
