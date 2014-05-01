@@ -98,35 +98,32 @@ updStack t@(Thread {frames = (tframe@(Frame {operands = toperands}):tframes)}) f
 getLocals :: Thread -> Locals
 getLocals = locals . getFrame
 
+updLocals :: Thread -> (Locals -> Locals) -> Thread
+updLocals t@(Thread {frames = (tframe@(Frame {locals = tlocals}) : tframes)}) f =
+  t {frames = (tframe {locals = f tlocals}):tframes} 
+
+
 remove :: ThreadOperation ()
-remove = state $ \t -> let frames1 = frames t
-                           operands1 = operands $ frames1 !! 0
-                       in ((), t)
+remove = state $ \t -> ((), updStack t $ drop 1)
 
 peek :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
-peek f = state $ \t -> let frames1 = frames t
-                           operands1 = operands $ frames1 !! 0
-                       in (f 0 $ operands1 !! 0, t)
+peek f = state $ \t -> (f 0 . (!!0) . getStack $ t, t)
 
 push :: (JType j) => j -> ThreadOperation ()
-push j = state $ \t -> let frames1 = frames t
-                           operands1 = operands (frames1 !! 0)
-                           val = case represent j of
-                             Narrow x -> undefined
-                             Wide x -> undefined
-                       in ((), Thread 0 [Frame undefined (val:operands1) undefined])
+push j = state $ \t -> let elem = jToStackElement j
+                       in ((), updStack t $ \s -> elem : s)
+
+jToStackElement :: (JType j) => j -> StackElement
+jToStackElement j = StackElement $ case represent j of
+  Narrow x -> fromIntegral x
+  Wide x -> x
 
 arg :: (JType j) => (Int -> Locals -> j) -> Int -> ThreadOperation j
 arg f n = state $ \t -> (undefined, t)
 
 pushn :: (JType j) => [j] -> ThreadOperation ()
-pushn val = state $ \t -> let frames1 = frames t
-                              operands1 = map stackElement $ operands (frames1 !! 0)
-                          in ((), Thread 0
-                                  [Frame
-                                   undefined
-                                   (map StackElement ((map (fff . represent) val) ++ operands1))
-                                   undefined])
+pushn js = state $ \t -> let vals = map jToStackElement js
+                         in ((), updStack t $ \s -> vals ++ s)
 
 pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 pop f = state $ \t -> let frames1 = frames t
