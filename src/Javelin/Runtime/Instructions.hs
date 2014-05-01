@@ -82,14 +82,21 @@ jdouble = fetchBytes 8
 type ThreadOperation a = State Thread a
 type Instruction = ThreadOperation ()
 
-curFrame :: Thread -> Frame
-curFrame = (!!0) . frames
+getFrame :: Thread -> Frame
+getFrame = (!!0) . frames
 
-curStack :: Thread -> [StackElement]
-curStack = operands . curFrame
+updFrame :: Thread -> (Frame -> Frame) -> Thread
+updFrame t@(Thread {frames = (tframe:tframes)}) f = t {frames = f tframe : tframes}
 
-curLocals :: Thread -> Locals
-curLocals = locals . curFrame
+getStack :: Thread -> [StackElement]
+getStack = operands . getFrame
+
+updStack :: Thread -> ([StackElement] -> [StackElement]) -> Thread
+updStack t@(Thread {frames = (tframe@(Frame {operands = toperands}):tframes)}) f =
+  t {frames = (tframe {operands = f toperands}):tframes}
+
+getLocals :: Thread -> Locals
+getLocals = locals . getFrame
 
 remove :: ThreadOperation ()
 remove = state $ \t -> let frames1 = frames t
