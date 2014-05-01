@@ -13,6 +13,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term: Runtime data structures*
 * Real DSL implementations - store
 * Overview DSL design, ins and outs
+* Refactor namespaces
 * Constants, loads, stores, math, conversions, comparisons, extended, reserved
 
 * Control, references, loads, stores

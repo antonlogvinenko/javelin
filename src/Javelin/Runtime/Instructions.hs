@@ -126,14 +126,12 @@ pushn js = state $ \t -> let vals = map jToStackElement js
                          in ((), updStack t $ \s -> vals ++ s)
 
 pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
-pop f = state $ \t -> let frames1 = frames t
-                          operands1 = operands $ frames1 !! 0
-                      in (f 0 $ operands1 !! 0, t)
+pop f = state $ \t -> let nElems = getStack t !! 0
+                      in (f 0 nElems, updStack t $ drop 1)
 
 popn :: (JType j) => (Int -> StackElement -> j) -> Int -> ThreadOperation [j]
-popn f n = state $ \t -> let frames1 = frames t
-                             operands1 = take n $ operands $ frames1 !! 0
-                         in (map (f 0) operands1, t)
+popn f n = state $ \t -> let nElems = take n $ getStack t
+                         in (map (f 0) nElems, updStack t $ drop n)
 
 store :: (JType j) => j -> Word16 -> ThreadOperation ()
 store j idx = state $ \t -> let index = fromIntegral idx
