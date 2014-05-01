@@ -19,16 +19,23 @@ data Thread = Thread { pc :: ProgramCounter,
               deriving (Show, Eq)
 
 
-type StartIndex = Int
-type BytesLength = Int
-class BytesContainer c where
-  getBytes :: c -> StartIndex -> BytesLength -> Word64
 
-data Arguments = Arguments { argumentsArray :: [Word8] }
+class BytesContainer c where
+  getBytes :: c -> Int -> Int -> Word64
+
+
+
+data Arguments = Arguments { argumentsArray :: [Word8] } deriving (Show, Eq)
 instance BytesContainer Arguments where
   getBytes c idx len = argumentToWord64 $ take len $ drop idx $ argumentsArray c
 
-data LocalVars = LocalVars { localVariables :: [Word32] }
+argumentToWord64 :: [Word8] -> Word64
+argumentToWord64 bs = let normalized = (take (8 - length bs) bs) ++ bs
+                   in runGet getWord64be $ pack normalized
+                      
+
+
+data LocalVars = LocalVars { localVariables :: [Word32] } deriving (Show, Eq)
 instance BytesContainer LocalVars where
   getBytes c idx len = let vars = localVariables c
                        in if len <= 4
@@ -38,22 +45,18 @@ instance BytesContainer LocalVars where
 localToWord64 :: [Word32] -> Word64
 localToWord64 bs = runGet getWord64be $ runPut $ putWord32be (bs !! 0) >> putWord32be (bs !! 1)
 
-argumentToWord64 :: [Word8] -> Word64
-argumentToWord64 bs = let normalized = (take (8 - length bs) bs) ++ bs
-                   in runGet getWord64be $ pack normalized
 
-data StackElement = StackElement { stackElement :: Word64 }
+
+data StackElement = StackElement { stackElement :: Word64 } deriving (Show, Eq)
 instance BytesContainer StackElement where
   getBytes c idx len = stackElement c
 
 
 
 
-type Locals = Array Integer Word32
-type Operands = [Word64]
 type ConstantPool = [Constant]
-data Frame = Frame { locals :: Locals,
-                     operands :: Operands,
+data Frame = Frame { locals :: LocalVars,
+                     operands :: [StackElement],
                      pool :: ConstantPool }
              deriving (Show, Eq)
 

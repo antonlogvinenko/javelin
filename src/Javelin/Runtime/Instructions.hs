@@ -3,9 +3,10 @@ where
 
 import Control.Monad.State.Lazy (State, state)
 import Javelin.Runtime.Thread (Thread(..),
-                               Frame(..), Locals, Operands, ConstantPool, ProgramCounter,
-                               FrameStack, Memory,
-                               pool, operands, locals)
+                               Frame(..), ConstantPool, ProgramCounter,
+                               FrameStack, Memory, StackElement(..), LocalVars,
+                               BytesContainer,
+                               pool, operands, locals, stackElement, getBytes)
 import qualified Data.Map.Lazy as Map (fromList, Map)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
@@ -52,24 +53,27 @@ instance JType Float where
 instance JType Word64 where
   represent x = Wide x
 
-jraw :: Word64 -> JRaw
-jraw = id
-jbyte :: Word64 -> JByte
-jbyte repr = undefined
-jshort :: Word64 -> JShort
-jshort repr = undefined
-jint :: Word64 -> JInt
-jint repr = undefined
-jlong :: Word64 -> JLong
-jlong repr = undefined
-jchar :: Word64 -> JChar
-jchar repr = undefined
-jboolean :: Word64 -> JBoolean
-jboolean repr = undefined
-jfloat :: Word64 -> JFloat
-jfloat repr = undefined
-jdouble :: Word64 -> JDouble
-jdouble repr = undefined
+fetchBytes :: (BytesContainer c, Num a) => Int -> Int -> c -> a
+fetchBytes len idx c = fromIntegral $ getBytes c idx len
+
+jraw :: (BytesContainer c) => Int -> c -> JRaw
+jraw = fetchBytes 8
+jbyte :: (BytesContainer c) => Int -> c -> JByte
+jbyte = fetchBytes 1
+jshort :: (BytesContainer c) => Int -> c -> JShort
+jshort = fetchBytes 2
+jint :: (BytesContainer c) => Int -> c -> JInt
+jint = fetchBytes 4
+jlong :: (BytesContainer c) => Int -> c -> JLong
+jlong = fetchBytes 8
+jchar :: (BytesContainer c) => Int -> c -> JChar
+jchar = fetchBytes 2
+jboolean :: (BytesContainer c) => Int -> c -> JBoolean
+jboolean = fetchBytes 1
+jfloat :: (BytesContainer c) => Int -> c -> JFloat
+jfloat = fetchBytes 8
+jdouble :: (BytesContainer c) => Int -> c -> JDouble
+jdouble = fetchBytes 8
 
 
 
@@ -84,10 +88,10 @@ remove = state $ \t -> let frames1 = frames t
                            operands1 = operands $ frames1 !! 0
                        in ((), t)
 
-peek :: (JType j) => (Word64 -> j) -> ThreadOperation j
+peek :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 peek f = state $ \t -> let frames1 = frames t
                            operands1 = operands $ frames1 !! 0
-                       in (f $ operands1 !! 0, t)
+                       in (f 0 $ operands1 !! 0, t)
 
 push :: (JType j) => j -> ThreadOperation ()
 push j = state $ \t -> let frames1 = frames t
@@ -97,28 +101,32 @@ push j = state $ \t -> let frames1 = frames t
                              Wide x -> undefined
                        in ((), Thread 0 [Frame undefined (val:operands1) undefined])
 
-arg :: (JType j) => (Word64 -> j) -> Int -> Int -> ThreadOperation j
-arg f n len = state $ \t -> (f 42, t)
+arg :: (JType j) => (Int -> LocalVars -> j) -> Int -> ThreadOperation j
+arg f n = state $ \t -> (undefined, t)
 
 pushn :: (JType j) => [j] -> ThreadOperation ()
 pushn val = state $ \t -> let frames1 = frames t
-                              operands1 = operands (frames1 !! 0)
-                          in ((), Thread 0 [Frame undefined ((map (fff . represent) val) ++ operands1) undefined])
+                              operands1 = map stackElement $ operands (frames1 !! 0)
+                          in ((), Thread 0
+                                  [Frame
+                                   undefined
+                                   (map StackElement ((map (fff . represent) val) ++ operands1))
+                                   undefined])
 
-pop :: (JType j) => (Word64 -> j) -> ThreadOperation j
+pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 pop f = state $ \t -> let frames1 = frames t
                           operands1 = operands $ frames1 !! 0
-                      in (f $ operands1 !! 0, t)
+                      in (f 0 $ operands1 !! 0, t)
 
-popn :: (JType j) => (Word64 -> j) -> Int -> ThreadOperation [j]
+popn :: (JType j) => (Int -> StackElement -> j) -> Int -> ThreadOperation [j]
 popn f n = state $ \t -> let frames1 = frames t
-                             operands1 = operands $ frames1 !! 0
-                         in (take n $ map f operands1, t)
+                             operands1 = take n $ operands $ frames1 !! 0
+                         in (map (f 0) operands1, t)
 
 store :: (JType j) => j -> Word16 -> ThreadOperation ()
 store j idx = state $ \t -> ((), t)
 
-load :: (JType j) => (Word64 -> j) -> Word16 -> ThreadOperation j
+load :: (JType j) => (Int -> LocalVars -> j) -> Word16 -> ThreadOperation j
 load f idx = state $ \t -> (undefined, t)
 
 fff :: Representation -> Word64
@@ -268,7 +276,7 @@ iloadFrom idx = do
   var <- load jint idx
   push var
 iload = do
-  idx <- arg jchar 0 2
+  idx <- arg jchar 0
   iloadFrom idx
 iload_0 = iloadFrom 0
 iload_1 = iloadFrom 1
@@ -278,7 +286,7 @@ istoreAt idx  = do
   op <- pop jint
   store op idx
 istore = do
-  idx <- arg jchar 0 2
+  idx <- arg jchar 0
   istoreAt idx
 istore_0 = istoreAt 0
 istore_1 = istoreAt 1
