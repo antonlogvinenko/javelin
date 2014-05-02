@@ -14,12 +14,11 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Overview DSL design, ins and outs
 * Refactor namespaces
 * Constants, loads, stores, math, conversions, comparisons, extended, reserved
+* unsigned byte, other types operated indirectly
 
-* Control, references, loads, stores
-return
-exceptions
-monitors
-memory access
+* Control, references
+* return, exceptions, monitors, memory access
+
 * Memory access for instructions
 * Reference type, operations stack element size
 * Chapters 3, 5 from JVM spec
