@@ -12,7 +12,7 @@ import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray (Array, array, (!), (//))
 import Data.Binary.IEEE754 (floatToWord, doubleToWord)
-import Data.Bits (rotate)
+import Data.Bits (rotate, (.|.), (.&.), xor)
 
 
 
@@ -134,7 +134,7 @@ popn :: (JType j) => (Int -> StackElement -> j) -> Int -> ThreadOperation [j]
 popn f n = state $ \t -> let nElems = take n $ getStack t
                          in (map (f 0) nElems, updStack t $ drop n)
 
-store :: (JType j) => j -> Word16 -> ThreadOperation ()
+store :: (JType j) => j -> JByte -> ThreadOperation ()
 store j idx = state $ \t -> let idx = fromIntegral idx
                                 arr = vars $ getLocals t
                                 r = represent j
@@ -149,7 +149,7 @@ split x = let a = fromIntegral x
               b = fromIntegral $ rotate x 32
               in (a, b)
 
-load :: (JType j) => (Int -> Locals -> j) -> Word16 -> ThreadOperation j
+load :: (JType j) => (Int -> Locals -> j) -> JByte -> ThreadOperation j
 load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)
 
 signExtend :: (Integral a) => a -> JInt
@@ -202,7 +202,7 @@ instructions = Map.fromList [
   (0x5f, (0, swap)),
 
   -- Math
-
+  
   -- Conversions
 
   -- Comparisons
@@ -295,28 +295,66 @@ math operandType operation = do
   op1 <- pop operandType
   op2 <- pop operandType
   push $ operation op1 op2
+
 iadd = math jint (+)
 ladd = math jlong (+)
 fadd = math jfloat (+)
 dadd = math jdouble (+)
+
 isub = math jint (-)
 lsub = math jlong (-)
 fsub = math jfloat (-)
 dsub = math jdouble (-)
+
 imul = math jint (*)
 lmul = math jlong (*)
 fmul = math jfloat (*)
 dmul = math jdouble (*)
-idiv = undefined
-ldiv = undefined
+
+idiv = math jint div
+ldiv = math jlong div
 fdiv = math jfloat (/)
 ddiv = math jdouble (/)
+
+irem = math jint rem
+lrem = math jlong rem
+frem = undefined
+drem = undefined
+
+neg operandType = do
+  x <- pop operandType
+  push $ -x
+ineg = neg jint
+lneg = neg jlong
+fneg = neg jfloat
+dneg = neg jdouble
+
+ishl = undefined
+lshl = undefined
+ishr = undefined
+lshr = undefined
+iushr = undefined
+lushr = undefined
+
+iand = math jint (.&.)
+land = math jlong (.&.)
+ior = math jint (.|.)
+lor = math jint (.|.)
+ixor = math jint xor
+lxor = math jlong xor
+iinc = do
+  index <- arg jbyte 0
+  const <- arg jbyte 0
+  var <- load jint index
+  let constExt = signExtend const
+  let newVar = var + constExt
+  store newVar index
 
 iloadFrom idx = do
   var <- load jint idx
   push var
 iload = do
-  idx <- arg jchar 0
+  idx <- arg jbyte 0
   iloadFrom idx
 iload_0 = iloadFrom 0
 iload_1 = iloadFrom 1
@@ -326,7 +364,7 @@ istoreAt idx  = do
   op <- pop jint
   store op idx
 istore = do
-  idx <- arg jchar 0
+  idx <- arg jbyte 0
   istoreAt idx
 istore_0 = istoreAt 0
 istore_1 = istoreAt 1

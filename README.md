@@ -14,7 +14,6 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Overview DSL design, ins and outs
 * Refactor namespaces
 * Constants, loads, stores, math, conversions, comparisons, extended, reserved
-* Sign-extentions to int? sipush, bipush
 
 * Control, references, loads, stores
 return
