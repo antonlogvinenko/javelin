@@ -21,7 +21,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 * Memory access for instructions
 * DSL implementation for arguments and reading commands
-* Reference type, operations stack element size
+* Reference type
 * Chapters 3, 5 from JVM spec
 * MVP: run a trivial main class
     * Write java Main class, compile, find out commands
