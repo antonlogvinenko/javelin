@@ -20,7 +20,6 @@ data Thread = Thread { pc :: ProgramCounter,
               deriving (Show, Eq)
 
 
-
 class BytesContainer c where
   getBytes :: c -> Int -> Int -> Word64
 
