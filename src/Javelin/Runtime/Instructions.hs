@@ -12,6 +12,7 @@ import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray (Array, array, (!), (//))
 import Data.Binary.IEEE754 (floatToWord, doubleToWord)
+import Data.Bits (rotate)
 
 
 -- Primitive types
@@ -141,8 +142,14 @@ store j idx = state $ \t -> let idx = fromIntegral idx
                                 r = represent j
                                 newLocals = case r of
                                   Narrow x -> arr // [(idx, x)]
-                                  Wide x -> arr // [(idx, 0), (idx+1, 0)]
+                                  Wide x -> let (a, b) = split x
+                                            in arr // [(idx, a), (idx+1, b)]
                             in ((), updLocals t $ \_ -> arr)
+
+split :: Word64 -> (Word32, Word32)
+split x = let a = fromIntegral x
+              b = fromIntegral $ rotate x 32
+              in (a, b)
 
 load :: (JType j) => (Int -> Locals -> j) -> Word16 -> ThreadOperation j
 load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)

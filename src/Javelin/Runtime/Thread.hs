@@ -8,6 +8,7 @@ import Data.Binary.Put
 import Data.Binary.Get (getWord64be, runGet)
 import Data.ByteString.Lazy (pack, ByteString)
 
+
 data Memory = Memory
             deriving (Show, Eq)
 
@@ -32,7 +33,6 @@ instance BytesContainer Arguments where
 argumentToWord64 :: [Word8] -> Word64
 argumentToWord64 bs = let normalized = (take (8 - length bs) bs) ++ bs
                    in runGet getWord64be $ pack normalized
-                      
 
 
 data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
@@ -41,6 +41,7 @@ instance BytesContainer Locals where
                        in if len <= 4
                           then localToWord64 [0, arr ! 0]
                           else localToWord64 [arr ! idx, arr ! (idx + 1)]
+
 
 localToWord64 :: [Word32] -> Word64
 localToWord64 bs = runGet getWord64be $ runPut $ putWord32be (bs !! 0) >> putWord32be (bs !! 1)
