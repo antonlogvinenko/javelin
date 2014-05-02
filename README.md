@@ -11,11 +11,12 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* Real DSL implementations - store
+* Double to stack storage? Change underlying types
 * Overview DSL design, ins and outs
 * Refactor namespaces
 * Constants, loads, stores, math, conversions, comparisons, extended, reserved
 
+* Sign-extentions to int? sipush, bipush
 * Control, references, loads, stores
 return
 exceptions

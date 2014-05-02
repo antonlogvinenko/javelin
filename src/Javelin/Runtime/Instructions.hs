@@ -11,18 +11,12 @@ import qualified Data.Map.Lazy as Map (fromList, Map)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray (Array, array, (!), (//))
-
+import Data.Binary.IEEE754 (floatToWord, doubleToWord)
 
 
 -- Primitive types
 data Representation = Narrow { narrow :: Word32 }
                     | Wide { wide :: Word64 }
-
-cake32 :: (Num a) => a -> Word32
-cake32 x = 42
-
-cake64 :: (Num a) => a -> Word64
-cake64 x = 42
 
 type JByte  =   Int8
 type JShort =   Int16
@@ -34,25 +28,32 @@ type JDouble =  Double
 type JFloat =   Float
 type JRaw =     Word64
 
+narrowInt :: (Integral a) => a -> Representation 
+narrowInt = Narrow . fromIntegral
+
+wideInt :: (Integral a) => a -> Representation
+wideInt = Wide . fromIntegral
+
+
 
 class JType a where
   represent :: a -> Representation
 instance JType Int8 where
-  represent x = Narrow $ cake32 x
+  represent = narrowInt
 instance JType Int16 where
-  represent x = Narrow $ cake32 x
+  represent = narrowInt
 instance JType Int32 where
-  represent x = Narrow $ cake32 x
+  represent = narrowInt
 instance JType Int64 where
-  represent x = Wide $ cake64 x
+  represent = wideInt
 instance JType Word16 where
-  represent x = Narrow $ cake32 x
+  represent = narrowInt
 instance JType Double where
-  represent x = Narrow $ cake32 x
+  represent = Wide . doubleToWord
 instance JType Float where
-  represent x = Wide $ cake64 x
+  represent = Narrow . floatToWord
 instance JType Word64 where
-  represent x = Wide x
+  represent = Wide
 
 fetchBytes :: (BytesContainer c, Num a) => Int -> Int -> c -> a
 fetchBytes len idx c = fromIntegral $ getBytes c idx len
@@ -221,9 +222,6 @@ instructions = Map.fromList [
 
 -- Constants
 
-int64 :: (Integral a) => a -> Int64
-int64 x = fromIntegral x
-
 nop = state $ \t -> ((), t)
 iconst x = push (x :: JInt)
 lconst x = push (x :: JLong)
@@ -244,9 +242,12 @@ fconst_1 = fconst 1
 fconst_2 = fconst 2
 dconst_0 = dconst 0
 dconst_1 = dconst 1
-bipush = undefined
-  
-sipush = undefined
+bipush = do
+  byte <- arg jbyte 0
+  push byte
+sipush = do
+  short <- arg jshort 0
+  push short
 ldc = undefined
 ldc_w = undefined
 ldc2_w = undefined
@@ -281,11 +282,28 @@ swap = do
   pushn [op2, op1]
 
 
+-- Math
+math operandType operation = do
+  op1 <- pop operandType
+  op2 <- pop operandType
+  push $ operation op1 op2
+iadd = math jint (+)
+ladd = math jlong (+)
+fadd = math jfloat (+)
+dadd = math jdouble (+)
+isub = math jint (-)
+lsub = math jlong (-)
+fsub = math jfloat (-)
+dsub = math jdouble (-)
+imul = math jint (*)
+lmul = math jlong (*)
+fmul = math jfloat (*)
+dmul = math jdouble (*)
+idiv = undefined
+ldiv = undefined
+fdiv = math jfloat (/)
+ddiv = math jdouble (/)
 
-iadd = do
-  op1 <- pop jint
-  op2 <- pop jint
-  push $ op1 + op2
 iloadFrom idx = do
   var <- load jint idx
   push var
