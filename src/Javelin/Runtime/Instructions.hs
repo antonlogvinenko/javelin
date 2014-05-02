@@ -15,6 +15,7 @@ import Data.Binary.IEEE754 (floatToWord, doubleToWord)
 import Data.Bits (rotate)
 
 
+
 -- Primitive types
 data Representation = Narrow { narrow :: Word32 }
                     | Wide { wide :: Word64 }
@@ -34,8 +35,6 @@ narrowInt = Narrow . fromIntegral
 
 wideInt :: (Integral a) => a -> Representation
 wideInt = Wide . fromIntegral
-
-
 
 class JType a where
   represent :: a -> Representation
@@ -105,7 +104,6 @@ updLocals :: Thread -> (Array Int Word32 -> Array Int Word32) -> Thread
 updLocals t@(Thread {frames = (tframe@(Frame {locals = Locals {vars = tvars}}) : tframes)}) f =
   t {frames = (tframe {locals = Locals $ f tvars}):tframes} 
 
-
 remove :: ThreadOperation ()
 remove = state $ \t -> ((), updStack t $ drop 1)
 
@@ -154,6 +152,8 @@ split x = let a = fromIntegral x
 load :: (JType j) => (Int -> Locals -> j) -> Word16 -> ThreadOperation j
 load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)
 
+signExtend :: (Integral a) => a -> JInt
+signExtend = fromIntegral
 
 
 -- Instruction listing
@@ -251,13 +251,14 @@ dconst_0 = dconst 0
 dconst_1 = dconst 1
 bipush = do
   byte <- arg jbyte 0
-  push byte
+  push $ signExtend byte
 sipush = do
   short <- arg jshort 0
-  push short
+  push $ signExtend short
 ldc = undefined
 ldc_w = undefined
 ldc2_w = undefined
+
 
 -- Stack
 
