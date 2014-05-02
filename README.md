@@ -2,6 +2,8 @@ Javelin
 =======
 JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
+Don't wanna lose this: http://dev.stephendiehl.com/hask/
+
 *Long term*
 * Bytecode parser [**Done**]
 * Runtime data structures [**In progress**]
