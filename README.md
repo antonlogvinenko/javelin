@@ -11,7 +11,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* add all commands to list, correct arguments length
+* arguments length: varying amount?
 * Overview DSL design, ins and outs
 * Refactor namespaces
 
