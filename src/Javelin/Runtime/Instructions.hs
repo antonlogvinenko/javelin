@@ -338,6 +338,18 @@ impdep2 = undefined
 
 -- Instruction listing
 
+tableswitchArgs :: ArgumentsParser
+tableswitchArgs = undefined
+
+lookupswitchArgs :: ArgumentsParser
+lookupswitchArgs = undefined
+
+wideArgs :: ArgumentsParser
+wideArgs = undefined
+
+multianewarrayArgs :: ArgumentsParser
+multianewarrayArgs = undefined
+
 instructions :: Map.Map Word8 (ArgumentsParser, Instruction)
 instructions = Map.fromList [
   
@@ -533,8 +545,8 @@ instructions = Map.fromList [
   (0xa7, (fixed 2, goto)),
   (0xa8, (fixed 2, jsr)),
   (0xa9, (fixed 1, ret)),
-  (0xaa, (dummy, tableswitch)),
-  (0xab, (dummy, lookupswitch)),
+  (0xaa, (tableswitchArgs, tableswitch)),
+  (0xab, (lookupswitchArgs, lookupswitch)),
   (0xac, (noarg, ireturn)),
   (0xad, (noarg, lreturn)),
   (0xae, (noarg, freturn)),
@@ -565,8 +577,8 @@ instructions = Map.fromList [
   
 
   -- Extended
-  (0xc4, (dummy, wide)),
-  (0xc5, (dummy, multianewarray)),
+  (0xc4, (wideArgs, wide)),
+  (0xc5, (multianewarrayArgs, multianewarray)),
   (0xc6, (fixed 2, ifnull)),
   (0xc7, (fixed 2, ifnonnull)),
   (0xc8, (fixed 4, goto_w)),
