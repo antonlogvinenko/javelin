@@ -2,8 +2,6 @@ Javelin
 =======
 JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
-Don't wanna lose this: http://dev.stephendiehl.com/hask/
-
 *Long term*
 * Bytecode parser [**Done**]
 * Runtime data structures [**In progress**]
@@ -17,6 +15,8 @@ Don't wanna lose this: http://dev.stephendiehl.com/hask/
 * Refactor namespaces
 * Constants, loads, stores, math, conversions, comparisons, extended, reserved
 * unsigned byte, other types operated indirectly
+* conversion i2l?
+* add commands to list, correct arguments length
 
 * Control, references
 * return, exceptions, monitors, memory access
@@ -52,3 +52,5 @@ Don't wanna lose this: http://dev.stephendiehl.com/hask/
 * 4.7.20, RuntimeVisibleTypeAnnotations (new)
 * 4.7.21, RuntimeInvisibleTypeAnnotations (new)
 * Changes in descriptor and signatures terminology (refactoring)
+
+Don't wanna lose this: http://dev.stephendiehl.com/hask/
