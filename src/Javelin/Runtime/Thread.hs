@@ -184,8 +184,7 @@ popn f n = state $ \t -> let nElems = take n $ getStack t
 store :: (JType j) => j -> JByte -> ThreadOperation ()
 store j idx = state $ \t -> let idx = fromIntegral idx
                                 arr = vars $ getLocals t
-                                r = represent j
-                                newLocals = case r of
+                                newLocals = case represent j of
                                   Narrow x -> arr // [(idx, x)]
                                   Wide x -> let (a, b) = split x
                                             in arr // [(idx, a), (idx+1, b)]
