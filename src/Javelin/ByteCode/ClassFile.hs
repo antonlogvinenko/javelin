@@ -2,7 +2,7 @@ module Javelin.ByteCode.ClassFile (parse, magicNumber, version, classBody)
 where
 
 import Data.Word (Word16, Word8)
-import Data.Map (fromList)
+import Data.Map (fromList, Map)
 import Control.Applicative
 import Data.Binary.Get
 import qualified Data.ByteString.Lazy as BS (pack, ByteString)
@@ -14,6 +14,7 @@ import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
 
 
+getInterface :: Get Word16
 getInterface = getWord
 
 classBody :: Get ClassBody
@@ -36,6 +37,7 @@ magicNumber = do
     then return 42
     else fail "Not a Java class format"
 
+classFlagsList :: Map Word16 ClassAccessFlags
 classFlagsList = fromList [(0x0001, ClassPublic), (0x0010, ClassFinal), (0x0020, ClassSuper),
                            (0x0200, ClassInterface), (0x0400, ClassAbstract),
                            (0x1000, ClassSynthetic), (0x2000, ClassAnn),

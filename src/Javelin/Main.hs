@@ -1,15 +1,11 @@
 module Javelin.Main
 where
 
-import Javelin.ByteCode.Utils
 import Javelin.ByteCode.DescSign
-import Data.Binary.Get
 import Javelin.ByteCode.ClassFile (parse)
-import Text.Parsec.Error
-import qualified Data.ByteString as BS (readFile, unpack, ByteString)
+import qualified Data.ByteString as BS (readFile, unpack)
 import System.Directory
 import System.Environment
-import System.IO
 import Control.Monad
 
 validate className = case className of
@@ -22,30 +18,28 @@ testClasses path = do
   let names = map (path ++) .
               filter (`notElem` [".", ".."]) $
               files
-  parsed <- sequence .
-            map (liftM validate . liftM parse . liftM BS.unpack . BS.readFile) $
-            names
-  return (map show $ zip names parsed, foldl (&&) True $ parsed)
+  parsed <- mapM (liftM (validate . parse . BS.unpack) . BS.readFile) names
+  return (zipWith (curry show) names parsed, and parsed)
 
 runClasses :: FilePath -> IO ()
 runClasses path = do
   (io, result) <- testClasses path
-  sequence_ $ map (putStrLn . show) io
+  mapM_ print io
   putStrLn $ ("All files passed: " ++) . show $ result
 
 runClass path = do
   bytestring <- BS.readFile path
   let words = BS.unpack bytestring
   case parse words of
-    Right (bs, off, v) -> putStrLn $ show v
-    Left (bs, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
+    Right (_, _, v) -> print v
+    Left (_, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
                                            -- show (take ((fromIntegral off) + 5) words),
                                             "\n",
                                            -- show (words !! ((fromIntegral off) - 1)),
                                             "\n"]
 
 runFunction arg = do
-  putStrLn $ show $ parseClassSignature arg
+  print $ parseClassSignature arg
 
 main = do
   args <- getArgs
