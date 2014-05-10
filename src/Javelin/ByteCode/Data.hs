@@ -2,7 +2,7 @@ module Javelin.ByteCode.Data
 where
   
 import Data.ByteString (ByteString)
-import Data.Word (Word32, Word16, Word8)
+import Data.Word (Word16, Word8)
 import Data.Int (Int32, Int64)
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}

@@ -1,16 +1,12 @@
 module Javelin.ByteCode.Utils
 where
 
-import Data.ByteString (ByteString, unpack, pack)
-import Data.Word (Word32, Word16, Word8)
-import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map(..), keys, lookup)
+import Data.ByteString (ByteString)
+import Data.Word (Word16)
+import qualified Data.Map.Lazy as Map (Map, keys, lookup)
 import Data.Bits
-import Data.Maybe
-import Control.Applicative
 import Data.Binary.Get
 import Data.ByteString.UTF8 (toString)
-
-import Javelin.ByteCode.Data
 import Debug.Trace
 
 getByte = getWord8

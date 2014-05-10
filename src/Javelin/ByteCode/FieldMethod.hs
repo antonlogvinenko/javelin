@@ -3,7 +3,6 @@ where
 
 import Data.Map.Lazy (Map, fromList)
 import Data.Word (Word16)
-import Control.Applicative
 import Data.Binary.Get
 
 import Javelin.ByteCode.Data

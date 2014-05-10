@@ -2,9 +2,8 @@ module Javelin.ByteCode.Attribute
 where
 
 import Data.ByteString (unpack)
-import Data.Word (Word32, Word16, Word8)
+import Data.Word (Word32, Word8)
 import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map, lookup)
-import Data.Maybe
 import Data.Binary.Get
 import Control.Applicative
 
@@ -28,7 +27,7 @@ getAttr pool = do
 
 parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
 parseAttr pool "Code" len = codeAttr pool len
-parseAttr pool text len = case Map.lookup text attrsNamesMap of
+parseAttr _ text len = case Map.lookup text attrsNamesMap of
   Just parser -> parser $ fromIntegral len
   Nothing -> do
     byteString <- getByteString $ fromIntegral len
@@ -118,21 +117,21 @@ parseVerifTypeInfo = do
 --   <-- VerifTypeInfo
 -- <- StackMapTable
 
-exceptionsAttr len = Exceptions <$> several getWord
+exceptionsAttr _ = Exceptions <$> several getWord
 
 innerClass = InnerClassInfo <$> getWord <*> getWord <*> getWord
               <*> (foldMask innerClassAccessFlagsMap <$> getWord)
-innerClassesAttr len = do
+innerClassesAttr _ = do
   innerClasses <- several innerClass
   return $ InnerClasses innerClasses
 
-enclosingMethodAttr len = EnclosingMethod <$> getWord <*> getWord
+enclosingMethodAttr _ = EnclosingMethod <$> getWord <*> getWord
 
-syntheticAttr len = return Synthetic
+syntheticAttr _ = return Synthetic
 
-signatureAttr len = Signature <$> getWord
+signatureAttr _ = Signature <$> getWord
 
-sourceFileAttr len = SourceFile <$> getWord
+sourceFileAttr _ = SourceFile <$> getWord
 
 sourceDebugExtensionAttr len = do
   byteString <- getByteString (fromIntegral len)
@@ -171,7 +170,7 @@ parseAnnAttr = Ann <$> getWord <*> several elementValuePairParser
 elementValuePairParser = ElementValuePair <$> getWord <*> elementValueParser
 elementValueParser = do
   tag <- getByteString 1
-  let tagChar = bytesToString tag !! 0
+  let tagChar = head $ bytesToString tag
   case take 1 . filter (elem tagChar . fst) $ elementValueParsersList of
     [(_, parser)] -> parser tagChar
     _ -> fail "Aaaa"
@@ -188,7 +187,7 @@ parseArrayValue tag = ElementArrayValue tag <$> several elementValueParser
 
 annDefaultAttr len = AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
 addDefauktAttr len = do
-  value <- getByteString $ len
+  value <- getByteString len
   let bytes = unpack value
   return $ AnnDefault bytes
 

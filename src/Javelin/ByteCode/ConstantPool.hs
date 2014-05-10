@@ -2,16 +2,14 @@ module Javelin.ByteCode.ConstantPool (getConstants)
 where
 
 import Data.Word (Word32, Word16, Word8)
-import Data.Map.Lazy (findWithDefault, fromList, Map(..))
+import Data.Map.Lazy (findWithDefault, fromList, Map)
 import Control.Applicative
-import Data.ByteString (ByteString)
 import Data.Binary.Get
 import Unsafe.Coerce
 
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 
-import Debug.Trace
 
 getConstants 1 = return []
 getConstants len = do
@@ -43,7 +41,7 @@ constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser),
 utf8InfoParser :: Get Constant
 utf8InfoParser = do
   byteStringLen <- getWord
-  byteString <- getByteString $ fromIntegral $ byteStringLen
+  byteString <- getByteString $ fromIntegral byteStringLen
   return $ Utf8Info $ bytesToString byteString
 
 twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Get Constant

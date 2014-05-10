@@ -1,11 +1,11 @@
 module Javelin.ByteCode.ClassFile (parse, magicNumber, version, classBody)
 where
 
-import Data.Word (Word32, Word16, Word8)
+import Data.Word (Word16, Word8)
 import Data.Map (fromList)
 import Control.Applicative
 import Data.Binary.Get
-import qualified Data.ByteString.Lazy as BS (unpack, pack, length, ByteString)
+import qualified Data.ByteString.Lazy as BS (pack, ByteString)
 
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
@@ -13,7 +13,6 @@ import Javelin.ByteCode.ConstantPool
 import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
 
-import Debug.Trace (trace)
 
 getInterface = getWord
 
@@ -58,5 +57,4 @@ parseByteCode = do
   return $ ByteCode minor major body
 
 parse :: [Word8] -> Either (BS.ByteString, ByteOffset, String) (BS.ByteString, ByteOffset, ByteCode)
-parse bytes = do
-  runGetOrFail parseByteCode $ BS.pack bytes
+parse bytes = runGetOrFail parseByteCode $ BS.pack bytes
