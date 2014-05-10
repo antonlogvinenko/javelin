@@ -32,7 +32,6 @@ data Frame = Frame { locals :: Locals,
                      pool :: ConstantPool }
              deriving (Show, Eq)
 
-
 -- Bytes storage order
 
 class BytesContainer c where
@@ -123,7 +122,6 @@ jfloat :: (BytesContainer c) => Int -> c -> JFloat
 jfloat = fetchBytes 8
 jdouble :: (BytesContainer c) => Int -> c -> JDouble
 jdouble = fetchBytes 8
-
 
 
 -- Instructions DSL

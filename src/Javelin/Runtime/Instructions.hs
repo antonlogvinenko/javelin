@@ -4,11 +4,11 @@ where
 import Javelin.Runtime.Thread (JByte, JShort, JInt, JLong, JBoolean, JChar, JDouble, JFloat, JRaw,
                                jbyte, jshort, jint, jlong, jboolean, jchar, jdouble, jfloat, jraw,
                                remove, peek, arg, push, pushn, pop, popn, store, load, signExtend,
+                               empty, Instruction(..)
                                )
 import qualified Data.Map.Lazy as Map (fromList, Map)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Bits ((.|.), (.&.), xor)
-import Javelin.Runtime.Thread (empty, Instruction(..))
 
 
 type ArgumentsParser = [Word8] -> [Word8]
@@ -19,7 +19,7 @@ dummy :: ArgumentsParser
 dummy = undefined
 
 noarg :: ArgumentsParser
-noarg = \_ -> []
+noarg = const []
 
 
 -- Instructions implementation

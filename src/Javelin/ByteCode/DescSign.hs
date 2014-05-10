@@ -5,9 +5,8 @@ import Javelin.ByteCode.Data
 import Text.ParserCombinators.Parsec.Prim
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Combinator
-import Text.Parsec.Error
 import Control.Applicative ((<$), (<$>), (<*), (<*>), (*>))
-import Text.ParserCombinators.Parsec.Combinator (endBy, sepBy)
+
 
 parseFieldDescriptor = parse fieldDescriptorP ""
 parseMethodDescriptor = parse methodDescriptorP ""
