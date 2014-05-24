@@ -26,7 +26,7 @@ getFieldMethod :: Map Word16 flag ->
                   ([flag] -> Word16 -> Word16 -> [AttrInfo] -> x) ->
                   [Constant]
                   -> Get x
-
+                  
 getFieldMethod accessFlags constr pool = do
   maskBytes <- getWord
   let mask = foldMask accessFlags maskBytes
