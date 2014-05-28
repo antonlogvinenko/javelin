@@ -27,7 +27,7 @@ getConstant = do
   findWithDefault (failingConstParser tag) tag constantTypeParser
 
 failingConstParser :: Word8 -> Get Constant
-failingConstParser x = fail $ "Undefined constant with index " ++ (show x) ++ "\n"
+failingConstParser x = fail $ "Undefined constant with index " ++ show x ++ "\n"
 
 constantTypeParser :: Map Word8 (Get Constant)
 constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser),

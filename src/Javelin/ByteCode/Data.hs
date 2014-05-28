@@ -7,7 +7,9 @@ import Data.Int (Int32, Int64)
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
               deriving (Show, Eq)
-data ClassBody = ClassBody { constPool :: [Constant],
+type ConstantPool = [Constant]
+
+data ClassBody = ClassBody { constPool :: ConstantPool,
                              classAccessFlags :: [ClassAccessFlags],
                              this :: Word16,
                              super :: Word16,

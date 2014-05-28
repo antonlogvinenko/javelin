@@ -25,6 +25,7 @@ library
                      Javelin.ByteCode.DescSign,
                      Javelin.Runtime.Instructions,
                      Javelin.Runtime.Thread,
+                     Javelin.Runtime.LLI.Loading,
                      Javelin.Main
 -- ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
