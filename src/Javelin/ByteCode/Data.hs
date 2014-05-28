@@ -29,12 +29,13 @@ data Constant = Utf8Info { stringValue :: String }
               | FloatInfo { float :: Float }
               | LongInfo { long :: Int64 }
               | DoubleInfo { double :: Double }
-              | ClassInfo { nameIndex :: Word16 }
               | StringInfo { stringIndex :: Word16 }
+              | ClassInfo { nameIndex :: Word16 }
               | NameAndTypeInfo { nameIndex :: Word16, nameAndTypeDescriptorIndex :: Word16 }
               | Fieldref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | Methodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
               | InterfaceMethodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
+
               | MethodHandleInfo { referenceKind :: Word8, referenceIndex :: Word16 }
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
               | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Show, Eq)
@@ -62,7 +63,6 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodBridge | MethodVarargs | MethodNative
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
-
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
               | ConstantValue { constantValueIndex :: Word16 }
