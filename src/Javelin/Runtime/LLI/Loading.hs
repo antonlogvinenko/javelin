@@ -7,7 +7,9 @@ import Data.Word (Word16)
 import Data.Map.Lazy (fromList, Map, insert)
 import Control.Applicative ((<$>))
 
--- Derived datatypes
+
+
+-- Derivation datatypes
 
 type DerivedPool = Map Int SymbolicReference
 
@@ -27,6 +29,7 @@ data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
 data PartReference = PartReference { partName :: String,
                                      partDescriptor :: String,
                                      ownerName :: String }
+
 
 
 -- Derivation
