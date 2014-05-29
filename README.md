@@ -53,3 +53,4 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Changes in descriptor and signatures terminology (refactoring)
 
 Don't wanna lose this: http://dev.stephendiehl.com/hask/
+And this http://blog.jle.im/entry/inside-my-world-ode-to-functor-and-monad

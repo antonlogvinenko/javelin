@@ -64,6 +64,7 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
 
+
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
               | ConstantValue { constantValueIndex :: Word16 }
               | CodeAttr { maxStack :: Word16,
