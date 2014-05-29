@@ -3,16 +3,73 @@ where
 
 import Javelin.ByteCode.Data
 import Data.Int (Int32, Int64)
+import Data.Word (Word16)
+import Data.Map.Lazy (fromList, Map, insert)
+import Control.Applicative ((<$>))
+
+-- Derived datatypes
+
+type DerivedPool = Map Int SymbolicReference
+
+data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
+                       | FieldReference { field :: PartReference }
+                       | ClassMethodReference { classMethod :: PartReference }
+                       | InterfaceMethodReference { interfaceMethod :: PartReference }
+                       | MethodHandleReference
+                       | MethodTypeReference { typeReference :: String }
+                       | CallSiteSpecifierReference
+                       | StringLiteral { string :: String }
+                       | DoubleLiteral { double :: Double }
+                       | FloatLiteral { float :: Float }
+                       | IntegerLiteral { integer :: Int32 }
+                       | LongLiteral { long :: Int64 }
+
+data PartReference = PartReference { partName :: String,
+                                     partDescriptor :: String,
+                                     ownerName :: String }
 
 
--- Some basics
+-- Derivation
 
-type Derive a = ConstantPool -> Int -> Maybe a
+derivePool :: ConstantPool -> DerivedPool
+derivePool p = deriveReduce p (length p - 1) $ fromList []
+
+deriveReduce :: ConstantPool -> Int -> DerivedPool -> DerivedPool
+deriveReduce _ (-1) d = d
+deriveReduce p i d = deriveReduce p (i - 1) d2
+  where item = p !! i
+        d2 = case deriveReference p item of
+          Just ref -> insert i ref d
+          Nothing -> d
+
+deriveReference :: ConstantPool -> Constant -> Maybe SymbolicReference
+deriveReference p c = case c of
+  ClassInfo idx ->
+    ClassOrInterface <$> deriveUtf8 p idx
+  Fieldref classIdx typeIdx ->
+    FieldReference <$> deriveFromClass classIdx typeIdx p
+  Methodref classIdx typeIdx ->
+    ClassMethodReference <$> deriveFromClass classIdx typeIdx p
+  InterfaceMethodref classIdx typeIdx ->
+    InterfaceMethodReference <$> deriveFromClass classIdx typeIdx p
+  MethodHandleInfo x y -> undefined
+  MethodTypeInfo idx -> MethodTypeReference <$> deriveUtf8 p idx
+  InvokeDynamicInfo x y -> undefined
+  StringInfo idx -> StringLiteral <$> deriveUtf8 p idx
+  DoubleInfo val -> Just $ DoubleLiteral val
+  FloatInfo val -> Just $ FloatLiteral val
+  LongInfo val -> Just $ LongLiteral val
+  IntegerInfo val -> Just $ IntegerLiteral val
+  _ -> Nothing
+
+
+
+-- Derivation utility functions
 
 (!?) :: (Integral i) => [a] -> i -> Maybe a
 arr !? idx = undefined
 
-deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> Maybe (String, String, String)
+deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> Maybe PartReference
 deriveFromClass classIdx typeIdx p = do
   classInfo <- p !? classIdx
   nameAndTypeInfo <- p !? typeIdx
@@ -22,59 +79,16 @@ deriveFromClass classIdx typeIdx p = do
       methodName <- p !? methodNameIdx
       descriptor <- p!? descriptorIdx
       case (className, methodName, descriptor) of
-        (Utf8Info a, Utf8Info b, Utf8Info c) -> return (a, b, c)
+        (Utf8Info a, Utf8Info b, Utf8Info c) -> return $ PartReference a b c
         _ -> Nothing
     _ -> Nothing
 
-deriveClassInterface :: Derive (String, String, String)
-deriveClassInterface = undefined
-
-deriveField :: Derive (String, String, String)
-deriveField p i = do
-  fieldref <- p !? i
-  case fieldref of
-    Fieldref classIdx typeIdx -> deriveFromClass classIdx typeIdx p
-    _ -> Nothing
-
-deriveClassMethod :: Derive (String, String, String)
-deriveClassMethod p i = do
-  classMethodref <- p !? i
-  case classMethodref of
-    Methodref classIdx typeIdx -> deriveFromClass classIdx typeIdx p
-    _ -> Nothing
-
-deriveInterfaceMethod :: Derive (String, String, String)
-deriveInterfaceMethod p i = do
-  interfaceMethodRef <- p !? i
-  case interfaceMethodRef of
-    InterfaceMethodref classIndex typeIndex -> deriveFromClass classIndex typeIndex p
+deriveUtf8 :: ConstantPool -> Word16 -> Maybe String
+deriveUtf8 p idx = do
+  name <- p !? idx
+  case name of
+    Utf8Info name -> Just name
     _ -> Nothing
     
-deriveMethodHandle = undefined
 
-deriveMethodType :: Derive String
-deriveMethodType p i = case p !! i of
-  MethodTypeInfo idx -> case p !! fromIntegral idx of
-    Utf8Info x -> Just x
-    _ -> Nothing
-  _ -> Nothing
 
-deriveCallSiteSpecifier = undefined
-
-deriveStringLiteral :: Derive String
-deriveStringLiteral p i = case p !! i of
-  Utf8Info x -> Just x
-  _ -> Nothing
-
-data NumericLiteral = DoubleLiteral { getDouble :: Double }
-                    | FloatLiteral { getFloat :: Float }
-                    | IntegerLiteral { getInteger :: Int32 }
-                    | LongLiteral { getLong :: Int64 }
-
-deriveNumericLiteral :: Derive NumericLiteral
-deriveNumericLiteral p i = case p !! i of
-  DoubleInfo x -> Just $ DoubleLiteral x
-  FloatInfo x -> Just $ FloatLiteral x
-  LongInfo x -> Just $ LongLiteral x
-  IntegerInfo x -> Just $ IntegerLiteral x
-  _ -> Nothing
