@@ -5,7 +5,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Long term*
 * Bytecode parser [**Done**]
 * Runtime data structures [**In progress**]
-* Linking/loading [** In progress**]
+* Linking/loading [**In progress**]
 * Execution (everything but invokedynamic & verification)
 * Garbage collection
 * Bytecode verification, invokedynamic

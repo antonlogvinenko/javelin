@@ -9,4 +9,4 @@ bootstrap className runtime = runtime
 
 runJVM :: String -> [String] -> Trace
 runJVM className mainArgs = let runtime = bootstrap className newRuntime
-                            in startWithMain runtime className mainArgs
+                            in startWithMain runtime className mainArgs True
