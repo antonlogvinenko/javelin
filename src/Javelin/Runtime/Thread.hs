@@ -10,12 +10,30 @@ import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray (Array, (!), (//))
 import Data.Binary.IEEE754 (floatToWord, doubleToWord)
 import Data.Bits (rotate)
-import Data.Map.Lazy as Map (Map)
+import Data.Map.Lazy as Map (fromList, Map)
 
 import Javelin.ByteCode.Data (Constant)
 import Javelin.Runtime.LLI.Loading
 
 -- Runtime data structures
+
+startWithMain :: Runtime -> String -> [String] -> ()
+startWithMain runtime mainClass mainArgs = undefined
+
+newRuntime :: Runtime
+newRuntime = let emptyMethodArea = fromList []
+                 emptyHeap = []
+                 emptyMemory = Memory emptyMethodArea emptyHeap
+                 threads = []
+             in Runtime emptyMemory threads
+
+data Execution = Execution { runtime :: Runtime,
+                             currentThread :: Thread }
+               deriving (Show, Eq)
+
+data Runtime = Runtime { memory :: Memory,
+                         threads :: [Thread] }
+             deriving (Show, Eq)
 
 data Memory = Memory { methodArea :: Map String DerivedPool,
                        heap :: [JObject] }
@@ -35,12 +53,16 @@ data JValue = JInt { getInt :: Int32 }
 type ProgramCounter = Integer
 type FrameStack = [Frame]
 
+newThread = Thread 0 []
+
 data Thread = Thread { pc :: ProgramCounter,
                        frames :: FrameStack }
               deriving (Show, Eq)
 
 type ConstantPool = [Constant]
-data Frame = Frame { locals :: Locals,
+data Frame = Frame { currentClass :: Integer,
+                     currentMethod :: Integer,
+                     locals :: Locals,
                      operands :: [StackElement],
                      pool :: ConstantPool }
              deriving (Show, Eq)
