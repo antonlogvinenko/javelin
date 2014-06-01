@@ -16,7 +16,7 @@ import Javelin.ByteCode.Data (Constant)
 
 -- Runtime data structures
 
-data Memory = Memory
+data Memory = Memory { methodArea :: Int }
             deriving (Show, Eq)
 
 type ProgramCounter = Integer
