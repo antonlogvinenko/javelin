@@ -12,7 +12,6 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Short term: Runtime data structures*
 * bind runJVM with main function in some mode
-* how to collect trace from other Threads?
 * execute function must optionally collect trace of execution in some way
  ** pass collecting function?
  ** use State monad on final instructions? (not in instruction DSL)
@@ -20,7 +19,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
  ** Should "state" result of executing Instruction monad contain description of action?
  ** Should "state" result of executing Instruciton implementation contain description?
 * implement bootstrap method: loading, linking, initializing
-* Some transactional access to memory?
+* how to collect trace from other Threads?
 * --bootstrap classpath argument
 
 Excluding for now:
@@ -28,7 +27,7 @@ Excluding for now:
 * exceptions
 * synchronization
 * invokedynamic
-* multiple threads
+* multiple threads (transactional access to memory)
 * user derined class loaders (only boostrap)
 
 * Memory access for instructions
