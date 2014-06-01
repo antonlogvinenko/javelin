@@ -17,13 +17,21 @@ import Javelin.Runtime.LLI.Loading
 
 -- Runtime data structures
 
-startWithMain :: Runtime -> String -> [String] -> ()
+data Trace = Trace
+
+startWithMain :: Runtime -> String -> [String] -> Trace
 startWithMain runtime mainClass mainArgs = let frame = Frame 0 0 undefined [] []
                                                thread = Thread 0 [frame]
                                            in execute $ Execution runtime thread
 
-execute :: Execution -> ()
-execute ex = ()
+execute :: Execution -> Trace
+execute e = step e Trace
+
+step :: Execution -> Trace -> Trace
+step e t = let e2 = undefined -- execute single step
+               t1 = undefined -- find trace
+               t2 = undefined -- combing t and t1
+           in step e2 t2 -- recursively
 
 newRuntime :: Runtime
 newRuntime = let emptyMethodArea = fromList []
