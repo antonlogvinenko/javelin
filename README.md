@@ -11,21 +11,22 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* Rewrite Thread with Execution in Thread.hs, where Execution = { Runtime, Thread }
+* bind runJVM with main function in some mode
+* how to collect trace from other Threads?
 * execute function must optionally collect trace of execution in some way
  ** pass collecting function?
  ** use State monad on final instructions? (not in instruction DSL)
  ** how to write step with State monad?
  ** Should "state" result of executing Instruction monad contain description of action?
  ** Should "state" result of executing Instruciton implementation contain description?
-* implement bootstrap method
-* implement class loading
-* implement linking, initializing
+* implement bootstrap method: loading, linking, initializing
 * Some transactional access to memory?
+* --bootstrap classpath argument
 
 Excluding for now:
-* all verifications
+* verification
 * exceptions
+* synchronization
 * invokedynamic
 * multiple threads
 * user derined class loaders (only boostrap)

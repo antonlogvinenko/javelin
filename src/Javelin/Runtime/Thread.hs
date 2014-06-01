@@ -19,20 +19,16 @@ import Javelin.Runtime.LLI.Loading
 
 data Trace = Trace
 
-startWithMain :: Runtime -> String -> [String] -> Bool -> Trace
-startWithMain runtime mainClass mainArgs tracing = let frame = Frame 0 0 undefined [] []
-                                                       thread = Thread 0 [frame]
-                                                       execution = Execution runtime thread
-                                                   in execute execution tracing Trace
 
-execute :: Execution -> Bool -> Trace -> Trace
+
+execute :: Thread -> Bool -> Trace -> Trace
 execute execution tracing trace1 = let execution2 = undefined -- execute single step
                                        trace1 = undefined -- find trace
                                        trace2 = undefined -- combing t and t1
                                    in execute execution2 tracing trace2 -- recursively
 
 -- execute next command, increment PC
-step :: Execution -> Execution
+step :: Thread -> Thread
 step e = e
 
 
@@ -42,10 +38,6 @@ newRuntime = let emptyMethodArea = fromList []
                  emptyMemory = Memory emptyMethodArea emptyHeap
                  threads = []
              in Runtime emptyMemory threads
-
-data Execution = Execution { runtime :: Runtime,
-                             currentThread :: Thread }
-               deriving (Show, Eq)
 
 data Runtime = Runtime { memory :: Memory,
                          threads :: [Thread] }
@@ -69,9 +61,10 @@ data JValue = JInt { getInt :: Int32 }
 type ProgramCounter = Integer
 type FrameStack = [Frame]
 
-newThread = Thread 0 []
+newThread = Thread newRuntime 0 []
 
-data Thread = Thread { pc :: ProgramCounter,
+data Thread = Thread { runtime :: Runtime,
+                       pc :: ProgramCounter,
                        frames :: FrameStack }
               deriving (Show, Eq)
 
@@ -184,7 +177,8 @@ getFrame :: Thread -> Frame
 getFrame = (!!0) . frames
 
 updFrame :: Thread -> (Frame -> Frame) -> Thread
-updFrame t@(Thread {frames = (tframe:tframes)}) f = t {frames = f tframe : tframes}
+updFrame t@(Thread {frames = (tframe:tframes)}) f =
+  t {frames = f tframe : tframes}
 
 getStack :: Thread -> [StackElement]
 getStack = operands . getFrame
