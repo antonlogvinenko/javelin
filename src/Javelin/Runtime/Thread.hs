@@ -5,18 +5,31 @@ import Control.Monad.State.Lazy (State, state)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Binary.Put
 import Data.Binary.Get (getWord64be, runGet)
-import Data.ByteString.Lazy (pack, ByteString)
+import Data.ByteString.Lazy (pack)
 import Data.Int (Int8, Int16, Int32, Int64)
-import Data.Array.IArray (Array, array, (!), (//))
+import Data.Array.IArray (Array, (!), (//))
 import Data.Binary.IEEE754 (floatToWord, doubleToWord)
 import Data.Bits (rotate)
+import Data.Map.Lazy as Map (Map)
 
 import Javelin.ByteCode.Data (Constant)
-
+import Javelin.Runtime.LLI.Loading
 
 -- Runtime data structures
 
-data Memory = Memory { methodArea :: Int }
+data Memory = Memory { methodArea :: Map String DerivedPool,
+                       heap :: [JObject] }
+            deriving (Show, Eq)
+
+type JObject = Map String JValue
+data JValue = JInt { getInt :: Int32 }
+            | JLong { getLong :: Int64 }
+            | JBoolean { getBoolean :: Int32}
+            | JShort { getShort :: Int16 }
+            | JByte { getByte :: Int8 }
+            | JDouble { getDouble :: Double }
+            | JFloat { getFloat :: Float }
+            | JReference { getReference :: Integer }
             deriving (Show, Eq)
 
 type ProgramCounter = Integer

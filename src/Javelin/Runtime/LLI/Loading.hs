@@ -25,10 +25,12 @@ data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
                        | FloatLiteral { float :: Float }
                        | IntegerLiteral { integer :: Int32 }
                        | LongLiteral { long :: Int64 }
+                       deriving (Show, Eq)
 
 data PartReference = PartReference { partName :: String,
                                      partDescriptor :: String,
                                      ownerName :: String }
+                   deriving (Show, Eq)
 
 
 
