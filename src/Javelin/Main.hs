@@ -7,6 +7,7 @@ import qualified Data.ByteString as BS (readFile, unpack)
 import System.Directory
 import System.Environment
 import Control.Monad
+import Javelin.Runtime.LLI.Bootstrap (runJVM)
 
 validate className = case className of
     Right _ -> True
@@ -44,10 +45,11 @@ runFunction arg = do
 main = do
   args <- getArgs
   if length args < 2
-    then putStrLn "Specify running mode: [f|c|cs] for function/class/classes and mode argument"
-    else let arg0 = args !! 0
-             arg1 = args !! 1
+    then putStrLn "Specify running mode: [f|c|cs|jvm] for function/class/classes and mode argument"
+    else let (arg0:arg1:restArgs) = args
          in case arg0 of
            "f" -> runFunction arg1
            "c" -> runClass arg1
            "cs" -> runClasses arg1
+           "jvm" -> let traces = runJVM arg1 restArgs
+                    in print traces

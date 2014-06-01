@@ -17,7 +17,7 @@ import Javelin.Runtime.LLI.Loading
 
 -- Runtime data structures
 
-data Trace = Trace
+data Trace = Trace deriving (Show, Eq)
 
 
 
