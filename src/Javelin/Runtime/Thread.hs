@@ -18,7 +18,12 @@ import Javelin.Runtime.LLI.Loading
 -- Runtime data structures
 
 startWithMain :: Runtime -> String -> [String] -> ()
-startWithMain runtime mainClass mainArgs = undefined
+startWithMain runtime mainClass mainArgs = let frame = Frame 0 0 undefined [] []
+                                               thread = Thread 0 [frame]
+                                           in execute $ Execution runtime thread
+
+execute :: Execution -> ()
+execute ex = ()
 
 newRuntime :: Runtime
 newRuntime = let emptyMethodArea = fromList []

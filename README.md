@@ -5,18 +5,21 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Long term*
 * Bytecode parser [**Done**]
 * Runtime data structures [**In progress**]
-* Linking/loading
+* Linking/loading [** In progress**]
 * Execution (everything but invokedynamic & verification)
 * Garbage collection
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* Arguments length: varying amount?
+* Rewrite Thread with Execution in Thread.hs, where Execution = { Runtime, Thread }
+* execute function must optionally collect trace of execution in some way
+* implement bootstrap method
+* implement class loading (not linking and initialization for now)
 
+* Arguments length: varying amount?
 * implement Constants, loads, stores, math, conversions, comparisons, extended, reserved
 * unsigned byte, other types operated indirectly
 * conversion i2l, etc?
-
 * implement Control, references
 * implement return, exceptions, monitors, memory access
 
