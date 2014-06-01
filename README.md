@@ -11,8 +11,8 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* implement bootstrap method: loading, linking, initializing
 * --bootstrap classpath argument
+* implement bootstrap method: loading, linking, initializing
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 
 Next: collecting instructions

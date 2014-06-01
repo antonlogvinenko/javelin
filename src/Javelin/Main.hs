@@ -45,11 +45,12 @@ runFunction arg = do
 main = do
   args <- getArgs
   if length args < 2
-    then putStrLn "Specify running mode: [f|c|cs|jvm] for function/class/classes and mode argument"
+    then putStrLn "Specify mode: [f|c|cs|jvm] for function/class/classes and mode argument"
     else let (arg0:arg1:restArgs) = args
          in case arg0 of
            "f" -> runFunction arg1
            "c" -> runClass arg1
            "cs" -> runClasses arg1
-           "jvm" -> let traces = runJVM arg1 restArgs
+           "jvm" -> let (classPath:mainArgs) = restArgs
+                        traces = runJVM classPath arg1 mainArgs
                     in print traces
