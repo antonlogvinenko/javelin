@@ -13,8 +13,31 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term: Runtime data structures*
 * Rewrite Thread with Execution in Thread.hs, where Execution = { Runtime, Thread }
 * execute function must optionally collect trace of execution in some way
+ ** pass collecting function?
+ ** use State monad on final instructions? (not in instruction DSL)
+ ** how to write step with State monad?
+ ** Should "state" result of executing Instruction monad contain description of action?
+ ** Should "state" result of executing Instruciton implementation contain description?
 * implement bootstrap method
-* implement class loading (not linking and initialization for now)
+* implement class loading
+* implement linking, initializing
+* Some transactional access to memory?
+
+Excluding for now:
+* all verifications
+* exceptions
+* invokedynamic
+* multiple threads
+* user derined class loaders (only boostrap)
+
+* Memory access for instructions
+* DSL implementation for arguments and reading commands
+* Reference type
+* MVP: run a trivial main class
+    * Write java Main class, compile, find out commands
+    * Program commands
+    * Program execution of commands
+    * Write trivial class loading and what it takes to execute a static main method
 
 * Arguments length: varying amount?
 * implement Constants, loads, stores, math, conversions, comparisons, extended, reserved
@@ -23,21 +46,11 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * implement Control, references
 * implement return, exceptions, monitors, memory access
 
-* Memory access for instructions
-* DSL implementation for arguments and reading commands
-* Reference type
-* Chapters 3, 5 from JVM spec
-* MVP: run a trivial main class
-    * Write java Main class, compile, find out commands
-    * Program commands
-    * Program execution of commands
-    * Write trivial class loading and what it takes to execute a static main method
-* next: linking, general class loading, native api
-    
 *Javelin deferred tasks*
 * need more unit testing for bytecode parser
 
-*Possible offspring projects"
+*Possible offspring projects
+* Viewing step by step bytecode execution interactively
 * UI for viewing bytecode
 * Disassembler
 * Decompiler?
