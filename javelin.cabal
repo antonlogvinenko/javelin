@@ -28,6 +28,7 @@ library
                      Javelin.Runtime.LLI.Loading,
                      Javelin.Runtime.LLI.Linking,
                      Javelin.Runtime.LLI.Initializing,
+                     Javelin.Runtime.LLI.Bootstrap,
                      Javelin.Main
 -- ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
