@@ -12,15 +12,18 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Short term: Runtime data structures*
 * bind runJVM with main function in some mode
+* implement bootstrap method: loading, linking, initializing
+* --bootstrap classpath argument
+* ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
+
+Next: collecting instructions
 * execute function must optionally collect trace of execution in some way
  ** pass collecting function?
  ** use State monad on final instructions? (not in instruction DSL)
  ** how to write step with State monad?
  ** Should "state" result of executing Instruction monad contain description of action?
  ** Should "state" result of executing Instruciton implementation contain description?
-* implement bootstrap method: loading, linking, initializing
 * how to collect trace from other Threads?
-* --bootstrap classpath argument
 
 Excluding for now:
 * verification
