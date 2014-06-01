@@ -19,19 +19,22 @@ import Javelin.Runtime.LLI.Loading
 
 data Trace = Trace
 
-startWithMain :: Runtime -> String -> [String] -> Trace
-startWithMain runtime mainClass mainArgs = let frame = Frame 0 0 undefined [] []
-                                               thread = Thread 0 [frame]
-                                           in execute $ Execution runtime thread
+startWithMain :: Runtime -> String -> [String] -> Bool -> Trace
+startWithMain runtime mainClass mainArgs tracing = let frame = Frame 0 0 undefined [] []
+                                                       thread = Thread 0 [frame]
+                                                       execution = Execution runtime thread
+                                                   in execute execution tracing Trace
 
-execute :: Execution -> Trace
-execute e = step e Trace
+execute :: Execution -> Bool -> Trace -> Trace
+execute execution tracing trace1 = let execution2 = undefined -- execute single step
+                                       trace1 = undefined -- find trace
+                                       trace2 = undefined -- combing t and t1
+                                   in execute execution2 tracing trace2 -- recursively
 
-step :: Execution -> Trace -> Trace
-step e t = let e2 = undefined -- execute single step
-               t1 = undefined -- find trace
-               t2 = undefined -- combing t and t1
-           in step e2 t2 -- recursively
+-- execute next command, increment PC
+step :: Execution -> Execution
+step e = e
+
 
 newRuntime :: Runtime
 newRuntime = let emptyMethodArea = fromList []
