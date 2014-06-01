@@ -33,7 +33,6 @@ data PartReference = PartReference { partName :: String,
                    deriving (Show, Eq)
 
 
-
 -- Derivation
 
 derivePool :: ConstantPool -> DerivedPool

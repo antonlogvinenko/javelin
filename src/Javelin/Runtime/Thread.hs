@@ -33,13 +33,25 @@ step e = e
 
 
 newRuntime :: Runtime
-newRuntime = let emptyMethodArea = fromList []
-                 emptyHeap = []
-                 emptyMemory = Memory emptyMethodArea emptyHeap
-                 threads = []
-             in Runtime emptyMemory threads
+newRuntime = let emptyMemory = Memory (fromList []) []
+                 emptyThreads = []
+                 classLoadingInfo = fromList []
+             in Runtime [BootstrapClassLoader] classLoadingInfo emptyMemory emptyThreads
 
-data Runtime = Runtime { memory :: Memory,
+data ClassLoader = BootstrapClassLoader
+                 | UserDefinedClassLoader { className :: String,
+                                            instanceReference :: Integer }
+                 deriving (Show, Eq)
+
+data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
+                                          initiating :: Integer,
+                                          runtimePackage :: (String, Integer),
+                                          loadingState :: Integer }
+                      deriving (Show, Eq)
+
+data Runtime = Runtime { classLoaders :: [ClassLoader],
+                         classLoading :: Map.Map String ClassLoadingInfo,
+                         memory :: Memory,
                          threads :: [Thread] }
              deriving (Show, Eq)
 
