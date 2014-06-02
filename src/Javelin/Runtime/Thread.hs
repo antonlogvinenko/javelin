@@ -33,10 +33,9 @@ step e = e
 
 
 newRuntime :: Runtime
-newRuntime = let emptyMemory = Memory (fromList []) []
-                 emptyThreads = []
+newRuntime = let emptyThreads = []
                  classLoadingInfo = fromList []
-             in Runtime [BootstrapClassLoader] classLoadingInfo emptyMemory emptyThreads
+             in Runtime [BootstrapClassLoader] classLoadingInfo (fromList []) [] emptyThreads
 
 data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { className :: String,
@@ -51,13 +50,10 @@ data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
 
 data Runtime = Runtime { classLoaders :: [ClassLoader],
                          classLoading :: Map.Map String ClassLoadingInfo,
-                         memory :: Memory,
+                         methodArea :: Map String DerivedPool,
+                         heap :: [JObject],
                          threads :: [Thread] }
              deriving (Show, Eq)
-
-data Memory = Memory { methodArea :: Map String DerivedPool,
-                       heap :: [JObject] }
-            deriving (Show, Eq)
 
 type JObject = Map String JValue
 data JValue = JInt { getInt :: Int32 }
