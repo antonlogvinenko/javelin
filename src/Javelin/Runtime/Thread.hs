@@ -22,10 +22,10 @@ data Trace = Trace deriving (Show, Eq)
 
 
 execute :: Thread -> Bool -> Trace -> Trace
-execute execution tracing trace1 = let execution2 = undefined -- execute single step
-                                       trace1 = undefined -- find trace
-                                       trace2 = undefined -- combing t and t1
-                                   in execute execution2 tracing trace2 -- recursively
+execute execution tracing trace = let execution2 = undefined -- execute single step
+                                      trace1 = undefined -- find trace
+                                      trace2 = undefined -- combing t and t1
+                                  in execute execution2 tracing trace2 -- recursively
 
 -- execute next command, increment PC
 step :: Thread -> Thread

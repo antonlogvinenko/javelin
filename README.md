@@ -11,9 +11,8 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* method area, constant pool structures?
-* init thread stack to run Main { public static void main(Sting...) }
 * find classes in bootstrap classpath by name, load bytes and parse (.class files)
+* init thread stack to run Main { public static void main(Sting...) }
 * implement bootstrap method: loading, linking, initializing
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 
