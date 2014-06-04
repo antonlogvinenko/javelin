@@ -1,0 +1,28 @@
+module Javelin.Runtime.LLI.ClassPath
+
+where
+
+import Control.Monad (forM)
+import System.Directory (getDirectoryContents, doesDirectoryExist)
+import System.FilePath ((</>))
+
+getRealFiles :: FilePath -> IO [FilePath]
+getRealFiles dir = do
+  contents <- getDirectoryContents dir
+  return $ map (dir </>) $ filter (`notElem` [".", ".."]) contents
+
+getClassPathFiles :: FilePath -> IO [FilePath]
+getClassPathFiles dir = do
+  files <- getRealFiles dir
+  -- doing [FilesPaths] -> (FilePath -> IO [FilePath]) -> IO [[FilePath]]
+  allFiles <- forM files weNeedToGoDeeper
+  return $ concat allFiles
+
+weNeedToGoDeeper :: FilePath -> IO [FilePath]
+weNeedToGoDeeper path = do
+  isDirectory <- doesDirectoryExist path
+  if isDirectory
+    then getClassPathFiles path
+    else return [path]
+  
+  
