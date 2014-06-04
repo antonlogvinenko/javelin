@@ -2,10 +2,12 @@ module Javelin.Runtime.LLI.ClassPath
 
 where
 
+import Data.ByteString (ByteString)
 import Control.Monad (forM)
 import Control.Applicative ((<*>), (<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
+import Data.Map.Lazy as Map (Map)
 
 getClassPathFiles :: FilePath -> IO [FilePath]
 getClassPathFiles dir = do
@@ -23,5 +25,13 @@ weNeedToGoDeeper path = do
   if isDirectory
     then getClassPathFiles path
     else return [path]
+
+data ClassSource = JarFile { getPath :: FilePath }
+                 | ClassFile { getPath :: FilePath }
+                 deriving (Show, Eq)
   
-  
+getClassSourcesLayout :: FilePath -> Map String ClassSource
+getClassSourcesLayout = undefined
+
+getClassBytes :: ClassSource -> ByteString
+getClassBytes = undefined
