@@ -6,7 +6,8 @@ import Javelin.Runtime.LLI.ClassPath
 
 main :: IO ()
 main = do
-  --files <- getClassPathFiles "/Users/anton/Documents"
---  print files
+  files <- getClassSourcesLayout "/Users/anton/dev/haskell/javelin/acceptance"
+           --"/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/jre/lib/"
+  print files
   putStrLn "Running from outside of the box"
 --  M.main
