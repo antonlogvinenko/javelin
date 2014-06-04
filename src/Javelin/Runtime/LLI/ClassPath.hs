@@ -15,8 +15,7 @@ getClassPathFiles dir = do
   return $ concat allFiles
 
 getRealFiles :: FilePath -> IO [FilePath]
-getRealFiles dir = do
-  map (dir </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents dir
+getRealFiles dir = map (dir </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents dir
 
 weNeedToGoDeeper :: FilePath -> IO [FilePath]
 weNeedToGoDeeper path = do
