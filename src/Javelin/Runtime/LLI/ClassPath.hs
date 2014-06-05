@@ -11,6 +11,8 @@ import Data.ByteString as BS (readFile)
 import Data.Map.Lazy as Map (Map, fromList, (!), lookup)
 import Data.List
 
+import Control.Monad.Trans
+import Control.Monad.Trans.Maybe
 
 
 -- Getting all classpath files
@@ -70,12 +72,11 @@ stripClassName p = undefined
 
 
 -- Getting class bytecode
+toMaybeT :: Maybe a -> MaybeT IO a
+toMaybeT = MaybeT . return
 
-getClassBytes :: ClassName -> IO Layout -> IO (Maybe ByteString)
-getClassBytes name layoutIO = do
-  layout <- layoutIO
-  case Map.lookup name layout of
-    Just x -> case x of
-      JarFile p -> Just <$> BS.readFile p
-      ClassFile p -> Just <$> BS.readFile p
-    Nothing -> return Nothing
+-- using MaybeT { IO (Maybe a) }
+getClassBytes :: ClassName -> Layout -> IO (Maybe ByteString)
+getClassBytes name layout = runMaybeT $ do
+  path <- toMaybeT $ getPath <$> Map.lookup name layout
+  lift $ BS.readFile path
