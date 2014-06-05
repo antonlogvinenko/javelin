@@ -7,7 +7,8 @@ import Control.Monad (forM)
 import Control.Applicative ( (<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy (Map, fromList, (!))
+import Data.ByteString as BS (readFile)
+import Data.Map.Lazy as Map (Map, fromList, (!), lookup)
 import Data.List
 
 
@@ -42,7 +43,7 @@ data ClassSource = JarFile { getPath :: FilePath }
                  deriving (Show, Eq)
 
 getClassSourcesLayout :: FilePath -> IO Layout
-getClassSourcesLayout dir = fromList <$>
+getClassSourcesLayout dir = Map.fromList <$>
                             concat <$>
                             map extractClasses <$>
                             foldl folder [] <$>
@@ -73,7 +74,8 @@ stripClassName p = undefined
 getClassBytes :: ClassName -> IO Layout -> IO (Maybe ByteString)
 getClassBytes name layoutIO = do
   layout <- layoutIO
-  case layout ! name of
-    JarFile p -> undefined
-    ClassFile p -> undefined
-                
+  case Map.lookup name layout of
+    Just x -> case x of
+      JarFile p -> Just <$> BS.readFile p
+      ClassFile p -> Just <$> BS.readFile p
+    Nothing -> return Nothing
