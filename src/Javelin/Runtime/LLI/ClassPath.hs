@@ -4,11 +4,15 @@ where
 
 import Data.ByteString (ByteString)
 import Control.Monad (forM)
-import Control.Applicative ((<*>), (<$>))
+import Control.Applicative ( (<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (Map, fromList)
+import Data.Map.Lazy (Map, fromList, (!))
 import Data.List
+
+
+
+-- Getting all classpath files
 
 getClassPathFiles :: FilePath -> IO [FilePath]
 getClassPathFiles dir = do
@@ -27,28 +31,49 @@ weNeedToGoDeeper path = do
     then getClassPathFiles path
     else return [path]
 
+
+
+-- Getting layout for classpath
+  
+type Layout = Map ClassName ClassSource
+type ClassName = String
 data ClassSource = JarFile { getPath :: FilePath }
                  | ClassFile { getPath :: FilePath }
                  deriving (Show, Eq)
 
-type Layout = Map String ClassSource
-
 getClassSourcesLayout :: FilePath -> IO Layout
-getClassSourcesLayout dir = Map.fromList <$>
+getClassSourcesLayout dir = fromList <$>
+                            concat <$>
+                            map extractClasses <$>
                             foldl folder [] <$>
                             map getType <$>
                             getClassPathFiles dir
 
-folder :: [(String, ClassSource)] -> Maybe (String, ClassSource) -> [(String, ClassSource)]
+getType :: FilePath -> Maybe ClassSource
+getType path
+  | ".class" `isSuffixOf` path = Just $ ClassFile path
+  | ".jar" `isSuffixOf` path = Just $ JarFile path
+  | otherwise = Nothing
+
+folder :: [ClassSource] -> Maybe ClassSource -> [ClassSource]
 folder list (Just x) = x:list
 folder list Nothing = list
 
-getType :: FilePath -> Maybe (String, ClassSource)
-getType path
-  | ".class" `isSuffixOf` path = Just (path, ClassFile path)
-  | ".jar" `isSuffixOf` path = Just (path, JarFile path)
-  | otherwise = Nothing
+extractClasses :: ClassSource -> [(ClassName, ClassSource)]
+extractClasses (JarFile p) = undefined
+extractClasses s@(ClassFile p) = [(stripClassName p, s)]
+
+stripClassName :: FilePath -> ClassName
+stripClassName p = undefined
 
 
-getClassBytes :: String -> IO Layout -> IO (Maybe ByteString)
-getClassBytes = undefined
+
+-- Getting class bytecode
+
+getClassBytes :: ClassName -> IO Layout -> IO (Maybe ByteString)
+getClassBytes name layoutIO = do
+  layout <- layoutIO
+  case layout ! name of
+    JarFile p -> undefined
+    ClassFile p -> undefined
+                
