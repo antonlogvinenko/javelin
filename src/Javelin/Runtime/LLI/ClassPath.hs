@@ -71,12 +71,15 @@ stripClassName p = undefined
 
 
 -- using MaybeT { IO (Maybe a) }
-getClassBytes :: ClassName -> Layout -> IO (Maybe ByteString)
+getClassBytes :: ClassName -> IO Layout -> IO (Maybe ByteString)
 getClassBytes name layout = runMaybeT $ do
-  source <- MaybeT . return $ Map.lookup name layout
+  source <- MaybeT $ Map.lookup name <$> layout
   lift $ getClassFromSource name source
 
 getClassFromSource :: ClassName -> ClassSource -> IO ByteString
 getClassFromSource _ (ClassFile path) = BS.readFile path
-getClassFromSource name (JarFile path) = BS.readFile path
+getClassFromSource name (JarFile path) = undefined
+
+
+
 
