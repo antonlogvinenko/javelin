@@ -8,7 +8,7 @@ import Control.Monad (forM)
 import Control.Applicative ( (<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (Map, fromList, (!), lookup)
+import Data.Map.Lazy as Map (Map, fromList, lookup, keys)
 import Data.List
 
 import Control.Monad.Trans
@@ -16,27 +16,7 @@ import Control.Monad.Trans.Maybe
 
 import Data.List.Split
 import Codec.Archive.Zip
-
--- Getting all classpath files
-
-getClassPathFiles :: FilePath -> IO [FilePath]
-getClassPathFiles dir = do
-  files <- getRealFiles dir
-  -- doing [FilesPaths] -> (FilePath -> IO [FilePath]) -> IO [[FilePath]]
-  allFiles <- forM files weNeedToGoDeeper
-  return $ concat allFiles
-
-getRealFiles :: FilePath -> IO [FilePath]
-getRealFiles dir = map (dir </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents dir
-
-weNeedToGoDeeper :: FilePath -> IO [FilePath]
-weNeedToGoDeeper path = do
-  isDirectory <- doesDirectoryExist path
-  if isDirectory
-    then getClassPathFiles path
-    else return [path]
-
-
+import Text.Regex.Posix
 
 
 -- Getting layout for classpath
@@ -54,6 +34,20 @@ getClassSourcesLayout dir = do
   classes <- mapM extractClasses sources
   return $ Map.fromList $ concat classes
 
+getClassPathFiles :: FilePath -> IO [FilePath]
+getClassPathFiles dir = do
+  files <- map (dir </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents dir
+  -- doing [FilesPaths] -> (FilePath -> IO [FilePath]) -> IO [[FilePath]]
+  allFiles <- forM files weNeedToGoDeeper
+  return $ concat allFiles
+  
+weNeedToGoDeeper :: FilePath -> IO [FilePath]
+weNeedToGoDeeper path = do
+  isDirectory <- doesDirectoryExist path
+  if isDirectory
+    then getClassPathFiles path
+    else return [path]
+
 getType :: FilePath -> Maybe ClassSource
 getType path
   | ".class" `isSuffixOf` path = Just $ ClassFile path
@@ -66,18 +60,22 @@ folder list Nothing = list
 
 extractClasses :: ClassSource -> IO [(ClassName, ClassSource)]
 extractClasses s@(JarFile path) = do
-  paths <- getJarContents path
+  paths <- getJarClasses path
   return $ map (\c -> (c, s))  $ map stripClassName paths
 extractClasses s@(ClassFile p) = return [(stripClassName p, s)]
 
 stripClassName :: FilePath -> ClassName
-stripClassName path = head $ splitOn "." $ last $ splitOn "/" path
+stripClassName path = replace '/' '.' $ head $ splitOn "." path
 
-getJarContents :: FilePath -> IO [FilePath]
-getJarContents path = do
+getJarClasses :: FilePath -> IO [FilePath]
+getJarClasses path = do
   raw <- BS.readFile path
   let arc = toArchive raw
-  return $ filesInArchive arc
+  let allFiles = filesInArchive arc
+  return $ map getPath $ foldl folder [] $ map getType allFiles
+
+replace co cr = map (\c -> if c == co then cr else c)
+
 
 
   
@@ -91,9 +89,3 @@ getClassBytes name layout = runMaybeT $ do
 getClassFromSource :: ClassName -> ClassSource -> IO ByteString
 getClassFromSource _ (ClassFile path) = BS.readFile path
 getClassFromSource name (JarFile path) = undefined
-
-
-
-
-
-
