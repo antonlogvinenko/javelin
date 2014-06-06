@@ -70,13 +70,8 @@ stripClassName :: FilePath -> ClassName
 stripClassName p = undefined
 
 
-
--- Getting class bytecode
-toMaybeT :: Maybe a -> MaybeT IO a
-toMaybeT = MaybeT . return
-
 -- using MaybeT { IO (Maybe a) }
 getClassBytes :: ClassName -> Layout -> IO (Maybe ByteString)
 getClassBytes name layout = runMaybeT $ do
-  path <- toMaybeT $ getPath <$> Map.lookup name layout
+  path <- MaybeT . return $ getPath <$> Map.lookup name layout
   lift $ BS.readFile path
