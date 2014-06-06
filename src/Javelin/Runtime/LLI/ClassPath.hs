@@ -14,6 +14,8 @@ import Data.List
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 
+import Data.List.Split
+
 
 -- Getting all classpath files
 
@@ -67,7 +69,7 @@ extractClasses (JarFile p) = undefined
 extractClasses s@(ClassFile p) = [(stripClassName p, s)]
 
 stripClassName :: FilePath -> ClassName
-stripClassName p = undefined
+stripClassName path = head $ splitOn "." $ last $ splitOn "/" path
 
 
 -- using MaybeT { IO (Maybe a) }
