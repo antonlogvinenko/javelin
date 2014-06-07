@@ -12,9 +12,12 @@ import Data.Map.Lazy as Map (Map, fromList, lookup)
 import Data.List
 
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans
 
 import Data.List.Split
 import Codec.Archive.Zip
+
+
 
 
 -- Getting layout for classpath
@@ -70,27 +73,37 @@ pathToClass path = replace '/' '.' $ head $ splitOn "." path
 classToPath :: ClassName -> FilePath
 classToPath name = (replace '.' '/' name) ++ ".class"
 
--- Haskell, where is my 'replace' function?
-replace co cr = map (\c -> if c == co then cr else c)
-
 
 
 
 -- using MaybeT { IO (Maybe a) }
-getClassBytes :: ClassName -> IO Layout -> IO (Maybe ByteString)
-getClassBytes name layout = runMaybeT $ do
+getClassBytes :: ClassName -> IO Layout -> MaybeT IO ByteString
+getClassBytes name layout = do
   source <- MaybeT $ Map.lookup name <$> layout
-  MaybeT $ getClassFromSource name source
+  getClassFromSource name source
 
-getClassFromSource :: ClassName -> ClassSource -> IO (Maybe ByteString)
-getClassFromSource name (ClassFile path) =
-  if classToPath name /= path
-  then return Nothing
-  else Just <$> BS.readFile path
-getClassFromSource name (JarFile path) = do
+getClassFromSource :: ClassName -> ClassSource -> MaybeT IO ByteString
+getClassFromSource name (ClassFile path) = do
+  x <- toMaybeT $ classMatchesPath name path
+  lift $ BS.readFile x
+getClassFromSource name (JarFile path) = MaybeT $ do
   raw <- BS.readFile path
   return $ do
     let arc = toArchive raw
         classPath = classToPath name
     entry <- findEntryByPath classPath arc
     return $ fromEntry entry
+
+classMatchesPath :: String -> FilePath -> Maybe FilePath
+classMatchesPath name path = if classToPath name /= path then Nothing else Just path
+
+
+
+
+-- These are some missing Haskell functions, need to move somewhere else
+toMaybeT :: (Monad m) => Maybe a -> MaybeT m a
+toMaybeT = MaybeT . return
+
+-- Srsly, Haskell, where is my 'replace' function?
+replace :: Char -> Char -> String -> String
+replace co cr = map (\c -> if c == co then cr else c)
