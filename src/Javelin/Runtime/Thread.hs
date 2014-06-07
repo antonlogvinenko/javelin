@@ -16,26 +16,23 @@ import Javelin.ByteCode.Data (Constant)
 import Javelin.Runtime.LLI.Loading
 import Javelin.Runtime.LLI.ClassPath
 
--- Runtime data structures
-
-data Trace = Trace deriving (Show, Eq)
 
 
+
+-- Running
+runJVM :: String -> String -> [String] -> IO Trace
+runJVM classPath mainClass args = do
+  thread <- bootstrap classPath mainClass args
+  return $ execute thread True Trace
 
 -- 1. set frame for main method, set pc, set String args
 -- 2. load runtime data structures for Main class
-bootstrap :: String -> Thread -> String -> [String] -> IO Thread
-bootstrap classPath thread className mainArgs = do
+bootstrap :: String -> String -> [String] -> IO Thread
+bootstrap classPath mainClass mainArgs = do
   layout <- getClassSourcesLayout classPath
-  -- set layout
+  let thread = newThread $ newRuntime layout
   -- set frame, pc, string args, runtime data structures
   return thread
-
-runJVM :: String -> String -> [String] -> IO Trace
-runJVM classPath className args = do
-  thread <- bootstrap classPath newThread className args
-  return $ execute thread True Trace
-
 
 execute :: Thread -> Bool -> Trace -> Trace
 execute execution tracing trace = let execution2 = undefined -- execute single step
@@ -48,10 +45,17 @@ step :: Thread -> Thread
 step e = e
 
 
-newRuntime :: Runtime
-newRuntime = let emptyThreads = []
-                 classLoadingInfo = fromList []
-             in Runtime [BootstrapClassLoader] classLoadingInfo (fromList []) [] emptyThreads
+
+
+-- Runtime data structures
+
+data Trace = Trace deriving (Show, Eq)
+
+newRuntime :: Layout -> Runtime
+newRuntime layout = let emptyThreads = []
+                        classLoadingInfo = fromList []
+                    in Runtime layout [BootstrapClassLoader]
+                       classLoadingInfo (fromList []) [] [] emptyThreads
 
 data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { className :: String,
@@ -64,9 +68,12 @@ data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
                                           loadingState :: Integer }
                       deriving (Show, Eq)
 
-data Runtime = Runtime { classLoaders :: [ClassLoader],
+type ConstantPool = [Constant]
+data Runtime = Runtime { layout :: Layout,
+                         classLoaders :: [ClassLoader],
                          classLoading :: Map.Map String ClassLoadingInfo,
                          methodArea :: Map String DerivedPool,
+                         constantPool :: [ConstantPool],
                          heap :: [JObject],
                          threads :: [Thread] }
              deriving (Show, Eq)
@@ -85,21 +92,23 @@ data JValue = JInt { getInt :: Int32 }
 type ProgramCounter = Integer
 type FrameStack = [Frame]
 
-newThread = Thread newRuntime 0 []
+newThread rt = Thread rt 0 []
 
 data Thread = Thread { runtime :: Runtime,
                        pc :: ProgramCounter,
                        frames :: FrameStack }
               deriving (Show, Eq)
 
-type ConstantPool = [Constant]
-data Frame = Frame { layout :: Layout,
-                     currentClass :: Integer,
+
+data Frame = Frame { currentClass :: Integer,
                      currentMethod :: Integer,
                      locals :: Locals,
                      operands :: [StackElement],
-                     pool :: ConstantPool }
+                     pool :: Integer }
              deriving (Show, Eq)
+
+
+
 
 -- Bytes storage order
 
@@ -127,6 +136,7 @@ localToWord64 bs = runGet getWord64be $ runPut $ putWord32be (bs !! 0) >> putWor
 data StackElement = StackElement { stackElement :: Word64 } deriving (Show, Eq)
 instance BytesContainer StackElement where
   getBytes c idx len = stackElement c
+
 
 
 
