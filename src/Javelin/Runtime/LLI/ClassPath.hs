@@ -28,7 +28,7 @@ data ClassSource = JarFile { getPath :: FilePath }
 getClassSourcesLayout :: FilePath -> IO Layout
 getClassSourcesLayout dir = do
   files <- getClassPathFiles dir
-  let sources = foldl folder [] $ map getType files
+  let sources = foldl folder [] files
   classes <- mapM extractClasses sources
   return $ Map.fromList $ concat classes
 
@@ -45,15 +45,11 @@ weNeedToGoDeeper path = do
     then getClassPathFiles path
     else return [path]
 
-getType :: FilePath -> Maybe ClassSource
-getType path
-  | ".class" `isSuffixOf` path = Just $ ClassFile path
-  | ".jar" `isSuffixOf` path = Just $ JarFile path
-  | otherwise = Nothing
-
-folder :: [ClassSource] -> Maybe ClassSource -> [ClassSource]
-folder list (Just x) = x:list
-folder list Nothing = list
+folder :: [ClassSource] -> FilePath -> [ClassSource]
+folder list path
+  | ".class" `isSuffixOf` path = ClassFile path : list
+  | ".jar" `isSuffixOf` path = JarFile path : list
+  | otherwise = list
 
 extractClasses :: ClassSource -> IO [(ClassName, ClassSource)]
 extractClasses s@(JarFile path) = do
@@ -61,18 +57,18 @@ extractClasses s@(JarFile path) = do
   return $ map (\c -> (c, s))  $ map pathToClass paths
 extractClasses s@(ClassFile p) = return [(pathToClass p, s)]
 
-pathToClass :: FilePath -> ClassName
-pathToClass path = replace '/' '.' $ head $ splitOn "." path
-
-classToPath :: ClassName -> FilePath
-classToPath name = (replace '.' '/' name) ++ ".class"
-
 getJarClasses :: FilePath -> IO [FilePath]
 getJarClasses path = do
   raw <- BS.readFile path
   let arc = toArchive raw
   let allFiles = filesInArchive arc
-  return $ map getPath $ foldl folder [] $ map getType allFiles
+  return $ map getPath $ foldl folder [] allFiles
+  
+pathToClass :: FilePath -> ClassName
+pathToClass path = replace '/' '.' $ head $ splitOn "." path
+
+classToPath :: ClassName -> FilePath
+classToPath name = (replace '.' '/' name) ++ ".class"
 
 -- Haskell, where is my 'replace' function?
 replace co cr = map (\c -> if c == co then cr else c)
