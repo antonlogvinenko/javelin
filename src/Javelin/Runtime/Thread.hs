@@ -59,11 +59,10 @@ newRuntime :: Layout -> Runtime
 newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout [BootstrapClassLoader]
-                       classLoadingInfo (fromList []) [] [] emptyThreads
+                       classLoadingInfo (fromList []) (fromList []) [] emptyThreads
 
 data ClassLoader = BootstrapClassLoader
-                 | UserDefinedClassLoader { className :: String,
-                                            instanceReference :: Integer }
+                 | UserDefinedClassLoader { instanceReference :: Integer }
                  deriving (Show, Eq)
 
 data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
@@ -75,9 +74,9 @@ data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
 type ConstantPool = [Constant]
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
-                         classLoading :: Map.Map String ClassLoadingInfo,
-                         methodArea :: Map String DerivedPool,
-                         constantPool :: [ConstantPool],
+                         classLoading :: Map.Map ClassName ClassLoadingInfo,
+                         methodArea :: Map ClassName DerivedPool,
+                         constantPool :: Map.Map ClassName ConstantPool,
                          heap :: [JObject],
                          threads :: [Thread] }
              deriving (Show, Eq)
