@@ -5,18 +5,16 @@ where
 import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy as BS (readFile)
 import Control.Monad (forM)
-import Control.Applicative ( (<$>))
+import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (Map, fromList, lookup, keys)
+import Data.Map.Lazy as Map (Map, fromList, lookup)
 import Data.List
 
-import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 
 import Data.List.Split
 import Codec.Archive.Zip
-import Text.Regex.Posix
 
 
 -- Getting layout for classpath
@@ -37,7 +35,6 @@ getClassSourcesLayout dir = do
 getClassPathFiles :: FilePath -> IO [FilePath]
 getClassPathFiles dir = do
   files <- map (dir </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents dir
-  -- doing [FilesPaths] -> (FilePath -> IO [FilePath]) -> IO [[FilePath]]
   allFiles <- forM files weNeedToGoDeeper
   return $ concat allFiles
   
@@ -61,11 +58,14 @@ folder list Nothing = list
 extractClasses :: ClassSource -> IO [(ClassName, ClassSource)]
 extractClasses s@(JarFile path) = do
   paths <- getJarClasses path
-  return $ map (\c -> (c, s))  $ map stripClassName paths
-extractClasses s@(ClassFile p) = return [(stripClassName p, s)]
+  return $ map (\c -> (c, s))  $ map pathToClass paths
+extractClasses s@(ClassFile p) = return [(pathToClass p, s)]
 
-stripClassName :: FilePath -> ClassName
-stripClassName path = replace '/' '.' $ head $ splitOn "." path
+pathToClass :: FilePath -> ClassName
+pathToClass path = replace '/' '.' $ head $ splitOn "." path
+
+classToPath :: ClassName -> FilePath
+classToPath name = (replace '.' '/' name) ++ ".class"
 
 getJarClasses :: FilePath -> IO [FilePath]
 getJarClasses path = do
@@ -74,6 +74,7 @@ getJarClasses path = do
   let allFiles = filesInArchive arc
   return $ map getPath $ foldl folder [] $ map getType allFiles
 
+-- Haskell, where is my 'replace' function?
 replace co cr = map (\c -> if c == co then cr else c)
 
 
@@ -83,8 +84,17 @@ replace co cr = map (\c -> if c == co then cr else c)
 getClassBytes :: ClassName -> IO Layout -> IO (Maybe ByteString)
 getClassBytes name layout = runMaybeT $ do
   source <- MaybeT $ Map.lookup name <$> layout
-  lift $ getClassFromSource name source
+  MaybeT $ getClassFromSource name source
 
-getClassFromSource :: ClassName -> ClassSource -> IO ByteString
-getClassFromSource _ (ClassFile path) = BS.readFile path
-getClassFromSource name (JarFile path) = undefined
+getClassFromSource :: ClassName -> ClassSource -> IO (Maybe ByteString)
+getClassFromSource name (ClassFile path) =
+  if classToPath name /= path
+  then return Nothing
+  else Just <$> BS.readFile path
+getClassFromSource name (JarFile path) = do
+  raw <- BS.readFile path
+  return $ do
+    let arc = toArchive raw
+        classPath = classToPath name
+    entry <- findEntryByPath classPath arc
+    return $ fromEntry entry
