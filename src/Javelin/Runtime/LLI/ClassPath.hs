@@ -1,4 +1,4 @@
-module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes)
+module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes, Layout)
 
 where
 

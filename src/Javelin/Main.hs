@@ -7,7 +7,7 @@ import qualified Data.ByteString as BS (readFile, unpack)
 import System.Directory
 import System.Environment
 import Control.Monad
-import Javelin.Runtime.LLI.Bootstrap (runJVM)
+import Javelin.Runtime.Thread (runJVM)
 
 validate className = case className of
     Right _ -> True
@@ -52,5 +52,6 @@ main = do
            "c" -> runClass arg1
            "cs" -> runClasses arg1
            "jvm" -> let (classPath:mainArgs) = restArgs
-                        traces = runJVM classPath arg1 mainArgs
-                    in print traces
+                    in do
+                      traces <- runJVM classPath arg1 mainArgs
+                      print traces

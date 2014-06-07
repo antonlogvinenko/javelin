@@ -14,11 +14,27 @@ import Data.Map.Lazy as Map (fromList, Map)
 
 import Javelin.ByteCode.Data (Constant)
 import Javelin.Runtime.LLI.Loading
+import Javelin.Runtime.LLI.ClassPath
 
 -- Runtime data structures
 
 data Trace = Trace deriving (Show, Eq)
 
+
+
+-- 1. set frame for main method, set pc, set String args
+-- 2. load runtime data structures for Main class
+bootstrap :: String -> Thread -> String -> [String] -> IO Thread
+bootstrap classPath thread className mainArgs = do
+  layout <- getClassSourcesLayout classPath
+  -- set layout
+  -- set frame, pc, string args, runtime data structures
+  return thread
+
+runJVM :: String -> String -> [String] -> IO Trace
+runJVM classPath className args = do
+  thread <- bootstrap classPath newThread className args
+  return $ execute thread True Trace
 
 
 execute :: Thread -> Bool -> Trace -> Trace
@@ -77,7 +93,8 @@ data Thread = Thread { runtime :: Runtime,
               deriving (Show, Eq)
 
 type ConstantPool = [Constant]
-data Frame = Frame { currentClass :: Integer,
+data Frame = Frame { layout :: Layout,
+                     currentClass :: Integer,
                      currentMethod :: Integer,
                      locals :: Locals,
                      operands :: [StackElement],
