@@ -78,7 +78,6 @@ replace co cr = map (\c -> if c == co then cr else c)
 
 
 
-  
 
 -- using MaybeT { IO (Maybe a) }
 getClassBytes :: ClassName -> IO Layout -> IO (Maybe ByteString)

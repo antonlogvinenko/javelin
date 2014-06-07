@@ -13,7 +13,6 @@ import Javelin.ByteCode.ConstantPool
 import Javelin.ByteCode.FieldMethod
 import Javelin.ByteCode.Attribute
 
-
 getInterface :: Get Word16
 getInterface = getWord
 
