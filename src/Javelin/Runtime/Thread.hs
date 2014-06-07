@@ -25,14 +25,12 @@ runJVM classPath mainClass args = do
   thread <- bootstrap classPath mainClass args
   return $ execute thread True Trace
 
--- 1. set frame for main method, set pc, set String args
--- 2. load runtime data structures for Main class
 bootstrap :: String -> String -> [String] -> IO Thread
 bootstrap classPath mainClass mainArgs = do
   layout <- getClassSourcesLayout classPath
-  let thread = newThread $ newRuntime layout
-  -- set frame, pc, string args, runtime data structures
-  return thread
+  let frame = undefined
+  -- args, create frame for invokation, lli main class
+  return $ newThread frame layout
 
 execute :: Thread -> Bool -> Trace -> Trace
 execute execution tracing trace = let execution2 = undefined -- execute single step
@@ -43,6 +41,12 @@ execute execution tracing trace = let execution2 = undefined -- execute single s
 -- execute next command, increment PC
 step :: Thread -> Thread
 step e = e
+
+
+
+
+
+
 
 
 
@@ -92,11 +96,11 @@ data JValue = JInt { getInt :: Int32 }
 type ProgramCounter = Integer
 type FrameStack = [Frame]
 
-newThread rt = Thread rt 0 []
+newThread frame = Thread 0 [frame] . newRuntime 
 
-data Thread = Thread { runtime :: Runtime,
-                       pc :: ProgramCounter,
-                       frames :: FrameStack }
+data Thread = Thread { pc :: ProgramCounter,
+                       frames :: FrameStack,
+                       runtime :: Runtime }
               deriving (Show, Eq)
 
 
