@@ -71,13 +71,20 @@ data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
                                           loadingState :: Integer }
                       deriving (Show, Eq)
 
+nativeJVM :: Map.Map (ClassName, String) (Thread -> Thread)
+nativeJVM = Map.fromList [
+  (("java.lang.Class", "getClass"), id)
+  ]
+
 type ConstantPool = [Constant]
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
                          classLoading :: Map.Map ClassName ClassLoadingInfo,
+
                          methodArea :: Map ClassName DerivedPool,
                          constantPool :: Map.Map ClassName ConstantPool,
                          heap :: [JObject],
+
                          threads :: [Thread] }
              deriving (Show, Eq)
 
