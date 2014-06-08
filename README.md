@@ -30,37 +30,35 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
   * errors
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
-
-
+* Instructions
+ * Collecting
+  * execute function must optionally collect trace of execution in some way
+  * pass collecting function?
+  * use State monad on final instructions? (not in instruction DSL)
+  * how to write step with State monad?
+  * Should "state" result of executing Instruction monad contain description of action?
+  * Should "state" result of executing Instruciton implementation contain description?
+  * how to collect trace from other Threads?
+ * Memory access for instructions
+ * DSL implementation for arguments and reading commands
+ * Reference type
+ * Arguments length: varying amount?
+ * implement Constants, loads, stores, math, conversions, comparisons, extended, reserved
+ * unsigned byte, other types operated indirectly
+ * conversion i2l, etc?
+ * implement Control, references
+ * implement return, exceptions, monitors, memory access
 * MVP: run a trivial main class
     * Write java Main class, compile, find out commands
     * Program commands
     * Program execution of commands
     * Write trivial class loading and what it takes to execute a static main method
 
-*Collecting instructions*
-* execute function must optionally collect trace of execution in some way
- * pass collecting function?
- * use State monad on final instructions? (not in instruction DSL)
- * how to write step with State monad?
- * Should "state" result of executing Instruction monad contain description of action?
- * Should "state" result of executing Instruciton implementation contain description?
-* how to collect trace from other Threads?
-* Memory access for instructions
-* DSL implementation for arguments and reading commands
-* Reference type
-* Arguments length: varying amount?
-* implement Constants, loads, stores, math, conversions, comparisons, extended, reserved
-* unsigned byte, other types operated indirectly
-* conversion i2l, etc?
-* implement Control, references
-* implement return, exceptions, monitors, memory access
-
 *Javelin deferred tasks*
 * need more unit testing for bytecode parser
 * test class searching in class path
 
-*Possible offspring projects
+*Possible offspring projects*
 * Continue with implenenting garbage collection
 * Continue with JIT
 * Viewing step by step bytecode execution interactively
