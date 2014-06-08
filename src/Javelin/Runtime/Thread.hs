@@ -12,10 +12,8 @@ import Data.Binary.IEEE754 (floatToWord, doubleToWord)
 import Data.Bits (rotate)
 import Data.Map.Lazy as Map (fromList, Map)
 
-import Javelin.ByteCode.Data (Constant)
-import Javelin.Runtime.LLI.Loading
 import Javelin.Runtime.LLI.ClassPath
-
+import Javelin.Runtime.Structures
 
 
 
@@ -38,88 +36,13 @@ execute execution tracing trace = let execution2 = undefined -- execute single s
                                       trace2 = undefined -- combing t and t1
                                   in execute execution2 tracing trace2 -- recursively
 
--- execute next command, increment PC
 step :: Thread -> Thread
 step e = e
-
-
-
-
-
-
-
-
-
-
--- Runtime data structures
-
-data Trace = Trace deriving (Show, Eq)
-
-newRuntime :: Layout -> Runtime
-newRuntime layout = let emptyThreads = []
-                        classLoadingInfo = fromList []
-                    in Runtime layout [BootstrapClassLoader]
-                       classLoadingInfo (fromList []) (fromList []) [] emptyThreads
-
-data ClassLoader = BootstrapClassLoader
-                 | UserDefinedClassLoader { instanceReference :: Integer }
-                 deriving (Show, Eq)
-
-data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
-                                          initiating :: Integer,
-                                          runtimePackage :: (String, Integer),
-                                          lliState :: LoadLinkInitializeState,
-                                          resolved :: Bool }
-                      deriving (Show, Eq)
-
-data LoadLinkInitializeState = Loaded | LinkVerified | LinkPrepared | Initialized
-                             deriving (Show, Eq)
 
 nativeJVM :: Map.Map (ClassName, String) (Thread -> Thread)
 nativeJVM = Map.fromList [
   (("java.lang.Class", "getClass"), id)
   ]
-
-type ConstantPool = [Constant]
-data Runtime = Runtime { layout :: Layout,
-                         classLoaders :: [ClassLoader],
-                         classLoading :: Map.Map ClassName ClassLoadingInfo,
-
-                         methodArea :: Map ClassName DerivedPool,
-                         constantPool :: Map.Map ClassName ConstantPool,
-                         heap :: [JObject],
-
-                         threads :: [Thread] }
-             deriving (Show, Eq)
-
-type JObject = Map String JValue
-data JValue = JInt { getInt :: Int32 }
-            | JLong { getLong :: Int64 }
-            | JBoolean { getBoolean :: Int32}
-            | JShort { getShort :: Int16 }
-            | JByte { getByte :: Int8 }
-            | JDouble { getDouble :: Double }
-            | JFloat { getFloat :: Float }
-            | JReference { getReference :: Integer }
-            deriving (Show, Eq)
-
-type ProgramCounter = Integer
-type FrameStack = [Frame]
-
-newThread frame = Thread 0 [frame] . newRuntime 
-
-data Thread = Thread { pc :: ProgramCounter,
-                       frames :: FrameStack,
-                       runtime :: Runtime }
-              deriving (Show, Eq)
-
-
-data Frame = Frame { currentClass :: Integer,
-                     currentMethod :: Integer,
-                     locals :: Locals,
-                     operands :: [StackElement],
-                     pool :: Integer }
-             deriving (Show, Eq)
 
 
 
@@ -137,7 +60,7 @@ argumentToWord64 :: [Word8] -> Word64
 argumentToWord64 bs = let normalized = (take (8 - length bs) bs) ++ bs
                    in runGet getWord64be $ pack normalized
 
-data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
+
 instance BytesContainer Locals where
   getBytes c idx len = let arr = vars c
                        in if len <= 4
@@ -147,7 +70,6 @@ instance BytesContainer Locals where
 localToWord64 :: [Word32] -> Word64
 localToWord64 bs = runGet getWord64be $ runPut $ putWord32be (bs !! 0) >> putWord32be (bs !! 1)
 
-data StackElement = StackElement { stackElement :: Word64 } deriving (Show, Eq)
 instance BytesContainer StackElement where
   getBytes c idx len = stackElement c
 

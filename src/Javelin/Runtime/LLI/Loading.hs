@@ -2,6 +2,8 @@ module Javelin.Runtime.LLI.Loading
 where
 
 import Javelin.ByteCode.Data
+import Javelin.Runtime.Structures
+
 import Data.Int (Int32, Int64)
 import Data.Word (Word16)
 import Data.Map.Lazy (fromList, Map, insert)
@@ -11,26 +13,7 @@ import Control.Applicative ((<$>))
 
 -- Derivation datatypes
 
-type DerivedPool = Map Int SymbolicReference
 
-data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
-                       | FieldReference { field :: PartReference }
-                       | ClassMethodReference { classMethod :: PartReference }
-                       | InterfaceMethodReference { interfaceMethod :: PartReference }
-                       | MethodHandleReference
-                       | MethodTypeReference { typeReference :: String }
-                       | CallSiteSpecifierReference
-                       | StringLiteral { string :: String }
-                       | DoubleLiteral { double :: Double }
-                       | FloatLiteral { float :: Float }
-                       | IntegerLiteral { integer :: Int32 }
-                       | LongLiteral { long :: Int64 }
-                       deriving (Show, Eq)
-
-data PartReference = PartReference { partName :: String,
-                                     partDescriptor :: String,
-                                     ownerName :: String }
-                   deriving (Show, Eq)
 
 
 -- Derivation
