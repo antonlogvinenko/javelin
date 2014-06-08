@@ -3,6 +3,8 @@ where
 
 import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
+import Javelin.Util
+import Javelin.Runtime.LLI.ClassPath
 
 import Data.Word (Word16)
 import Data.Map.Lazy as Map (fromList, insert, lookup)
@@ -19,7 +21,7 @@ load trigger name rt =
       properClassLoader = getProperClassLoader trigger rt
   in case properClassLoader of
           Nothing -> Left "Some error to be specified"
-          Just cl -> Right $ classLoadFunction name rt cl
+          Just cl -> classLoadFunction name rt cl
 
 getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
 getProperClassLoader Nothing (Runtime {classLoaders = loaders}) = loaders !? 0
@@ -30,11 +32,24 @@ getProperClassLoader (Just trigger)
     let definingCLIndex = defining classLoadingInfo
     classLoaders !? definingCLIndex
 
-type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> Runtime
+type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> Either String Runtime
 loadArray :: ClassLoadMethod
 loadArray name rt classLoader = undefined
 loadClass :: ClassLoadMethod
-loadClass name rt classLoader = undefined
+loadClass name rt (UserDefinedClassLoader cl) = undefined
+loadClass name rt cl@BootstrapClassLoader =
+  case getInitiatingClassLoader name rt of
+    Nothing -> loadClassWithBootstrap name rt
+    Just initCl -> if initCl == cl
+                   then Right rt
+                   else loadClassWithBootstrap name rt
+
+loadClassWithBootstrap :: ClassName -> Runtime -> Either String Runtime
+loadClassWithBootstrap name rt@(Runtime {layout = layout}) =
+  let bytes = getClassBytes name layout
+  in undefined
+  
+
 
 isArray :: ClassName -> Bool
 isArray name = undefined
@@ -80,12 +95,6 @@ deriveReference p c = case c of
 
 
 -- Derivation utility functions
-
-(!?) :: (Integral i) => [a] -> i -> Maybe a
-(!?) list index = let indexInt = fromIntegral index in
-  if length list <= indexInt
-  then Nothing
-  else Just $ list !! indexInt
 
 deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> Maybe PartReference
 deriveFromClass classIdx typeIdx p = do

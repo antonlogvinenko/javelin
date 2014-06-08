@@ -2,13 +2,14 @@ module Javelin.Runtime.Structures
 
 where 
 
+import Control.Applicative
 import Data.Word (Word32, Word64)
 import Data.Array.IArray (Array)
-import Data.Map.Lazy as Map (fromList, Map)
+import Data.Map.Lazy as Map (fromList, Map, lookup)
 import Data.Int (Int8, Int16, Int32, Int64)
 
 import Javelin.ByteCode.Data (Constant)
-
+import Javelin.Util
 
 
 
@@ -37,6 +38,11 @@ newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout [BootstrapClassLoader]
                        classLoadingInfo (fromList []) (fromList []) [] emptyThreads
+
+getInitiatingClassLoader :: ClassName -> Runtime -> Maybe ClassLoader
+getInitiatingClassLoader name rt = do
+  index <- initiating <$> (Map.lookup name $ classLoading rt)
+  classLoaders rt !? index
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],

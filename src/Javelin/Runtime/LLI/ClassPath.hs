@@ -8,7 +8,7 @@ import Control.Monad (forM)
 import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (Map, fromList, lookup)
+import Data.Map.Lazy as Map (fromList, lookup)
 import Data.List
 
 import Control.Monad.Trans.Maybe
@@ -73,9 +73,9 @@ classToPath name = (replace '.' '/' name) ++ ".class"
 
 
 -- using MaybeT { IO (Maybe a) }
-getClassBytes :: ClassName -> IO Layout -> MaybeT IO ByteString
+getClassBytes :: ClassName -> Layout -> MaybeT IO ByteString
 getClassBytes name layout = do
-  source <- MaybeT $ Map.lookup name <$> layout
+  source <- toMaybeT $ Map.lookup name layout
   getClassFromSource name source
 
 getClassFromSource :: ClassName -> ClassSource -> MaybeT IO ByteString

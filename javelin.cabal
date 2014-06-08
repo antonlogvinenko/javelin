@@ -30,6 +30,7 @@ library
                      Javelin.Runtime.LLI.ClassPath,
                      Javelin.Runtime.LLI.Initializing,	
                      Javelin.Runtime.Structures,
+                     Javelin.Util,
                      Javelin.Main
 -- ghc-options:       -Wall
   build-depends:     base >=4.6 && <4.7
