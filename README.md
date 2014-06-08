@@ -6,16 +6,14 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode parser [**Done**]
 * Runtime data structures [**Done**]
 * Loading, linking, initializing: light version [**In progress**]
-* Execution (everything but invokedynamic & verification)
-* Bytecode verification, invokedynamic
-
-*The first simplest version will not include*
-* verification
-* exceptions
-* synchronization
-* invokedynamic
-* multiple threads (transactional access to memory)
-* user derined class loaders (only boostrap)
+* Executing instructions
+* All features skipped
+ * verification
+ * exceptions
+ * synchronization
+ * invokedynamic
+ * multiple threads (use haskell threads and transactions for shared memory?)
+ * user derined class loaders (only boostrap)
 
 *Short term*
  * Loading, Linking, Initialization
@@ -23,7 +21,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
   * bootstrap array load
   * constraints
   * deriving
- * LLI, probably skip
+ * LLI, probably skip:
   * verification
   * constraints
   * user defined CL
