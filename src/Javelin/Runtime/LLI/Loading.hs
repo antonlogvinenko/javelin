@@ -18,8 +18,8 @@ load trigger name rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
       properClassLoader = getProperClassLoader trigger rt
   in case properClassLoader of
-          Nothing -> undefined
-          Just cl -> classLoadFunction name rt cl
+          Nothing -> Left "Some error to be specified"
+          Just cl -> Right $ classLoadFunction name rt cl
 
 getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
 getProperClassLoader Nothing (Runtime {classLoaders = loaders}) = loaders !? 0
@@ -30,7 +30,7 @@ getProperClassLoader (Just trigger)
     let definingCLIndex = defining classLoadingInfo
     classLoaders !? definingCLIndex
 
-type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> Either String Runtime
+type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> Runtime
 loadArray :: ClassLoadMethod
 loadArray name rt classLoader = undefined
 loadClass :: ClassLoadMethod
