@@ -11,8 +11,8 @@ import Control.Applicative ((<$>))
 
 -- Loading
 
-load :: ClassName -> Runtime -> Runtime
-load = undefined
+load :: Maybe ClassName -> ClassName -> Runtime -> Runtime
+load trigger name rt@(Runtime {layout = layout}) = undefined
 
 
 -- Derivation

@@ -11,10 +11,14 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Bytecode verification, invokedynamic
 
 *Short term: Runtime data structures*
-* init thread stack to run Main { public static void main(Sting...) }
-* implement bootstrap method: loading, linking, initializing
+* loading (correctness? user defined class loaders?)
+* implement bootstrap method: linking, initializing
+ ** no verification
+ ** no correctness
+ ** no used defined CL (?)
+ ** no errors
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
-
+* init thread stack to run Main { public static void main(Sting...) }
 * test class searching in class path
 
 Next: collecting instructions
