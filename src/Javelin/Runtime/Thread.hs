@@ -44,7 +44,7 @@ nativeJVM = Map.fromList [
   (("java.lang.Class", "getClass"), id)
   ]
 
-
+data Trace = Trace deriving (Show, Eq)
 
 
 -- Bytes storage order

@@ -1,4 +1,4 @@
-module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes, Layout, ClassName)
+module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes)
 
 where
 
@@ -17,16 +17,12 @@ import Control.Monad.Trans
 import Data.List.Split
 import Codec.Archive.Zip
 
+import Javelin.Runtime.Structures
+
 
 
 
 -- Getting layout for classpath
-  
-type Layout = Map ClassName ClassSource
-type ClassName = String
-data ClassSource = JarFile { getPath :: FilePath }
-                 | ClassFile { getPath :: FilePath }
-                 deriving (Show, Eq)
 
 getClassSourcesLayout :: FilePath -> IO Layout
 getClassSourcesLayout dir = do

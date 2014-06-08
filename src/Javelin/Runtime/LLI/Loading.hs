@@ -4,16 +4,15 @@ where
 import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
 
-import Data.Int (Int32, Int64)
 import Data.Word (Word16)
-import Data.Map.Lazy (fromList, Map, insert)
+import Data.Map.Lazy (fromList, insert)
 import Control.Applicative ((<$>))
 
 
+-- Loading
 
--- Derivation datatypes
-
-
+load :: ClassName -> Runtime -> Runtime
+load = undefined
 
 
 -- Derivation

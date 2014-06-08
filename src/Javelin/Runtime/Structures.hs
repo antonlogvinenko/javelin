@@ -5,32 +5,38 @@ where
 import Data.Word (Word32, Word64)
 import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map)
-
-import Javelin.ByteCode.Data (Constant)
-import Javelin.Runtime.LLI.ClassPath
 import Data.Int (Int8, Int16, Int32, Int64)
 
-data Trace = Trace deriving (Show, Eq)
+import Javelin.ByteCode.Data (Constant)
 
+
+
+
+-- Thread
+newThread frame = Thread 0 [frame] . newRuntime
+data Thread = Thread { pc :: ProgramCounter,
+                       frames :: FrameStack,
+                       runtime :: Runtime }
+              deriving (Show, Eq)
+type ProgramCounter = Integer
+type FrameStack = [Frame]
+data Frame = Frame { currentClass :: Integer,
+                     currentMethod :: Integer,
+                     locals :: Locals,
+                     operands :: [StackElement],
+                     pool :: Integer }
+             deriving (Show, Eq)
+data StackElement = StackElement { stackElement :: Word64 } deriving (Show, Eq)
+data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
+
+
+
+-- Runtime
 newRuntime :: Layout -> Runtime
 newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout [BootstrapClassLoader]
                        classLoadingInfo (fromList []) (fromList []) [] emptyThreads
-
-data ClassLoader = BootstrapClassLoader
-                 | UserDefinedClassLoader { instanceReference :: Integer }
-                 deriving (Show, Eq)
-
-data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
-                                          initiating :: Integer,
-                                          runtimePackage :: (String, Integer),
-                                          lliState :: LoadLinkInitializeState,
-                                          resolved :: Bool }
-                      deriving (Show, Eq)
-
-data LoadLinkInitializeState = Loaded | LinkVerified | LinkPrepared | Initialized
-                             deriving (Show, Eq)
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
@@ -43,6 +49,38 @@ data Runtime = Runtime { layout :: Layout,
                          threads :: [Thread] }
              deriving (Show, Eq)
 
+
+
+-- LLI ClassPath
+type Layout = Map ClassName ClassSource
+type ClassName = String
+data ClassSource = JarFile { getPath :: FilePath }
+                 | ClassFile { getPath :: FilePath }
+                 deriving (Show, Eq)
+                          
+
+
+-- LLI state
+data LoadLinkInitializeState = Loaded | LinkVerified | LinkPrepared | Initialized
+                             deriving (Show, Eq)
+
+
+
+-- ClassLoading Info
+data ClassLoader = BootstrapClassLoader
+                 | UserDefinedClassLoader { instanceReference :: Integer }
+                 deriving (Show, Eq)
+
+data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
+                                          initiating :: Integer,
+                                          runtimePackage :: (String, Integer),
+                                          lliState :: LoadLinkInitializeState,
+                                          resolved :: Bool }
+                      deriving (Show, Eq)
+
+
+
+-- Heap contents
 type JObject = Map String JValue
 data JValue = JInt { getInt :: Int32 }
             | JLong { getLong :: Int64 }
@@ -54,28 +92,9 @@ data JValue = JInt { getInt :: Int32 }
             | JReference { getReference :: Integer }
             deriving (Show, Eq)
 
-type ProgramCounter = Integer
-type FrameStack = [Frame]
-
-newThread frame = Thread 0 [frame] . newRuntime 
-
-data Thread = Thread { pc :: ProgramCounter,
-                       frames :: FrameStack,
-                       runtime :: Runtime }
-              deriving (Show, Eq)
 
 
-data Frame = Frame { currentClass :: Integer,
-                     currentMethod :: Integer,
-                     locals :: Locals,
-                     operands :: [StackElement],
-                     pool :: Integer }
-             deriving (Show, Eq)
-
-data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
-
-data StackElement = StackElement { stackElement :: Word64 } deriving (Show, Eq)
-
+-- Class loading structures
 type DerivedPool = Map Int SymbolicReference
 
 data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
