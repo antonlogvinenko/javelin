@@ -18,7 +18,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * constraints
 * deriving
 
-* LLI, probably skip:
+* LLI, probably skip
  ** verification
  ** constraints
  ** user defined CL
