@@ -68,8 +68,12 @@ data ClassLoader = BootstrapClassLoader
 data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
                                           initiating :: Integer,
                                           runtimePackage :: (String, Integer),
-                                          loadingState :: Integer }
+                                          lliState :: LoadLinkInitializeState,
+                                          resolved :: Bool }
                       deriving (Show, Eq)
+
+data LoadLinkInitializeState = Loaded | LinkVerified | LinkPrepared | Initialized
+                             deriving (Show, Eq)
 
 nativeJVM :: Map.Map (ClassName, String) (Thread -> Thread)
 nativeJVM = Map.fromList [
