@@ -4,19 +4,25 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Long term*
 * Bytecode parser [**Done**]
-* Runtime data structures [**In progress**]
-* Linking/loading [**In progress**]
+* Runtime data structures [**Done**]
+* Loading, linking, initializing: light version [**In progress**]
 * Execution (everything but invokedynamic & verification)
-* Garbage collection
 * Bytecode verification, invokedynamic
+* Execution visualization?
+* Garbage collection?
+* JIT?
 
 *Short term: Runtime data structures*
-* loading (correctness? user defined class loaders?)
-* implement bootstrap method: linking, initializing
- ** no verification
- ** no correctness
- ** no used defined CL (?)
- ** no errors
+* bootstrap class load
+* bootstrap array load
+* constraints
+* deriving
+
+* LLI, probably skip:
+ ** verification
+ ** constraints
+ ** user defined CL
+ ** errors
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
 * test class searching in class path
