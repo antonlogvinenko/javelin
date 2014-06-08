@@ -21,6 +21,10 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
   * bootstrap array load
   * constraints
   * deriving
+ * Linking
+  * ...
+ * Initializing:
+  * ...
  * LLI, probably skip:
   * verification
   * constraints
