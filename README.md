@@ -19,10 +19,10 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * deriving
 
 * LLI, probably skip
- ** verification
- ** constraints
- ** user defined CL
- ** errors
+ * verification
+ * constraints
+ * user defined CL
+ * errors
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
 * test class searching in class path
