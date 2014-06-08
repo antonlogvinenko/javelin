@@ -12,17 +12,17 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Garbage collection?
 * JIT?
 
-*Short term: Runtime data structures*
-* bootstrap class load
-* bootstrap array load
-* constraints
-* deriving
-
-* LLI, probably skip
- * verification
- * constraints
- * user defined CL
- * errors
+*Short term*
+ * Loading, Linking, Initialization
+  * bootstrap class load
+  * bootstrap array load
+  * constraints
+  * deriving
+ * LLI, probably skip
+  * verification
+  * constraints
+  * user defined CL
+  * errors
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
 * test class searching in class path
