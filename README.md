@@ -8,9 +8,14 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Loading, linking, initializing: light version [**In progress**]
 * Execution (everything but invokedynamic & verification)
 * Bytecode verification, invokedynamic
-* Execution visualization?
-* Garbage collection?
-* JIT?
+
+*The first simplest version will not include*
+* verification
+* exceptions
+* synchronization
+* invokedynamic
+* multiple threads (transactional access to memory)
+* user derined class loaders (only boostrap)
 
 *Short term*
  * Loading, Linking, Initialization
@@ -25,34 +30,25 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
   * errors
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
-* test class searching in class path
 
-Next: collecting instructions
-* execute function must optionally collect trace of execution in some way
- ** pass collecting function?
- ** use State monad on final instructions? (not in instruction DSL)
- ** how to write step with State monad?
- ** Should "state" result of executing Instruction monad contain description of action?
- ** Should "state" result of executing Instruciton implementation contain description?
-* how to collect trace from other Threads?
 
-Excluding for now:
-* verification
-* exceptions
-* synchronization
-* invokedynamic
-* multiple threads (transactional access to memory)
-* user derined class loaders (only boostrap)
-
-* Memory access for instructions
-* DSL implementation for arguments and reading commands
-* Reference type
 * MVP: run a trivial main class
     * Write java Main class, compile, find out commands
     * Program commands
     * Program execution of commands
     * Write trivial class loading and what it takes to execute a static main method
 
+*Collecting instructions*
+* execute function must optionally collect trace of execution in some way
+ * pass collecting function?
+ * use State monad on final instructions? (not in instruction DSL)
+ * how to write step with State monad?
+ * Should "state" result of executing Instruction monad contain description of action?
+ * Should "state" result of executing Instruciton implementation contain description?
+* how to collect trace from other Threads?
+* Memory access for instructions
+* DSL implementation for arguments and reading commands
+* Reference type
 * Arguments length: varying amount?
 * implement Constants, loads, stores, math, conversions, comparisons, extended, reserved
 * unsigned byte, other types operated indirectly
@@ -62,12 +58,15 @@ Excluding for now:
 
 *Javelin deferred tasks*
 * need more unit testing for bytecode parser
+* test class searching in class path
 
 *Possible offspring projects
+* Continue with implenenting garbage collection
+* Continue with JIT
 * Viewing step by step bytecode execution interactively
+* Decompiler
 * UI for viewing bytecode
 * Disassembler
-* Decompiler?
 
 *Haskell deferred tasks*
 * cabal sandboxing
@@ -82,5 +81,6 @@ Excluding for now:
 * 4.7.21, RuntimeInvisibleTypeAnnotations (new)
 * Changes in descriptor and signatures terminology (refactoring)
 
-Don't wanna lose this: http://dev.stephendiehl.com/hask/
-And this http://blog.jle.im/entry/inside-my-world-ode-to-functor-and-monad
+Very handy posts:
+* http://dev.stephendiehl.com/hask/
+* http://blog.jle.im/entry/inside-my-world-ode-to-functor-and-monad
