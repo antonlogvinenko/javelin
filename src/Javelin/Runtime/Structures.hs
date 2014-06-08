@@ -71,9 +71,9 @@ data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { instanceReference :: Integer }
                  deriving (Show, Eq)
 
-data ClassLoadingInfo = ClassLoaderInfo { defining :: Integer,
-                                          initiating :: Integer,
-                                          runtimePackage :: (String, Integer),
+data ClassLoadingInfo = ClassLoaderInfo { defining :: Int,
+                                          initiating :: Int,
+                                          runtimePackage :: (String, Int),
                                           lliState :: LoadLinkInitializeState,
                                           resolved :: Bool }
                       deriving (Show, Eq)

@@ -5,14 +5,43 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
 
 import Data.Word (Word16)
-import Data.Map.Lazy (fromList, insert)
+import Data.Map.Lazy as Map (fromList, insert, lookup)
 import Control.Applicative ((<$>))
+
+
 
 
 -- Loading
 
-load :: Maybe ClassName -> ClassName -> Runtime -> Runtime
-load trigger name rt@(Runtime {layout = layout}) = undefined
+load :: Maybe ClassName -> ClassName -> Runtime -> Either String Runtime
+load trigger name rt =
+  let classLoadFunction = if isArray name then loadArray else loadClass
+      properClassLoader = getProperClassLoader trigger rt
+  in case properClassLoader of
+          Nothing -> undefined
+          Just cl -> classLoadFunction name rt cl
+
+getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
+getProperClassLoader Nothing (Runtime {classLoaders = loaders}) = loaders !? 0
+getProperClassLoader (Just trigger)
+  rt@(Runtime {classLoading = classLoading, classLoaders = classLoaders}) =
+  do
+    classLoadingInfo <- Map.lookup trigger classLoading
+    let definingCLIndex = defining classLoadingInfo
+    classLoaders !? definingCLIndex
+
+type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> Either String Runtime
+loadArray :: ClassLoadMethod
+loadArray name rt classLoader = undefined
+loadClass :: ClassLoadMethod
+loadClass name rt classLoader = undefined
+
+isArray :: ClassName -> Bool
+isArray name = undefined
+
+
+
+
 
 
 -- Derivation
@@ -53,7 +82,10 @@ deriveReference p c = case c of
 -- Derivation utility functions
 
 (!?) :: (Integral i) => [a] -> i -> Maybe a
-arr !? idx = undefined
+(!?) list index = let indexInt = fromIntegral index in
+  if length list <= indexInt
+  then Nothing
+  else Just $ list !! indexInt
 
 deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> Maybe PartReference
 deriveFromClass classIdx typeIdx p = do
