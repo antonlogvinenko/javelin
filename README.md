@@ -18,7 +18,8 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term*
  * Loading, Linking, Initialization
   * bootstrap class load
-   * Use EitherT in ClassPath module
+   * MissingH and test dependencye, set up cabal profiles
+   * Use EitherT in ClassPath module - use maybeToEither from MissingH
    * Start types for errors during loading linking initializing
    * load if ok with bootstrap (add bytecode to data structures)
    * fix: can be several class loaders for a class
