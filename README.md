@@ -18,7 +18,6 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term*
  * Loading, Linking, Initialization
   * bootstrap class load
-   * MissingH and test dependency, set up cabal profiles
    * Use EitherT in ClassPath module - use maybeToEither from MissingH
    * Start types for errors during loading linking initializing
    * load if ok with bootstrap (add bytecode to data structures)
@@ -74,7 +73,6 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Disassembler
 
 *Haskell deferred tasks*
-* cabal sandboxing
 * quickcheck/hunit/tasty/hspec
 * checkSpec, htest
 * emacs modes
