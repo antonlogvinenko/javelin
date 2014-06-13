@@ -87,3 +87,4 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 Very handy posts:
 * http://dev.stephendiehl.com/hask/
 * http://blog.jle.im/entry/inside-my-world-ode-to-functor-and-monad
+* http://katychuang.com/cabal-guide/
