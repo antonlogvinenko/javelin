@@ -5,6 +5,7 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
 import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
+import Javelin.ByteCode.ClassFile
 
 import Control.Monad.Trans.Maybe
 import Data.Word (Word16)
@@ -15,7 +16,11 @@ import Data.ByteString.Lazy (ByteString)
 
 -- Loading
 
-data LoadingError = ClassNotFound
+data LoadingError = ClassNotFoundException
+                  | LinkageError
+                  | ClassFormatError
+                  | UnsupportedClassVersionError
+                  | NoClassDefFoundError
                   | UnknownError { msg :: String }
                   deriving (Show, Eq)
 
@@ -51,13 +56,15 @@ loadClass name rt cl@BootstrapClassLoader =
 loadClassWithBootstrap :: ClassName -> Runtime -> IO (Either LoadingError Runtime)
 loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
   maybeBytes <- runMaybeT $ getClassBytes name layout
-  let eitherBytes = maybeToEither ClassNotFound maybeBytes
+  let eitherBytes = maybeToEither ClassNotFoundException maybeBytes
   return $ do
     bytes <- eitherBytes
-    derive rt bytes
+    derive name rt BootstrapClassLoader bytes
 
-derive :: Runtime -> ByteString -> Either LoadingError Runtime
-derive = undefined
+derive :: ClassName -> Runtime -> ClassLoader -> ByteString -> Either LoadingError Runtime
+derive name rt initCl bs = if Just initCl == getInitiatingClassLoader name rt
+                           then Left LinkageError
+                           else undefined
 
 isArray :: ClassName -> Bool
 isArray name = undefined

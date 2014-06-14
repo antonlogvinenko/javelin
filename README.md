@@ -18,9 +18,8 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term*
  * Loading, Linking, Initialization
   * bootstrap class load
-   * Use EitherT in ClassPath module - use maybeToEither from MissingH
+   * write derive: 3 errors, resolve supreclass, superinterface, save information to runtime
    * Start types for errors during loading linking initializing
-   * load if ok with bootstrap (add bytecode to data structures)
    * fix: can be several class loaders for a class
   * bootstrap array load
   * constraints

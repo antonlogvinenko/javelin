@@ -39,14 +39,20 @@ newRuntime layout = let emptyThreads = []
                     in Runtime layout [BootstrapClassLoader]
                        classLoadingInfo (fromList []) (fromList []) [] emptyThreads
 
-getInitiatingClassLoader :: ClassName -> Runtime -> Maybe ClassLoader
-getInitiatingClassLoader name rt = do
-  index <- initiating <$> (Map.lookup name $ classLoading rt)
+getClassLoader name rt f = do
+  index <- f <$> (Map.lookup name $ classLoading rt)
   classLoaders rt !? index
+
+getInitiatingClassLoader :: ClassName -> Runtime -> Maybe ClassLoader
+getInitiatingClassLoader name rt = getClassLoader name rt initiating
+
+getDefiningClassLoader :: ClassName -> Runtime -> Maybe ClassLoader
+getDefiningClassLoader name rt = getClassLoader name rt defining
+
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
-                         classLoading :: Map.Map ClassName ClassLoadingInfo,
+                         classLoading :: Map.Map ClassName ClassLoaderInfo,
 
                          methodArea :: Map ClassName DerivedPool,
                          constantPool :: Map.Map ClassName [Constant],
@@ -77,13 +83,12 @@ data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { instanceReference :: Integer }
                  deriving (Show, Eq)
 
-data ClassLoadingInfo = ClassLoaderInfo { defining :: Int,
-                                          initiating :: Int,
-                                          runtimePackage :: (String, Int),
-                                          lliState :: LoadLinkInitializeState,
-                                          resolved :: Bool }
-                      deriving (Show, Eq)
-
+data ClassLoaderInfo = ClassLoaderInfo { defining :: Int,
+                                         initiating :: Int,
+                                         runtimePackage :: (String, Int),
+                                         lliState :: LoadLinkInitializeState,
+                                         resolved :: Bool }
+                     deriving (Show, Eq)
 
 
 -- Heap contents
