@@ -6,21 +6,25 @@ import Javelin.Runtime.Structures
 import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
 
+import Control.Monad.Trans.Maybe
 import Data.Word (Word16)
 import Data.Map.Lazy as Map (fromList, insert, lookup)
 import Control.Applicative ((<$>))
-
-
+import Data.ByteString.Lazy (ByteString)
 
 
 -- Loading
 
-load :: Maybe ClassName -> ClassName -> Runtime -> Either String Runtime
+data LoadingError = ClassNotFound
+                  | UnknownError { msg :: String }
+                  deriving (Show, Eq)
+
+load :: Maybe ClassName -> ClassName -> Runtime -> IO (Either LoadingError Runtime)
 load trigger name rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
       properClassLoader = getProperClassLoader trigger rt
   in case properClassLoader of
-          Nothing -> Left "Some error to be specified"
+          Nothing -> return $ Left $ UnknownError "Class loader could not be found"
           Just cl -> classLoadFunction name rt cl
 
 getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
@@ -32,7 +36,7 @@ getProperClassLoader (Just trigger)
     let definingCLIndex = defining classLoadingInfo
     classLoaders !? definingCLIndex
 
-type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> Either String Runtime
+type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> IO (Either LoadingError Runtime)
 loadArray :: ClassLoadMethod
 loadArray name rt classLoader = undefined
 loadClass :: ClassLoadMethod
@@ -41,15 +45,19 @@ loadClass name rt cl@BootstrapClassLoader =
   case getInitiatingClassLoader name rt of
     Nothing -> loadClassWithBootstrap name rt
     Just initCl -> if initCl == cl
-                   then Right rt
+                   then return $ Right rt
                    else loadClassWithBootstrap name rt
 
-loadClassWithBootstrap :: ClassName -> Runtime -> Either String Runtime
-loadClassWithBootstrap name rt@(Runtime {layout = layout}) =
-  let bytes = getClassBytes name layout
-  in undefined
-  
+loadClassWithBootstrap :: ClassName -> Runtime -> IO (Either LoadingError Runtime)
+loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
+  maybeBytes <- runMaybeT $ getClassBytes name layout
+  let eitherBytes = maybeToEither ClassNotFound maybeBytes
+  return $ do
+    bytes <- eitherBytes
+    derive rt bytes
 
+derive :: Runtime -> ByteString -> Either LoadingError Runtime
+derive = undefined
 
 isArray :: ClassName -> Bool
 isArray name = undefined

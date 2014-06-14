@@ -48,8 +48,7 @@ library
                      zip-archive ==0.2.3.2,
                      filepath ==1.3.0.2,
                      transformers ==0.4.1.0,
-                     split ==0.2.2,
-                     MissingH
+                     split ==0.2.2
 test-suite test
   hs-source-dirs:    test
   main-is:           Main.hs

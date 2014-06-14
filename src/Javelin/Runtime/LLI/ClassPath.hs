@@ -1,4 +1,4 @@
-module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes)
+module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes, maybeToEither)
 
 where
 
@@ -11,6 +11,7 @@ import System.FilePath ((</>))
 import Data.Map.Lazy as Map (fromList, lookup)
 import Data.List
 
+
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans
 
@@ -18,7 +19,7 @@ import Data.List.Split
 import Codec.Archive.Zip
 
 import Javelin.Runtime.Structures
-
+import Javelin.Util
 
 
 
@@ -92,14 +93,3 @@ getClassFromSource name (JarFile path) = MaybeT $ do
 
 classMatchesPath :: String -> FilePath -> Maybe FilePath
 classMatchesPath name path = if classToPath name /= path then Nothing else Just path
-
-
-
-
--- These are some missing Haskell functions, need to move somewhere else
-toMaybeT :: (Monad m) => Maybe a -> MaybeT m a
-toMaybeT = MaybeT . return
-
--- Srsly, Haskell, where is my 'replace' function?
-replace :: Char -> Char -> String -> String
-replace co cr = map (\c -> if c == co then cr else c)
