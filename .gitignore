@@ -1,3 +1,5 @@
+javelin.iml
+.idea
 dist
 .cabal-sandbox
 cabal-dev
