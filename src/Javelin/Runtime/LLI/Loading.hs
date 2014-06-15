@@ -14,6 +14,8 @@ import Control.Applicative ((<$>))
 import Data.ByteString.Lazy (ByteString, unpack)
 
 
+
+
 -- Loading
 
 data LoadingError = ClassNotFoundException
@@ -32,6 +34,9 @@ load trigger name rt =
           Nothing -> return $ Left $ UnknownError "Class loader could not be found"
           Just cl -> classLoadFunction name rt cl
 
+isArray :: ClassName -> Bool
+isArray name = head name == '['
+
 getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
 getProperClassLoader Nothing (Runtime {classLoaders = loaders}) = loaders !? 0
 getProperClassLoader (Just trigger)
@@ -42,8 +47,10 @@ getProperClassLoader (Just trigger)
     classLoaders !? definingCLIndex
 
 type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> IO (Either LoadingError Runtime)
+
 loadArray :: ClassLoadMethod
 loadArray name rt classLoader = undefined
+
 loadClass :: ClassLoadMethod
 loadClass name rt (UserDefinedClassLoader cl) = undefined
 loadClass name rt cl@BootstrapClassLoader =
@@ -61,9 +68,8 @@ loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
     bytes <- eitherBytes
     derive name rt BootstrapClassLoader bytes
 
-isArray :: ClassName -> Bool
-isArray name = undefined
 
+-- §5.3.5 Deriving a Class from a class File Representation
 derive :: ClassName -> Runtime -> ClassLoader -> ByteString -> Either LoadingError Runtime
 derive name rt initCl bs = do
   checkInitiatingClassLoader initCl name rt
@@ -88,13 +94,13 @@ checkClassVersion bc = if minVer bc < 0 || majVer bc > 100500
                        else Right bc
 
 checkRepresentedClass :: Runtime -> ByteCode -> Either LoadingError ByteCode
-checkRepresentedClass = undefined
+checkRepresentedClass = undefined --NoClassDefFoundError
 
 checkSuperClasses :: Runtime -> ByteCode -> Either LoadingError ByteCode
-checkSuperClasses = undefined
+checkSuperClasses = undefined --IncompatibleClassChangeError --ClassCircularityError
 
 checkSuperInterfaces :: Runtime -> ByteCode -> Either LoadingError ByteCode
-checkSuperInterfaces = undefined
+checkSuperInterfaces = undefined --same as for classes
 
 recordClassLoading :: Runtime -> ByteCode -> Either LoadingError Runtime
 recordClassLoading = undefined
@@ -102,7 +108,7 @@ recordClassLoading = undefined
 
 
 
--- Derivation
+-- §5.1 The Runtime Constant Pool
 
 derivePool :: ConstantPool -> DerivedPool
 derivePool p = deriveReduce p (length p - 1) $ fromList []
@@ -134,10 +140,6 @@ deriveReference p c = case c of
   LongInfo val -> Just $ LongLiteral val
   IntegerInfo val -> Just $ IntegerLiteral val
   _ -> Nothing
-
-
-
--- Derivation utility functions
 
 deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> Maybe PartReference
 deriveFromClass classIdx typeIdx p = do

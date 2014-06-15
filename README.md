@@ -18,11 +18,11 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term*
  * Loading
   * bootstrap class load
+   * put symbolic links somewhere, constant pool?
    * write derive: 3 errors, resolve supreclass, superinterface, save information to runtime
-  * fix: can be several class loaders for a class
   * bootstrap array load
+  * fix: can be several class loaders for a class
   * constraints
-  * deriving
  * Linking
   * ...
  * Initializing:
