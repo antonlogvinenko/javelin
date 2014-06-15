@@ -5,13 +5,13 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
 import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
-import Javelin.ByteCode.ClassFile
+import Javelin.ByteCode.ClassFile (parse)
 
 import Control.Monad.Trans.Maybe
 import Data.Word (Word16)
 import Data.Map.Lazy as Map (fromList, insert, lookup)
 import Control.Applicative ((<$>))
-import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy (ByteString, unpack)
 
 
 -- Loading
@@ -61,16 +61,44 @@ loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
     bytes <- eitherBytes
     derive name rt BootstrapClassLoader bytes
 
-derive :: ClassName -> Runtime -> ClassLoader -> ByteString -> Either LoadingError Runtime
-derive name rt initCl bs = if Just initCl == getInitiatingClassLoader name rt
-                           then Left LinkageError
-                           else undefined
-
 isArray :: ClassName -> Bool
 isArray name = undefined
 
+derive :: ClassName -> Runtime -> ClassLoader -> ByteString -> Either LoadingError Runtime
+derive name rt initCl bs = do
+  checkInitiatingClassLoader initCl name rt
+  checkClassFileFormat bs rt
+    >>= checkClassVersion
+    >>= checkRepresentedClass rt
+    >>= checkSuperClasses rt
+    >>= recordClassLoading rt
 
+checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
+                                            then Left LinkageError
+                                            else Right ()
+checkClassFileFormat :: ByteString -> Runtime -> Either LoadingError ByteCode
+checkClassFileFormat bs rt = let body = parse $ unpack bs in
+  case body of
+    Left (_, _, msg) -> Left ClassFormatError
+    Right (_, _, body) -> Right body
+    
+checkClassVersion :: ByteCode -> Either LoadingError ByteCode
+checkClassVersion bc = if minVer bc < 0 || majVer bc > 100500
+                       then Left UnsupportedClassVersionError
+                       else Right bc
 
+checkRepresentedClass :: Runtime -> ByteCode -> Either LoadingError ByteCode
+checkRepresentedClass = undefined
+
+checkSuperClasses :: Runtime -> ByteCode -> Either LoadingError ByteCode
+checkSuperClasses = undefined
+
+checkSuperInterfaces :: Runtime -> ByteCode -> Either LoadingError ByteCode
+checkSuperInterfaces = undefined
+
+recordClassLoading :: Runtime -> ByteCode -> Either LoadingError Runtime
+recordClassLoading = undefined
+  
 
 
 

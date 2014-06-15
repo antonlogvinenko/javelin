@@ -57,5 +57,10 @@ parseByteCode = do
   body <- classBody
   return $ ByteCode minor major body
 
+--parse :: [Word8] -> Either (BS.ByteString, ByteOffset, String) (BS.ByteString, ByteOffset, ByteCode)
+--parse bytes = parse $ BS.pack bytes
+
+
 parse :: [Word8] -> Either (BS.ByteString, ByteOffset, String) (BS.ByteString, ByteOffset, ByteCode)
 parse bytes = runGetOrFail parseByteCode $ BS.pack bytes
+
