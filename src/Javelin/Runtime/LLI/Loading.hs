@@ -24,6 +24,7 @@ data LoadingError = ClassNotFoundException
                   | UnsupportedClassVersionError
                   | NoClassDefFoundError
                   | InternalError { internal :: InternalLoadingError }
+                  | ResolutionError
                   deriving (Show, Eq)
 
 data InternalLoadingError = CantCheckClassRepresentation
@@ -80,9 +81,7 @@ derive name rt initCl bs = do
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
   syms <- checkRepresentedClass name rt bc
-  checkSuperClasses rt bc syms
-  checkSuperInterfaces rt bc syms
-  recordClassLoading rt bc syms
+  checkSuperClass bc syms rt >>= checkSuperInterfaces bc syms >>= recordClassLoading bc syms
 
 checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
                                             then Left LinkageError
@@ -91,7 +90,7 @@ checkClassFileFormat :: ByteString -> Runtime -> Either LoadingError ByteCode
 checkClassFileFormat bs rt = let body = parse $ unpack bs in
   case body of
     Left (_, _, msg) -> Left ClassFormatError
-    Right (_, _, body) -> Right body
+    Right (_, _, byteCode) -> Right byteCode
     
 checkClassVersion :: ByteCode -> Either LoadingError ()
 checkClassVersion bc = if minVer bc < 0 || majVer bc > 100500
@@ -106,16 +105,20 @@ checkRepresentedClass name rt bc = let pool = constPool $ body bc
                                      Just (ClassOrInterface x) -> return symbolics
                                      _ -> Left $ InternalError CantCheckClassRepresentation
 
-checkSuperClasses :: Runtime -> ByteCode -> Symbolics -> Either LoadingError ()
-checkSuperClasses = undefined --IncompatibleClassChangeError --ClassCircularityError
+checkSuperClass :: ByteCode -> Symbolics -> Runtime -> Either LoadingError Runtime
+checkSuperClass = undefined --IncompatibleClassChangeError --ClassCircularityError
 
-checkSuperInterfaces :: Runtime -> ByteCode -> Symbolics -> Either LoadingError ()
-checkSuperInterfaces = undefined --same as for classes
+checkSuperInterfaces :: ByteCode -> Symbolics -> Runtime -> Either LoadingError Runtime
+checkSuperInterfaces bc syms rt = let superInterfaces = interfaces $ body bc
+                                  in undefined
 
-recordClassLoading :: Runtime -> ByteCode -> Symbolics -> Either LoadingError Runtime
+recordClassLoading :: ByteCode -> Symbolics -> Runtime -> Either LoadingError Runtime
 recordClassLoading = undefined
 --defining cl, initiatin cl, pool, symbolics, lli status
 
+
+resolve :: ClassName -> Runtime -> Runtime
+resolve = undefined
 
 
 
