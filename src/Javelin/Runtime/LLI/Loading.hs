@@ -79,10 +79,10 @@ derive name rt initCl bs = do
   checkInitiatingClassLoader initCl name rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
-  symbolics <- checkRepresentedClass name rt bc
-  checkSuperClasses rt bc symbolics
-  checkSuperInterfaces rt bc symbolics
-  recordClassLoading rt bc symbolics
+  syms <- checkRepresentedClass name rt bc
+  checkSuperClasses rt bc syms
+  checkSuperInterfaces rt bc syms
+  recordClassLoading rt bc syms
 
 checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
                                             then Left LinkageError
@@ -114,6 +114,7 @@ checkSuperInterfaces = undefined --same as for classes
 
 recordClassLoading :: Runtime -> ByteCode -> Symbolics -> Either LoadingError Runtime
 recordClassLoading = undefined
+--defining cl, initiatin cl, pool, symbolics, lli status
 
 
 
