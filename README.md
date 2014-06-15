@@ -22,7 +22,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
    * write derive: 3 errors, resolve supreclass, superinterface, save information to runtime
   * bootstrap array load
   * fix: can be several class loaders for a class
-  * constraints
+  * put constraints on it
  * Linking
   * ...
  * Initializing:

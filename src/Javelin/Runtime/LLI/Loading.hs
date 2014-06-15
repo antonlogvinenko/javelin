@@ -12,7 +12,7 @@ import Data.Word (Word16)
 import Data.Map.Lazy as Map (fromList, insert, lookup)
 import Control.Applicative ((<$>))
 import Data.ByteString.Lazy (ByteString, unpack)
-
+import Javelin.Util
 
 
 
@@ -23,15 +23,19 @@ data LoadingError = ClassNotFoundException
                   | ClassFormatError
                   | UnsupportedClassVersionError
                   | NoClassDefFoundError
-                  | UnknownError { msg :: String }
+                  | InternalError { internal :: InternalLoadingError }
                   deriving (Show, Eq)
+
+data InternalLoadingError = CantCheckClassRepresentation
+                          | ClassLoaderNotFound
+                          deriving (Show, Eq)
 
 load :: Maybe ClassName -> ClassName -> Runtime -> IO (Either LoadingError Runtime)
 load trigger name rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
       properClassLoader = getProperClassLoader trigger rt
   in case properClassLoader of
-          Nothing -> return $ Left $ UnknownError "Class loader could not be found"
+          Nothing -> return $ Left $ InternalError ClassLoaderNotFound
           Just cl -> classLoadFunction name rt cl
 
 isArray :: ClassName -> Bool
@@ -73,11 +77,12 @@ loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
 derive :: ClassName -> Runtime -> ClassLoader -> ByteString -> Either LoadingError Runtime
 derive name rt initCl bs = do
   checkInitiatingClassLoader initCl name rt
-  checkClassFileFormat bs rt
-    >>= checkClassVersion
-    >>= checkRepresentedClass rt
-    >>= checkSuperClasses rt
-    >>= recordClassLoading rt
+  bc <- checkClassFileFormat bs rt
+  checkClassVersion bc
+  symbolics <- checkRepresentedClass name rt bc
+  checkSuperClasses rt bc symbolics
+  checkSuperInterfaces rt bc symbolics
+  recordClassLoading rt bc symbolics
 
 checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
                                             then Left LinkageError
@@ -88,32 +93,37 @@ checkClassFileFormat bs rt = let body = parse $ unpack bs in
     Left (_, _, msg) -> Left ClassFormatError
     Right (_, _, body) -> Right body
     
-checkClassVersion :: ByteCode -> Either LoadingError ByteCode
+checkClassVersion :: ByteCode -> Either LoadingError ()
 checkClassVersion bc = if minVer bc < 0 || majVer bc > 100500
                        then Left UnsupportedClassVersionError
-                       else Right bc
+                       else Right ()
 
-checkRepresentedClass :: Runtime -> ByteCode -> Either LoadingError ByteCode
-checkRepresentedClass = undefined --NoClassDefFoundError
+checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> Either LoadingError Symbolics
+checkRepresentedClass name rt bc = let pool = constPool $ body bc
+                                       symbolics = derivePool pool
+                                       thisIndex = this $ body bc
+                                   in case Map.lookup (fromIntegral thisIndex) symbolics of
+                                     Just (ClassOrInterface x) -> return symbolics
+                                     _ -> Left $ InternalError CantCheckClassRepresentation
 
-checkSuperClasses :: Runtime -> ByteCode -> Either LoadingError ByteCode
+checkSuperClasses :: Runtime -> ByteCode -> Symbolics -> Either LoadingError ()
 checkSuperClasses = undefined --IncompatibleClassChangeError --ClassCircularityError
 
-checkSuperInterfaces :: Runtime -> ByteCode -> Either LoadingError ByteCode
+checkSuperInterfaces :: Runtime -> ByteCode -> Symbolics -> Either LoadingError ()
 checkSuperInterfaces = undefined --same as for classes
 
-recordClassLoading :: Runtime -> ByteCode -> Either LoadingError Runtime
+recordClassLoading :: Runtime -> ByteCode -> Symbolics -> Either LoadingError Runtime
 recordClassLoading = undefined
-  
+
 
 
 
 -- §5.1 The Runtime Constant Pool
 
-derivePool :: ConstantPool -> DerivedPool
+derivePool :: ConstantPool -> Symbolics
 derivePool p = deriveReduce p (length p - 1) $ fromList []
 
-deriveReduce :: ConstantPool -> Int -> DerivedPool -> DerivedPool
+deriveReduce :: ConstantPool -> Int -> Symbolics -> Symbolics
 deriveReduce _ (-1) d = d
 deriveReduce p i d = deriveReduce p (i - 1) d2
   where item = p !! i
