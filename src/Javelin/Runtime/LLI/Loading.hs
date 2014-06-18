@@ -97,22 +97,22 @@ checkClassVersion bc = if minVer bc < 0 || majVer bc > 100500
                        then Left UnsupportedClassVersionError
                        else Right ()
 
-checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> Either LoadingError Symbolics
+checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> Either LoadingError SymTable
 checkRepresentedClass name rt bc = let pool = constPool $ body bc
-                                       symbolics = derivePool pool
+                                       symbolics = deriveSymTable pool
                                        thisIndex = this $ body bc
                                    in case Map.lookup (fromIntegral thisIndex) symbolics of
                                      Just (ClassOrInterface x) -> return symbolics
                                      _ -> Left $ InternalError CantCheckClassRepresentation
 
-checkSuperClass :: ByteCode -> Symbolics -> Runtime -> Either LoadingError Runtime
+checkSuperClass :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
 checkSuperClass = undefined --IncompatibleClassChangeError --ClassCircularityError
 
-checkSuperInterfaces :: ByteCode -> Symbolics -> Runtime -> Either LoadingError Runtime
+checkSuperInterfaces :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
 checkSuperInterfaces bc syms rt = let superInterfaces = interfaces $ body bc
                                   in undefined
 
-recordClassLoading :: ByteCode -> Symbolics -> Runtime -> Either LoadingError Runtime
+recordClassLoading :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
 recordClassLoading = undefined
 --defining cl, initiatin cl, pool, symbolics, lli status
 
@@ -124,10 +124,10 @@ resolve = undefined
 
 -- §5.1 The Runtime Constant Pool
 
-derivePool :: ConstantPool -> Symbolics
-derivePool p = deriveReduce p (length p - 1) $ fromList []
+deriveSymTable :: ConstantPool -> SymTable
+deriveSymTable p = deriveReduce p (length p - 1) $ fromList []
 
-deriveReduce :: ConstantPool -> Int -> Symbolics -> Symbolics
+deriveReduce :: ConstantPool -> Int -> SymTable -> SymTable
 deriveReduce _ (-1) d = d
 deriveReduce p i d = deriveReduce p (i - 1) d2
   where item = p !! i

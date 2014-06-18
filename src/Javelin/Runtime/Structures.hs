@@ -54,7 +54,7 @@ data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
 
-                         symbolics:: Map ClassName Symbolics,
+                         symbolics:: Map ClassName SymTable,
                          constantPool :: Map.Map ClassName [Constant],
                          heap :: [JObject],
 
@@ -106,7 +106,7 @@ data JValue = JInt { getInt :: Int32 }
 
 
 -- Class loading structures
-type Symbolics = Map Int SymbolicReference
+type SymTable = Map Int SymbolicReference
 
 data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
                        | FieldReference { field :: PartReference }
