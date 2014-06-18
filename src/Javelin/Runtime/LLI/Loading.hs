@@ -117,7 +117,7 @@ recordClassLoading = undefined
 --defining cl, initiatin cl, pool, symbolics, lli status
 
 
-resolve :: ClassName -> Runtime -> Runtime
+resolve :: ClassName -> Runtime -> Either Runtime Runtime
 resolve = undefined
 
 
