@@ -23,6 +23,8 @@ data LoadingError = ClassNotFoundException
                   | ClassFormatError
                   | UnsupportedClassVersionError
                   | NoClassDefFoundError
+                  | IncompatibleClassChangeError
+                  | ClassCircularityError
                   | InternalError { internal :: InternalLoadingError }
                   | ResolutionError
                   deriving (Show, Eq)
@@ -116,12 +118,14 @@ checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
                                        rt <- resolve parent rt
                                        case isInterface parent rt of
                                          Nothing -> undefined --error - didn't find parent's access flags
-                                         Just True -> undefined -- error! parent can't be an interface
-                                         _ -> case (isInterface name rt, parent) of
+                                         Just True -> Left IncompatibleClassChangeError
+                                         Just False -> case (isInterface name rt, parent) of
                                            (Nothing, _) -> undefined -- error, why nothing found?
                                            (Just True, "java.lang.Object") -> Right rt
                                            (Just True, _) -> undefined --error parent of interf is obj
-                                           _ -> Right rt
+                                           (Just False, parent) -> if parent == name
+                                                                   then Left ClassCircularityError
+                                                                   else Right rt
                                      Just _ -> undefined -- error!
                                      Nothing -> undefined -- error!
 
@@ -130,12 +134,15 @@ checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
 checkSuperInterfaces :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
 checkSuperInterfaces bc syms rt = let superInterfaces = interfaces $ body bc
                                   in undefined
--- resolve superinterfaces
+
 
 recordClassLoading :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
 recordClassLoading = undefined
 --defining cl, initiatin cl, pool, symbolics, lli status: loaded + resolved?
 
+
+
+-- §5.4.3 Resolution
 
 resolve :: ClassName -> Runtime -> Either LoadingError Runtime
 resolve = undefined
