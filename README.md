@@ -85,3 +85,4 @@ Very handy posts:
 * http://dev.stephendiehl.com/hask/
 * http://blog.jle.im/entry/inside-my-world-ode-to-functor-and-monad
 * http://katychuang.com/cabal-guide/
+* http://fp.silk.co
