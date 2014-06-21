@@ -119,16 +119,16 @@ checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
                                        case isInterface parent rt of
                                          Nothing -> undefined --error - didn't find parent's access flags
                                          Just True -> Left IncompatibleClassChangeError
-                                         Just False -> case (isInterface name rt, parent) of
-                                           (Nothing, _) -> undefined -- error, why nothing found?
-                                           (Just True, "java.lang.Object") -> Right rt
-                                           (Just True, _) -> undefined --error parent of interf is obj
-                                           (Just False, parent) -> if parent == name
-                                                                   then Left ClassCircularityError
-                                                                   else Right rt
+                                         Just False -> let thisIsInterface = elem ClassInterface $ classAccessFlags $ body bc
+                                                       in case (isInterface name rt, parent) of
+                                                         (Nothing, _) -> undefined -- error, why nothing found?
+                                                         (Just True, "java.lang.Object") -> Right rt
+                                                         (Just True, _) -> undefined --error parent of interf is obj
+                                                         (Just False, parent) -> if parent == name
+                                                                                 then Left ClassCircularityError
+                                                                                 else Right rt
                                      Just _ -> undefined -- error!
                                      Nothing -> undefined -- error!
-
 
 
 checkSuperInterfaces :: ClassName -> ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
@@ -151,7 +151,6 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
     Nothing -> undefined -- error!
 
   -- 1 bug in check superClasses
-  -- 2 write interfaces
   -- errors handing
   -- recordClassLoading
 
