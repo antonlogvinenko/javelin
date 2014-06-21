@@ -8,7 +8,7 @@ import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map, lookup)
 import Data.Int (Int8, Int16, Int32, Int64)
 
-import Javelin.ByteCode.Data (Constant, ByteCode)
+import Javelin.ByteCode.Data
 import Javelin.Util
 
 
@@ -60,6 +60,8 @@ data Runtime = Runtime { layout :: Layout,
                          threads :: [Thread] }
              deriving (Show, Eq)
 
+isInterface :: ClassName -> Runtime -> Maybe Bool
+isInterface name rt = (elem ClassInterface) <$> classAccessFlags <$> body <$> (Map.lookup name $ bytecodes rt)
 
 
 -- LLI ClassPath

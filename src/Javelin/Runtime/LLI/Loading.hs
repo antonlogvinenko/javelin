@@ -114,15 +114,14 @@ checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
                                    (name, idx) -> case Map.lookup superClassIdx sym of
                                      Just (ClassOrInterface parent) -> do
                                        rt <- resolve parent rt
-                                       let isInterface = elem ClassInterface $ classAccessFlags $ body bc
-                                       case classAccessFlags <$> body <$> (Map.lookup parent $ bytecodes rt) of
+                                       case isInterface parent rt of
                                          Nothing -> undefined --error - didn't find parent's access flags
-                                         Just parentFlags -> if elem ClassInterface parentFlags
-                                                             then undefined -- error! parent can't be an interface
-                                                             else case (isInterface, parent) of
-                                                               (True, "java.lang.Object") -> Right rt
-                                                               (True, _) -> undefined --error parent of interf is obj
-                                                               _ -> Right rt
+                                         Just True -> undefined -- error! parent can't be an interface
+                                         _ -> case (isInterface name rt, parent) of
+                                           (Nothing, _) -> undefined -- error, why nothing found?
+                                           (Just True, "java.lang.Object") -> Right rt
+                                           (Just True, _) -> undefined --error parent of interf is obj
+                                           _ -> Right rt
                                      Just _ -> undefined -- error!
                                      Nothing -> undefined -- error!
 
