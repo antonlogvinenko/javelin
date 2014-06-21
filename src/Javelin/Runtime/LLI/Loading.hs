@@ -83,7 +83,7 @@ derive name rt initCl bs = do
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
   syms <- checkRepresentedClass name rt bc
-  checkSuperClass name bc syms rt >>= checkSuperInterfaces bc syms >>= recordClassLoading bc syms
+  checkSuperClass name bc syms rt >>= checkSuperInterfaces name bc syms >>= recordClassLoading bc syms
 
 checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
                                             then Left LinkageError
@@ -131,9 +131,29 @@ checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
 
 
 
-checkSuperInterfaces :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
-checkSuperInterfaces bc syms rt = let superInterfaces = interfaces $ body bc
-                                  in undefined
+checkSuperInterfaces :: ClassName -> ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
+checkSuperInterfaces name bc syms rt = let superInterfaces = interfaces $ body bc
+                                  in foldl (checkSuperInterface name bc syms) (Right rt) superInterfaces
+checkSuperInterface :: ClassName => ByteCode -> SymTable -> Either LoadingError Runtime -> Word16 -> Either LoadingError Runtime
+checkSuperInterface name bc sym eitherRt interfaceIdx = do
+  rt <- eitherRt
+  case Map.lookup interfaceIdx sym of
+    Just (ClassOrInterface parent) -> do
+      rt <- resolve parent rt
+      case isInterface parent rt of
+        Nothing -> undefined --error!
+        Just True -> if parent == name
+                     then Left ClassCircularityError
+                     else Right rt
+        Just False -> Left IncompatibleClassChangeError
+      undefined
+    Just _ -> undefined --error!
+    Nothing -> undefined -- error!
+
+  -- 1 bug in check superClasses
+  -- 2 write interfaces
+  -- errors handing
+  -- recordClassLoading
 
 
 recordClassLoading :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
