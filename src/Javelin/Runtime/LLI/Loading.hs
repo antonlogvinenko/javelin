@@ -27,6 +27,7 @@ data LoadingError = ClassNotFoundException
                   | ClassCircularityError
                   | InternalError { internal :: InternalLoadingError }
                   | ResolutionError
+                  | UnknownError { message :: String }
                   deriving (Show, Eq)
 
 data InternalLoadingError = CantCheckClassRepresentation
@@ -111,24 +112,23 @@ checkSuperClass :: ClassName -> ByteCode -> SymTable -> Runtime -> Either Loadin
 checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
                                  in case (name, superClassIdx) of
                                    ("java.lang.Object", 0) -> Right rt
-                                   (_, 0) -> Left undefined -- error!
-                                   ("java.lang.Object", _) -> Left undefined --error!
+                                   (_, 0) -> Left $ UnknownError "Only java.lang.Object has no super classes"
+                                   ("java.lang.Object", _) -> Left $ UnknownError "java.lang.Object has no super classes"
                                    (name, idx) -> case Map.lookup superClassIdx sym of
                                      Just (ClassOrInterface parent) -> do
                                        rt <- resolve parent rt
                                        case isInterface parent rt of
-                                         Nothing -> undefined --error - didn't find parent's access flags
+                                         Nothing -> Left $ UnknownError "Couldn't find access flags for super class"
                                          Just True -> Left IncompatibleClassChangeError
                                          Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                                                            thisIsInterface = elem ClassInterface thisAccessFlags
                                                        in case (thisIsInterface, parent) of
                                                          (True, "java.lang.Object") -> Right rt
-                                                         (True, _) -> undefined --error parent of interf is obj
+                                                         (True, _) -> Left $ UnknownError "Interface must have java.lang.Object as it's super class"
                                                          (False, parent) -> if parent == name
                                                                                  then Left ClassCircularityError
                                                                                  else Right rt
-                                     Just _ -> undefined -- error!
-                                     Nothing -> undefined -- error!
+                                     _ -> Left $ UnknownError "SymTable doesn't have a class at the index"
 
 
 checkSuperInterfaces :: ClassName -> ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
@@ -141,17 +141,15 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
     Just (ClassOrInterface parent) -> do
       rt <- resolve parent rt
       case isInterface parent rt of
-        Nothing -> undefined --error!
+        Nothing -> left $ UnknownError "Couldn't find access flags for super interface"
         Just True -> if parent == name
                      then Left ClassCircularityError
                      else Right rt
         Just False -> Left IncompatibleClassChangeError
       undefined
-    Just _ -> undefined --error!
-    Nothing -> undefined -- error!
+    _ -> Left $ UnknownError "SymTable doesn't have a interface symbol at the index"
 
-  -- errors handing
-  -- recordClassLoading
+-- recordClassLoading
 
 
 recordClassLoading :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
