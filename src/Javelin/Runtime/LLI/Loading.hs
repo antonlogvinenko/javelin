@@ -45,28 +45,29 @@ load trigger name rt =
 isArray :: ClassName -> Bool
 isArray name = head name == '['
 
-getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
-getProperClassLoader Nothing (Runtime {classLoaders = loaders}) = loaders !? 0
+getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe Int
+getProperClassLoader Nothing _ = Just 0
 getProperClassLoader (Just trigger)
   rt@(Runtime {classLoading = classLoading, classLoaders = classLoaders}) =
   do
     classLoadingInfo <- Map.lookup trigger classLoading
     let definingCLIndex = defining classLoadingInfo
-    classLoaders !? definingCLIndex
+    return definingCLIndex
 
-type ClassLoadMethod = ClassName -> Runtime -> ClassLoader -> IO (Either LoadingError Runtime)
+type ClassLoadMethod = ClassName -> Runtime -> Int -> IO (Either LoadingError Runtime)
 
 loadArray :: ClassLoadMethod
 loadArray name rt classLoader = undefined
 
 loadClass :: ClassLoadMethod
-loadClass name rt (UserDefinedClassLoader cl) = undefined
-loadClass name rt cl@BootstrapClassLoader =
+loadClass name rt cl@0 = 
   case getInitiatingClassLoader name rt of
     Nothing -> loadClassWithBootstrap name rt
     Just initCl -> if initCl == cl
                    then return $ Right rt
                    else loadClassWithBootstrap name rt
+loadClass name rt cl = undefined
+
 
 loadClassWithBootstrap :: ClassName -> Runtime -> IO (Either LoadingError Runtime)
 loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
@@ -74,17 +75,20 @@ loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
   let eitherBytes = maybeToEither ClassNotFoundException maybeBytes
   return $ do
     bytes <- eitherBytes
-    derive name rt BootstrapClassLoader bytes
+    derive name rt 0 0 bytes
+
 
 
 -- §5.3.5 Deriving a Class from a class File Representation
-derive :: ClassName -> Runtime -> ClassLoader -> ByteString -> Either LoadingError Runtime
-derive name rt initCl bs = do
+derive :: ClassName -> Runtime -> Int -> Int -> ByteString -> Either LoadingError Runtime
+derive name rt initCl defCl bs = do
   checkInitiatingClassLoader initCl name rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
   syms <- checkRepresentedClass name rt bc
-  checkSuperClass name bc syms rt >>= checkSuperInterfaces name bc syms >>= recordClassLoading bc syms
+  checkSuperClass name bc syms rt
+    >>= checkSuperInterfaces name bc syms
+    >>= recordClassLoading name bc syms initCl defCl
 
 checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
                                             then Left LinkageError
@@ -141,7 +145,7 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
     Just (ClassOrInterface parent) -> do
       rt <- resolve parent rt
       case isInterface parent rt of
-        Nothing -> left $ UnknownError "Couldn't find access flags for super interface"
+        Nothing -> Left $ UnknownError "Couldn't find access flags for super interface"
         Just True -> if parent == name
                      then Left ClassCircularityError
                      else Right rt
@@ -149,13 +153,15 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
       undefined
     _ -> Left $ UnknownError "SymTable doesn't have a interface symbol at the index"
 
--- recordClassLoading
-
-
-recordClassLoading :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
-recordClassLoading = undefined
---defining cl, initiatin cl, pool, symbolics, lli status: loaded + resolved?
-
+recordClassLoading :: ClassName -> ByteCode -> SymTable -> Int -> Int -> Runtime -> Either LoadingError Runtime
+recordClassLoading name bc sym defCl initCl
+  rt@(Runtime {classLoading = cls, symbolics = syms, bytecodes = bcs, constantPool = cps}) =
+    let clInfo = ClassLoaderInfo defCl initCl (name, defCl) Loaded False
+    in Right $ rt {classLoading = insert name clInfo cls,
+                   symbolics = insert name sym syms,
+                   bytecodes = insert name bc bcs,
+                   constantPool = insert name (constPool $ body bc) cps}
+  
 
 
 -- §5.4.3 Resolution

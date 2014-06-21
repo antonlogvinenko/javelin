@@ -37,14 +37,13 @@ newRuntime layout = let emptyThreads = []
                     in Runtime layout [BootstrapClassLoader]
                        classLoadingInfo (fromList []) (fromList []) (fromList []) [] emptyThreads
 
-getClassLoader name rt f = do
-  index <- f <$> (Map.lookup name $ classLoading rt)
-  classLoaders rt !? index
+getClassLoader :: ClassName -> Runtime -> (ClassLoaderInfo -> Int) -> Maybe Int
+getClassLoader name rt f = f <$> (Map.lookup name $ classLoading rt)
 
-getInitiatingClassLoader :: ClassName -> Runtime -> Maybe ClassLoader
+getInitiatingClassLoader :: ClassName -> Runtime -> Maybe Int
 getInitiatingClassLoader name rt = getClassLoader name rt initiating
 
-getDefiningClassLoader :: ClassName -> Runtime -> Maybe ClassLoader
+getDefiningClassLoader :: ClassName -> Runtime -> Maybe Int
 getDefiningClassLoader name rt = getClassLoader name rt defining
 
 
