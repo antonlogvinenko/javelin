@@ -40,6 +40,8 @@ getProperClassLoader (Just trigger)
 
 type ClassLoadMethod = ClassName -> Runtime -> Int -> IO (Either LoadingError Runtime)
 
+
+-- §5.3.3 Creating Array Classes
 loadArray :: ClassLoadMethod
 loadArray name rt classLoader = undefined
 
@@ -53,6 +55,7 @@ loadClass name rt cl@0 =
 loadClass name rt cl = undefined
 
 
+-- §5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassName -> Runtime -> IO (Either LoadingError Runtime)
 loadClassWithBootstrap name rt@(Runtime {layout = layout}) = do
   maybeBytes <- runMaybeT $ getClassBytes name layout
@@ -201,6 +204,3 @@ deriveUtf8 p idx = do
   case name of
     Utf8Info name -> Just name
     _ -> Nothing
-    
-
-
