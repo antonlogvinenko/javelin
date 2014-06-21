@@ -5,6 +5,7 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
 import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
+import Javelin.Runtime.LLI.Linking
 import Javelin.ByteCode.ClassFile (parse)
 
 import Control.Monad.Trans.Maybe
@@ -17,23 +18,6 @@ import Javelin.Util
 
 
 -- Loading
-
-data LoadingError = ClassNotFoundException
-                  | LinkageError
-                  | ClassFormatError
-                  | UnsupportedClassVersionError
-                  | NoClassDefFoundError
-                  | IncompatibleClassChangeError
-                  | ClassCircularityError
-                  | InternalError { internal :: InternalLoadingError }
-                  | ResolutionError
-                  | UnknownError { message :: String }
-                  deriving (Show, Eq)
-
-data InternalLoadingError = CantCheckClassRepresentation
-                          | ClassLoaderNotFound
-                          deriving (Show, Eq)
-
 load :: Maybe ClassName -> ClassName -> Runtime -> IO (Either LoadingError Runtime)
 load trigger name rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
@@ -116,23 +100,23 @@ checkSuperClass :: ClassName -> ByteCode -> SymTable -> Runtime -> Either Loadin
 checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
                                  in case (name, superClassIdx) of
                                    ("java.lang.Object", 0) -> Right rt
-                                   (_, 0) -> Left $ UnknownError "Only java.lang.Object has no super classes"
-                                   ("java.lang.Object", _) -> Left $ UnknownError "java.lang.Object has no super classes"
+                                   (_, 0) -> Left $ InternalError OnlyClassObjectHasNoSuperClass
+                                   ("java.lang.Object", _) -> Left $ InternalError ClassObjectHasNoSuperClasses
                                    (name, idx) -> case Map.lookup superClassIdx sym of
                                      Just (ClassOrInterface parent) -> do
                                        rt <- resolve parent rt
                                        case isInterface parent rt of
-                                         Nothing -> Left $ UnknownError "Couldn't find access flags for super class"
+                                         Nothing -> Left $ InternalError CouldNotFindAccessFlags
                                          Just True -> Left IncompatibleClassChangeError
                                          Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                                                            thisIsInterface = elem ClassInterface thisAccessFlags
                                                        in case (thisIsInterface, parent) of
                                                          (True, "java.lang.Object") -> Right rt
-                                                         (True, _) -> Left $ UnknownError "Interface must have java.lang.Object as it's super class"
+                                                         (True, _) -> Left $ InternalError InterfaceMustHaveObjectAsSuperClass
                                                          (False, parent) -> if parent == name
                                                                                  then Left ClassCircularityError
                                                                                  else Right rt
-                                     _ -> Left $ UnknownError "SymTable doesn't have a class at the index"
+                                     _ -> Left $ InternalError SymTableHasNoClassEntryAtIndex
 
 
 checkSuperInterfaces :: ClassName -> ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
@@ -145,13 +129,13 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
     Just (ClassOrInterface parent) -> do
       rt <- resolve parent rt
       case isInterface parent rt of
-        Nothing -> Left $ UnknownError "Couldn't find access flags for super interface"
+        Nothing -> Left $ InternalError CouldNotFindAccessFlags
         Just True -> if parent == name
                      then Left ClassCircularityError
                      else Right rt
         Just False -> Left IncompatibleClassChangeError
       undefined
-    _ -> Left $ UnknownError "SymTable doesn't have a interface symbol at the index"
+    _ -> Left $ InternalError SymTableHasNoClassEntryAtIndex
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> Int -> Int -> Runtime -> Either LoadingError Runtime
 recordClassLoading name bc sym defCl initCl
@@ -162,13 +146,6 @@ recordClassLoading name bc sym defCl initCl
                    bytecodes = insert name bc bcs,
                    constantPool = insert name (constPool $ body bc) cps}
   
-
-
--- §5.4.3 Resolution
-
-resolve :: ClassName -> Runtime -> Either LoadingError Runtime
-resolve = undefined
-
 
 
 -- §5.1 The Runtime Constant Pool

@@ -90,6 +90,27 @@ data ClassLoaderInfo = ClassLoaderInfo { defining :: Int,
                                          resolved :: Bool }
                      deriving (Show, Eq)
 
+data LoadingError = ClassNotFoundException
+                  | LinkageError
+                  | ClassFormatError
+                  | UnsupportedClassVersionError
+                  | NoClassDefFoundError
+                  | IncompatibleClassChangeError
+                  | ClassCircularityError
+                  | InternalError { internal :: InternalLoadingError }
+                  | ResolutionError
+                  | UnknownError { message :: String }
+                  deriving (Show, Eq)
+
+data InternalLoadingError = CantCheckClassRepresentation
+                          | ClassLoaderNotFound
+                          | OnlyClassObjectHasNoSuperClass
+                          | ClassObjectHasNoSuperClasses
+                          | CouldNotFindAccessFlags
+                          | InterfaceMustHaveObjectAsSuperClass
+                          | SymTableHasNoClassEntryAtIndex
+                          deriving (Show, Eq)
+
 
 -- Heap contents
 type JObject = Map String JValue
