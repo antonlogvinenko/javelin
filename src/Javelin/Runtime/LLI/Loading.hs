@@ -81,7 +81,7 @@ derive name rt initCl bs = do
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
   syms <- checkRepresentedClass name rt bc
-  checkSuperClass bc syms rt >>= checkSuperInterfaces bc syms >>= recordClassLoading bc syms
+  checkSuperClass name bc syms rt >>= checkSuperInterfaces bc syms >>= recordClassLoading bc syms
 
 checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
                                             then Left LinkageError
@@ -105,19 +105,40 @@ checkRepresentedClass name rt bc = let pool = constPool $ body bc
                                      Just (ClassOrInterface x) -> return symbolics
                                      _ -> Left $ InternalError CantCheckClassRepresentation
 
-checkSuperClass :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
-checkSuperClass = undefined --IncompatibleClassChangeError --ClassCircularityError
+checkSuperClass :: ClassName -> ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
+checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
+                                 in case (name, superClassIdx) of
+                                   ("java.lang.Object", 0) -> Right rt
+                                   (_, 0) -> Left undefined -- error!
+                                   ("java.lang.Object", _) -> Left undefined --error!
+                                   (name, idx) -> case Map.lookup superClassIdx sym of
+                                     Just (ClassOrInterface parent) -> do
+                                       rt <- resolve parent rt
+                                       let isInterface = elem ClassInterface $ classAccessFlags $ body bc
+                                       case classAccessFlags <$> body <$> (Map.lookup parent $ bytecodes rt) of
+                                         Nothing -> undefined --error - didn't find parent's access flags
+                                         Just parentFlags -> if elem ClassInterface parentFlags
+                                                             then undefined -- error! parent can't be an interface
+                                                             else case (isInterface, parent) of
+                                                               (True, "java.lang.Object") -> Right rt
+                                                               (True, _) -> undefined --error parent of interf is obj
+                                                               _ -> Right rt
+                                     Just _ -> undefined -- error!
+                                     Nothing -> undefined -- error!
+
+
 
 checkSuperInterfaces :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
 checkSuperInterfaces bc syms rt = let superInterfaces = interfaces $ body bc
                                   in undefined
+-- resolve superinterfaces
 
 recordClassLoading :: ByteCode -> SymTable -> Runtime -> Either LoadingError Runtime
 recordClassLoading = undefined
---defining cl, initiatin cl, pool, symbolics, lli status
+--defining cl, initiatin cl, pool, symbolics, lli status: loaded + resolved?
 
 
-resolve :: ClassName -> Runtime -> Either Runtime Runtime
+resolve :: ClassName -> Runtime -> Either LoadingError Runtime
 resolve = undefined
 
 
@@ -132,7 +153,7 @@ deriveReduce _ (-1) d = d
 deriveReduce p i d = deriveReduce p (i - 1) d2
   where item = p !! i
         d2 = case deriveReference p item of
-          Just ref -> insert i ref d
+          Just ref -> insert (fromIntegral i) ref d
           Nothing -> d
 
 deriveReference :: ConstantPool -> Constant -> Maybe SymbolicReference

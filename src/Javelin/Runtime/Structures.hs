@@ -3,12 +3,12 @@ module Javelin.Runtime.Structures
 where 
 
 import Control.Applicative
-import Data.Word (Word32, Word64)
+import Data.Word (Word16, Word32, Word64)
 import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map, lookup)
 import Data.Int (Int8, Int16, Int32, Int64)
 
-import Javelin.ByteCode.Data (Constant)
+import Javelin.ByteCode.Data (Constant, ByteCode)
 import Javelin.Util
 
 
@@ -30,14 +30,12 @@ data Frame = Frame { currentClass :: Integer,
 data StackElement = StackElement { stackElement :: Word64 } deriving (Show, Eq)
 data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
 
-
-
 -- Runtime
 newRuntime :: Layout -> Runtime
 newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout [BootstrapClassLoader]
-                       classLoadingInfo (fromList []) (fromList []) [] emptyThreads
+                       classLoadingInfo (fromList []) (fromList []) (fromList []) [] emptyThreads
 
 getClassLoader name rt f = do
   index <- f <$> (Map.lookup name $ classLoading rt)
@@ -52,12 +50,13 @@ getDefiningClassLoader name rt = getClassLoader name rt defining
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
+
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
-
-                         symbolics:: Map ClassName SymTable,
+                         symbolics :: Map ClassName SymTable,
+                         bytecodes :: Map.Map ClassName ByteCode,
                          constantPool :: Map.Map ClassName [Constant],
-                         heap :: [JObject],
 
+                         heap :: [JObject],
                          threads :: [Thread] }
              deriving (Show, Eq)
 
@@ -106,7 +105,7 @@ data JValue = JInt { getInt :: Int32 }
 
 
 -- Class loading structures
-type SymTable = Map Int SymbolicReference
+type SymTable = Map Word16 SymbolicReference
 
 data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
                        | FieldReference { field :: PartReference }
