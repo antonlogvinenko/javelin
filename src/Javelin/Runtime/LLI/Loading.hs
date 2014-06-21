@@ -33,10 +33,7 @@ getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe Int
 getProperClassLoader Nothing _ = Just 0
 getProperClassLoader (Just trigger)
   rt@(Runtime {classLoading = classLoading, classLoaders = classLoaders}) =
-  do
-    classLoadingInfo <- Map.lookup trigger classLoading
-    let definingCLIndex = defining classLoadingInfo
-    return definingCLIndex
+  defining <$>  Map.lookup trigger classLoading
 
 type ClassLoadMethod = ClassName -> Runtime -> Int -> IO (Either LoadingError Runtime)
 
