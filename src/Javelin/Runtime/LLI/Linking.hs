@@ -14,3 +14,6 @@ verification name rt = Right rt
 
 preparing :: ClassName -> Runtime -> Either LoadingError Runtime
 preparing name rt = undefined
+-- find all static fields in bytecode
+-- create area in heap
+-- set runtime proper values to static fields
