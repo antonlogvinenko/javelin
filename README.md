@@ -17,13 +17,15 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Short term*
 * Linking
- * static fields init (preparation)
+ * preparation: static fields init
+ * errors, compose with loading errors?
+ * who starts the whole lli cycle?
 * Loading
   * bootstrap array load
   * fix: can be several class loaders for a class
-* Initializing
 * Resolution
- * LLI, probably skip:
+* Initializing
+* LLI, probably skip:
   * verification
   * constraints
   * user defined CL

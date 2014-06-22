@@ -5,12 +5,12 @@ import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.Resolve
 
 
-link :: ClassName -> Runtime -> Either LoadingError Runtime
-link name rt = verify name rt >>= prepare name
+linking :: ClassName -> Runtime -> Either LoadingError Runtime
+linking name rt = verification name rt >>= preparing name
 
 -- §5.4.1 verification skipped in the first iteration
-verify :: ClassName -> Runtime -> Either LoadingError Runtime
-verify name rt = Right rt
+verification :: ClassName -> Runtime -> Either LoadingError Runtime
+verification name rt = Right rt
 
-prepare :: ClassName -> Runtime -> Either LoadingError Runtime
-prepare name rt = undefined
+preparing :: ClassName -> Runtime -> Either LoadingError Runtime
+preparing name rt = undefined
