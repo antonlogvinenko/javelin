@@ -5,7 +5,7 @@ where
 import Control.Applicative
 import Data.Word (Word16, Word32, Word64)
 import Data.Array.IArray (Array)
-import Data.Map.Lazy as Map (fromList, Map, lookup)
+import Data.Map.Lazy as Map (fromList, Map, lookup, insert)
 import Data.Int (Int8, Int16, Int32, Int64)
 
 import Javelin.ByteCode.Data
@@ -46,6 +46,26 @@ getInitiatingClassLoader name rt = getClassLoader name rt initiating
 getDefiningClassLoader :: ClassName -> Runtime -> Maybe Int
 getDefiningClassLoader name rt = getClassLoader name rt defining
 
+
+
+type Ref = Int
+
+malloc :: Runtime -> (Runtime, Ref)
+malloc rt@(Runtime {heap = h}) =
+  let h2 = h ++ [JObject
+
+getField :: Runtime -> Ref -> String -> Maybe JValue
+getField rt ref name = do
+  let h = heap rt
+  object <- h !? ref
+  Map.lookup name object
+
+writeField :: Runtime -> Ref -> String -> JValue -> Maybe Runtime
+writeField rt@(Runtime {heap = h}) ref name value = do
+  jobject <- h !? ref
+  let newObject = Map.insert name value jobject
+  -- how to set newObject to the same index in heap? switch to arrays?
+  return $ rt{heap = h}
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
