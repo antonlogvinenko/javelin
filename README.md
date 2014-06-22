@@ -16,21 +16,16 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
  * user derined class loaders (only boostrap)
 
 *Short term*
- * Loading
-  * bootstrap class load
-   * write derive: 3 errors, resolve supreclass, superinterface, save information to runtime
+* Linking with no resolution
+* Loading
   * bootstrap array load
   * fix: can be several class loaders for a class
-  * put constraints on it
- * Linking
-  * ...
- * Initializing:
-  * ...
+* Initializing
+* Resolution
  * LLI, probably skip:
   * verification
   * constraints
   * user defined CL
-  * errors
  * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
  * init thread stack to run Main { public static void main(Sting...) }
  * Instructions

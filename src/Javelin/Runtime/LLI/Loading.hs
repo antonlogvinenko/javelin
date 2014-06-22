@@ -5,6 +5,7 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
 import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
+import Javelin.Runtime.LLI.Resolve
 import Javelin.Runtime.LLI.Linking
 import Javelin.ByteCode.ClassFile (parse)
 
