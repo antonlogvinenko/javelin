@@ -87,7 +87,8 @@ data ClassLoaderInfo = ClassLoaderInfo { defining :: Int,
                                          initiating :: Int,
                                          runtimePackage :: (String, Int),
                                          lliState :: LoadLinkInitializeState,
-                                         resolved :: Bool }
+                                         resolved :: Bool,
+                                         staticRef :: Maybe Int }
                      deriving (Show, Eq)
 
 data LoadingError = ClassNotFoundException

@@ -141,7 +141,7 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> Int -> Int -> Runtime -> Either LoadingError Runtime
 recordClassLoading name bc sym defCl initCl
   rt@(Runtime {classLoading = cls, symbolics = syms, bytecodes = bcs, constantPool = cps}) =
-    let clInfo = ClassLoaderInfo defCl initCl (name, defCl) Loaded False
+    let clInfo = ClassLoaderInfo defCl initCl (name, defCl) Loaded False Nothing
     in Right $ rt {classLoading = insert name clInfo cls,
                    symbolics = insert name sym syms,
                    bytecodes = insert name bc bcs,
