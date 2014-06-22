@@ -16,7 +16,8 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
  * user derined class loaders (only boostrap)
 
 *Short term*
-* Linking with no resolution
+* Linking
+ * static fields init (preparation)
 * Loading
   * bootstrap array load
   * fix: can be several class loaders for a class
