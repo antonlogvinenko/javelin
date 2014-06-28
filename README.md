@@ -23,8 +23,10 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Loading
   * bootstrap array load
   * fix: can be several class loaders for a class
+
 * Resolution
 * Initializing
+
 * LLI, probably skip:
   * verification
   * constraints
