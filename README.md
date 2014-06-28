@@ -27,10 +27,6 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 * Resolution
 * Initializing
 
-* LLI, probably skip:
-  * verification
-  * constraints
-  * user defined CL
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
 * Instructions
