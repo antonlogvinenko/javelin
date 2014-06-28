@@ -10,14 +10,14 @@ import Javelin.Runtime.LLI.Resolve
 import Javelin.ByteCode.Data
 import Javelin.Util
 
-linking :: ClassName -> Runtime -> Either String Runtime
+linking :: ClassName -> Runtime -> Either VMError Runtime
 linking name rt = verification name rt >>= preparing name
 
 -- §5.4.1 verification skipped in the first iteration
-verification :: ClassName -> Runtime -> Either String Runtime
+verification :: ClassName -> Runtime -> Either VMError Runtime
 verification name rt = Right rt
 
-preparing :: ClassName -> Runtime -> Either String Runtime
+preparing :: ClassName -> Runtime -> Either VMError Runtime
 preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
   let classLoaderInfo = classLoadingInfo Map.! name
       (rt1, ref) = malloc rt
@@ -26,7 +26,7 @@ preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
     return rt2{classLoading = Map.insert name classLoaderInfo{staticRef = Just ref} classLoadingInfo}
 
 
-writeStaticFields :: String -> Runtime -> Ref -> Either String Runtime
+writeStaticFields :: String -> Runtime -> Ref -> Either VMError Runtime
 writeStaticFields name rt ref = let (s, h) = heap rt
                                     jobject = h ! ref
                                 in do
@@ -36,23 +36,16 @@ writeStaticFields name rt ref = let (s, h) = heap rt
                                        staticFields = filter staticSearch $ fields $ body bc
                                      in foldl (prepareStaticField sym ref) (return rt) staticFields
 
-getSymTable :: Runtime -> ClassName -> Either String SymTable
-getSymTable rt name = maybeToEither "" $ Map.lookup name $ symbolics rt
--- rewrite, move to structures
 
-getByteCode :: Runtime -> ClassName -> Either String ByteCode
-getByteCode rt name = maybeToEither "" $ Map.lookup name $ bytecodes rt
--- rewrite, move to structures
-
-bla :: SymTable -> Word16 -> Either String String
-bla = undefined
+bla :: SymTable -> Word16 -> Either VMError String
+bla sym idx = undefined
 -- rewrite, move to structures
 
 getDefaultValue :: String -> JValue
 getDefaultValue = undefined
 --rewrite here
 
-prepareStaticField :: SymTable -> Ref -> Either String Runtime -> FieldInfo -> Either String Runtime
+prepareStaticField :: SymTable -> Ref -> Either VMError Runtime -> FieldInfo -> Either VMError Runtime
 prepareStaticField sym ref ert fi = do
   rt <- ert
   fieldName <- bla sym $ fieldNameIndex fi

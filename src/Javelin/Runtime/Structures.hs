@@ -56,16 +56,25 @@ type Ref = Int
 malloc :: Runtime -> (Runtime, Ref)
 malloc rt@(Runtime {heap = (s, h)}) = (rt{heap = (s + 1, h)}, s)
 
-getField :: Runtime -> Ref -> String -> Maybe JValue
+getField :: Runtime -> Ref -> String -> Either VMError JValue
 getField rt ref name = let (s, h) = heap rt
                            jobject = h ! ref
-                       in Map.lookup name jobject
+                       in mlookup jobject name
 
-writeField :: Runtime -> Ref -> (String, JValue) -> Either String Runtime
+mlookup :: (Ord k) => Map k v -> k -> Either VMError v
+mlookup m k = maybeToEither (StateError "asd") $ Map.lookup k m
+
+writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
 writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
   let jobject = h ! ref
       newObject = Map.insert name value jobject
   return $ rt{heap = (s, h // [(ref, newObject)])}
+
+getSymTable :: Runtime -> ClassName -> Either VMError SymTable
+getSymTable rt name = mlookup (symbolics rt) name
+
+getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
+getByteCode rt name = mlookup (bytecodes rt) name
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
@@ -123,6 +132,9 @@ data LoadingError = ClassNotFoundException
                   | UnknownError { message :: String }
                   deriving (Show, Eq)
 
+data LinkingError = LinkingError
+                  deriving (Show, Eq)
+
 data InternalLoadingError = CantCheckClassRepresentation
                           | ClassLoaderNotFound
                           | OnlyClassObjectHasNoSuperClass
@@ -132,6 +144,10 @@ data InternalLoadingError = CantCheckClassRepresentation
                           | SymTableHasNoClassEntryAtIndex
                           deriving (Show, Eq)
 
+data VMError = StateError { msg :: String }
+             | Loading { le :: LoadingError }
+             | Linking { li :: LinkingError }
+             deriving (Show, Eq)
 
 -- Heap contents
 type JObject = Map String JValue
