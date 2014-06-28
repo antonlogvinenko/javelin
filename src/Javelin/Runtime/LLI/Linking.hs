@@ -3,42 +3,63 @@ where
 
 import qualified Data.Map.Lazy as Map (fromList, Map, lookup, insert, (!))
 import Data.Array.IArray as Array ((!), (//))
+import Data.Word (Word16)
 
 import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.Resolve
 import Javelin.ByteCode.Data
 import Javelin.Util
 
-linking :: ClassName -> Runtime -> Either LoadingError Runtime
+linking :: ClassName -> Runtime -> Either String Runtime
 linking name rt = verification name rt >>= preparing name
 
 -- §5.4.1 verification skipped in the first iteration
-verification :: ClassName -> Runtime -> Either LoadingError Runtime
+verification :: ClassName -> Runtime -> Either String Runtime
 verification name rt = Right rt
 
-preparing :: ClassName -> Runtime -> Either LoadingError Runtime
+preparing :: ClassName -> Runtime -> Either String Runtime
 preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
   let classLoaderInfo = classLoadingInfo Map.! name
       (rt1, ref) = malloc rt
   in do
-    rt2 <- maybeToEither undefined $ writeStaticFields name rt1 ref
+    rt2 <- writeStaticFields name rt1 ref
     return rt2{classLoading = Map.insert name classLoaderInfo{staticRef = Just ref} classLoadingInfo}
 
 
-writeStaticFields :: String -> Runtime -> Ref -> Maybe Runtime
+writeStaticFields :: String -> Runtime -> Ref -> Either String Runtime
 writeStaticFields name rt ref = let (s, h) = heap rt
                                     jobject = h ! ref
                                 in do
-                                   sym <- Map.lookup name $ symbolics rt
-                                   bc <- Map.lookup name $ bytecodes rt
+                                   sym <- getSymTable rt name
+                                   bc <- getByteCode rt name 
                                    let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
                                        staticFields = filter staticSearch $ fields $ body bc
-                                     in return $ foldl (prepareStaticField sym ref) rt staticFields
+                                     in foldl (prepareStaticField sym ref) (return rt) staticFields
 
-prepareStaticField :: SymTable -> Ref -> Runtime -> FieldInfo -> Runtime
-prepareStaticField sym ref rt fi = let nameIndex = fieldNameIndex fi
-                                       descriptorIndex = fieldDescriptorIndex fi
-                                   in undefined
+getSymTable :: Runtime -> ClassName -> Either String SymTable
+getSymTable rt name = maybeToEither "" $ Map.lookup name $ symbolics rt
+-- rewrite, move to structures
+
+getByteCode :: Runtime -> ClassName -> Either String ByteCode
+getByteCode rt name = maybeToEither "" $ Map.lookup name $ bytecodes rt
+-- rewrite, move to structures
+
+bla :: SymTable -> Word16 -> Either String String
+bla = undefined
+-- rewrite, move to structures
+
+getDefaultValue :: String -> JValue
+getDefaultValue = undefined
+--rewrite here
+
+prepareStaticField :: SymTable -> Ref -> Either String Runtime -> FieldInfo -> Either String Runtime
+prepareStaticField sym ref ert fi = do
+  rt <- ert
+  fieldName <- bla sym $ fieldNameIndex fi
+  descriptorName <- bla sym $ fieldDescriptorIndex fi
+  let defaultValue = getDefaultValue descriptorName
+  writeField rt ref (fieldName, defaultValue)
 -- take string literals from sym table for 2 indices
+-- parse descriptor - or save already parsed while creating sym table? good question
 -- determine default value by descriptor
 -- do writeField rt ref (name, value) several times for default values

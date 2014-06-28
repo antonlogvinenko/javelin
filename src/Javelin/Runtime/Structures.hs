@@ -61,7 +61,7 @@ getField rt ref name = let (s, h) = heap rt
                            jobject = h ! ref
                        in Map.lookup name jobject
 
-writeField :: Runtime -> Ref -> (String, JValue) -> Maybe Runtime
+writeField :: Runtime -> Ref -> (String, JValue) -> Either String Runtime
 writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
   let jobject = h ! ref
       newObject = Map.insert name value jobject
