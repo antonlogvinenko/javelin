@@ -33,8 +33,11 @@ writeStaticFields name rt ref = let (s, h) = heap rt
                                    bc <- Map.lookup name $ bytecodes rt
                                    let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
                                        staticFields = filter staticSearch $ fields $ body bc
-                                     in return $ foldl prepareStaticField rt staticFields
+                                     in return $ foldl (prepareStaticField sym ref) rt staticFields
 
-prepareStaticField :: Runtime -> FieldInfo -> Runtime
-prepareStaticField rt fi = undefined
+prepareStaticField :: SymTable -> Ref -> Runtime -> FieldInfo -> Runtime
+prepareStaticField sym ref rt fi = let nameIndex = fieldNameIndex fi
+                                       descriptorIndex = fieldDescriptorIndex fi
+                                   in undefined
+-- take string literals from sym table for 2 indices
 -- do writeField rt ref (name, value) several times for default values
