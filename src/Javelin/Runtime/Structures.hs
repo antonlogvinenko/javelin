@@ -7,6 +7,7 @@ import Data.Word (Word16, Word32, Word64)
 import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map, lookup, insert)
 import Data.Int (Int8, Int16, Int32, Int64)
+import Data.Array.IArray
 
 import Javelin.ByteCode.Data
 import Javelin.Util
@@ -35,7 +36,9 @@ newRuntime :: Layout -> Runtime
 newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout [BootstrapClassLoader]
-                       classLoadingInfo (fromList []) (fromList []) (fromList []) [] emptyThreads
+                       classLoadingInfo (fromList []) (fromList []) (fromList [])
+                       (0, (array (0, 1000) []))
+                       emptyThreads
 
 getClassLoader :: ClassName -> Runtime -> (ClassLoaderInfo -> Int) -> Maybe Int
 getClassLoader name rt f = f <$> (Map.lookup name $ classLoading rt)
@@ -51,21 +54,18 @@ getDefiningClassLoader name rt = getClassLoader name rt defining
 type Ref = Int
 
 malloc :: Runtime -> (Runtime, Ref)
-malloc rt@(Runtime {heap = h}) =
-  let h2 = h ++ [JObject
+malloc rt@(Runtime {heap = (s, h)}) = (rt{heap = (s + 1, h)}, s)
 
 getField :: Runtime -> Ref -> String -> Maybe JValue
-getField rt ref name = do
-  let h = heap rt
-  object <- h !? ref
-  Map.lookup name object
+getField rt ref name = let (s, h) = heap rt
+                           jobject = h ! ref
+                       in Map.lookup name jobject
 
-writeField :: Runtime -> Ref -> String -> JValue -> Maybe Runtime
-writeField rt@(Runtime {heap = h}) ref name value = do
-  jobject <- h !? ref
-  let newObject = Map.insert name value jobject
-  -- how to set newObject to the same index in heap? switch to arrays?
-  return $ rt{heap = h}
+writeField :: Runtime -> Ref -> (String, JValue) -> Maybe Runtime
+writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
+  let jobject = h ! ref
+      newObject = Map.insert name value jobject
+  return $ rt{heap = (s, h // [(ref, newObject)])}
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
@@ -75,7 +75,7 @@ data Runtime = Runtime { layout :: Layout,
                          bytecodes :: Map.Map ClassName ByteCode,
                          constantPool :: Map.Map ClassName [Constant],
 
-                         heap :: [JObject],
+                         heap :: (Int, Array Int JObject),
                          threads :: [Thread] }
              deriving (Show, Eq)
 

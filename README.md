@@ -17,7 +17,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Short term*
 * Linking
- * preparation: static fields init
+ * preparation: static fields creation
  * errors, compose with loading errors?
  * who starts the whole lli cycle?
 * Loading
