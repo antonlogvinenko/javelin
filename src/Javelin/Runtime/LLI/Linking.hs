@@ -40,4 +40,5 @@ prepareStaticField sym ref rt fi = let nameIndex = fieldNameIndex fi
                                        descriptorIndex = fieldDescriptorIndex fi
                                    in undefined
 -- take string literals from sym table for 2 indices
+-- determine default value by descriptor
 -- do writeField rt ref (name, value) several times for default values
