@@ -31,10 +31,10 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
   * verification
   * constraints
   * user defined CL
- * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
- * init thread stack to run Main { public static void main(Sting...) }
- * Instructions
-  * Collecting
+* ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
+* init thread stack to run Main { public static void main(Sting...) }
+* Instructions
+ * Collecting
    * execute function must optionally collect trace of execution in some way
    * pass collecting function?
    * use State monad on final instructions? (not in instruction DSL)
