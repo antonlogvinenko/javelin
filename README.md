@@ -18,6 +18,7 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 *Short term*
 * Linking
  * preparation: static fields creation
+ * start using either eveywhere and add "get bytecode" rt -> either e bc funs
  * errors, compose with loading errors?
  * who starts the whole lli cycle?
 * Loading

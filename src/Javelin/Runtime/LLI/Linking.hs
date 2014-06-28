@@ -7,6 +7,7 @@ import Data.Array.IArray as Array ((!), (//))
 import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.Resolve
 import Javelin.ByteCode.Data
+import Javelin.Util
 
 linking :: ClassName -> Runtime -> Either LoadingError Runtime
 linking name rt = verification name rt >>= preparing name
@@ -19,19 +20,20 @@ preparing :: ClassName -> Runtime -> Either LoadingError Runtime
 preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
   let classLoaderInfo = classLoadingInfo Map.! name
       (rt1, ref) = malloc rt
-      rt2 = writeStaticFields name rt1 ref
-  in Right $ rt2{classLoading = Map.insert name classLoaderInfo{staticRef = Just ref} classLoadingInfo}
+  in do
+    rt2 <- maybeToEither undefined $ writeStaticFields name rt1 ref
+    return rt2{classLoading = Map.insert name classLoaderInfo{staticRef = Just ref} classLoadingInfo}
 
 
-writeStaticFields :: String -> Runtime -> Ref -> Runtime
+writeStaticFields :: String -> Runtime -> Ref -> Maybe Runtime
 writeStaticFields name rt ref = let (s, h) = heap rt
                                     jobject = h ! ref
-                                in case Map.lookup name $ bytecodes rt of
-                                  Nothing -> undefined
-                                  Just bc -> let allFields = fields $ body bc
-                                                 -- find all static fields in bytecode
-                                                 staticFields = undefined
-                                             in foldl prepareStaticField rt staticFields
+                                in do
+                                   sym <- Map.lookup name $ symbolics rt
+                                   bc <- Map.lookup name $ bytecodes rt
+                                   let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
+                                       staticFields = filter staticSearch $ fields $ body bc
+                                     in return $ foldl prepareStaticField rt staticFields
 
 prepareStaticField :: Runtime -> FieldInfo -> Runtime
 prepareStaticField rt fi = undefined
