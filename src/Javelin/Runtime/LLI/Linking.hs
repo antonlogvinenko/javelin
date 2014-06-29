@@ -41,6 +41,8 @@ bla :: SymTable -> Word16 -> Either VMError String
 bla sym idx = undefined
 -- rewrite, move to structures
 
+  
+
 getDefaultValue :: String -> JValue
 getDefaultValue = undefined
 --rewrite here

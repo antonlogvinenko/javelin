@@ -57,12 +57,13 @@ malloc :: Runtime -> (Runtime, Ref)
 malloc rt@(Runtime {heap = (s, h)}) = (rt{heap = (s + 1, h)}, s)
 
 getField :: Runtime -> Ref -> String -> Either VMError JValue
-getField rt ref name = let (s, h) = heap rt
-                           jobject = h ! ref
-                       in mlookup jobject name
+getField rt ref name = let h = snd $ heap rt
+                       in if ref < (snd . bounds) h
+                          then maybeToEither (StateError rt "") $ Map.lookup name (h ! ref)
+                          else Left $ StateError rt ""
 
-mlookup :: (Ord k) => Map k v -> k -> Either VMError v
-mlookup m k = maybeToEither (StateError "asd") $ Map.lookup k m
+rtlookup :: (Ord k) => (Runtime -> Map k v) -> Runtime -> k -> Either VMError v
+rtlookup f rt k = maybeToEither (StateError rt "") $ Map.lookup k $ f rt
 
 writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
 writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
@@ -71,10 +72,10 @@ writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
   return $ rt{heap = (s, h // [(ref, newObject)])}
 
 getSymTable :: Runtime -> ClassName -> Either VMError SymTable
-getSymTable rt name = mlookup (symbolics rt) name
+getSymTable = rtlookup symbolics
 
 getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
-getByteCode rt name = mlookup (bytecodes rt) name
+getByteCode = rtlookup bytecodes
 
 data Runtime = Runtime { layout :: Layout,
                          classLoaders :: [ClassLoader],
@@ -144,7 +145,8 @@ data InternalLoadingError = CantCheckClassRepresentation
                           | SymTableHasNoClassEntryAtIndex
                           deriving (Show, Eq)
 
-data VMError = StateError { msg :: String }
+data VMError = StateError { rt :: Runtime,
+                            msg :: String }
              | Loading { le :: LoadingError }
              | Linking { li :: LinkingError }
              deriving (Show, Eq)
