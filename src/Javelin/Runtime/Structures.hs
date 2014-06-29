@@ -182,6 +182,13 @@ data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
                        | LongLiteral { long :: Int64 }
                        deriving (Show, Eq)
 
+getStringLiteral :: SymTable -> Word16 -> Either VMError String
+getStringLiteral t i = maybeToEither undefined $ do
+  v <- Map.lookup i t
+  case v of
+    StringLiteral x -> return x
+    _ -> Nothing
+
 data PartReference = PartReference { partName :: String,
                                      partDescriptor :: String,
                                      ownerName :: String }

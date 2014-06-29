@@ -36,25 +36,17 @@ writeStaticFields name rt ref = let (s, h) = heap rt
                                        staticFields = filter staticSearch $ fields $ body bc
                                      in foldl (prepareStaticField sym ref) (return rt) staticFields
 
-
-bla :: SymTable -> Word16 -> Either VMError String
-bla sym idx = undefined
--- rewrite, move to structures
-
-  
-
 getDefaultValue :: String -> JValue
 getDefaultValue = undefined
---rewrite here
+-- 2 rewrite here
 
 prepareStaticField :: SymTable -> Ref -> Either VMError Runtime -> FieldInfo -> Either VMError Runtime
 prepareStaticField sym ref ert fi = do
   rt <- ert
-  fieldName <- bla sym $ fieldNameIndex fi
-  descriptorName <- bla sym $ fieldDescriptorIndex fi
+  fieldName <- getStringLiteral sym $ fieldNameIndex fi
+  descriptorName <- getStringLiteral sym $ fieldDescriptorIndex fi
   let defaultValue = getDefaultValue descriptorName
   writeField rt ref (fieldName, defaultValue)
--- take string literals from sym table for 2 indices
--- parse descriptor - or save already parsed while creating sym table? good question
--- determine default value by descriptor
--- do writeField rt ref (name, value) several times for default values
+-- 1 parse descriptor - or save already parsed while creating sym table? good question
+-- 2 determine default value by descriptor
+-- 3 do writeField rt ref (name, value) several times for default values
