@@ -3,7 +3,7 @@ module Javelin.Runtime.Structures
 where 
 
 import Control.Applicative
-import Data.Word (Word16, Word32, Word64)
+import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map, lookup, insert)
 import Data.Int (Int8, Int16, Int32, Int64)
@@ -158,12 +158,19 @@ data JValue = JInt { getInt :: Int32 }
             | JBoolean { getBoolean :: Int32}
             | JShort { getShort :: Int16 }
             | JByte { getByte :: Int8 }
+            | JChar { getChar :: Word8 }
             | JDouble { getDouble :: Double }
             | JFloat { getFloat :: Float }
             | JReference { getReference :: Integer }
             deriving (Show, Eq)
 
+nullReference = JReference (-1)
 
+baseDefaultValues :: Map.Map BaseType JValue
+baseDefaultValues = Map.fromList [
+  (ByteT, JByte 0), (CharT, JChar 0), (DoubleT, JDouble 0), (FloatT, JFloat 0),
+  (IntT, JInt 0), (LongT, JLong 0), (ShortT, JShort 0), (BooleanT, JBoolean 0)
+  ]
 
 -- Class loading structures
 type SymTable = Map Word16 SymbolicReference

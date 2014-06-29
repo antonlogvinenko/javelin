@@ -1,6 +1,6 @@
 Javelin
 =======
-JVM 8, interpreting JVM 8 spec implementation in Haskell.
+JVM 8 spec implementation in Haskell.
 
 *Long term*
 * Bytecode parser [**Done**]
@@ -17,7 +17,6 @@ JVM 8, interpreting JVM 8 spec implementation in Haskell.
 
 *Short term*
 * Linking
- * preparation: static fields creation
  * get values from sym table - polymorphims? lots of duplicated code
  * start using either eveywhere and add "get bytecode" rt -> either e bc funs
  * errors, compose with loading errors?

@@ -230,7 +230,7 @@ data FieldType = BaseType { baseType :: BaseType }
                | ArrayType { componentType :: FieldType }
                deriving (Show, Eq)
 data BaseType = ByteT | CharT | DoubleT | FloatT | IntT | LongT | ShortT | BooleanT
-              deriving (Show, Eq)
+              deriving (Show, Eq, Ord)
 
 -- FieldDescriptor
 data FieldDescriptor = FieldDescriptor { fieldType :: FieldType } deriving (Show, Eq)

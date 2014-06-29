@@ -4,10 +4,12 @@ where
 import qualified Data.Map.Lazy as Map (fromList, Map, lookup, insert, (!))
 import Data.Array.IArray as Array ((!), (//))
 import Data.Word (Word16)
+import Control.Applicative ((<$>))
 
 import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.Resolve
 import Javelin.ByteCode.Data
+import Javelin.ByteCode.DescSign
 import Javelin.Util
 
 linking :: ClassName -> Runtime -> Either VMError Runtime
@@ -26,6 +28,7 @@ preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
     return rt2{classLoading = Map.insert name classLoaderInfo{staticRef = Just ref} classLoadingInfo}
 
 
+-- use write function
 writeStaticFields :: String -> Runtime -> Ref -> Either VMError Runtime
 writeStaticFields name rt ref = let (s, h) = heap rt
                                     jobject = h ! ref
@@ -36,17 +39,17 @@ writeStaticFields name rt ref = let (s, h) = heap rt
                                        staticFields = filter staticSearch $ fields $ body bc
                                      in foldl (prepareStaticField sym ref) (return rt) staticFields
 
-getDefaultValue :: String -> JValue
-getDefaultValue = undefined
--- 2 rewrite here
+getDefaultValue :: Runtime -> String -> Either VMError JValue
+getDefaultValue rt name = case parseFieldDescriptor name of
+  Left err -> Left $ StateError rt ""
+  Right d -> case fieldType d of
+    BaseType t -> maybeToEither (StateError rt "") $ Map.lookup t baseDefaultValues
+    _ -> return nullReference
 
 prepareStaticField :: SymTable -> Ref -> Either VMError Runtime -> FieldInfo -> Either VMError Runtime
 prepareStaticField sym ref ert fi = do
   rt <- ert
   fieldName <- getStringLiteral sym $ fieldNameIndex fi
   descriptorName <- getStringLiteral sym $ fieldDescriptorIndex fi
-  let defaultValue = getDefaultValue descriptorName
+  defaultValue <- getDefaultValue rt descriptorName
   writeField rt ref (fieldName, defaultValue)
--- 1 parse descriptor - or save already parsed while creating sym table? good question
--- 2 determine default value by descriptor
--- 3 do writeField rt ref (name, value) several times for default values
