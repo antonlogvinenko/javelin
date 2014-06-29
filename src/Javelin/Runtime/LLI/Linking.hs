@@ -15,10 +15,11 @@ import Javelin.Util
 linking :: ClassName -> Runtime -> Either VMError Runtime
 linking name rt = verification name rt >>= preparing name
 
--- §5.4.1 verification skipped in the first iteration
+-- §5.4.1 Verification
 verification :: ClassName -> Runtime -> Either VMError Runtime
 verification name rt = Right rt
 
+-- §5.4.2 Preparation
 preparing :: ClassName -> Runtime -> Either VMError Runtime
 preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
   let classLoaderInfo = classLoadingInfo Map.! name
@@ -27,8 +28,6 @@ preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
     rt2 <- writeStaticFields name rt1 ref
     return rt2{classLoading = Map.insert name classLoaderInfo{staticRef = Just ref} classLoadingInfo}
 
-
--- use write function
 writeStaticFields :: String -> Runtime -> Ref -> Either VMError Runtime
 writeStaticFields name rt ref = let (s, h) = heap rt
                                     jobject = h ! ref
