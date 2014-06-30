@@ -5,6 +5,7 @@ import qualified Data.Map.Lazy as Map (fromList, Map, lookup, insert, (!))
 import Data.Array.IArray as Array ((!), (//))
 import Data.Word (Word16)
 import Control.Applicative ((<$>))
+import Control.Arrow ((>>>))
 
 import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.Resolve
@@ -35,8 +36,8 @@ writeStaticFields name rt ref = let (s, h) = heap rt
                                    sym <- getSymTable rt name
                                    bc <- getByteCode rt name 
                                    let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
-                                       staticFields = filter staticSearch $ fields $ body bc
-                                     in foldl (prepareStaticField sym ref) (return rt) staticFields
+                                   body >>> fields >>> filter staticSearch >>>
+                                     foldl (prepareStaticField sym ref) (return rt) $ bc
 
 getDefaultValue :: Runtime -> String -> Either VMError JValue
 getDefaultValue rt name = case parseFieldDescriptor name of
@@ -48,7 +49,7 @@ getDefaultValue rt name = case parseFieldDescriptor name of
 prepareStaticField :: SymTable -> Ref -> Either VMError Runtime -> FieldInfo -> Either VMError Runtime
 prepareStaticField sym ref ert fi = do
   rt <- ert
-  fieldName <- getStringLiteral sym $ fieldNameIndex fi
+  fieldName <- fieldNameIndex >>> getStringLiteral sym $ fi
   descriptorName <- getStringLiteral sym $ fieldDescriptorIndex fi
   defaultValue <- getDefaultValue rt descriptorName
   writeField rt ref (fieldName, defaultValue)

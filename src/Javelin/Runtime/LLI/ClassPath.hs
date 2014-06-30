@@ -5,6 +5,7 @@ where
 import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy as BS (readFile)
 import Control.Monad (forM)
+import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
@@ -54,7 +55,7 @@ folder list path
 extractClasses :: ClassSource -> IO [(ClassName, ClassSource)]
 extractClasses s@(JarFile path) = do
   paths <- getJarClasses path
-  return $ map (\c -> (c, s))  $ map pathToClass paths
+  map pathToClass >>> map (\c -> (c, s)) >>> return $ paths
 extractClasses s@(ClassFile p) = return [(pathToClass p, s)]
 
 getJarClasses :: FilePath -> IO [FilePath]
