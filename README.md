@@ -20,12 +20,13 @@ JVM 8 spec implementation in Haskell.
  * get values from sym table - polymorphims? lots of duplicated code
  * start using either eveywhere and add "get bytecode" rt -> either e bc funs
  * errors, compose with loading errors?
- * who starts the whole lli cycle?
 * Loading
   * bootstrap array load
   * fix: can be several class loaders for a class
 
 * Resolution
+ * implementation
+ * usage
 * Initializing
 
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)

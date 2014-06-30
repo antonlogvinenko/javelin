@@ -20,3 +20,15 @@ maybeToEither e Nothing = Left e
 -- Srsly, Haskell, where is my 'replace' function?
 replace :: Char -> Char -> String -> String
 replace co cr = map (\c -> if c == co then cr else c)
+
+
+data Apply a b = Apply { x :: a, f :: a -> b }
+
+(->>) :: a -> (a -> b) -> Apply a b
+(->>) x f = Apply x f
+
+(.>) :: Apply a b -> (b -> c) -> Apply a c
+(.>) (Apply x f) g = Apply x $ g . f
+
+run :: Apply a b -> b
+run (Apply x f) = f x
