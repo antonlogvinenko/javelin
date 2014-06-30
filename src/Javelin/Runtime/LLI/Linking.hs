@@ -36,8 +36,7 @@ writeStaticFields name rt ref = let (s, h) = heap rt
                                    sym <- getSymTable rt name
                                    bc <- getByteCode rt name 
                                    let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
-                                   body >>> fields >>> filter staticSearch >>>
-                                     foldl (prepareStaticField sym ref) (return rt) $ bc
+                                   body >>> fields >>> filter staticSearch >>> foldl (prepareStaticField sym ref) (return rt) $ bc
 
 getDefaultValue :: Runtime -> String -> Either VMError JValue
 getDefaultValue rt name = case parseFieldDescriptor name of
