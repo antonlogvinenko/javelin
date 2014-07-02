@@ -84,3 +84,4 @@ Very handy posts:
 * http://blog.jle.im/entry/inside-my-world-ode-to-functor-and-monad
 * http://katychuang.com/cabal-guide/
 * http://fp.silk.co
+* http://ejenk.com/blog/why-dependently-typed-programming-will-one-day-rock-your-world.html
