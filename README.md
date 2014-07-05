@@ -85,3 +85,5 @@ Very handy posts:
 * http://katychuang.com/cabal-guide/
 * http://fp.silk.co
 * http://ejenk.com/blog/why-dependently-typed-programming-will-one-day-rock-your-world.html
+* http://www.seas.upenn.edu/~cis194/lectures.html
+* https://github.com/grsmv/haskell-bookmarks
