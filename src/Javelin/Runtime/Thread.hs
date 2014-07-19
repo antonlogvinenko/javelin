@@ -58,7 +58,7 @@ instance BytesContainer Arguments where
 
 argumentToWord64 :: [Word8] -> Word64
 argumentToWord64 bs = let normalized = (take (8 - length bs) bs) ++ bs
-                   in runGet getWord64be $ pack normalized
+                      in runGet getWord64be $ pack normalized
 
 
 instance BytesContainer Locals where

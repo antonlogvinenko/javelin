@@ -8,13 +8,16 @@ import Control.Applicative ((<$>))
 import Control.Arrow ((>>>))
 
 import Javelin.Runtime.Structures
-import Javelin.Runtime.LLI.Resolve
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.DescSign
 import Javelin.Util
 
 linking :: ClassName -> Runtime -> Either VMError Runtime
-linking name rt = verification name rt >>= preparing name
+linking name rt = verification name rt >>= preparing name >>= resolve name
+
+resolve :: ClassName -> Runtime -> Either VMError Runtime
+resolve = undefined
+
 
 -- §5.4.1 Verification
 verification :: ClassName -> Runtime -> Either VMError Runtime

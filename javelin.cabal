@@ -27,7 +27,6 @@ library
                      Javelin.Runtime.Thread,
                      Javelin.Runtime.LLI.Loading,
                      Javelin.Runtime.LLI.Linking,
-                     Javelin.Runtime.LLI.Resolve,
                      Javelin.Runtime.LLI.ClassPath,
                      Javelin.Runtime.LLI.Initializing,	
                      Javelin.Runtime.Structures,
