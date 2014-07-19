@@ -13,19 +13,19 @@ import Javelin.ByteCode.DescSign
 import Javelin.Util
 
 linking :: ClassName -> Runtime -> Either VMError Runtime
-linking name rt = verification name rt >>= preparing name >>= resolve name
+linking name rt = verify name rt >>= prepare name >>= resolve name
 
 resolve :: ClassName -> Runtime -> Either VMError Runtime
 resolve = undefined
 
 
--- §5.4.1 Verification
-verification :: ClassName -> Runtime -> Either VMError Runtime
-verification name rt = Right rt
+-- §5.4.1 Verify
+verify :: ClassName -> Runtime -> Either VMError Runtime
+verify name rt = Right rt
 
 -- §5.4.2 Preparation
-preparing :: ClassName -> Runtime -> Either VMError Runtime
-preparing name rt@(Runtime {classLoading = classLoadingInfo}) =
+prepare :: ClassName -> Runtime -> Either VMError Runtime
+prepare name rt@(Runtime {classLoading = classLoadingInfo}) =
   let classLoaderInfo = classLoadingInfo Map.! name
       (rt1, ref) = malloc rt
   in do

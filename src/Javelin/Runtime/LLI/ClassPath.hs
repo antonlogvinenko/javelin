@@ -26,7 +26,7 @@ import Javelin.Util
 
 -- Getting layout for classpath
 
-getClassSourcesLayout :: FilePath -> IO Layout
+getClassSourcesLayout :: FilePath -> IO ClassPathLayout
 getClassSourcesLayout dir = do
   files <- getClassPathFiles dir
   let sources = foldl folder [] files
@@ -75,7 +75,7 @@ classToPath name = (replace '.' '/' name) ++ ".class"
 
 
 -- using MaybeT { IO (Maybe a) }
-getClassBytes :: ClassName -> Layout -> MaybeT IO ByteString
+getClassBytes :: ClassName -> ClassPathLayout -> MaybeT IO ByteString
 getClassBytes name layout = do
   source <- toMaybeT $ Map.lookup name layout
   getClassFromSource name source

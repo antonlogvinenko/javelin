@@ -32,7 +32,7 @@ data StackElement = StackElement { stackElement :: Word64 } deriving (Show, Eq)
 data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
 
 -- Runtime
-newRuntime :: Layout -> Runtime
+newRuntime :: ClassPathLayout -> Runtime
 newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout [BootstrapClassLoader]
@@ -77,10 +77,11 @@ getSymTable = rtlookup symbolics
 getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
 getByteCode = rtlookup bytecodes
 
-data Runtime = Runtime { layout :: Layout,
-                         classLoaders :: [ClassLoader],
+data Runtime = Runtime { classPathLayout :: ClassPathLayout,
 
+                         classLoaders :: [ClassLoader],
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
+
                          symbolics :: Map ClassName SymTable,
                          bytecodes :: Map.Map ClassName ByteCode,
                          constantPool :: Map.Map ClassName [Constant],
@@ -94,7 +95,7 @@ isInterface name rt = (elem ClassInterface) <$> classAccessFlags <$> body <$> (M
 
 
 -- LLI ClassPath
-type Layout = Map ClassName ClassSource
+type ClassPathLayout = Map ClassName ClassSource
 type ClassName = String
 data ClassSource = JarFile { getPath :: FilePath }
                  | ClassFile { getPath :: FilePath }
@@ -150,6 +151,9 @@ data VMError = StateError { rt :: Runtime,
              | Loading { le :: LoadingError }
              | Linking { li :: LinkingError }
              deriving (Show, Eq)
+
+loadingLeft = Left . Loading
+linkingLeft = Left . Linking
 
 -- Heap contents
 type JObject = Map String JValue
