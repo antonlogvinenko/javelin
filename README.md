@@ -15,19 +15,18 @@ JVM 8 spec implementation in Haskell.
  * multiple threads (use haskell threads and transactions for shared memory?)
  * user derined class loaders (only boostrap)
 
+commands with indexes
+constant pool: index -> symbolic reference
+ 
 *Short term*
-* Linking
- * get values from sym table - polymorphims? lots of duplicated code
- * start using either eveywhere and add "get bytecode" rt -> either e bc funs
- * errors, compose with loading errors?
-* Loading
-  * bootstrap array load
-  * fix: can be several class loaders for a class
-
-* Resolution
+* Resolution in linking
  * implementation
  * usage
 * Initializing
+
+* Loading
+  * bootstrap array load
+  * fix: can be several class loaders for a class
 
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
