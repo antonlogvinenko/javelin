@@ -34,7 +34,7 @@ constant pool: index -> symbolic reference
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }
 
-* Instructions deferred tasks*
+*Instructions deferred tasks*
 * Collecting
   * execute function must optionally collect trace of execution in some way
   * pass collecting function?
