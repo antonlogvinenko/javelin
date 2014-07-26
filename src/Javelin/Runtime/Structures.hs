@@ -104,7 +104,7 @@ data ClassSource = JarFile { getPath :: FilePath }
 
 
 -- LLI state
-data LoadLinkInitializeState = Loaded | LinkVerified | LinkPrepared | Initialized
+data LoadLinkInitializeState = Loaded | Linked | Initialized
                              deriving (Show, Eq)
 
 

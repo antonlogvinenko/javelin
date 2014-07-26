@@ -78,6 +78,8 @@ constant pool: index -> symbolic reference
 * 4.7.21, RuntimeInvisibleTypeAnnotations (new)
 * Changes in descriptor and signatures terminology (refactoring)
 
+Class loading https://pbs.twimg.com/media/BtcuJK5IcAA7DxK.jpg
+
 Very handy posts:
 * http://dev.stephendiehl.com/hask/
 * http://blog.jle.im/entry/inside-my-world-ode-to-functor-and-monad
