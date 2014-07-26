@@ -25,10 +25,10 @@ library
                      Javelin.ByteCode.DescSign,
                      Javelin.Runtime.Instructions,
                      Javelin.Runtime.Thread,
-                     Javelin.Runtime.LLI.Loading,
-                     Javelin.Runtime.LLI.Linking,
                      Javelin.Runtime.LLI.ClassPath,
-                     Javelin.Runtime.LLI.Initializing,	
+                     Javelin.Runtime.LLI.Loading,
+                     Javelin.Runtime.LLI.LinkingInitializing,
+                     Javelin.Runtime.LLI.Resolving,
                      Javelin.Runtime.Structures,
                      Javelin.Util,
                      Javelin.Main

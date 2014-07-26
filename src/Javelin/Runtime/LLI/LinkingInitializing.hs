@@ -1,4 +1,4 @@
-module Javelin.Runtime.LLI.Linking
+module Javelin.Runtime.LLI.LinkingInitializing
 where
 
 import qualified Data.Map.Lazy as Map (fromList, Map, lookup, insert, (!))
@@ -13,10 +13,9 @@ import Javelin.ByteCode.DescSign
 import Javelin.Util
 
 linking :: ClassName -> Runtime -> Either VMError Runtime
-linking name rt = verify name rt >>= prepare name >>= resolve name
+linking name rt = verify name rt >>= prepare name
 
-resolve :: ClassName -> Runtime -> Either VMError Runtime
-resolve = undefined
+
 
 
 -- §5.4.1 Verify

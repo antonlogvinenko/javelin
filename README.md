@@ -15,18 +15,21 @@ JVM 8 spec implementation in Haskell.
  * multiple threads (use haskell threads and transactions for shared memory?)
  * user derined class loaders (only boostrap)
 
-commands with indexes
+commands with indices
 constant pool: index -> symbolic reference
  
 *Short term*
-* Resolution in linking
- * implementation
- * usage
+* Resolving
+ * class
+ * interface
+ * field
+ * method
+ * interface method
 * Initializing
+ * ???
+* Linking + Loaading + Initializing
+* Execution of a simple Main class
 
-* Loading
-  * bootstrap array load
-  * fix: can be several class loaders for a class
 
 * ad hoc loading of System, System.out to println data, all required instrucitons (milestone)
 * init thread stack to run Main { public static void main(Sting...) }

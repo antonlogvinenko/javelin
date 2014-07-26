@@ -5,7 +5,7 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
 import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
-import Javelin.Runtime.LLI.Linking
+import Javelin.Runtime.LLI.Resolving
 import Javelin.ByteCode.ClassFile (parse)
 
 import Control.Monad.Trans.Maybe
