@@ -142,15 +142,17 @@ data LinkageError = LinkageError
                   | InternalError { internal :: InternalLoadingError }
                   | ResolutionError
                   | UnknownError { message :: String }
+                  | ExceptionInInitializerError
                   deriving (Show, Eq)
 
+-- VerifyError
 
 data VMError = StateError { rt :: Runtime,
                             msg :: String }
-             | Loading { le :: LinkageError }
+             | Linkage { le :: LinkageError }
              deriving (Show, Eq)
 
-loadingLeft = Left . Loading
+linkageLeft = Left . Linkage
 
 -- Heap contents
 type JObject = Map String JValue

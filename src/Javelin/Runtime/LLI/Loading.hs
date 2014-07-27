@@ -23,7 +23,7 @@ load trigger name rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
       properClassLoader = getProperClassLoader trigger rt
   in case properClassLoader of
-          Nothing -> return $ loadingLeft $ InternalError ClassLoaderNotFound
+          Nothing -> return $ linkageLeft $ InternalError ClassLoaderNotFound
           Just cl -> classLoadFunction name rt cl
 
 isArray :: ClassName -> Bool
@@ -56,7 +56,7 @@ loadClass name rt cl = undefined
 loadClassWithBootstrap :: ClassName -> Runtime -> IO (Either VMError Runtime)
 loadClassWithBootstrap name rt@(Runtime {classPathLayout = layout}) = do
   maybeBytes <- runMaybeT $ getClassBytes name layout
-  let eitherBytes = maybeToEither (Loading $ NoClassDefFoundError ClassNotFoundException) maybeBytes
+  let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundError ClassNotFoundException) maybeBytes
   return $ do
     bytes <- eitherBytes
     derive name rt 0 0 bytes
@@ -75,17 +75,17 @@ derive name rt initCl defCl bs = do
     >>= recordClassLoading name bc syms initCl defCl
 
 checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
-                                            then loadingLeft LinkageError
+                                            then linkageLeft LinkageError
                                             else Right ()
 checkClassFileFormat :: ByteString -> Runtime -> Either VMError ByteCode
 checkClassFileFormat bs rt = let body = parse $ unpack bs in
   case body of
-    Left (_, _, msg) -> loadingLeft ClassFormatError
+    Left (_, _, msg) -> linkageLeft ClassFormatError
     Right (_, _, byteCode) -> Right byteCode
     
 checkClassVersion :: ByteCode -> Either VMError ()
 checkClassVersion bc = if minVer bc < 0 || majVer bc > 100500
-                       then loadingLeft UnsupportedClassVersionError
+                       then linkageLeft UnsupportedClassVersionError
                        else Right ()
 
 checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> Either VMError SymTable
@@ -94,29 +94,29 @@ checkRepresentedClass name rt bc = let pool = constPool $ body bc
                                        thisIndex = this $ body bc
                                    in case Map.lookup (fromIntegral thisIndex) symbolics of
                                      Just (ClassOrInterface x) -> return symbolics
-                                     _ -> loadingLeft $ InternalError CantCheckClassRepresentation
+                                     _ -> linkageLeft $ InternalError CantCheckClassRepresentation
 
 checkSuperClass :: ClassName -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
 checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
                                  in case (name, superClassIdx) of
                                    ("java.lang.Object", 0) -> Right rt
-                                   (_, 0) -> loadingLeft $ InternalError OnlyClassObjectHasNoSuperClass
-                                   ("java.lang.Object", _) -> loadingLeft $ InternalError ClassObjectHasNoSuperClasses
+                                   (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
+                                   ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
                                    (name, idx) -> case Map.lookup superClassIdx sym of
                                      Just (ClassOrInterface parent) -> do
                                        rt <- resolve parent rt
                                        case isInterface parent rt of
-                                         Nothing -> loadingLeft $ InternalError CouldNotFindAccessFlags
-                                         Just True -> loadingLeft IncompatibleClassChangeError
+                                         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
+                                         Just True -> linkageLeft IncompatibleClassChangeError
                                          Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                                                            thisIsInterface = elem ClassInterface thisAccessFlags
                                                        in case (thisIsInterface, parent) of
                                                          (True, "java.lang.Object") -> Right rt
-                                                         (True, _) -> loadingLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
+                                                         (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
                                                          (False, parent) -> if parent == name
-                                                                                 then loadingLeft ClassCircularityError
+                                                                                 then linkageLeft ClassCircularityError
                                                                                  else Right rt
-                                     _ -> loadingLeft $ InternalError SymTableHasNoClassEntryAtIndex
+                                     _ -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
 
 
 checkSuperInterfaces :: ClassName -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
@@ -129,13 +129,13 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
     Just (ClassOrInterface parent) -> do
       rt <- resolve parent rt
       case isInterface parent rt of
-        Nothing -> loadingLeft $ InternalError CouldNotFindAccessFlags
+        Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
         Just True -> if parent == name
-                     then loadingLeft ClassCircularityError
+                     then linkageLeft ClassCircularityError
                      else Right rt
-        Just False -> loadingLeft $ IncompatibleClassChangeError
+        Just False -> linkageLeft $ IncompatibleClassChangeError
       undefined
-    _ -> loadingLeft $ InternalError SymTableHasNoClassEntryAtIndex
+    _ -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> Int -> Int -> Runtime -> Either VMError Runtime
 recordClassLoading name bc sym defCl initCl
