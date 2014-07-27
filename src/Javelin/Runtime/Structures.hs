@@ -122,21 +122,9 @@ data ClassLoaderInfo = ClassLoaderInfo { defining :: Int,
                                          staticRef :: Maybe Int }
                      deriving (Show, Eq)
 
-data LoadingError = ClassNotFoundException
-                  | LinkageError
-                  | ClassFormatError
-                  | UnsupportedClassVersionError
-                  | NoClassDefFoundError
-                  | IncompatibleClassChangeError
-                  | ClassCircularityError
-                  | InternalError { internal :: InternalLoadingError }
-                  | ResolutionError
-                  | UnknownError { message :: String }
-                  deriving (Show, Eq)
 
-data LinkingError = LinkingError
-                  deriving (Show, Eq)
-
+data ClassNotFoundException = ClassNotFoundException
+                            deriving (Show, Eq)
 data InternalLoadingError = CantCheckClassRepresentation
                           | ClassLoaderNotFound
                           | OnlyClassObjectHasNoSuperClass
@@ -145,15 +133,24 @@ data InternalLoadingError = CantCheckClassRepresentation
                           | InterfaceMustHaveObjectAsSuperClass
                           | SymTableHasNoClassEntryAtIndex
                           deriving (Show, Eq)
+data LinkageError = LinkageError
+                  | ClassFormatError
+                  | UnsupportedClassVersionError
+                  | NoClassDefFoundError { notFound :: ClassNotFoundException }
+                  | IncompatibleClassChangeError
+                  | ClassCircularityError
+                  | InternalError { internal :: InternalLoadingError }
+                  | ResolutionError
+                  | UnknownError { message :: String }
+                  deriving (Show, Eq)
+
 
 data VMError = StateError { rt :: Runtime,
                             msg :: String }
-             | Loading { le :: LoadingError }
-             | Linking { li :: LinkingError }
+             | Loading { le :: LinkageError }
              deriving (Show, Eq)
 
 loadingLeft = Left . Loading
-linkingLeft = Left . Linking
 
 -- Heap contents
 type JObject = Map String JValue

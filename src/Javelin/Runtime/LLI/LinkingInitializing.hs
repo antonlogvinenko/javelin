@@ -6,15 +6,15 @@ import Data.Array.IArray as Array ((!), (//))
 import Data.Word (Word16)
 import Control.Applicative ((<$>))
 import Control.Arrow ((>>>))
+import Javelin.Util
 
 import Javelin.Runtime.Structures
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.DescSign
-import Javelin.Util
+
 
 linking :: ClassName -> Runtime -> Either VMError Runtime
 linking name rt = verify name rt >>= prepare name
-
 
 
 

@@ -56,7 +56,7 @@ loadClass name rt cl = undefined
 loadClassWithBootstrap :: ClassName -> Runtime -> IO (Either VMError Runtime)
 loadClassWithBootstrap name rt@(Runtime {classPathLayout = layout}) = do
   maybeBytes <- runMaybeT $ getClassBytes name layout
-  let eitherBytes = maybeToEither (Loading ClassNotFoundException) maybeBytes
+  let eitherBytes = maybeToEither (Loading $ NoClassDefFoundError ClassNotFoundException) maybeBytes
   return $ do
     bytes <- eitherBytes
     derive name rt 0 0 bytes
