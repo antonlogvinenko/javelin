@@ -20,11 +20,9 @@ constant pool: index -> symbolic reference
  
 *Short term*
 * Resolving
- * class
- * interface
- * field
- * method
- * interface method
+ * exceptions
+ * storing resolved?
+ * what type has information about resolved object?
 * Initializing
  * ???
 * Linking + Loaading + Initializing

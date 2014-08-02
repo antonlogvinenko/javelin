@@ -125,6 +125,7 @@ data ClassLoaderInfo = ClassLoaderInfo { defining :: Int,
 
 data ClassNotFoundException = ClassNotFoundException
                             deriving (Show, Eq)
+
 data InternalLoadingError = CantCheckClassRepresentation
                           | ClassLoaderNotFound
                           | OnlyClassObjectHasNoSuperClass
@@ -136,16 +137,22 @@ data InternalLoadingError = CantCheckClassRepresentation
 data LinkageError = LinkageError
                   | ClassFormatError
                   | UnsupportedClassVersionError
-                  | NoClassDefFoundError { notFound :: ClassNotFoundException }
+
+                  | NoClassDefFoundClassNotFoundError { notFound :: ClassNotFoundException }
+                  | NoClassDefFoundError
+                    
                   | IncompatibleClassChangeError
+                  | AbstractMethodError
+                  | IllegalAccessError
+                  | InstantiationError
+                  | NoSuchFieldError
+                  | NoSuchMethodError
+                    
                   | ClassCircularityError
                   | InternalError { internal :: InternalLoadingError }
-                  | ResolutionError
                   | UnknownError { message :: String }
                   | ExceptionInInitializerError
                   deriving (Show, Eq)
-
--- VerifyError
 
 data VMError = StateError { rt :: Runtime,
                             msg :: String }
