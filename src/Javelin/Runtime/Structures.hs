@@ -81,10 +81,10 @@ data Runtime = Runtime { classPathLayout :: ClassPathLayout,
 
                          classLoaders :: [ClassLoader],
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
+                         classResolving :: Map.Map ClassName (Maybe VMError),
 
                          symbolics :: Map ClassName SymTable,
                          bytecodes :: Map.Map ClassName ByteCode,
-                         constantPool :: Map.Map ClassName [Constant],
 
                          heap :: (Int, Array Int JObject),
                          threads :: [Thread] }

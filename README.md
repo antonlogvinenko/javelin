@@ -20,9 +20,9 @@ constant pool: index -> symbolic reference
  
 *Short term*
 * Resolving
- * exceptions
- * storing resolved?
- * what type has information about resolved object?
+ * for each type of 'resolvables':
+  * how and where to store/group resolve results? result is Maybe VMError
+  * resolve methods arguments?
 * Initializing
  * ???
 * Linking + Loaading + Initializing

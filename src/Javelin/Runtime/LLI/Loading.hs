@@ -104,7 +104,7 @@ checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
                                    ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
                                    (name, idx) -> case Map.lookup superClassIdx sym of
                                      Just (ClassOrInterface parent) -> do
-                                       rt <- resolve parent rt
+                                       rt <- resolveClassInterface parent rt
                                        case isInterface parent rt of
                                          Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
                                          Just True -> linkageLeft IncompatibleClassChangeError
@@ -127,7 +127,7 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   case Map.lookup interfaceIdx sym of
     Just (ClassOrInterface parent) -> do
-      rt <- resolve parent rt
+      rt <- resolveClassInterface parent rt
       case isInterface parent rt of
         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
         Just True -> if parent == name
@@ -139,12 +139,11 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> Int -> Int -> Runtime -> Either VMError Runtime
 recordClassLoading name bc sym defCl initCl
-  rt@(Runtime {classLoading = cls, symbolics = syms, bytecodes = bcs, constantPool = cps}) =
+  rt@(Runtime {classLoading = cls, symbolics = syms, bytecodes = bcs}) =
     let clInfo = ClassLoaderInfo defCl initCl (name, defCl) Loaded False Nothing
     in Right $ rt {classLoading = insert name clInfo cls,
                    symbolics = insert name sym syms,
-                   bytecodes = insert name bc bcs,
-                   constantPool = insert name (constPool $ body bc) cps}
+                   bytecodes = insert name bc bcs}
   
 
 
