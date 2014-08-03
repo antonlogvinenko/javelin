@@ -9,12 +9,13 @@ import Javelin.Runtime.LLI.Resolving
 import Javelin.ByteCode.ClassFile (parse)
 
 import Control.Monad.Trans.Maybe
+import Control.Monad (liftM)
 import Data.Word (Word16)
 import Data.Map.Lazy as Map (fromList, insert, lookup)
 import Control.Applicative ((<$>))
 import Data.ByteString.Lazy (ByteString, unpack)
 import Javelin.Util
-
+import Control.Arrow ((>>>))
 
 
 -- Loading
@@ -24,18 +25,20 @@ load trigger name rt =
       properClassLoader = getProperClassLoader trigger rt
   in case properClassLoader of
           Nothing -> return $ linkageLeft $ InternalError ClassLoaderNotFound
-          Just cl -> classLoadFunction name rt cl
+          Just cl -> case newClassRequest trigger name rt of
+            Left e -> return $ Left e
+            Right request -> classLoadFunction request rt cl
 
 isArray :: ClassName -> Bool
 isArray name = head name == '['
 
-getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe Int
-getProperClassLoader Nothing _ = Just 0
+getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
+getProperClassLoader Nothing _ = Just BootstrapClassLoader
 getProperClassLoader (Just trigger)
-  rt@(Runtime {classLoading = classLoading, classLoaders = classLoaders}) =
-  defining <$>  Map.lookup trigger classLoading
+  rt@(Runtime {classLoading = classLoading}) =
+  defining <$> Map.lookup trigger classLoading
 
-type ClassLoadMethod = ClassName -> Runtime -> Int -> IO (Either VMError Runtime)
+type ClassLoadMethod = ClassRequest -> Runtime -> ClassLoader -> IO (Either VMError Runtime)
 
 
 -- §5.3.3 Creating Array Classes
@@ -43,40 +46,46 @@ loadArray :: ClassLoadMethod
 loadArray name rt classLoader = undefined
 
 loadClass :: ClassLoadMethod
-loadClass name rt cl@0 = 
-  case getInitiatingClassLoader name rt of
-    Nothing -> loadClassWithBootstrap name rt
-    Just initCl -> if initCl == cl
-                   then return $ Right rt
-                   else loadClassWithBootstrap name rt
+loadClass request rt cl@BootstrapClassLoader =
+  case trigger request of
+    Nothing -> undefined
+    Just triggerClass -> case getInitiatingClassLoader rt  triggerClass of
+      Nothing -> loadClassWithBootstrap request rt
+      Just initCl -> if initCl == cl
+                     then return $ Right rt
+                     else loadClassWithBootstrap request rt
 loadClass name rt cl = undefined
 
 
 -- §5.3.1 Loading Using the Bootstrap Class Loader
-loadClassWithBootstrap :: ClassName -> Runtime -> IO (Either VMError Runtime)
-loadClassWithBootstrap name rt@(Runtime {classPathLayout = layout}) = do
-  maybeBytes <- runMaybeT $ getClassBytes name layout
+loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
+loadClassWithBootstrap request rt@(Runtime {classPathLayout = layout}) = do
+  maybeBytes <- runMaybeT $ getClassBytes (name request) layout
   let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
   return $ do
     bytes <- eitherBytes
-    derive name rt 0 0 bytes
+    derive request rt BootstrapClassLoader BootstrapClassLoader bytes
 
 
 
 -- §5.3.5 Deriving a Class from a class File Representation
-derive :: ClassName -> Runtime -> Int -> Int -> ByteString -> Either VMError Runtime
-derive name rt initCl defCl bs = do
-  checkInitiatingClassLoader initCl name rt
+derive :: ClassRequest -> Runtime -> ClassLoader -> ClassLoader -> ByteString -> Either VMError Runtime
+derive request rt initCl defCl bs = do
+  checkInitiatingClassLoader initCl (name request) rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
-  syms <- checkRepresentedClass name rt bc
-  checkSuperClass name bc syms rt
-    >>= checkSuperInterfaces name bc syms
-    >>= recordClassLoading name bc syms initCl defCl
+  syms <- checkRepresentedClass (name request) rt bc
+  checkSuperClass undefined bc syms rt
+    >>= checkSuperInterfaces request bc syms
+    >>= recordClassLoading (name request) bc syms initCl defCl
 
-checkInitiatingClassLoader initCl name rt = if Just initCl == getInitiatingClassLoader name rt
-                                            then linkageLeft LinkageError
-                                            else Right ()
+checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> Either VMError Runtime
+checkInitiatingClassLoader initCL name rt = do
+  let actualInitCl = getInitiatingClassLoader rt name
+  if Just initCL == actualInitCl
+    then linkageLeft LinkageError
+    else Right rt
+
 checkClassFileFormat :: ByteString -> Runtime -> Either VMError ByteCode
 checkClassFileFormat bs rt = let body = parse $ unpack bs in
   case body of
@@ -96,48 +105,48 @@ checkRepresentedClass name rt bc = let pool = constPool $ body bc
                                      Just (ClassOrInterface x) -> return symbolics
                                      _ -> linkageLeft $ InternalError CantCheckClassRepresentation
 
-checkSuperClass :: ClassName -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
-checkSuperClass name bc sym rt = let superClassIdx = super $ body bc
-                                 in case (name, superClassIdx) of
-                                   ("java.lang.Object", 0) -> Right rt
-                                   (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
-                                   ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
-                                   (name, idx) -> case Map.lookup superClassIdx sym of
-                                     Just (ClassOrInterface parent) -> do
-                                       rt <- resolveClassInterface parent rt
-                                       case isInterface parent rt of
-                                         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
-                                         Just True -> linkageLeft IncompatibleClassChangeError
-                                         Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
-                                                           thisIsInterface = elem ClassInterface thisAccessFlags
-                                                       in case (thisIsInterface, parent) of
-                                                         (True, "java.lang.Object") -> Right rt
-                                                         (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
-                                                         (False, parent) -> if parent == name
-                                                                                 then linkageLeft ClassCircularityError
-                                                                                 else Right rt
-                                     _ -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
+checkSuperClass :: ClassRequest -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
+checkSuperClass request bc sym rt = let superClassIdx = super $ body bc
+                                    in case (name request, superClassIdx) of
+                                      ("java.lang.Object", 0) -> Right rt
+                                      (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
+                                      ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
+                                      (_, idx) -> case Map.lookup superClassIdx sym of
+                                        Just (ClassOrInterface parent) -> do
+                                          rt <- resolveClassInterface undefined rt
+                                          case isInterface parent rt of
+                                            Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
+                                            Just True -> linkageLeft IncompatibleClassChangeError
+                                            Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
+                                                              thisIsInterface = elem ClassInterface thisAccessFlags
+                                                          in case (thisIsInterface, parent) of
+                                                            (True, "java.lang.Object") -> Right rt
+                                                            (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
+                                                            (False, parent) -> if parent == name request
+                                                                               then linkageLeft ClassCircularityError
+                                                                               else Right rt
+                                      _ -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
 
 
-checkSuperInterfaces :: ClassName -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
-checkSuperInterfaces name bc syms rt = let superInterfaces = interfaces $ body bc
-                                  in foldl (checkSuperInterface name bc syms) (Right rt) superInterfaces
-checkSuperInterface :: ClassName => ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
-checkSuperInterface name bc sym eitherRt interfaceIdx = do
+checkSuperInterfaces :: ClassRequest -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
+checkSuperInterfaces request bc syms rt = let superInterfaces = interfaces $ body bc
+                                          in foldl (checkSuperInterface undefined bc syms) (Right rt) superInterfaces
+checkSuperInterface :: ClassRequest => ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
+checkSuperInterface request bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   case Map.lookup interfaceIdx sym of
     Just (ClassOrInterface parent) -> do
-      rt <- resolveClassInterface name rt
+      rt <- resolveClassInterface request rt
       case isInterface parent rt of
         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
-        Just True -> if parent == name
+        Just True -> if parent == name request
                      then linkageLeft ClassCircularityError
                      else Right rt
         Just False -> linkageLeft $ IncompatibleClassChangeError
       undefined
     _ -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
 
-recordClassLoading :: ClassName -> ByteCode -> SymTable -> Int -> Int -> Runtime -> Either VMError Runtime
+recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> Either VMError Runtime
 recordClassLoading name bc sym defCl initCl
   rt@(Runtime {classLoading = cls, symbolics = syms, bytecodes = bcs}) =
     let clInfo = ClassLoaderInfo defCl initCl (name, defCl) Loaded False Nothing

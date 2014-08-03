@@ -17,6 +17,8 @@ maybeToEither :: e -> Maybe a -> Either e a
 maybeToEither e (Just a) = Right a
 maybeToEither e Nothing = Left e
 
+m2e = maybeToEither
+
 -- Srsly, Haskell, where is my 'replace' function?
 replace :: Char -> Char -> String -> String
 replace co cr = map (\c -> if c == co then cr else c)

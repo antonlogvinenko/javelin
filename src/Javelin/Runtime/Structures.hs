@@ -10,6 +10,7 @@ import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray
 
 import Javelin.ByteCode.Data
+import Control.Arrow ((>>>))
 import Javelin.Util
 
 
@@ -35,19 +36,10 @@ data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
 newRuntime :: ClassPathLayout -> Runtime
 newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
-                    in Runtime layout [BootstrapClassLoader]
+                    in Runtime layout
                        classLoadingInfo (fromList []) (fromList []) (fromList [])
                        (0, (array (0, 1000) []))
                        emptyThreads
-
-getClassLoader :: ClassName -> Runtime -> (ClassLoaderInfo -> Int) -> Maybe Int
-getClassLoader name rt f = f <$> (Map.lookup name $ classLoading rt)
-
-getInitiatingClassLoader :: ClassName -> Runtime -> Maybe Int
-getInitiatingClassLoader name rt = getClassLoader name rt initiating
-
-getDefiningClassLoader :: ClassName -> Runtime -> Maybe Int
-getDefiningClassLoader name rt = getClassLoader name rt defining
 
 
 
@@ -77,9 +69,35 @@ getSymTable = rtlookup symbolics
 getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
 getByteCode = rtlookup bytecodes
 
+data ClassRequest = ClassRequest { trigger :: Maybe ClassName,
+                                   triggerDefiningCL :: ClassLoader,
+                                   name :: ClassName }
+                  deriving (Show, Eq)
+
+newClassRequest :: Maybe ClassName -> ClassName -> Runtime -> Either VMError ClassRequest
+newClassRequest trigger name rt =
+  case trigger of
+    Nothing -> return $ ClassRequest trigger BootstrapClassLoader name
+    Just triggerClass -> do
+      triggerInfo <- m2e (StateError rt "") (getDefiningClassLoader rt triggerClass)
+      return $ ClassRequest trigger triggerInfo name
+
+getInitiatingClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
+getInitiatingClassLoader rt name = getClassLoader rt name initiating
+
+getDefiningClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
+getDefiningClassLoader rt name = getClassLoader rt name defining
+
+getClassLoader :: Runtime -> ClassName -> (ClassLoaderInfo -> ClassLoader) -> Maybe ClassLoader
+getClassLoader rt name clType = do
+  info <- getClassLoaderInfo rt name
+  return $ clType info
+
+getClassLoaderInfo :: Runtime -> ClassName -> Maybe ClassLoaderInfo
+getClassLoaderInfo rt name = Map.lookup name (classLoading rt)
+
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
 
-                         classLoaders :: [ClassLoader],
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
                          classResolving :: Map.Map ClassName (Maybe LinkageError),
 
@@ -114,9 +132,9 @@ data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { instanceReference :: Integer }
                  deriving (Show, Eq)
 
-data ClassLoaderInfo = ClassLoaderInfo { defining :: Int,
-                                         initiating :: Int,
-                                         runtimePackage :: (String, Int),
+data ClassLoaderInfo = ClassLoaderInfo { defining :: ClassLoader,
+                                         initiating :: ClassLoader,
+                                         runtimePackage :: (String, ClassLoader),
                                          lliState :: LoadLinkInitializeState,
                                          resolved :: Bool,
                                          staticRef :: Maybe Int }

@@ -11,12 +11,13 @@ import Javelin.Util
 -- 1. not yet resolved
 -- 2. successfilly resolved
 -- 3. resolution failed on the previous attempt 
-resolveClassInterface :: ClassName -> Runtime -> Either VMError Runtime
-resolveClassInterface name rt = do
-  case rt $> classResolving >>> (Map.lookup name) of
+resolveClassInterface :: ClassRequest -> Runtime -> Either VMError Runtime
+resolveClassInterface request rt = do
+  case rt $> classResolving >>> (Map.lookup $ name request) of
     Just Nothing -> return rt
     Just (Just err) -> linkageLeft err
     Nothing -> undefined
+
 
     
 
