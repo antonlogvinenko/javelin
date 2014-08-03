@@ -125,7 +125,6 @@ checkSuperClass request bc sym rt = let superClassIdx = super $ body bc
                                                             (False, parent) -> if parent == name request
                                                                                then linkageLeft ClassCircularityError
                                                                                else Right rt
-                                      _ -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
 
 
 checkSuperInterfaces :: ClassRequest -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
