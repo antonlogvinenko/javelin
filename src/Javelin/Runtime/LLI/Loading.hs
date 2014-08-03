@@ -127,7 +127,7 @@ checkSuperInterface name bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   case Map.lookup interfaceIdx sym of
     Just (ClassOrInterface parent) -> do
-      rt <- resolveClassInterface parent rt
+      rt <- resolveClassInterface name rt
       case isInterface parent rt of
         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
         Just True -> if parent == name

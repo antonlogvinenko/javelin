@@ -20,9 +20,13 @@ constant pool: index -> symbolic reference
  
 *Short term*
 * Resolving
+ * class interface
+  * not defCl but class name for resolution, functions to extract class related info
+  * check access
  * for each type of 'resolvables':
-  * how and where to store/group resolve results? result is Maybe VMError
   * resolve methods arguments?
+  * implement
+  * how and where to store/group resolve results? result is Maybe VMError
 * Initializing
  * ???
 * Linking + Loaading + Initializing

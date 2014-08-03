@@ -81,7 +81,7 @@ data Runtime = Runtime { classPathLayout :: ClassPathLayout,
 
                          classLoaders :: [ClassLoader],
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
-                         classResolving :: Map.Map ClassName (Maybe VMError),
+                         classResolving :: Map.Map ClassName (Maybe LinkageError),
 
                          symbolics :: Map ClassName SymTable,
                          bytecodes :: Map.Map ClassName ByteCode,
