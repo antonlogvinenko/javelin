@@ -22,49 +22,46 @@ import Control.Arrow ((>>>))
 load :: Maybe ClassName -> ClassName -> Runtime -> IO (Either VMError Runtime)
 load trigger name rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
-      properClassLoader = getProperClassLoader trigger rt
-  in case properClassLoader of
-          Nothing -> return $ linkageLeft $ InternalError ClassLoaderNotFound
-          Just cl -> case newClassRequest trigger name rt of
-            Left e -> return $ Left e
-            Right request -> classLoadFunction request rt cl
+  in case getProperClassLoader trigger rt of
+    Nothing -> return $ linkageLeft $ InternalError ClassLoaderNotFound
+    Just triggerDCL -> classLoadFunction (ClassRequest trigger triggerDCL name) rt
 
 isArray :: ClassName -> Bool
 isArray name = head name == '['
 
 getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
 getProperClassLoader Nothing _ = Just BootstrapClassLoader
-getProperClassLoader (Just trigger)
-  rt@(Runtime {classLoading = classLoading}) =
-  defining <$> Map.lookup trigger classLoading
-
-type ClassLoadMethod = ClassRequest -> Runtime -> ClassLoader -> IO (Either VMError Runtime)
+getProperClassLoader (Just trigger) rt = getDefiningClassLoader rt trigger
 
 
--- §5.3.3 Creating Array Classes
-loadArray :: ClassLoadMethod
-loadArray name rt classLoader = undefined
+type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
 
 loadClass :: ClassLoadMethod
-loadClass request rt cl@BootstrapClassLoader =
-  case trigger request of
-    Nothing -> undefined
-    Just triggerClass -> case getInitiatingClassLoader rt triggerClass of
-      Nothing -> loadClassWithBootstrap request rt
-      Just initCl -> if initCl == cl
-                     then return $ Right rt
-                     else loadClassWithBootstrap request rt
-loadClass name rt cl = undefined
+loadClass request@(ClassRequest trig trigDCL n) rt =
+  case trigDCL of
+    BootstrapClassLoader -> loadClassWithBootstrap request rt
+    cl -> loadClassWithUserDefCL request rt
 
 
 -- §5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
-loadClassWithBootstrap request rt@(Runtime {classPathLayout = layout}) = do
-  maybeBytes <- runMaybeT $ getClassBytes (name request) layout
-  let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
-  return $ do
-    bytes <- eitherBytes
-    derive request rt BootstrapClassLoader BootstrapClassLoader bytes
+loadClassWithBootstrap request@(ClassRequest t dcl n) rt@(Runtime {classPathLayout = layout}) = 
+  case getInitiatingClassLoader rt n of
+    Just BootstrapClassLoader -> return $ Right rt
+    _ -> do
+      maybeBytes <- runMaybeT $ getClassBytes (name request) layout
+      let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
+      return $ do
+        bytes <- eitherBytes
+        derive request rt BootstrapClassLoader BootstrapClassLoader bytes
+
+-- §5.3.2 Loading Using a User-defined Class Loader
+loadClassWithUserDefCL :: ClassLoadMethod
+loadClassWithUserDefCL request rt = undefined
+
+-- §5.3.3 Creating Array Classes
+loadArray :: ClassLoadMethod
+loadArray request rt = undefined
 
 
 

@@ -74,14 +74,6 @@ data ClassRequest = ClassRequest { trigger :: Maybe ClassName,
                                    name :: ClassName }
                   deriving (Show, Eq)
 
-newClassRequest :: Maybe ClassName -> ClassName -> Runtime -> Either VMError ClassRequest
-newClassRequest trigger name rt =
-  case trigger of
-    Nothing -> return $ ClassRequest trigger BootstrapClassLoader name
-    Just triggerClass -> do
-      triggerInfo <- m2e (StateError rt "") (getDefiningClassLoader rt triggerClass)
-      return $ ClassRequest trigger triggerInfo name
-
 getInitiatingClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
 getInitiatingClassLoader rt name = getClassLoader rt name initiating
 

@@ -18,7 +18,6 @@ JVM 8 spec implementation in Haskell.
 commands with indices
 constant pool: index -> symbolic reference
 
-0. fix compiler
 1. newClassRequest - must only return defining class loader + rename it
 2. if loading array, no "bootstrap or custom class loader" logic required
 
