@@ -18,8 +18,18 @@ JVM 8 spec implementation in Haskell.
 commands with indices
 constant pool: index -> symbolic reference
 
-1. newClassRequest - must only return defining class loader + rename it
-2. if loading array, no "bootstrap or custom class loader" logic required
+
+1. go through deriving, calls to resolve
+2. link/initialize process
+3. resolve process
+
+4. represent states in Runtime (lli, resolved per class items)
+5. represent errors
+6. go through loading class from FS via bootstrap CL
+
+7. VM start, init, running bytecode
+
+
 
 *Short term*
 * Resolving

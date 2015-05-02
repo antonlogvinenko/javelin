@@ -18,13 +18,19 @@ import Javelin.Util
 import Control.Arrow ((>>>))
 
 
--- Loading
+-- §5.3 Creation and Loading
 load :: Maybe ClassName -> ClassName -> Runtime -> IO (Either VMError Runtime)
 load trigger name rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
   in case getProperClassLoader trigger rt of
     Nothing -> return $ linkageLeft $ InternalError ClassLoaderNotFound
     Just triggerDCL -> classLoadFunction (ClassRequest trigger triggerDCL name) rt
+
+loadClass :: ClassLoadMethod
+loadClass request@(ClassRequest trig trigDCL n) rt =
+  case trigDCL of
+    BootstrapClassLoader -> loadClassWithBootstrap request rt
+    cl -> loadClassWithUserDefCL request rt
 
 isArray :: ClassName -> Bool
 isArray name = head name == '['
@@ -33,15 +39,7 @@ getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
 getProperClassLoader Nothing _ = Just BootstrapClassLoader
 getProperClassLoader (Just trigger) rt = getDefiningClassLoader rt trigger
 
-
 type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
-
-loadClass :: ClassLoadMethod
-loadClass request@(ClassRequest trig trigDCL n) rt =
-  case trigDCL of
-    BootstrapClassLoader -> loadClassWithBootstrap request rt
-    cl -> loadClassWithUserDefCL request rt
-
 
 -- §5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
@@ -63,7 +61,8 @@ loadClassWithUserDefCL request rt = undefined
 loadArray :: ClassLoadMethod
 loadArray request rt = undefined
 
-
+-- §5.3.4 Loading Constraints
+-- not implemented yet
 
 -- §5.3.5 Deriving a Class from a class File Representation
 derive :: ClassRequest -> Runtime -> ClassLoader -> ClassLoader -> ByteString -> Either VMError Runtime
