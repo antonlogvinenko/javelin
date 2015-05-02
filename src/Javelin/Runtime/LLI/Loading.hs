@@ -49,7 +49,7 @@ loadClass :: ClassLoadMethod
 loadClass request rt cl@BootstrapClassLoader =
   case trigger request of
     Nothing -> undefined
-    Just triggerClass -> case getInitiatingClassLoader rt  triggerClass of
+    Just triggerClass -> case getInitiatingClassLoader rt triggerClass of
       Nothing -> loadClassWithBootstrap request rt
       Just initCl -> if initCl == cl
                      then return $ Right rt
@@ -93,7 +93,7 @@ checkClassFileFormat bs rt = let body = parse $ unpack bs in
     Right (_, _, byteCode) -> Right byteCode
     
 checkClassVersion :: ByteCode -> Either VMError ()
-checkClassVersion bc = if minVer bc < 0 || majVer bc > 100500
+checkClassVersion bc = if minVer bc < 0 || majVer bc > 1050
                        then linkageLeft UnsupportedClassVersionError
                        else Right ()
 
@@ -130,7 +130,7 @@ checkSuperClass request bc sym rt = let superClassIdx = super $ body bc
 checkSuperInterfaces :: ClassRequest -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
 checkSuperInterfaces request bc syms rt = let superInterfaces = interfaces $ body bc
                                           in foldl (checkSuperInterface undefined bc syms) (Right rt) superInterfaces
-checkSuperInterface :: ClassRequest => ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
+checkSuperInterface :: ClassRequest -> ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
 checkSuperInterface request bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   case Map.lookup interfaceIdx sym of
