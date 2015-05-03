@@ -35,7 +35,7 @@ type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
 
 -- §5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
-loadClassWithBootstrap request@(ClassRequest dcl n) rt@(Runtime {classPathLayout = layout}) = 
+loadClassWithBootstrap request@(ClassRequest _ n) rt@(Runtime {classPathLayout = layout}) = 
   case getInitiatingClassLoader rt n of
     Just BootstrapClassLoader -> return $ Right rt
     _ -> do
@@ -58,14 +58,14 @@ loadArray request rt = undefined
 
 -- §5.3.5 Deriving a Class from a class File Representation
 derive :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> Either VMError Runtime
-derive request@(ClassRequest initCl n) rt defCl bs = do
-  checkInitiatingClassLoader initCl (name request) rt
+derive request@(ClassRequest initCL n) rt defCL bs = do
+  checkInitiatingClassLoader initCL (name request) rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
   syms <- checkRepresentedClass (name request) rt bc
-  checkSuperClass request defCl bc syms rt
-    >>= checkSuperInterfaces request defCl bc syms
-    >>= recordClassLoading (name request) bc syms initCl defCl
+  checkSuperClass request defCL bc syms rt
+    >>= checkSuperInterfaces request defCL bc syms
+    >>= recordClassLoading (name request) bc syms initCL defCL
 
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> Either VMError Runtime
 checkInitiatingClassLoader initCL name rt = do
@@ -86,15 +86,16 @@ checkClassVersion bc = if minVer bc < 0 || majVer bc > 1050
                        else Right ()
 
 checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> Either VMError SymTable
-checkRepresentedClass name rt bc = let pool = constPool $ body bc
-                                       symbolics = deriveSymTable pool
-                                       thisIndex = this $ body bc
-                                   in case Map.lookup (fromIntegral thisIndex) symbolics of
-                                     Just (ClassOrInterface x) -> return symbolics
-                                     _ -> linkageLeft $ InternalError CantCheckClassRepresentation
+checkRepresentedClass name rt bc =
+  let pool = constPool $ body bc
+      symbolics = deriveSymTable pool
+      thisIndex = this $ body bc
+  in case Map.lookup (fromIntegral thisIndex) symbolics of
+    Just (ClassOrInterface x) -> return symbolics
+    _ -> linkageLeft $ InternalError CantCheckClassRepresentation
 
 checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
-checkSuperClass request defCl bc sym rt =
+checkSuperClass request defCL bc sym rt =
   let superClassIdx = super $ body bc
       loadingClass = name request
   in case (loadingClass, superClassIdx) of
@@ -104,7 +105,7 @@ checkSuperClass request defCl bc sym rt =
     (_, idx) -> case Map.lookup idx sym of
       Nothing -> undefined
       Just (ClassOrInterface parent) -> do
-        rt <- resolve (ClassRequest defCl parent) rt
+        rt <- resolve (ClassRequest defCL parent) rt
         case isInterface parent rt of
           Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
           Just True -> linkageLeft IncompatibleClassChangeError
@@ -119,16 +120,16 @@ checkSuperClass request defCl bc sym rt =
 
 
 checkSuperInterfaces :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
-checkSuperInterfaces request defCl bc syms rt = let superInterfaces = interfaces $ body bc
-                                                in foldl (checkSuperInterface request defCl bc syms) (Right rt) superInterfaces
+checkSuperInterfaces request defCL bc syms rt = let superInterfaces = interfaces $ body bc
+                                                in foldl (checkSuperInterface request defCL bc syms) (Right rt) superInterfaces
 checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
-checkSuperInterface request defCl bc sym eitherRt interfaceIdx = do
+checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   let loadingClass = name request
   case Map.lookup interfaceIdx sym of
     Nothing -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
     Just (ClassOrInterface parent) -> do
-      rt <- resolve (ClassRequest defCl parent) rt
+      rt <- resolve (ClassRequest defCL parent) rt
       case isInterface parent rt of
         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
         Just True -> if parent == loadingClass
@@ -138,9 +139,9 @@ checkSuperInterface request defCl bc sym eitherRt interfaceIdx = do
 
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> Either VMError Runtime
-recordClassLoading name bc sym defCl initCl
+recordClassLoading name bc sym defCL initCL
   rt@(Runtime {classLoading = cls, symbolics = syms, bytecodes = bcs}) =
-    let clInfo = ClassLoaderInfo defCl initCl (name, defCl) Loaded False Nothing
+    let clInfo = ClassLoaderInfo defCL initCL (name, defCL) Loaded False Nothing
     in Right $ rt {classLoading = insert name clInfo cls,
                    symbolics = insert name sym syms,
                    bytecodes = insert name bc bcs}
