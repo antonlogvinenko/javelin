@@ -21,7 +21,7 @@ constant pool: index -> symbolic reference
 1. Loading
  - check symbols deriving
  - check repr dericing logic
- - call to load will always have defining classloader?
+
 
 1. pass request to resolve? in load defining class loader is already known!
 

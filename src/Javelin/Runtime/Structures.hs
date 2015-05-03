@@ -69,8 +69,7 @@ getSymTable = rtlookup symbolics
 getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
 getByteCode = rtlookup bytecodes
 
-data ClassRequest = ClassRequest { trigger :: Maybe ClassName,
-                                   triggerDefiningCL :: ClassLoader,
+data ClassRequest = ClassRequest { initCL :: ClassLoader,
                                    name :: ClassName }
                   deriving (Show, Eq)
 

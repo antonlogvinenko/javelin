@@ -19,31 +19,23 @@ import Control.Arrow ((>>>))
 
 
 -- §5.3 Creation and Loading
-load :: Maybe ClassName -> ClassName -> Runtime -> IO (Either VMError Runtime)
-load trigger name rt =
+load :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
+load request@(ClassRequest _ name) rt =
   let classLoadFunction = if isArray name then loadArray else loadClass
-  in case getProperClassLoader trigger rt of
-    Nothing -> return $ linkageLeft $ InternalError ClassLoaderNotFound
-    Just triggerDCL -> classLoadFunction (ClassRequest trigger triggerDCL name) rt
+  in classLoadFunction request rt
 
 loadClass :: ClassLoadMethod
-loadClass request@(ClassRequest trig trigDCL n) rt =
-  case trigDCL of
-    BootstrapClassLoader -> loadClassWithBootstrap request rt
-    cl -> loadClassWithUserDefCL request rt
+loadClass request@(ClassRequest BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
+loadClass request rt = loadClassWithUserDefCL request rt
 
 isArray :: ClassName -> Bool
 isArray name = head name == '['
-
-getProperClassLoader :: Maybe ClassName -> Runtime -> Maybe ClassLoader
-getProperClassLoader Nothing _ = Just BootstrapClassLoader
-getProperClassLoader (Just trigger) rt = getDefiningClassLoader rt trigger
 
 type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
 
 -- §5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
-loadClassWithBootstrap request@(ClassRequest t dcl n) rt@(Runtime {classPathLayout = layout}) = 
+loadClassWithBootstrap request@(ClassRequest dcl n) rt@(Runtime {classPathLayout = layout}) = 
   case getInitiatingClassLoader rt n of
     Just BootstrapClassLoader -> return $ Right rt
     _ -> do
@@ -66,7 +58,7 @@ loadArray request rt = undefined
 
 -- §5.3.5 Deriving a Class from a class File Representation
 derive :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> Either VMError Runtime
-derive request@(ClassRequest t initCl n) rt defCl bs = do
+derive request@(ClassRequest initCl n) rt defCl bs = do
   checkInitiatingClassLoader initCl (name request) rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
@@ -112,7 +104,7 @@ checkSuperClass request defCl bc sym rt =
     (_, idx) -> case Map.lookup idx sym of
       Nothing -> undefined
       Just (ClassOrInterface parent) -> do
-        rt <- resolve (ClassRequest (Just loadingClass) defCl parent) rt
+        rt <- resolve (ClassRequest defCl parent) rt
         case isInterface parent rt of
           Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
           Just True -> linkageLeft IncompatibleClassChangeError
@@ -136,7 +128,7 @@ checkSuperInterface request defCl bc sym eitherRt interfaceIdx = do
   case Map.lookup interfaceIdx sym of
     Nothing -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
     Just (ClassOrInterface parent) -> do
-      rt <- resolve (ClassRequest (Just loadingClass) defCl parent) rt
+      rt <- resolve (ClassRequest defCl parent) rt
       case isInterface parent rt of
         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
         Just True -> if parent == loadingClass
