@@ -51,7 +51,7 @@ loadClassWithBootstrap request@(ClassRequest t dcl n) rt@(Runtime {classPathLayo
       let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
       return $ do
         bytes <- eitherBytes
-        derive request rt BootstrapClassLoader BootstrapClassLoader bytes
+        derive request rt BootstrapClassLoader bytes
 
 -- §5.3.2 Loading Using a User-defined Class Loader
 loadClassWithUserDefCL :: ClassLoadMethod
@@ -65,14 +65,14 @@ loadArray request rt = undefined
 -- not implemented yet
 
 -- §5.3.5 Deriving a Class from a class File Representation
-derive :: ClassRequest -> Runtime -> ClassLoader -> ClassLoader -> ByteString -> Either VMError Runtime
-derive request rt initCl defCl bs = do
+derive :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> Either VMError Runtime
+derive request@(ClassRequest t initCl n) rt defCl bs = do
   checkInitiatingClassLoader initCl (name request) rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
   syms <- checkRepresentedClass (name request) rt bc
-  checkSuperClass undefined bc syms rt
-    >>= checkSuperInterfaces request bc syms
+  checkSuperClass request defCl bc syms rt
+    >>= checkSuperInterfaces request defCl bc syms
     >>= recordClassLoading (name request) bc syms initCl defCl
 
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> Either VMError Runtime
@@ -101,45 +101,49 @@ checkRepresentedClass name rt bc = let pool = constPool $ body bc
                                      Just (ClassOrInterface x) -> return symbolics
                                      _ -> linkageLeft $ InternalError CantCheckClassRepresentation
 
-checkSuperClass :: ClassRequest -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
-checkSuperClass request bc sym rt = let superClassIdx = super $ body bc
-                                    in case (name request, superClassIdx) of
-                                      ("java.lang.Object", 0) -> Right rt
-                                      (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
-                                      ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
-                                      (_, idx) -> case Map.lookup superClassIdx sym of
-                                        Just (ClassOrInterface parent) -> do
-                                          rt <- resolveClassInterface undefined rt
-                                          case isInterface parent rt of
-                                            Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
-                                            Just True -> linkageLeft IncompatibleClassChangeError
-                                            Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
-                                                              thisIsInterface = elem ClassInterface thisAccessFlags
-                                                          in case (thisIsInterface, parent) of
-                                                            (True, "java.lang.Object") -> Right rt
-                                                            (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
-                                                            (False, parent) -> if parent == name request
-                                                                               then linkageLeft ClassCircularityError
-                                                                               else Right rt
+checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
+checkSuperClass request defCl bc sym rt =
+  let superClassIdx = super $ body bc
+      loadingClass = name request
+  in case (loadingClass, superClassIdx) of
+    ("java.lang.Object", 0) -> Right rt
+    (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
+    ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
+    (_, idx) -> case Map.lookup idx sym of
+      Nothing -> undefined
+      Just (ClassOrInterface parent) -> do
+        rt <- resolve (ClassRequest (Just loadingClass) defCl parent) rt
+        case isInterface parent rt of
+          Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
+          Just True -> linkageLeft IncompatibleClassChangeError
+          Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
+                            thisIsInterface = elem ClassInterface thisAccessFlags
+                        in case (thisIsInterface, parent) of
+                          (True, "java.lang.Object") -> Right rt
+                          (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
+                          (False, parent) -> if parent == name request
+                                             then linkageLeft ClassCircularityError
+                                             else Right rt
 
 
-checkSuperInterfaces :: ClassRequest -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
-checkSuperInterfaces request bc syms rt = let superInterfaces = interfaces $ body bc
-                                          in foldl (checkSuperInterface undefined bc syms) (Right rt) superInterfaces
-checkSuperInterface :: ClassRequest -> ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
-checkSuperInterface request bc sym eitherRt interfaceIdx = do
+checkSuperInterfaces :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
+checkSuperInterfaces request defCl bc syms rt = let superInterfaces = interfaces $ body bc
+                                                in foldl (checkSuperInterface request defCl bc syms) (Right rt) superInterfaces
+checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
+checkSuperInterface request defCl bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
+  let loadingClass = name request
   case Map.lookup interfaceIdx sym of
+    Nothing -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
     Just (ClassOrInterface parent) -> do
-      rt <- resolveClassInterface request rt
+      rt <- resolve (ClassRequest (Just loadingClass) defCl parent) rt
       case isInterface parent rt of
         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
-        Just True -> if parent == name request
+        Just True -> if parent == loadingClass
                      then linkageLeft ClassCircularityError
                      else Right rt
         Just False -> linkageLeft $ IncompatibleClassChangeError
-      undefined
-    _ -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
+
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> Either VMError Runtime
 recordClassLoading name bc sym defCl initCl

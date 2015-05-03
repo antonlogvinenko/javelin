@@ -18,10 +18,12 @@ JVM 8 spec implementation in Haskell.
 commands with indices
 constant pool: index -> symbolic reference
 
+1. Loading
+ - check symbols deriving
+ - check repr dericing logic
+ - call to load will always have defining classloader?
 
-1. go through deriving, calls to resolve
-2. link/initialize process
-3. resolve process
+1. pass request to resolve? in load defining class loader is already known!
 
 4. represent states in Runtime (lli, resolved per class items)
 5. represent errors
