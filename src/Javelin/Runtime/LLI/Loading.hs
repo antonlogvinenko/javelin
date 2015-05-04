@@ -35,11 +35,11 @@ type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
 
 -- §5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
-loadClassWithBootstrap request@(ClassRequest _ n) rt@(Runtime {classPathLayout = layout}) = 
-  case getInitiatingClassLoader rt n of
+loadClassWithBootstrap request@(ClassRequest _ name) rt@(Runtime {classPathLayout = layout}) = 
+  case getInitiatingClassLoader rt name of
     Just BootstrapClassLoader -> return $ Right rt
     _ -> do
-      maybeBytes <- runMaybeT $ getClassBytes (name request) layout
+      maybeBytes <- runMaybeT $ getClassBytes (getName request) layout
       let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
       return $ do
         bytes <- eitherBytes
@@ -58,14 +58,14 @@ loadArray request rt = undefined
 
 -- §5.3.5 Deriving a Class from a class File Representation
 derive :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> Either VMError Runtime
-derive request@(ClassRequest initCL n) rt defCL bs = do
-  checkInitiatingClassLoader initCL (name request) rt
+derive request@(ClassRequest initCL name) rt defCL bs = do
+  checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
-  syms <- checkRepresentedClass (name request) rt bc
+  syms <- checkRepresentedClass name rt bc
   checkSuperClass request defCL bc syms rt
     >>= checkSuperInterfaces request defCL bc syms
-    >>= recordClassLoading (name request) bc syms initCL defCL
+    >>= recordClassLoading name bc syms initCL defCL
 
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> Either VMError Runtime
 checkInitiatingClassLoader initCL name rt = do
@@ -97,11 +97,11 @@ checkRepresentedClass name rt bc =
 checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
 checkSuperClass request defCL bc sym rt =
   let superClassIdx = super $ body bc
-      loadingClass = name request
+      loadingClass = getName request
   in case (loadingClass, superClassIdx) of
     ("java.lang.Object", 0) -> Right rt
-    (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
     ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
+    (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
     (_, idx) -> case Map.lookup idx sym of
       Nothing -> undefined
       Just (ClassOrInterface parent) -> do
@@ -114,7 +114,7 @@ checkSuperClass request defCL bc sym rt =
                         in case (thisIsInterface, parent) of
                           (True, "java.lang.Object") -> Right rt
                           (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
-                          (False, parent) -> if parent == name request
+                          (False, parent) -> if parent == getName request
                                              then linkageLeft ClassCircularityError
                                              else Right rt
 
@@ -125,7 +125,7 @@ checkSuperInterfaces request defCL bc syms rt = let superInterfaces = interfaces
 checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
 checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
-  let loadingClass = name request
+  let loadingClass = getName request
   case Map.lookup interfaceIdx sym of
     Nothing -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
     Just (ClassOrInterface parent) -> do

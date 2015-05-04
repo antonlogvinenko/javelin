@@ -13,7 +13,7 @@ import Javelin.Util
 -- 3. resolution failed on the previous attempt 
 resolve :: ClassRequest -> Runtime -> Either VMError Runtime
 resolve request rt = do
-  case rt $> classResolving >>> (Map.lookup $ name request) of
+  case rt $> classResolving >>> (Map.lookup $ getName request) of
     Just Nothing -> return rt
     Just (Just err) -> linkageLeft err
     Nothing -> undefined
