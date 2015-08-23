@@ -1,23 +1,11 @@
 module Javelin.Runtime.LLI.Loading.Loading
 where
 
-import Javelin.ByteCode.Data
 import Javelin.Runtime.Structures
-import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
-import Javelin.Runtime.LLI.Resolving
-import Javelin.ByteCode.ClassFile (parse)
-import Javelin.Runtime.LLI.Loading.DeriveSymTable (deriveSymTable)
 import Javelin.Runtime.LLI.Loading.DeriveClass (deriveClass)
 
 import Control.Monad.Trans.Maybe
-import Data.Word (Word16)
-import Data.Map as Map (insert, lookup)
-import Control.Applicative ((<$>))
-import Data.ByteString.Lazy (ByteString, unpack)
-import Javelin.Util
-import Control.Arrow ((>>>))
-
 
 -- 5.3 Creation and Loading
 load :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
