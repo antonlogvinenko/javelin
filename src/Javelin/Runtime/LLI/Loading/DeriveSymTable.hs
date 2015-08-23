@@ -35,9 +35,9 @@ deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> PartReference
 deriveFromClass classIdx typeIdx p =
   let classInfo = p !! fromIntegral classIdx
       nameAndTypeInfo = p !! fromIntegral typeIdx
-      className = stringValue (p !! fromIntegral (nameIndex classInfo))
-      methodName = stringValue (p !! fromIntegral (nameIndex nameAndTypeInfo))
-      descriptor = stringValue (p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo))
+      className = stringValue $ p !! fromIntegral (nameIndex classInfo)
+      methodName = stringValue $ p !! fromIntegral (nameIndex nameAndTypeInfo)
+      descriptor = stringValue $ p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo)
   in PartReference className methodName descriptor
 
 deriveUtf8 :: ConstantPool -> Word16 -> String
