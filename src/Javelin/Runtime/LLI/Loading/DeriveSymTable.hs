@@ -43,9 +43,9 @@ deriveFromClass classIdx nameAndTypeIdx p =
   let classInfo = p !! fromIntegral classIdx
       nameAndTypeInfo = p !! fromIntegral nameAndTypeIdx
       className = stringValue $ p !! fromIntegral (nameIndex classInfo)
-      methodName = stringValue $ p !! fromIntegral (nameIndex nameAndTypeInfo)
-      descriptor = stringValue $ p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo)
-  in PartReference className methodName descriptor
+      memberName = stringValue $ p !! fromIntegral (nameIndex nameAndTypeInfo)
+      memberDescriptor = stringValue $ p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo)
+  in PartReference className memberName memberDescriptor
 
 deriveUtf8 :: ConstantPool -> Word16 -> String
 deriveUtf8 p idx = stringValue $ p !! fromIntegral idx
