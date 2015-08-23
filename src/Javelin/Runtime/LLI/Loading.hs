@@ -18,11 +18,10 @@ import Javelin.Util
 import Control.Arrow ((>>>))
 
 
--- §5.3 Creation and Loading
+-- 5.3 Creation and Loading
 load :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
 load request@(ClassRequest _ name) rt =
-  let classLoadFunction = if isArray name then loadArray else loadClass
-  in classLoadFunction request rt
+  (if isArray name then loadArray else loadClass) request rt
 
 loadClass :: ClassLoadMethod
 loadClass request@(ClassRequest BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
@@ -33,30 +32,30 @@ isArray name = head name == '['
 
 type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
 
--- §5.3.1 Loading Using the Bootstrap Class Loader
+-- 5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
 loadClassWithBootstrap request@(ClassRequest _ name) rt@(Runtime {classPathLayout = layout}) = 
   case getInitiatingClassLoader rt name of
     Just BootstrapClassLoader -> return $ Right rt
     _ -> do
-      maybeBytes <- runMaybeT $ getClassBytes (getName request) layout
+      maybeBytes <- runMaybeT $ getClassBytes name layout
       let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
       return $ do
         bytes <- eitherBytes
         derive request rt BootstrapClassLoader bytes
 
--- §5.3.2 Loading Using a User-defined Class Loader
+-- 5.3.2 Loading Using a User-defined Class Loader
 loadClassWithUserDefCL :: ClassLoadMethod
 loadClassWithUserDefCL request rt = undefined
 
--- §5.3.3 Creating Array Classes
+-- 5.3.3 Creating Array Classes
 loadArray :: ClassLoadMethod
 loadArray request rt = undefined
 
--- §5.3.4 Loading Constraints
+-- 5.3.4 Loading Constraints
 -- not implemented yet
 
--- §5.3.5 Deriving a Class from a class File Representation
+-- 5.3.5 Deriving a Class from a class File Representation
 derive :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> Either VMError Runtime
 derive request@(ClassRequest initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
@@ -148,7 +147,7 @@ recordClassLoading name bc sym defCL initCL
   
 
 
--- §5.1 The Runtime Constant Pool
+-- 5.1 The Runtime Constant Pool
 
 deriveSymTable :: ConstantPool -> SymTable
 deriveSymTable p = deriveReduce p (length p - 1) $ fromList []
@@ -157,47 +156,46 @@ deriveReduce :: ConstantPool -> Int -> SymTable -> SymTable
 deriveReduce _ (-1) d = d
 deriveReduce p i d = deriveReduce p (i - 1) d2
   where item = p !! i
-        d2 = case deriveReference p item of
-          Just ref -> insert (fromIntegral i) ref d
-          Nothing -> d
+        d2 = insert (fromIntegral i) (deriveReference p item) d
 
-deriveReference :: ConstantPool -> Constant -> Maybe SymbolicReference
-deriveReference p c = case c of
-  ClassInfo idx ->
-    ClassOrInterface <$> deriveUtf8 p idx
-  Fieldref classIdx typeIdx ->
-    FieldReference <$> deriveFromClass classIdx typeIdx p
-  Methodref classIdx typeIdx ->
-    ClassMethodReference <$> deriveFromClass classIdx typeIdx p
-  InterfaceMethodref classIdx typeIdx ->
-    InterfaceMethodReference <$> deriveFromClass classIdx typeIdx p
-  MethodHandleInfo x y -> undefined
-  MethodTypeInfo idx -> MethodTypeReference <$> deriveUtf8 p idx
-  InvokeDynamicInfo x y -> undefined
-  StringInfo idx -> StringLiteral <$> deriveUtf8 p idx
-  DoubleInfo val -> Just $ DoubleLiteral val
-  FloatInfo val -> Just $ FloatLiteral val
-  LongInfo val -> Just $ LongLiteral val
-  IntegerInfo val -> Just $ IntegerLiteral val
-  _ -> Nothing
+deriveReference :: ConstantPool -> Constant -> SymbolicReference
 
-deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> Maybe PartReference
-deriveFromClass classIdx typeIdx p = do
-  classInfo <- p !? classIdx
-  nameAndTypeInfo <- p !? typeIdx
-  case (classInfo, nameAndTypeInfo) of
-    (ClassInfo classNameIdx, NameAndTypeInfo methodNameIdx descriptorIdx) -> do
-      className <- p !? classNameIdx
-      methodName <- p !? methodNameIdx
-      descriptor <- p!? descriptorIdx
-      case (className, methodName, descriptor) of
-        (Utf8Info a, Utf8Info b, Utf8Info c) -> return $ PartReference a b c
-        _ -> Nothing
-    _ -> Nothing
+deriveReference p c@(MethodHandleInfo x y) = undefined
+deriveReference p c@(InvokeDynamicInfo x y) = undefined
 
-deriveUtf8 :: ConstantPool -> Word16 -> Maybe String
-deriveUtf8 p idx = do
-  name <- p !? idx
-  case name of
-    Utf8Info name -> Just name
-    _ -> Nothing
+deriveReference p c@(ClassInfo idx) = ClassOrInterface $ deriveUtf8 p idx
+deriveReference p c@(Fieldref classIdx typeIdx) =
+  FieldReference $ deriveFromClass classIdx typeIdx p
+deriveReference p c@(Methodref classIdx typeIdx) =
+  ClassMethodReference $ deriveFromClass classIdx typeIdx p
+deriveReference p c@(InterfaceMethodref classIdx typeIdx) =
+  InterfaceMethodReference $ deriveFromClass classIdx typeIdx p
+deriveReference p c@(MethodTypeInfo idx) = MethodTypeReference $ deriveUtf8 p idx
+
+deriveReference p c@(StringInfo idx) = StringLiteral $ deriveUtf8 p idx
+deriveReference p c@(DoubleInfo val) = DoubleLiteral val
+deriveReference p c@(FloatInfo val) = FloatLiteral val
+deriveReference p c@(LongInfo val) = LongLiteral val
+deriveReference p c@(IntegerInfo val) = IntegerLiteral val
+
+deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> PartReference
+deriveFromClass classIdx typeIdx p =
+  let classInfo = p !! fromIntegral classIdx
+      nameAndTypeInfo = p !! fromIntegral typeIdx
+      className = stringValue (p !! fromIntegral (nameIndex classInfo))
+      methodName = stringValue (p !! fromIntegral (nameIndex nameAndTypeInfo))
+      descriptor = stringValue (p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo))
+  in PartReference className methodName descriptor
+
+  -- do
+  -- classInfo <- p !? classIdx
+  -- nameAndTypeInfo <- p !? typeIdx
+  -- case (classInfo, nameAndTypeInfo) of
+  --   (ClassInfo classNameIdx, NameAndTypeInfo methodNameIdx descriptorIdx) -> do
+  --     (Utf8Info a) <- p !! classNameIdx
+  --     (Utf8Info b) <- p !! methodNameIdx
+  --     (Utf8Info c) <- p !! descriptorIdx
+  --     return $ PartReference a b c
+
+deriveUtf8 :: ConstantPool -> Word16 -> String
+deriveUtf8 p idx = stringValue $ p !! fromIntegral idx

@@ -19,17 +19,22 @@ commands with indices
 constant pool: index -> symbolic reference
 
 1. Loading
- - check symbols deriving
- - check repr dericing logic
+ - check deriveSymTable
+ - check derive
+ - update scheme of LLI on image (loading -> resolve)
 
+ - errors during class loading
+ - check bytes loading
 
-1. pass request to resolve? in load defining class loader is already known!
+2. Resolving
 
-4. represent states in Runtime (lli, resolved per class items)
-5. represent errors
-6. go through loading class from FS via bootstrap CL
-
-7. VM start, init, running bytecode
+3. Linking, init
+4. Altogether
+ 
+- represent states in Runtime (lli, resolved per class items)
+- represent errors
+- go through loading class from FS via bootstrap CL
+- VM start, init, running bytecode
 
 
 
