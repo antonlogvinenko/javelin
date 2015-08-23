@@ -150,7 +150,7 @@ recordClassLoading name bc sym defCL initCL
 -- 5.1 The Runtime Constant Pool
 
 deriveSymTable :: ConstantPool -> SymTable
-deriveSymTable p = deriveReduce p (length p - 1) $ fromList []
+deriveSymTable p = deriveReduce p (length p - 1) $ Map.empty
 
 deriveReduce :: ConstantPool -> Int -> SymTable -> SymTable
 deriveReduce _ (-1) d = d
