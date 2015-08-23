@@ -7,11 +7,12 @@ import Javelin.Util
 import Javelin.Runtime.LLI.ClassPath
 import Javelin.Runtime.LLI.Resolving
 import Javelin.ByteCode.ClassFile (parse)
+import Javelin.Runtime.LLI.Loading.DeriveSymTable (deriveSymTable)
 
 import Control.Monad.Trans.Maybe
 import Control.Monad (liftM)
 import Data.Word (Word16)
-import Data.Map.Lazy as Map (fromList, insert, lookup)
+import Data.Map as Map (insert, lookup, empty)
 import Control.Applicative ((<$>))
 import Data.ByteString.Lazy (ByteString, unpack)
 import Javelin.Util
@@ -89,8 +90,8 @@ checkRepresentedClass name rt bc =
   let pool = constPool $ body bc
       symbolics = deriveSymTable pool
       thisIndex = this $ body bc
-  in case Map.lookup (fromIntegral thisIndex) symbolics of
-    Just (ClassOrInterface x) -> return symbolics
+  in case symbolics !! (fromIntegral thisIndex) of
+    (ClassOrInterface x) -> return symbolics
     _ -> linkageLeft $ InternalError CantCheckClassRepresentation
 
 checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
@@ -101,9 +102,8 @@ checkSuperClass request defCL bc sym rt =
     ("java.lang.Object", 0) -> Right rt
     ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
     (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
-    (_, idx) -> case Map.lookup idx sym of
-      Nothing -> undefined
-      Just (ClassOrInterface parent) -> do
+    (_, idx) -> case sym !! fromIntegral idx of
+      (ClassOrInterface parent) -> do
         rt <- resolve (ClassRequest defCL parent) rt
         case isInterface parent rt of
           Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
@@ -125,9 +125,8 @@ checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Ei
 checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   let loadingClass = getName request
-  case Map.lookup interfaceIdx sym of
-    Nothing -> linkageLeft $ InternalError SymTableHasNoClassEntryAtIndex
-    Just (ClassOrInterface parent) -> do
+  case sym !! fromIntegral interfaceIdx of
+    (ClassOrInterface parent) -> do
       rt <- resolve (ClassRequest defCL parent) rt
       case isInterface parent rt of
         Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
@@ -147,55 +146,3 @@ recordClassLoading name bc sym defCL initCL
   
 
 
--- 5.1 The Runtime Constant Pool
-
-deriveSymTable :: ConstantPool -> SymTable
-deriveSymTable p = deriveReduce p (length p - 1) $ Map.empty
-
-deriveReduce :: ConstantPool -> Int -> SymTable -> SymTable
-deriveReduce _ (-1) d = d
-deriveReduce p i d = deriveReduce p (i - 1) d2
-  where item = p !! i
-        d2 = insert (fromIntegral i) (deriveReference p item) d
-
-deriveReference :: ConstantPool -> Constant -> SymbolicReference
-
-deriveReference p c@(MethodHandleInfo x y) = undefined
-deriveReference p c@(InvokeDynamicInfo x y) = undefined
-
-deriveReference p c@(ClassInfo idx) = ClassOrInterface $ deriveUtf8 p idx
-deriveReference p c@(Fieldref classIdx typeIdx) =
-  FieldReference $ deriveFromClass classIdx typeIdx p
-deriveReference p c@(Methodref classIdx typeIdx) =
-  ClassMethodReference $ deriveFromClass classIdx typeIdx p
-deriveReference p c@(InterfaceMethodref classIdx typeIdx) =
-  InterfaceMethodReference $ deriveFromClass classIdx typeIdx p
-deriveReference p c@(MethodTypeInfo idx) = MethodTypeReference $ deriveUtf8 p idx
-
-deriveReference p c@(StringInfo idx) = StringLiteral $ deriveUtf8 p idx
-deriveReference p c@(DoubleInfo val) = DoubleLiteral val
-deriveReference p c@(FloatInfo val) = FloatLiteral val
-deriveReference p c@(LongInfo val) = LongLiteral val
-deriveReference p c@(IntegerInfo val) = IntegerLiteral val
-
-deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> PartReference
-deriveFromClass classIdx typeIdx p =
-  let classInfo = p !! fromIntegral classIdx
-      nameAndTypeInfo = p !! fromIntegral typeIdx
-      className = stringValue (p !! fromIntegral (nameIndex classInfo))
-      methodName = stringValue (p !! fromIntegral (nameIndex nameAndTypeInfo))
-      descriptor = stringValue (p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo))
-  in PartReference className methodName descriptor
-
-  -- do
-  -- classInfo <- p !? classIdx
-  -- nameAndTypeInfo <- p !? typeIdx
-  -- case (classInfo, nameAndTypeInfo) of
-  --   (ClassInfo classNameIdx, NameAndTypeInfo methodNameIdx descriptorIdx) -> do
-  --     (Utf8Info a) <- p !! classNameIdx
-  --     (Utf8Info b) <- p !! methodNameIdx
-  --     (Utf8Info c) <- p !! descriptorIdx
-  --     return $ PartReference a b c
-
-deriveUtf8 :: ConstantPool -> Word16 -> String
-deriveUtf8 p idx = stringValue $ p !! fromIntegral idx

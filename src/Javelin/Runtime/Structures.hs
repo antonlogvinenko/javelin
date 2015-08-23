@@ -192,7 +192,7 @@ baseDefaultValues = Map.fromList [
   ]
 
 -- Class loading structures
-type SymTable = Map Word16 SymbolicReference
+type SymTable = [SymbolicReference]
 
 data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
                        | FieldReference { field :: PartReference }
@@ -210,8 +210,8 @@ data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
 
 getStringLiteral :: SymTable -> Word16 -> Either VMError String
 getStringLiteral t i = maybeToEither undefined $ do
-  v <- Map.lookup i t
-  case v of
+  let elem = t !! fromIntegral i
+  case elem of
     StringLiteral x -> return x
     _ -> Nothing
 
