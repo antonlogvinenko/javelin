@@ -1,4 +1,4 @@
-module Javelin.Runtime.LLI.Loading
+module Javelin.Runtime.LLI.Loading.Loading
 where
 
 import Javelin.ByteCode.Data
@@ -10,9 +10,8 @@ import Javelin.ByteCode.ClassFile (parse)
 import Javelin.Runtime.LLI.Loading.DeriveSymTable (deriveSymTable)
 
 import Control.Monad.Trans.Maybe
-import Control.Monad (liftM)
 import Data.Word (Word16)
-import Data.Map as Map (insert, lookup, empty)
+import Data.Map as Map (insert, lookup)
 import Control.Applicative ((<$>))
 import Data.ByteString.Lazy (ByteString, unpack)
 import Javelin.Util
