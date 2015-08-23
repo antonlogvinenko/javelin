@@ -28,6 +28,7 @@ library
                      Javelin.Runtime.LLI.ClassPath,
                      Javelin.Runtime.LLI.Loading.Loading,
                      Javelin.Runtime.LLI.Loading.DeriveSymTable,
+                     Javelin.Runtime.LLI.Loading.DeriveClass,
                      Javelin.Runtime.LLI.LinkingInitializing,
                      Javelin.Runtime.LLI.Resolving,
                      Javelin.Runtime.Structures,

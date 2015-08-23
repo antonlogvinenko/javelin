@@ -21,9 +21,8 @@ constant pool: index -> symbolic reference
 1. Loading
  - check derive
  - update scheme of LLI on image (loading -> resolve)
-
- - errors during class loading
  - check bytes loading
+ - errors during class loading
 
 2. Resolving
 
