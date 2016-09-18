@@ -19,8 +19,8 @@ commands with indices
 constant pool: index -> symbolic reference
 
 1. Loading
- - check derive class
  - update scheme of LLI on image (loading -> resolve)
+ - check derive
  - check bytes loading
  - errors during class loading
 

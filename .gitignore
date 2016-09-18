@@ -1,10 +1,1 @@
-javelin.iml
-.idea
-dist
-.cabal-sandbox
-cabal-dev
-*.o
-*.hi
-*.chi
-*.chs.h
-.virthualenv
+.stack-work
