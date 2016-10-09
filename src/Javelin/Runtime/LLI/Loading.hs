@@ -1,8 +1,8 @@
 module Javelin.Runtime.LLI.Loading
 where
 
-import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.ClassPath
+import Javelin.Runtime.Structures
 import Javelin.ByteCode.Data
 import Javelin.Runtime.LLI.Resolving
 import Javelin.ByteCode.ClassFile (parse)
@@ -12,6 +12,7 @@ import Data.Map as Map (insert, lookup)
 import Data.ByteString.Lazy (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
+
 
 
 

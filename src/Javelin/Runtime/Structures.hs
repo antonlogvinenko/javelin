@@ -191,7 +191,8 @@ baseDefaultValues = Map.fromList [
   (IntT, JInt 0), (LongT, JLong 0), (ShortT, JShort 0), (BooleanT, JBoolean 0)
   ]
 
--- Class loading structures
+
+-- Data structures
 type SymTable = [SymbolicReference]
 
 data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
@@ -208,14 +209,14 @@ data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
                        | LongLiteral { long :: Int64 }
                        deriving (Show, Eq)
 
+data PartReference = PartReference { partName :: String,
+                                     partDescriptor :: String,
+                                     ownerName :: String }
+                   deriving (Show, Eq)
+
 getStringLiteral :: SymTable -> Word16 -> Either VMError String
 getStringLiteral t i = maybeToEither undefined $ do
   let elem = t !! fromIntegral i
   case elem of
     StringLiteral x -> return x
     _ -> Nothing
-
-data PartReference = PartReference { partName :: String,
-                                     partDescriptor :: String,
-                                     ownerName :: String }
-                   deriving (Show, Eq)
