@@ -113,31 +113,37 @@ checkRepresentedClass name rt bc =
       symTable = deriveSymTable pool
       thisIndex = this $ body bc
   in case symTable !! (fromIntegral thisIndex) of
-    (ClassOrInterface x) -> return symTable
-    _ -> linkageLeft $ InternalError CantCheckClassRepresentation
+    (ClassOrInterface actualName) -> if actualName == name
+                                     then return symTable
+                                     else linkageLeft NoClassDefFoundError
+    _ -> linkageLeft ClassFormatError
+-- last case is due to invalid bytecode; throw an exception and terminate?
 
 checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
 checkSuperClass request defCL bc sym rt =
   let superClassIdx = super $ body bc
-      loadingClass = getName request
-  in case (loadingClass, superClassIdx) of
+      name = getName request
+  in case (name, superClassIdx) of
     ("java.lang.Object", 0) -> Right rt
     ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
     (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
     (_, idx) -> case sym !! fromIntegral idx of
+      -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
         rt <- resolve (ClassRequest defCL parent) rt
         case isInterface parent rt of
+          -- bytecode error
           Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
           Just True -> linkageLeft IncompatibleClassChangeError
           Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                             thisIsInterface = elem ClassInterface thisAccessFlags
                         in case (thisIsInterface, parent) of
                           (True, "java.lang.Object") -> Right rt
+                          -- bytecode error
                           (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
-                          (False, parent) -> if parent == getName request
-                                             then linkageLeft ClassCircularityError
-                                             else Right rt
+                          (False, parentName) -> if parentName == name
+                                                 then linkageLeft ClassCircularityError
+                                                 else Right rt
 
 
 checkSuperInterfaces :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
@@ -146,16 +152,17 @@ checkSuperInterfaces request defCL bc syms rt = let superInterfaces = interfaces
 checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
 checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
-  let loadingClass = getName request
+  let name = getName request
   case sym !! fromIntegral interfaceIdx of
+    --other constructor? bytecode error
     (ClassOrInterface parent) -> do
       rt <- resolve (ClassRequest defCL parent) rt
       case isInterface parent rt of
-        Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
-        Just True -> if parent == loadingClass
+        Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags 
+        Just False -> linkageLeft $ IncompatibleClassChangeError
+        Just True -> if parent == name
                      then linkageLeft ClassCircularityError
                      else Right rt
-        Just False -> linkageLeft $ IncompatibleClassChangeError
 
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> Either VMError Runtime

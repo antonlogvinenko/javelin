@@ -12,7 +12,7 @@ type ConstantPool = [Constant]
 data ClassBody = ClassBody { constPool :: ConstantPool,
                              classAccessFlags :: [ClassAccessFlags],
                              this :: Word16,
-                             super :: Word16,
+                             super :: Word16, --0 for java.lang.Object
                              interfaces :: [Word16],
                              fields :: [FieldInfo],
                              methods :: [MethodInfo],

@@ -14,7 +14,6 @@ import Control.Arrow ((>>>))
 import Javelin.Util
 
 
-
 -- Thread
 newThread frame = Thread 0 [frame] . newRuntime
 data Thread = Thread { pc :: ProgramCounter,
@@ -135,8 +134,7 @@ data ClassLoaderInfo = ClassLoaderInfo { defining :: ClassLoader,
 data ClassNotFoundException = ClassNotFoundException
                             deriving (Show, Eq)
 
-data InternalLoadingError = CantCheckClassRepresentation
-                          | ClassLoaderNotFound
+data InternalLoadingError = ClassLoaderNotFound
                           | OnlyClassObjectHasNoSuperClass
                           | ClassObjectHasNoSuperClasses
                           | CouldNotFindAccessFlags
