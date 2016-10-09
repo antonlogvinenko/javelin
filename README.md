@@ -9,6 +9,8 @@ JVM 8 spec implementation in Haskell.
  * Symtable, 2 cases [**In progress**]
  * Deriving class [**In progress**]
  * Top level class loading [**In progress**]
+ * Test these parts of loading
+ * Change type of class loading status type
 * Linking, initializing: light version [**In progress**]
 * Executing instructions
 * All features skipped
