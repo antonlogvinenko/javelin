@@ -18,34 +18,39 @@ import Control.Monad.Trans.Maybe
 
 -- 5.1 Deriving the Run-Time Constant Pool
 
+deriveUtf8 :: ConstantPool -> Word16 -> String
+deriveUtf8 p idx = stringValue $ p !! fromIntegral idx
+-- note: fix, value at index could be not Utf8Info, stringValue not applicable
+-- or throw an exception: invalid bytecode
+
 deriveSymTable :: ConstantPool -> SymTable
 deriveSymTable p = map (deriveRef p) p
 
 deriveRef :: ConstantPool -> Constant -> SymbolicReference
-
-deriveRef p c@(MethodHandleInfo x y) = undefined
-deriveRef p c@(InvokeDynamicInfo x y) = undefined
-
-deriveRef p c@(ClassInfo idx) =
+deriveRef p (ClassInfo idx) =
   ClassOrInterface $ deriveUtf8 p idx
-deriveRef p c@(Fieldref classIdx nameAndTypeIdx) =
+deriveRef p (Fieldref classIdx nameAndTypeIdx) =
   FieldReference $ deriveFromClass classIdx nameAndTypeIdx p
-deriveRef p c@(Methodref classIdx typeIdx) =
+deriveRef p (Methodref classIdx typeIdx) =
   ClassMethodReference $ deriveFromClass classIdx typeIdx p
-deriveRef p c@(InterfaceMethodref classIdx typeIdx) =
+deriveRef p (InterfaceMethodref classIdx typeIdx) =
   InterfaceMethodReference $ deriveFromClass classIdx typeIdx p
-deriveRef p c@(MethodTypeInfo idx) =
+deriveRef p (MethodHandleInfo x y) = undefined
+deriveRef p (MethodTypeInfo idx) =
   MethodTypeReference $ deriveUtf8 p idx
-
-deriveRef p c@(StringInfo idx) =
+deriveRef p (InvokeDynamicInfo x y) = undefined
+deriveRef p (StringInfo idx) =
   StringLiteral $ deriveUtf8 p idx
-deriveRef p c@(DoubleInfo val) =
+-- note: required is an additional method to add strings to symtable (due to intern)
+deriveRef p (DoubleInfo val) =
   DoubleLiteral val
-deriveRef p c@(FloatInfo val) =
+-- note: repr in IEEE 754 double point
+deriveRef p (FloatInfo val) =
   FloatLiteral val
-deriveRef p c@(LongInfo val) =
+-- note: repr in IEEE 754 single point
+deriveRef p (LongInfo val) =
   LongLiteral val
-deriveRef p c@(IntegerInfo val) =
+deriveRef p (IntegerInfo val) =
   IntegerLiteral val
 
 deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> PartReference
@@ -57,8 +62,6 @@ deriveFromClass classIdx nameAndTypeIdx p =
       memberDescriptor = stringValue $ p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo)
   in PartReference className memberName memberDescriptor
 
-deriveUtf8 :: ConstantPool -> Word16 -> String
-deriveUtf8 p idx = stringValue $ p !! fromIntegral idx
 
 
 
@@ -94,10 +97,10 @@ checkClassVersion bc = if minVer bc < 0 || majVer bc > 1050
 checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> Either VMError SymTable
 checkRepresentedClass name rt bc =
   let pool = constPool $ body bc
-      symbolics = deriveSymTable pool
+      symTable = deriveSymTable pool
       thisIndex = this $ body bc
-  in case symbolics !! (fromIntegral thisIndex) of
-    (ClassOrInterface x) -> return symbolics
+  in case symTable !! (fromIntegral thisIndex) of
+    (ClassOrInterface x) -> return symTable
     _ -> linkageLeft $ InternalError CantCheckClassRepresentation
 
 checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
@@ -152,7 +155,7 @@ recordClassLoading name bc sym defCL initCL
 
 
 
--- 5.3 Creation and Loading
+-- 5.3 Creation and Loading top level code
 load :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
 load request@(ClassRequest _ name) rt =
   (if isArray name then loadArray else loadClass) request rt

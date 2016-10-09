@@ -195,7 +195,7 @@ baseDefaultValues = Map.fromList [
 -- Data structures
 type SymTable = [SymbolicReference]
 
-data SymbolicReference = ClassOrInterface { classInterfaceName :: String }
+data SymbolicReference = ClassOrInterface { classOrInterfaceName :: String }
                        | FieldReference { field :: PartReference }
                        | ClassMethodReference { classMethod :: PartReference }
                        | InterfaceMethodReference { interfaceMethod :: PartReference }
