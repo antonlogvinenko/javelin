@@ -107,24 +107,21 @@ data BootstrapMethod = BootstrapMethod { methodRef :: Word16,
                                          arguments :: [Word16] }
                      deriving (Show, Eq)                            
                               
-data ElementValue = ElementConstValue { tag :: Char,
-                                        value :: Word16 }
-                  | ElementEnumConstValue { tag :: Char,
-                                            typeNameIndex :: Word16,
-                                            constNameIndex :: Word16 }
-                  | ElementClassInfoIndex { tag :: Char,
-                                            classInfoIndex :: Word16 }
-                  | ElementAnnValue { tag :: Char,
-                                             annotation :: Ann }
-                  | ElementArrayValue { tag :: Char,
-                                        elementValues :: [ElementValue] }
-                  deriving (Show, Eq)
-data ElementValuePair = ElementValuePair { elementNameIndex :: Word16,
-                                           elementValue :: ElementValue
-                                         } deriving (Show, Eq)
-data Ann = Ann { typeIndex :: Word16,
-                 elementValuePairs :: [ElementValuePair]
-               } deriving (Show, Eq)
+data ElementValue =
+  ElementConstValue { tag :: Char, value :: Word16 }
+  | ElementEnumConstValue { tag :: Char, typeNameIndex :: Word16, constNameIndex :: Word16 }
+  | ElementClassInfoIndex { tag :: Char, classInfoIndex :: Word16 }
+  | ElementAnnValue { tag :: Char, annotation :: Ann }
+  | ElementArrayValue { tag :: Char, elementValues :: [ElementValue] }
+  deriving (Show, Eq)
+           
+data ElementValuePair =
+  ElementValuePair { elementNameIndex :: Word16, elementValue :: ElementValue }
+  deriving (Show, Eq)
+
+data Ann =
+  Ann { typeIndex :: Word16, elementValuePairs :: [ElementValuePair] }
+  deriving (Show, Eq)
 
 data TypeAnn = TypeAnn { targetType :: TypeTargetType,
                          targetInfo :: TypeTargetInfo,
