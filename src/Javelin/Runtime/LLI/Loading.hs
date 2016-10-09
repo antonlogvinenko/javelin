@@ -74,7 +74,7 @@ deriveFromClass classIdx nameAndTypeIdx p =
       memberName = stringValue $ p !! fromIntegral (nameIndex nameAndTypeInfo)
       memberDescriptor = stringValue $ p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo)
   in PartReference className memberName memberDescriptor
-
+-- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 
 
 
