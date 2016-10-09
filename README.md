@@ -6,6 +6,10 @@ JVM 8 spec implementation in Haskell.
 * Bytecode parser [**Done**]
 * Runtime data structures [**Done**]
 * Loading, linking, initializing: light version [**In progress**]
+ * Loading
+  * Symtable [**Done**]
+  * Deriving class [**In progress**]
+  * Top level loading class [**In progress**]
 * Executing instructions
 * All features skipped
  * verification
