@@ -41,7 +41,6 @@ deriveRef p (MethodTypeInfo idx) =
 deriveRef p (InvokeDynamicInfo x y) = undefined
 deriveRef p (StringInfo idx) =
   StringLiteral $ deriveUtf8 p idx
--- note: required is an additional method to add strings to symtable (due to intern)
 deriveRef p (DoubleInfo val) =
   DoubleLiteral val
 -- note: repr in IEEE 754 double point
@@ -52,6 +51,20 @@ deriveRef p (LongInfo val) =
   LongLiteral val
 deriveRef p (IntegerInfo val) =
   IntegerLiteral val
+
+internString :: SymTable -> String -> (Word16, SymTable)
+internString st str = case findString 0 str st of
+  Just idx -> (idx, st)
+  Nothing -> appendString str st
+findString _ _ [] = Nothing
+findString i str (s:st) = case s of
+  (StringLiteral str') -> if str == str'
+                          then Just i
+                          else findString (i + 1) str st
+  _ -> findString (i + 1) str st
+appendString :: String -> SymTable -> (Word16, SymTable)
+appendString str st = (fromIntegral $ length st, newSymTable)
+  where newSymTable = st ++ [StringLiteral str]
 
 deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> PartReference
 deriveFromClass classIdx nameAndTypeIdx p =
