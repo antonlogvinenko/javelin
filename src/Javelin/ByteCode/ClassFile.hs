@@ -27,7 +27,7 @@ classBody = do
   fields <- several $ getField pool
   methods <- several $ getMethod pool
   attributes <- several $ getAttr pool
-  return $ ClassBody pool flags thisClass superClass interfaces fields methods attributes
+  return $ ClassBody (ConstantPool pool) flags thisClass superClass interfaces fields methods attributes
 
 magicNumber :: Get Int
 magicNumber = do
@@ -37,10 +37,10 @@ magicNumber = do
     else fail "Not a Java class format"
 
 classFlagsList :: Map Word16 ClassAccessFlags
-classFlagsList = fromList [(0x0001, ClassPublic), (0x0010, ClassFinal), (0x0020, ClassSuper),
-                           (0x0200, ClassInterface), (0x0400, ClassAbstract),
-                           (0x1000, ClassSynthetic), (0x2000, ClassAnn),
-                           (0x4000, ClassEnum)]
+classFlagsList = fromList [(0x0001, AccPublic), (0x0010, AccFinal), (0x0020, AccSuper),
+                           (0x0200, AccInterface), (0x0400, AccAbstract),
+                           (0x1000, AccSynthetic), (0x2000, AccAnn),
+                           (0x4000, AccEnum)]
 
 parseClassAccessFlags :: Get [ClassAccessFlags]
 parseClassAccessFlags = foldMask classFlagsList <$> getWord

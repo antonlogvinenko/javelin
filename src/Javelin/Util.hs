@@ -27,3 +27,8 @@ infix 0 $>
 ($>) :: a -> (a -> b) -> b
 ($>) x f = f x
 
+data JVM_ERR = ERR_CONST_POOL_REPR
+             deriving Show
+
+jvmFail :: Monad m => JVM_ERR -> m a
+jvmFail msg = fail $ show msg

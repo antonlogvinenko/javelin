@@ -18,15 +18,15 @@ import Control.Monad.Trans.Maybe
 
 -- 5.1 Deriving the Run-Time Constant Pool
 
-deriveUtf8 :: ConstantPool -> Word16 -> String
+deriveUtf8 :: [Constant] -> Word16 -> String
 deriveUtf8 p idx = stringValue $ p !! fromIntegral idx
 -- note: fix, value at index could be not Utf8Info, stringValue not applicable
 -- or throw an exception: invalid bytecode
 
 deriveSymTable :: ConstantPool -> SymTable
-deriveSymTable p = map (deriveRef p) p
+deriveSymTable (ConstantPool p) = map (deriveRef p) p
 
-deriveRef :: ConstantPool -> Constant -> SymbolicReference
+deriveRef :: [Constant] -> Constant -> SymbolicReference
 deriveRef p (ClassInfo idx) =
   ClassOrInterface $ deriveUtf8 p idx
 deriveRef p (Fieldref classIdx nameAndTypeIdx) =
@@ -66,7 +66,7 @@ appendString :: String -> SymTable -> (Word16, SymTable)
 appendString str st = (fromIntegral $ length st, newSymTable)
   where newSymTable = st ++ [StringLiteral str]
 
-deriveFromClass :: (Integral i) => i -> i -> ConstantPool -> PartReference
+deriveFromClass :: (Integral i) => i -> i -> [Constant] -> PartReference
 deriveFromClass classIdx nameAndTypeIdx p =
   let classInfo = p !! fromIntegral classIdx
       nameAndTypeInfo = p !! fromIntegral nameAndTypeIdx
@@ -136,7 +136,7 @@ checkSuperClass request defCL bc sym rt =
           Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
           Just True -> linkageLeft IncompatibleClassChangeError
           Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
-                            thisIsInterface = elem ClassInterface thisAccessFlags
+                            thisIsInterface = elem AccInterface thisAccessFlags
                         in case (thisIsInterface, parent) of
                           (True, "java.lang.Object") -> Right rt
                           -- bytecode error

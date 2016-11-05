@@ -99,7 +99,7 @@ data Runtime = Runtime { classPathLayout :: ClassPathLayout,
              deriving (Show, Eq)
 
 isInterface :: ClassName -> Runtime -> Maybe Bool
-isInterface name rt = (elem ClassInterface) <$> classAccessFlags <$> body <$> (Map.lookup name $ bytecodes rt)
+isInterface name rt = (elem AccInterface) <$> classAccessFlags <$> body <$> (Map.lookup name $ bytecodes rt)
 
 
 -- LLI ClassPath

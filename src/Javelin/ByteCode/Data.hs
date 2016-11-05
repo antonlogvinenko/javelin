@@ -4,10 +4,23 @@ where
 import Data.ByteString (ByteString)
 import Data.Word (Word16, Word8)
 import Data.Int (Int32, Int64)
+import Data.List (intercalate)
+import Javelin.Util
+
+tab :: Int -> String -> String
+tab n str = (take n $ repeat ' ') ++ str
+
+out :: [String] -> String
+out = intercalate "\n"
+
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
-              deriving (Show, Eq)
-type ConstantPool = [Constant]
+              deriving Eq
+instance Show ByteCode where
+  show (ByteCode min maj body) = out [tab 2 $ "minor version: " ++ show min,
+                                      tab 2 $ "major version: " ++ show maj,
+                                      show body]
+
 
 data ClassBody = ClassBody { constPool :: ConstantPool,
                              classAccessFlags :: [ClassAccessFlags],
@@ -17,12 +30,23 @@ data ClassBody = ClassBody { constPool :: ConstantPool,
                              fields :: [FieldInfo],
                              methods :: [MethodInfo],
                              attrs :: [AttrInfo] }
-                 deriving (Show, Eq)
+                 deriving Eq
+instance Show ClassBody where
+  show cb = out $ [tab 2 $ "flags: " ++ intercalate ", " (map show (classAccessFlags cb)),
+                   show (constPool cb)]
 
-data ClassAccessFlags = ClassPublic | ClassFinal
-                      | ClassSuper | ClassInterface | ClassAbstract
-                      | ClassSynthetic | ClassAnn | ClassEnum
-                      deriving (Show, Eq)
+newtype ConstantPool = ConstantPool [Constant] deriving (Eq)
+
+instance Show ConstantPool where
+  show (ConstantPool p) = out $ "Constant pool:" :
+                          (map showConstLine $ zip (iterate (1+) 0) (map (showConst p) p))
+showConstLine :: (Int, String) -> String
+showConstLine (i, c) = tab 2 $ "#" ++ show i ++ " = " ++ c
+  
+data ClassAccessFlags = AccPublic | AccFinal
+                    | AccSuper | AccInterface | AccAbstract
+                    | AccSynthetic | AccAnn | AccEnum
+                    deriving (Show, Eq)
 
 data Constant = Utf8Info { stringValue :: String }
               | IntegerInfo { integer :: Int32 }
@@ -38,7 +62,34 @@ data Constant = Utf8Info { stringValue :: String }
 
               | MethodHandleInfo { referenceKind :: Word8, referenceIndex :: Word16 }
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
-              | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Show, Eq)
+              | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving Eq
+
+showRefed :: [Constant] -> Word16 -> String
+showRefed p idx = case (p !? (idx - 1)) of
+  Just (Utf8Info s) -> s
+  Just (NameAndTypeInfo n t) -> "name = \"" ++ (showRefed p n) ++ "\", " ++
+                                "type = \"" ++ (showRefed p t) ++ "\""
+  Just (ClassInfo c) -> "class = \"" ++ (showRefed p c) ++ "\""
+  _ -> jvmFail ERR_CONST_POOL_REPR
+    
+showConst :: [Constant] -> Constant -> String
+showConst _ (Utf8Info s) = "Utf8 \t" ++ s
+showConst _ (IntegerInfo i) = "Int \t" ++ (show i)
+showConst _ (FloatInfo f) = "Float \t" ++ (show f)
+showConst _ (LongInfo l) = "Long \t" ++ (show l)
+showConst _ (DoubleInfo d) = "Double \t" ++ (show d)
+showConst p (StringInfo s) = "String \t" ++ "#" ++ (show s) ++ "\t" ++ "// " ++ (showRefed p s)
+showConst p (ClassInfo i) = "Class \t" ++ "#" ++ (show i) ++ "\t" ++ "// " ++ (showRefed p i)
+showConst p (NameAndTypeInfo n t) = "NameAndType \t" ++ "#" ++ (show n) ++ ":#" ++ (show t) ++
+                                    " " ++
+                                    "name = \"" ++ (showRefed p n) ++ "\" " ++
+                                    "type = \"" ++ (showRefed p t) ++ "\""
+showConst p (Fieldref c nt) = "Fieldref \t" ++ (showRefed p c) ++ (showRefed p nt)
+showConst p (Methodref c nt) = "Methodref \t" ++ (showRefed p c) ++ (showRefed p nt)
+showConst p (InterfaceMethodref c nt) = "InterfaceMethodref \t" ++ (showRefed p c) ++ (showRefed p nt)
+showConst p (MethodHandleInfo rk ri) = "MethodHandleInfo \t" ++ (show rk) ++ (showRefed p ri)
+showConst p (MethodTypeInfo di) = "MethodTypeInfo \t" ++ (showRefed p di)
+showConst p (InvokeDynamicInfo bi nt) = "InvokeDynamicInfo \t" ++ (showRefed p bi) ++ (showRefed p nt)
 
 data FieldInfo = FieldInfo { fieldAccessFlags :: [FieldInfoAccessFlag],
                              fieldNameIndex :: Word16,
