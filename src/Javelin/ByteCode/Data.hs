@@ -31,25 +31,27 @@ instance Show ConstantPool where
 showConstLine :: (Int, String) -> String
 showConstLine (i, c) = space 2 $ "#" ++ show (i + 1) ++ "\t" ++ c
 
+showConstant :: [Constant] -> Constant -> String
+showConstant = showConst 0
+
 showConst :: Int -> [Constant] -> Constant -> String
 showConst pad _ (Utf8Info s) = printf "Utf8 { %s }" s
 showConst pad _ (IntegerInfo i) = printf "Int { %d }" i
 showConst pad _ (FloatInfo f) = printf "Float { %f }" f
 showConst pad _ (LongInfo l) = printf "Long { %d }" l
 showConst pad _ (DoubleInfo d) = printf "Double { %f }" d
-showConst pad p (StringInfo s) = printf "String { string = #%d: %s }" s (showConst 0 p (at p s))
-showConst pad p (ClassInfo i) = printf "Class { name = #%d: %s }" i (showConst 0 p (at p i))
 
-showConst pad p (NameAndTypeInfo n t) = out [printf "NameAndType {\tname = #%d %s" n (showConst 0 p (at p n)),
-                                             tab (pad + 3) $ printf "descriptor = #%d %s }" t (showConst (pad + 5) p (at p t))]
+showConst pad p (StringInfo s) = printf "String { string = #%d: %s }" s (showConstant p (at p s))
+showConst pad p (ClassInfo i) = printf "Class { name = #%d: %s }" i (showConstant p (at p i))
+showConst pad p (NameAndTypeInfo n t) = out [printf "NameAndType {\tname = #%d %s" n (showConstant p (at p n)),
+                                             tab (pad + 3) $ printf "descriptor = #%d %s }" t (showConstant p (at p t))]
                                     
-showConst pad p (Fieldref c nt) = out [printf "Fieldref {\tclass = #%d %s" c (showConst 0 p (at p c)),
+showConst pad p (Fieldref c nt) = out [printf "Fieldref {\tclass = #%d %s" c (showConstant p (at p c)),
                                        tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
-showConst pad p (Methodref c nt) = out [printf "Methodref {\tclass = #%d %s" c (showConst 0 p (at p c)),
+showConst pad p (Methodref c nt) = out [printf "Methodref {\tclass = #%d %s" c (showConstant p (at p c)),
                                         tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
-
-showConst pad p (InterfaceMethodref c nt) = out [printf "InterfaceMethodref {\tclass = #%d %s" c (showConst 0 p (at p c)),
-                                                 tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst 0 p (at p nt))]
+showConst pad p (InterfaceMethodref c nt) = out [printf "InterfaceMethodref {\tclass = #%d %s" c (showConstant p (at p c)),
+                                                 tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
 showConst pad p (MethodHandleInfo rk ri) = out [printf "MethodHandleInfo {\treference_kind = #%d" rk,
                                                 tab (pad + 3) $ printf "reference = #%d %s }" ri (showConst 0 p (at p ri))]
 showConst pad p (MethodTypeInfo i) = out [printf "MethodTypeInfo {\tdescriptor = #%d %s }" i (showConst 0 p (at p i))]
