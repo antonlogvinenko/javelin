@@ -4,22 +4,63 @@ where
 import Data.ByteString (ByteString)
 import Data.Word (Word16, Word8)
 import Data.Int (Int32, Int64)
-import Data.List (intercalate)
 import Javelin.Util
+import Data.List (intercalate)
+import Text.Printf
 
-tab :: Int -> String -> String
-tab n str = (take n $ repeat ' ') ++ str
+-- Outputtab :: Int -> String -> String
+space n str = (take n $ repeat ' ') ++ str
+tab n str = (take n $ repeat '\t') ++ str
 
 out :: [String] -> String
-out = intercalate "\n"
+out = intercalate "\n"  
 
+instance Show ByteCode where
+  show (ByteCode min maj body) = out [space 2 $ "minor version: " ++ show min,
+                                      space 2 $ "major version: " ++ show maj,
+                                      show body]
+
+instance Show ClassBody where
+  show cb = out $ [space 2 $ "flags: " ++ intercalate ", " (map show (classAccessFlags cb)),
+                   show (constPool cb)]
+
+
+instance Show ConstantPool where
+  show (ConstantPool p) = out $ "Constant pool:" :
+                          (map showConstLine $ zip (iterate (1+) 0) (map (showConst 0 p) p))
+showConstLine :: (Int, String) -> String
+showConstLine (i, c) = space 2 $ "#" ++ show (i + 1) ++ "\t" ++ c
+
+showConst :: Int -> [Constant] -> Constant -> String
+showConst pad _ (Utf8Info s) = printf "Utf8 { %s }" s
+showConst pad _ (IntegerInfo i) = printf "Int { %d }" i
+showConst pad _ (FloatInfo f) = printf "Float { %f }" f
+showConst pad _ (LongInfo l) = printf "Long { %d }" l
+showConst pad _ (DoubleInfo d) = printf "Double { %f }" d
+showConst pad p (StringInfo s) = printf "String { string = #%d: %s }" s (showConst 0 p (at p s))
+showConst pad p (ClassInfo i) = printf "Class { name = #%d: %s }" i (showConst 0 p (at p i))
+
+showConst pad p (NameAndTypeInfo n t) = out [printf "NameAndType {\tname = #%d %s" n (showConst 0 p (at p n)),
+                                             tab (pad + 3) $ printf "descriptor = #%d %s }" t (showConst (pad + 5) p (at p t))]
+                                    
+showConst pad p (Fieldref c nt) = out [printf "Fieldref {\tclass = #%d %s" c (showConst 0 p (at p c)),
+                                       tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
+showConst pad p (Methodref c nt) = out [printf "Methodref {\tclass = #%d %s" c (showConst 0 p (at p c)),
+                                        tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
+
+showConst pad p (InterfaceMethodref c nt) = out [printf "InterfaceMethodref {\tclass = #%d %s" c (showConst 0 p (at p c)),
+                                                 tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst 0 p (at p nt))]
+showConst pad p (MethodHandleInfo rk ri) = out [printf "MethodHandleInfo {\treference_kind = #%d" rk,
+                                                tab (pad + 3) $ printf "reference = #%d %s }" ri (showConst 0 p (at p ri))]
+showConst pad p (MethodTypeInfo i) = out [printf "MethodTypeInfo {\tdescriptor = #%d %s }" i (showConst 0 p (at p i))]
+showConst pad p (InvokeDynamicInfo bi ti) = out [printf "InvokeDynamicInfo {\tbootstrap_method_attr = #%d %s }" bi (showConst 0 p (at p bi)),
+                                                 tab (pad + 3) $ printf "name_and_type = #%d %s }" ti (showConst 0 p (at p ti))]
+
+
+-- Definitions
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
               deriving Eq
-instance Show ByteCode where
-  show (ByteCode min maj body) = out [tab 2 $ "minor version: " ++ show min,
-                                      tab 2 $ "major version: " ++ show maj,
-                                      show body]
 
 
 data ClassBody = ClassBody { constPool :: ConstantPool,
@@ -31,17 +72,9 @@ data ClassBody = ClassBody { constPool :: ConstantPool,
                              methods :: [MethodInfo],
                              attrs :: [AttrInfo] }
                  deriving Eq
-instance Show ClassBody where
-  show cb = out $ [tab 2 $ "flags: " ++ intercalate ", " (map show (classAccessFlags cb)),
-                   show (constPool cb)]
 
 newtype ConstantPool = ConstantPool [Constant] deriving (Eq)
 
-instance Show ConstantPool where
-  show (ConstantPool p) = out $ "Constant pool:" :
-                          (map showConstLine $ zip (iterate (1+) 0) (map (showConst p) p))
-showConstLine :: (Int, String) -> String
-showConstLine (i, c) = tab 2 $ "#" ++ show i ++ " = " ++ c
   
 data ClassAccessFlags = AccPublic | AccFinal
                     | AccSuper | AccInterface | AccAbstract
@@ -63,33 +96,6 @@ data Constant = Utf8Info { stringValue :: String }
               | MethodHandleInfo { referenceKind :: Word8, referenceIndex :: Word16 }
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
               | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving Eq
-
-showRefed :: [Constant] -> Word16 -> String
-showRefed p idx = case (p !? (idx - 1)) of
-  Just (Utf8Info s) -> s
-  Just (NameAndTypeInfo n t) -> "name = \"" ++ (showRefed p n) ++ "\", " ++
-                                "type = \"" ++ (showRefed p t) ++ "\""
-  Just (ClassInfo c) -> "class = \"" ++ (showRefed p c) ++ "\""
-  _ -> jvmFail ERR_CONST_POOL_REPR
-    
-showConst :: [Constant] -> Constant -> String
-showConst _ (Utf8Info s) = "Utf8 \t" ++ s
-showConst _ (IntegerInfo i) = "Int \t" ++ (show i)
-showConst _ (FloatInfo f) = "Float \t" ++ (show f)
-showConst _ (LongInfo l) = "Long \t" ++ (show l)
-showConst _ (DoubleInfo d) = "Double \t" ++ (show d)
-showConst p (StringInfo s) = "String \t" ++ "#" ++ (show s) ++ "\t" ++ "// " ++ (showRefed p s)
-showConst p (ClassInfo i) = "Class \t" ++ "#" ++ (show i) ++ "\t" ++ "// " ++ (showRefed p i)
-showConst p (NameAndTypeInfo n t) = "NameAndType \t" ++ "#" ++ (show n) ++ ":#" ++ (show t) ++
-                                    " " ++
-                                    "name = \"" ++ (showRefed p n) ++ "\" " ++
-                                    "type = \"" ++ (showRefed p t) ++ "\""
-showConst p (Fieldref c nt) = "Fieldref \t" ++ (showRefed p c) ++ (showRefed p nt)
-showConst p (Methodref c nt) = "Methodref \t" ++ (showRefed p c) ++ (showRefed p nt)
-showConst p (InterfaceMethodref c nt) = "InterfaceMethodref \t" ++ (showRefed p c) ++ (showRefed p nt)
-showConst p (MethodHandleInfo rk ri) = "MethodHandleInfo \t" ++ (show rk) ++ (showRefed p ri)
-showConst p (MethodTypeInfo di) = "MethodTypeInfo \t" ++ (showRefed p di)
-showConst p (InvokeDynamicInfo bi nt) = "InvokeDynamicInfo \t" ++ (showRefed p bi) ++ (showRefed p nt)
 
 data FieldInfo = FieldInfo { fieldAccessFlags :: [FieldInfoAccessFlag],
                              fieldNameIndex :: Word16,

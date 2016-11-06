@@ -27,8 +27,5 @@ infix 0 $>
 ($>) :: a -> (a -> b) -> b
 ($>) x f = f x
 
-data JVM_ERR = ERR_CONST_POOL_REPR
-             deriving Show
-
-jvmFail :: Monad m => JVM_ERR -> m a
-jvmFail msg = fail $ show msg
+at :: Integral b => [a] -> b -> a
+at cc i = cc !! ((fromIntegral i) - 1)
