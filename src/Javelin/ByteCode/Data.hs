@@ -44,11 +44,12 @@ printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
 printAttribute :: [Constant] ->  AttrInfo -> String
 printAttribute p ca@(CodeAttr {}) = out [tab 2 $ printf "Max stack: %d" (maxStack ca),
                                          tab 2 $ printf "Max locals: %d" (maxLocals ca),
-                                         tab 2 $ printf "Code: \n%s" $ out $ map (tab 3 . printCode) (code ca)]
+                                         tab 2 $ printf "Code: \n%s" $ out $ map (tab 3 . printCode p) (code ca)]
 printAttribute p ca = show ca
 
-printCode :: Word8 -> String
-printCode = show
+printCode :: [Constant] -> Instruction -> String
+printCode p c@(Getfield cpFieldRef) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
+printCode x y = show y
 
 printField :: [Constant] -> FieldInfo -> String
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
@@ -159,12 +160,14 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
 
+data Instruction = ALoad0 | Areturn | Getfield { cpFieldRef :: Word16 } | Unknown
+                 deriving (Show, Eq)
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
               | ConstantValue { constantValueIndex :: Word16 }
               | CodeAttr { maxStack :: Word16,
                            maxLocals :: Word16,
-                           code :: [Word8],
+                           code :: [Instruction],
                            exceptionTable :: [Exception],
                            codeAttrs :: [AttrInfo] }
               | StackMapTable { entries :: [StackMapFrame] }

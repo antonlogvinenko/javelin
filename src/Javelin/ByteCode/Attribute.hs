@@ -3,7 +3,7 @@ where
 
 import Data.ByteString (unpack)
 import Data.Word (Word32, Word8)
-import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map, lookup)
+import qualified Data.Map.Lazy as Map (findWithDefault, fromList, Map, lookup, (!))
 import Data.Binary.Get
 import Control.Applicative
 
@@ -64,10 +64,37 @@ codeAttr pool len = do
   maxStack <- getWord
   maxLocals <- getWord
   codeLength <- getDWord
-  code <- times getByte (fromIntegral codeLength)
+  code <- isolate (fromIntegral codeLength) parseInstructions
   exceptionTable <- several getExceptionTable
   attributes <- several (getAttr pool)
   return $ CodeAttr maxStack maxLocals code exceptionTable attributes
+
+parseInstructions :: Get [Instruction]
+parseInstructions = do
+  finish <- isEmpty
+  if finish
+    then return []
+    else do
+      code <- getWord8
+      instruction <- findInstructionParser code
+      instructions <- parseInstructions
+      return $ instruction : instructions
+
+-- Remove when all parsers are defined!
+findInstructionParser :: Word8 -> Get Instruction
+findInstructionParser idx = case Map.lookup idx instructionParsers of
+  Just p -> p
+  Nothing -> return Unknown
+
+instructionParsers :: Map.Map Word8 (Get Instruction)
+instructionParsers = Map.fromList [
+  (0x2a, return ALoad0),
+  (0xb0, return Areturn),
+  (0xb4, do
+      b1 <- fromIntegral <$> getByte
+      b2 <- fromIntegral <$> getByte
+      return $ Getfield (8 * b1 + b2))]
+
 
 -- -> StackMapTable
 stackMapTableAttr len = do
