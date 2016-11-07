@@ -21,15 +21,51 @@ instance Show ByteCode where
                                       show body]
 
 instance Show ClassBody where
-  show cb = out $ [space 2 $ "flags: " ++ intercalate ", " (map show (classAccessFlags cb)),
-                   show (constPool cb)]
+  show body@(ClassBody {constPool = (ConstantPool p)}) = out $ [space 2 $ "flags: " ++ intercalate ", " (map show (classAccessFlags body)),
+                     show (constPool body),
+                     printf "This: %s" (showConstant p (at p (this body))),
+                     printf "Superclass: %s" (showConstant p (at p (super body))),
+                     printf "Interfaces:\n%s" $ out $ map (showConstant p . (at p)) (interfaces body),
+                     printf "Fields:\n%s" $ out $ map (printField p) (fields body),
+                     printf "Methods:\n%s" $ out $ map (printMethod p) (methods body),
+                     printf "Class attributes:\n%s" $ out $ map show (attrs body)]
+
+printMethod :: [Constant] -> MethodInfo -> String
+printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
+                             methodNameIndex = name,
+                             methodInfoDescriptorIndex = descriptor,
+                             methodAttrs = attributes}) =
+  printf "MethodInfo \n\tName: #%d %s,\n\tDescriptor: #%d %s,\n\tAccessFlags = %s,\n\tAttributes:\n %s\n"
+  name (showConstant p (at p name))
+  descriptor (showConstant p (at p descriptor))
+  (show accessFlags)
+  (out $ map (printAttribute p) attributes)
+
+printAttribute :: [Constant] ->  AttrInfo -> String
+printAttribute p ca@(CodeAttr {}) = out [tab 2 $ printf "Max stack: %d" (maxStack ca),
+                                         tab 2 $ printf "Max locals: %d" (maxLocals ca),
+                                         tab 2 $ printf "Code: \n%s" $ out $ map (tab 3 . printCode) (code ca)]
+printAttribute p ca = show ca
+
+printCode :: Word8 -> String
+printCode = show
+
+printField :: [Constant] -> FieldInfo -> String
+printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
+                           fieldNameIndex = name,
+                           fieldDescriptorIndex = descriptor,
+                           fieldAttrs = attributes}) =
+  printf "FieldInfo { name = #%d %s,\n\tdescriptor = #%d %s,\n\taccessFlags = %s,\n\tattributes = %s }"
+  name (showConstant p (at p name))
+  descriptor (showConstant p (at p descriptor))
+  (show accessFlags)
+  (show attributes)
 
 
 instance Show ConstantPool where
-  show (ConstantPool p) = out $ "Constant pool:" :
-                          (map showConstLine $ zip (iterate (1+) 0) (map (showConst 0 p) p))
+  show (ConstantPool p) = out $ "Constant pool:" : (map showConstLine $ zip (iterate (1+) 0) (map (showConst 0 p) p))
 showConstLine :: (Int, String) -> String
-showConstLine (i, c) = space 2 $ "#" ++ show (i + 1) ++ "\t" ++ c
+showConstLine (i, c) = space 2 $ printf "#%d\t%s" (i + 1) c
 
 showConstant :: [Constant] -> Constant -> String
 showConstant = showConst 0
