@@ -88,12 +88,31 @@ findInstructionParser idx = case Map.lookup idx instructionParsers of
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
 instructionParsers = Map.fromList [
+  (0x00, return Nop),
+  (0x01, return AconstNull),
+  (0x02, return IconstM1),
+  (0x03, return Iconst0),
+  (0x04, return Iconst1),
+  (0x05, return Iconst2),
+  (0x06, return Iconst3),
+  (0x07, return Iconst4),
+  (0x08, return Iconst5),
+  (0x09, return Lconst0),
+  (0x0a, return Lconst1),
+  (0x0b, return Fconst0),
+  (0x0c, return Fconst1),
+  (0x0d, return Fconst2),
+  (0x0e, return Dconst0),
+  (0x0f, return Dconst1),
+  (0x10, Bipush <$> getWord8),
+  (0x11, Sipush <$> getWord8),
+  (0x12, (Ldc . CPIndex8) <$> getWord8),
+  (0x13, (LdcW . CPIndex16) <$> getWord),
+  (0x14, (Ldc2W . CPIndex16) <$> getWord),
+  
   (0x2a, return ALoad0),
   (0xb0, return Areturn),
-  (0xb4, do
-      b1 <- fromIntegral <$> getByte
-      b2 <- fromIntegral <$> getByte
-      return $ Getfield (8 * b1 + b2))]
+  (0xb4, Getfield <$> getWord)]
 
 
 -- -> StackMapTable

@@ -49,7 +49,13 @@ printAttribute p ca = show ca
 
 printCode :: [Constant] -> Instruction -> String
 printCode p c@(Getfield cpFieldRef) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
-printCode x y = show y
+
+printCode p c@(Ldc (CPIndex8 cpi)) = printLdc cpi p
+printCode p c@(LdcW (CPIndex16 cpi)) = printLdc cpi p
+printCode p c@(Ldc2W (CPIndex16 cpi)) = printLdc cpi p
+printCode p c = show c
+
+printLdc cpi p = printf "ldc #%d %s" cpi (showConst 3 p (at p cpi))
 
 printField :: [Constant] -> FieldInfo -> String
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
@@ -160,7 +166,20 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
 
-data Instruction = ALoad0 | Areturn | Getfield { cpFieldRef :: Word16 } | Unknown
+data CPIndex8 = CPIndex8 Word8
+              deriving (Show, Eq)
+data CPIndex16 = CPIndex16 Word16
+               deriving (Show, Eq)
+
+data Instruction = Nop |
+                   AconstNull |
+                   IconstM1 | Iconst0 | Iconst1 | Iconst2 | Iconst3 | Iconst4 | Iconst5 |
+                   Lconst0 | Lconst1 |
+                   Fconst0 | Fconst1 | Fconst2 |
+                   Dconst0 | Dconst1 |
+                   Bipush Word8 | Sipush Word8 |
+                   Ldc CPIndex8 | LdcW CPIndex16 | Ldc2W CPIndex16 |
+                   Aaload | ALoad0 | Areturn | Getfield Word16 | Unknown
                  deriving (Show, Eq)
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
