@@ -88,6 +88,7 @@ findInstructionParser idx = case Map.lookup idx instructionParsers of
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
 instructionParsers = Map.fromList [
+  -- Const ops
   (0x00, return Nop),
   (0x01, return AconstNull),
   (0x02, return IconstM1),
@@ -109,8 +110,44 @@ instructionParsers = Map.fromList [
   (0x12, (Ldc . CPIndex8) <$> getWord8),
   (0x13, (LdcW . CPIndex16) <$> getWord),
   (0x14, (Ldc2W . CPIndex16) <$> getWord),
+
+  -- Load ops
+  (0x15, (Iload . Local) <$> getWord8),
+  (0x16, (Lload . Local) <$> getWord8),
+  (0x17, (Fload . Local) <$> getWord8),
+  (0x18, (Dload . Local) <$> getWord8),
+  (0x19, (Aload . Local) <$> getWord8),
+  (0x1a, return Iload0),
+  (0x1b, return Iload1),
+  (0x1c, return Iload2),
+  (0x1d, return Iload3),
+  (0x1e, return Lload0),
+  (0x1f, return Lload1),
+  (0x20, return Lload2),
+  (0x21, return Lload3),
+  (0x22, return Fload0),
+  (0x23, return Fload1),
+  (0x24, return Fload2),
+  (0x25, return Fload3),
+  (0x26, return Dload0),
+  (0x27, return Dload1),
+  (0x28, return Dload2),
+  (0x29, return Dload3),
+  (0x2a, return Aload0),
+  (0x2b, return Aload1),
+  (0x2c, return Aload2),
+  (0x2d, return Aload3),
+  (0x2e, return Iaload),
+  (0x2f, return Laload),
+  (0x30, return Faload),
+  (0x31, return Daload),
+  (0x32, return Aaload),
+  (0x33, return Baload),
+  (0x34, return Caload),
+  (0x35, return Saload),
+
+  -- Store ops
   
-  (0x2a, return ALoad0),
   (0xb0, return Areturn),
   (0xb4, Getfield <$> getWord)]
 

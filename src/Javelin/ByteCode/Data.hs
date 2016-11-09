@@ -50,12 +50,12 @@ printAttribute p ca = show ca
 printCode :: [Constant] -> Instruction -> String
 printCode p c@(Getfield cpFieldRef) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
 
-printCode p c@(Ldc (CPIndex8 cpi)) = printLdc cpi p
-printCode p c@(LdcW (CPIndex16 cpi)) = printLdc cpi p
-printCode p c@(Ldc2W (CPIndex16 cpi)) = printLdc cpi p
+printCode p c@(Ldc (CPIndex8 cpi)) = printLdc "ldc" cpi p
+printCode p c@(LdcW (CPIndex16 cpi)) = printLdc "ldc_w" cpi p
+printCode p c@(Ldc2W (CPIndex16 cpi)) = printLdc "ldc2_w" cpi p
 printCode p c = show c
 
-printLdc cpi p = printf "ldc #%d %s" cpi (showConst 3 p (at p cpi))
+printLdc name cpi p = printf "%s #%d %s" name cpi "empty" --(showConst 3 p (at p cpi))
 
 printField :: [Constant] -> FieldInfo -> String
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
@@ -170,6 +170,8 @@ data CPIndex8 = CPIndex8 Word8
               deriving (Show, Eq)
 data CPIndex16 = CPIndex16 Word16
                deriving (Show, Eq)
+data Local = Local Word8
+           deriving (Show, Eq)
 
 data Instruction = Nop |
                    AconstNull |
@@ -179,7 +181,16 @@ data Instruction = Nop |
                    Dconst0 | Dconst1 |
                    Bipush Word8 | Sipush Word8 |
                    Ldc CPIndex8 | LdcW CPIndex16 | Ldc2W CPIndex16 |
-                   Aaload | ALoad0 | Areturn | Getfield Word16 | Unknown
+
+                   Iload Local | Lload Local | Fload Local | Dload Local | Aload Local |
+                   Iload0 | Iload1 | Iload2 | Iload3 |
+                   Lload0 | Lload1 | Lload2 | Lload3 |
+                   Fload0 | Fload1 | Fload2 | Fload3 |
+                   Dload0 | Dload1 | Dload2 | Dload3 |
+                   Aload0 | Aload1 | Aload2 | Aload3 |
+                   Iaload | Laload | Faload | Daload | Aaload | Baload | Caload | Saload |
+                   
+                   Areturn | Getfield Word16 | Unknown
                  deriving (Show, Eq)
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
