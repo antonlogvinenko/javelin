@@ -197,6 +197,10 @@ data Instruction = Nop |
                    Dstore0 | Dstore1 | Dstore2 | Dstore3 |
                    Astore0 | Astore1 | Astore2 | Astore3 |
                    Iastore | Lastore | Fastore | Dastore | Aastore | Bastore | Castore | Sastore |
+
+                   Pop | Pop2 | Dup | DupX1 | DupX2 | Dup2 | Dup2X1 | Dup2X2 | Swap |
+
+                   IAdd |
                    Areturn | Getfield Word16 | Unknown
                  deriving (Show, Eq)
 

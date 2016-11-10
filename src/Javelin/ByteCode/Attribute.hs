@@ -180,6 +180,19 @@ instructionParsers = Map.fromList [
   (0x54, return Bastore),
   (0x55, return Castore),
   (0x56, return Sastore),
+
+  (0x57, return Pop),
+  (0x58, return Pop2),
+  (0x59, return Dup),
+  (0x5a, return DupX1),
+  (0x5b, return DupX2),
+  (0x5c, return Dup2),
+  (0x5d, return Dup2X1),
+  (0x5e, return Dup2X2),
+  (0x5f, return Swap),
+
+  (0x60, return IAdd),
+  
   
   (0xb0, return Areturn),
   (0xb4, Getfield <$> getWord)]
