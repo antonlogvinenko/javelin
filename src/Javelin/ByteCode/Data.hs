@@ -189,7 +189,14 @@ data Instruction = Nop |
                    Dload0 | Dload1 | Dload2 | Dload3 |
                    Aload0 | Aload1 | Aload2 | Aload3 |
                    Iaload | Laload | Faload | Daload | Aaload | Baload | Caload | Saload |
-                   
+
+                   Istore Local | Lstore Local | Fstore Local | Dstore Local | Astore Local |
+                   Istore0 | Istore1 | Istore2 | Istore3 |
+                   Lstore0 | Lstore1 | Lstore2 | Lstore3 |
+                   Fstore0 | Fstore1 | Fstore2 | Fstore3 |
+                   Dstore0 | Dstore1 | Dstore2 | Dstore3 |
+                   Astore0 | Astore1 | Astore2 | Astore3 |
+                   Iastore | Lastore | Fastore | Dastore | Aastore | Bastore | Castore | Sastore |
                    Areturn | Getfield Word16 | Unknown
                  deriving (Show, Eq)
 
