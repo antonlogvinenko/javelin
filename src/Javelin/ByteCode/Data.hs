@@ -200,7 +200,20 @@ data Instruction = Nop |
 
                    Pop | Pop2 | Dup | DupX1 | DupX2 | Dup2 | Dup2X1 | Dup2X2 | Swap |
 
-                   IAdd |
+                   IAdd | LAdd | FAdd | DAdd | ISub | LSub | FSub | DSub |
+                   IMul | LMul | FMul | DMul | IDiv | LDiv | FDiv | DDiv |
+                   IRem | LRem | FRem | DRem | INeg | LNeg | FNeg | DNeg |
+
+                   IShl | LShl | IShr | LShr | IUshr | LUshr |
+
+                   IAnd | LAnd | IOr | LOr | IXor | LXor | IInc |
+
+                   I2L | I2F | I2D | L2I | L2F | L2D | F2I | F2L | F2D | D2I | D2L | D2F |
+
+                   I2B | I2C | I2S |
+
+                   LCmp | FCmpL | FCmpG | DCmpL | DCmpG |
+
                    Areturn | Getfield Word16 | Unknown
                  deriving (Show, Eq)
 
