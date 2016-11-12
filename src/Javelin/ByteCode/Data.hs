@@ -7,6 +7,7 @@ import Data.Int (Int32, Int64)
 import Javelin.Util
 import Data.List (intercalate)
 import Text.Printf
+import Javelin.ByteCode.Utils
 
 -- Outputtab :: Int -> String -> String
 space n str = (take n $ repeat ' ') ++ str
@@ -222,11 +223,13 @@ data Instruction = Nop |
                    IfICmpGt BranchOffset | IfICmpLe BranchOffset |
                    IfACmpEq BranchOffset | IfACmpNe BranchOffset |
 
+                   -- Control
                    Goto BranchOffset | Jsr BranchOffset | Ret Local |
                    TableSwitch | LookupSwitch |
 
                    IReturn | LReturn | FReturn | DReturn | AReturn | Return |
 
+                   -- References
                    GetStatic CPIndex16 | PutStatic CPIndex16 |
                    GetField CPIndex16 | PutField CPIndex16 |
 
@@ -239,6 +242,15 @@ data Instruction = Nop |
 
                    AThrow | CheckCast CPIndex16 | InstanceOf_ CPIndex16 |
                    MonitorEnter | MonitorExit |
+
+                   -- Extended
+                   Wide | MultiANewArray CPIndex16 Word8 |
+                   IfNull CPIndex16 | IfNotNull CPIndex16 |
+                   GotoW DWord | JsrW DWord  |
+
+                   -- Reserved
+                   BreakPoint | ImDep1 | ImDep2 |
+                   
                    Unknown
                  deriving (Show, Eq)
 
