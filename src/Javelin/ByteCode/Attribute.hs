@@ -163,38 +163,39 @@ instructionParsers = Map.fromList [
   (0x95, return FCmpL), (0x96, return FCmpG),
   (0x97, return DCmpL), (0x98, return DCmpG),
 
-  (0x99, IfEq <$> getWord),
-  (0x9a, IfNe <$> getWord),
-  (0x9b, IfLt <$> getWord),
-  (0x9c, IfGe <$> getWord),
-  (0x9d, IfGt <$> getWord),
-  (0x9e, IfLe <$> getWord),
-  (0x9f, IfICmpEq <$> getWord),
-  (0xa0, IfICmpNe <$> getWord),
-  (0xa1, IfICmpLt <$> getWord),
-  (0xa2, IfICmpGe <$> getWord),
-  (0xa3, IfICmpGt <$> getWord),
-  (0xa4, IfICmpLe <$> getWord),
-  (0xa5, IfACmpEq <$> getWord),
-  (0xa6, IfACmpNe <$> getWord),
+  (0x99, IfEq <$> getWord), (0x9a, IfNe <$> getWord),
+  (0x9b, IfLt <$> getWord), (0x9c, IfGe <$> getWord),
+  (0x9d, IfGt <$> getWord), (0x9e, IfLe <$> getWord),
+  (0x9f, IfICmpEq <$> getWord), (0xa0, IfICmpNe <$> getWord),
+  (0xa1, IfICmpLt <$> getWord), (0xa2, IfICmpGe <$> getWord),
+  (0xa3, IfICmpGt <$> getWord), (0xa4, IfICmpLe <$> getWord),
+  (0xa5, IfACmpEq <$> getWord), (0xa6, IfACmpNe <$> getWord),
 
-  (0xa7, Goto <$> getWord),
-  (0xa8, Jsr <$> getWord),
-  (0xa9, Ret <$> getWord8),
-  (0xaa, return TableSwitch),
-  (0xab, return LookupSwitch),
+  (0xa7, Goto <$> getWord), (0xa8, Jsr <$> getWord), (0xa9, Ret <$> getWord8),
+  (0xaa, return TableSwitch), (0xab, return LookupSwitch),
   
-  (0xac, return IReturn),
-  (0xad, return LReturn),
-  (0xae, return FReturn),
-  (0xaf, return DReturn),
-  (0xb0, return AReturn),
-  (0xb1, return Return),
+  (0xac, return IReturn), (0xad, return LReturn), (0xae, return FReturn), (0xaf, return DReturn),
+  (0xb0, return AReturn), (0xb1, return Return),
   
-  (0xb2, GetStatic <$> getCPIndex16),
-  (0xb3, PutStatic <$> getCPIndex16),
-  (0xb4, GetField <$> getCPIndex16),
-  (0xb5, PutField <$> getCPIndex16)]
+  (0xb2, GetStatic <$> getCPIndex16), (0xb3, PutStatic <$> getCPIndex16),
+  (0xb4, GetField <$> getCPIndex16), (0xb5, PutField <$> getCPIndex16),
+
+  (0xb6, InvokeVirtual <$> getCPIndex16),
+  (0xb7, InvokeSpecial <$> getCPIndex16),
+  (0xb8, InvokeStatic <$> getCPIndex16),
+  (0xb9, InvokeInterface <$> getCPIndex16 <*> getWord8),
+  (0xba, InvokeDynamic <$> getCPIndex16 <*> getWord8),
+
+  (0xbb, New_ <$> getCPIndex16), (0xbc, NewArray <$> getWord8), (0xbd, ANewArray <$> getCPIndex16),
+  (0xbe, return ArrayLength),
+
+  (0xbf, return AThrow),
+  (0xc0, CheckCast <$> getCPIndex16), (0xc1, InstanceOf_ <$> getCPIndex16),
+  (0xc2, return MonitorEnter), (0xc3, return MonitorExit)
+  
+--  (0xc4, 
+--  (0xc0, 
+  ]
 
 
 getCPIndex16 :: Get CPIndex16

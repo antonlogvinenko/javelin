@@ -230,6 +230,15 @@ data Instruction = Nop |
                    GetStatic CPIndex16 | PutStatic CPIndex16 |
                    GetField CPIndex16 | PutField CPIndex16 |
 
+                   InvokeVirtual CPIndex16 | InvokeSpecial CPIndex16 |
+                   InvokeStatic CPIndex16 | InvokeInterface CPIndex16 Word8 |
+                   InvokeDynamic CPIndex16 Word8 |
+
+                   New_ CPIndex16 | NewArray Word8 | ANewArray CPIndex16 |
+                   ArrayLength |
+
+                   AThrow | CheckCast CPIndex16 | InstanceOf_ CPIndex16 |
+                   MonitorEnter | MonitorExit |
                    Unknown
                  deriving (Show, Eq)
 
