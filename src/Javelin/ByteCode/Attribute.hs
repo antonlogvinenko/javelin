@@ -88,54 +88,56 @@ findInstructionParser idx = case Map.lookup idx instructionParsers of
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
 instructionParsers = Map.fromList [
-  -- Const ops
+  -- Constants
   (0x00, return Nop),
-  (0x01, return AconstNull),
-  (0x02, return IconstM1),
-  (0x03, return Iconst0), (0x04, return Iconst1), (0x05, return Iconst2),
-  (0x06, return Iconst3), (0x07, return Iconst4), (0x08, return Iconst5),
-  (0x09, return Lconst0), (0x0a, return Lconst1),
-  (0x0b, return Fconst0), (0x0c, return Fconst1), (0x0d, return Fconst2),
-  (0x0e, return Dconst0), (0x0f, return Dconst1),
-  (0x10, Bipush <$> getWord8),
-  (0x11, Sipush <$> getWord8),
+  (0x01, return AConstNull),
+  (0x02, return IConstM1),
+  (0x03, return IConst0), (0x04, return IConst1), (0x05, return IConst2),
+  (0x06, return IConst3), (0x07, return IConst4), (0x08, return IConst5),
+  (0x09, return LConst0), (0x0a, return LConst1),
+  (0x0b, return FConst0), (0x0c, return FConst1), (0x0d, return FConst2),
+  (0x0e, return DConst0), (0x0f, return DConst1),
+  (0x10, BiPush <$> getWord8),
+  (0x11, SiPush <$> getWord8),
   (0x12, Ldc <$> getCPIndex8),
   (0x13, LdcW <$> getCPIndex16),
   (0x14, Ldc2W <$> getCPIndex16),
 
-  -- Load ops
-  (0x15, Iload <$> getLocal),
-  (0x16, Lload <$> getLocal),
-  (0x17, Fload <$> getLocal),
-  (0x18, Dload <$> getLocal),
-  (0x19, Aload <$> getLocal),
-  (0x1a, return Iload0), (0x1b, return Iload1), (0x1c, return Iload2), (0x1d, return Iload3),
-  (0x1e, return Lload0), (0x1f, return Lload1), (0x20, return Lload2), (0x21, return Lload3),
-  (0x22, return Fload0), (0x23, return Fload1), (0x24, return Fload2), (0x25, return Fload3),
-  (0x26, return Dload0), (0x27, return Dload1), (0x28, return Dload2), (0x29, return Dload3),
-  (0x2a, return Aload0), (0x2b, return Aload1), (0x2c, return Aload2), (0x2d, return Aload3),
-  (0x2e, return Iaload), (0x2f, return Laload), (0x30, return Faload), (0x31, return Daload),
-  (0x32, return Aaload), (0x33, return Baload), (0x34, return Caload), (0x35, return Saload),
+  -- Loads
+  (0x15, ILoad <$> getLocal),
+  (0x16, LLoad <$> getLocal),
+  (0x17, FLoad <$> getLocal),
+  (0x18, DLoad <$> getLocal),
+  (0x19, ALoad <$> getLocal),
+  (0x1a, return ILoad0), (0x1b, return ILoad1), (0x1c, return ILoad2), (0x1d, return ILoad3),
+  (0x1e, return LLoad0), (0x1f, return LLoad1), (0x20, return LLoad2), (0x21, return LLoad3),
+  (0x22, return FLoad0), (0x23, return FLoad1), (0x24, return FLoad2), (0x25, return FLoad3),
+  (0x26, return DLoad0), (0x27, return DLoad1), (0x28, return DLoad2), (0x29, return DLoad3),
+  (0x2a, return ALoad0), (0x2b, return ALoad1), (0x2c, return ALoad2), (0x2d, return ALoad3),
+  (0x2e, return IaLoad), (0x2f, return LaLoad), (0x30, return FaLoad), (0x31, return DaLoad),
+  (0x32, return AaLoad), (0x33, return BaLoad), (0x34, return CaLoad), (0x35, return SaLoad),
 
-  -- Store ops
-  (0x36, Istore <$> getLocal),
-  (0x37, Lstore <$> getLocal),
-  (0x38, Fstore <$> getLocal),
-  (0x39, Dstore <$> getLocal),
-  (0x3a, Astore <$> getLocal),
-  (0x3b, return Istore0), (0x3c, return Istore1), (0x3d, return Istore2), (0x3e, return Istore3),
-  (0x3f, return Lstore0), (0x40, return Lstore1), (0x41, return Lstore2), (0x42, return Lstore3),
-  (0x43, return Fstore0), (0x44, return Fstore1), (0x45, return Fstore2), (0x46, return Fstore3),
-  (0x47, return Dstore0), (0x48, return Dstore1), (0x49, return Dstore2), (0x4a, return Dstore3),
-  (0x4b, return Astore0), (0x4c, return Astore1), (0x4d, return Astore2), (0x4e, return Astore3),
-  (0x4f, return Iastore), (0x50, return Lastore), (0x51, return Fastore), (0x52, return Dastore),
-  (0x53, return Aastore), (0x54, return Bastore), (0x55, return Castore), (0x56, return Sastore),
+  -- Stores
+  (0x36, IStore <$> getLocal),
+  (0x37, LStore <$> getLocal),
+  (0x38, FStore <$> getLocal),
+  (0x39, DStore <$> getLocal),
+  (0x3a, AStore <$> getLocal),
+  (0x3b, return IStore0), (0x3c, return IStore1), (0x3d, return IStore2), (0x3e, return IStore3),
+  (0x3f, return LStore0), (0x40, return LStore1), (0x41, return LStore2), (0x42, return LStore3),
+  (0x43, return FStore0), (0x44, return FStore1), (0x45, return FStore2), (0x46, return FStore3),
+  (0x47, return DStore0), (0x48, return DStore1), (0x49, return DStore2), (0x4a, return DStore3),
+  (0x4b, return AStore0), (0x4c, return AStore1), (0x4d, return AStore2), (0x4e, return AStore3),
+  (0x4f, return IaStore), (0x50, return LaStore), (0x51, return FaStore), (0x52, return DaStore),
+  (0x53, return AaStore), (0x54, return BaStore), (0x55, return CaStore), (0x56, return SaStore),
 
+  -- Stack
   (0x57, return Pop), (0x58, return Pop2),
   (0x59, return Dup), (0x5a, return DupX1), (0x5b, return DupX2),
   (0x5c, return Dup2), (0x5d, return Dup2X1), (0x5e, return Dup2X2),
   (0x5f, return Swap),
 
+  -- Math
   (0x60, return IAdd), (0x61, return LAdd), (0x62, return FAdd), (0x63, return DAdd),
   (0x64, return ISub), (0x65, return LSub), (0x66, return FSub), (0x67, return DSub),
   (0x68, return IMul), (0x69, return LMul), (0x6a, return FMul), (0x6b, return DMul),
@@ -152,6 +154,7 @@ instructionParsers = Map.fromList [
   (0x82, return IXor), (0x83, return LXor),
   (0x84, return IInc),
 
+  -- Conversions
   (0x85, return I2L), (0x86, return I2F), (0x87, return I2D),
   (0x88, return L2I), (0x89, return L2F), (0x8a, return L2D),
   (0x8b, return F2I), (0x8c, return F2L), (0x8d, return F2D),
@@ -159,6 +162,7 @@ instructionParsers = Map.fromList [
 
   (0x91, return I2B), (0x92, return I2C), (0x93, return I2S),
 
+  -- Comparisons
   (0x94, return LCmp),
   (0x95, return FCmpL), (0x96, return FCmpG),
   (0x97, return DCmpL), (0x98, return DCmpG),

@@ -56,7 +56,7 @@ printCode p c@(LdcW (CPIndex16 cpi)) = printLdc "ldc_w" cpi p
 printCode p c@(Ldc2W (CPIndex16 cpi)) = printLdc "ldc2_w" cpi p
 printCode p c = show c
 
-printLdc name cpi p = printf "%s #%d %s" name cpi "empty" --(showConst 3 p (at p cpi))
+printLdc name cpi p = printf "%s #%d %s" name cpi (showConst 3 p (at p cpi))
 
 printField :: [Constant] -> FieldInfo -> String
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
@@ -175,33 +175,39 @@ type Local = Word8
 
 type BranchOffset = Word16
 
-data Instruction = Nop |
-                   AconstNull |
-                   IconstM1 | Iconst0 | Iconst1 | Iconst2 | Iconst3 | Iconst4 | Iconst5 |
-                   Lconst0 | Lconst1 |
-                   Fconst0 | Fconst1 | Fconst2 |
-                   Dconst0 | Dconst1 |
-                   Bipush Word8 | Sipush Word8 |
+data Instruction =
+                   -- Constants
+                   Nop |
+                   AConstNull |
+                   IConstM1 | IConst0 | IConst1 | IConst2 | IConst3 | IConst4 | IConst5 |
+                   LConst0 | LConst1 |
+                   FConst0 | FConst1 | FConst2 |
+                   DConst0 | DConst1 |
+                   BiPush Word8 | SiPush Word8 |
                    Ldc CPIndex8 | LdcW CPIndex16 | Ldc2W CPIndex16 |
 
-                   Iload Local | Lload Local | Fload Local | Dload Local | Aload Local |
-                   Iload0 | Iload1 | Iload2 | Iload3 |
-                   Lload0 | Lload1 | Lload2 | Lload3 |
-                   Fload0 | Fload1 | Fload2 | Fload3 |
-                   Dload0 | Dload1 | Dload2 | Dload3 |
-                   Aload0 | Aload1 | Aload2 | Aload3 |
-                   Iaload | Laload | Faload | Daload | Aaload | Baload | Caload | Saload |
+                   -- Loads
+                   ILoad Local | LLoad Local | FLoad Local | DLoad Local | ALoad Local |
+                   ILoad0 | ILoad1 | ILoad2 | ILoad3 |
+                   LLoad0 | LLoad1 | LLoad2 | LLoad3 |
+                   FLoad0 | FLoad1 | FLoad2 | FLoad3 |
+                   DLoad0 | DLoad1 | DLoad2 | DLoad3 |
+                   ALoad0 | ALoad1 | ALoad2 | ALoad3 |
+                   IaLoad | LaLoad | FaLoad | DaLoad | AaLoad | BaLoad | CaLoad | SaLoad |
 
-                   Istore Local | Lstore Local | Fstore Local | Dstore Local | Astore Local |
-                   Istore0 | Istore1 | Istore2 | Istore3 |
-                   Lstore0 | Lstore1 | Lstore2 | Lstore3 |
-                   Fstore0 | Fstore1 | Fstore2 | Fstore3 |
-                   Dstore0 | Dstore1 | Dstore2 | Dstore3 |
-                   Astore0 | Astore1 | Astore2 | Astore3 |
-                   Iastore | Lastore | Fastore | Dastore | Aastore | Bastore | Castore | Sastore |
+                   -- Stores
+                   IStore Local | LStore Local | FStore Local | DStore Local | AStore Local |
+                   IStore0 | IStore1 | IStore2 | IStore3 |
+                   LStore0 | LStore1 | LStore2 | LStore3 |
+                   FStore0 | FStore1 | FStore2 | FStore3 |
+                   DStore0 | DStore1 | DStore2 | DStore3 |
+                   AStore0 | AStore1 | AStore2 | AStore3 |
+                   IaStore | LaStore | FaStore | DaStore | AaStore | BaStore | CaStore | SaStore |
 
+                   -- Stack
                    Pop | Pop2 | Dup | DupX1 | DupX2 | Dup2 | Dup2X1 | Dup2X2 | Swap |
 
+                   -- Math
                    IAdd | LAdd | FAdd | DAdd | ISub | LSub | FSub | DSub |
                    IMul | LMul | FMul | DMul | IDiv | LDiv | FDiv | DDiv |
                    IRem | LRem | FRem | DRem | INeg | LNeg | FNeg | DNeg |
@@ -210,10 +216,12 @@ data Instruction = Nop |
 
                    IAnd | LAnd | IOr | LOr | IXor | LXor | IInc |
 
+                   -- Conversions
                    I2L | I2F | I2D | L2I | L2F | L2D | F2I | F2L | F2D | D2I | D2L | D2F |
 
                    I2B | I2C | I2S |
 
+                   -- Comparisons
                    LCmp | FCmpL | FCmpG | DCmpL | DCmpG |
 
                    IfEq BranchOffset | IfNe BranchOffset |
