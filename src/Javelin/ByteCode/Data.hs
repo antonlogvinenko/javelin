@@ -173,6 +173,8 @@ data CPIndex16 = CPIndex16 Word16
 data Local = Local Word8
            deriving (Show, Eq)
 
+type BranchOffset = Word16
+
 data Instruction = Nop |
                    AconstNull |
                    IconstM1 | Iconst0 | Iconst1 | Iconst2 | Iconst3 | Iconst4 | Iconst5 |
@@ -213,6 +215,12 @@ data Instruction = Nop |
                    I2B | I2C | I2S |
 
                    LCmp | FCmpL | FCmpG | DCmpL | DCmpG |
+
+                   IfEq BranchOffset | IfNe BranchOffset |
+                   IfLt BranchOffset | IfGe BranchOffset| IfGt BranchOffset | IfLe BranchOffset|
+                   IfICmpEq BranchOffset | IfICmpNe BranchOffset|
+                   IfICmpLt BranchOffset | IfICmpGe BranchOffset|
+                   IfICmpGt BranchOffset | IfICmpLe BranchOffset |
 
                    Areturn | Getfield Word16 | Unknown
                  deriving (Show, Eq)

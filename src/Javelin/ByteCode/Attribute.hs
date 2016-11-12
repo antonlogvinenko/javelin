@@ -163,6 +163,20 @@ instructionParsers = Map.fromList [
   (0x95, return FCmpL), (0x96, return FCmpG),
   (0x97, return DCmpL), (0x98, return DCmpG),
 
+  (0x99, IfEq <$> getWord),
+  (0x9a, IfNe <$> getWord),
+  (0x9b, IfLt <$> getWord),
+  (0x9c, IfGe <$> getWord),
+  (0x9d, IfGt <$> getWord),
+  (0x9e, IfLe <$> getWord),
+  (0x9f, IfICmpEq <$> getWord),
+  (0xa0, IfICmpNe <$> getWord),
+  (0xa1, IfICmpLt <$> getWord),
+  (0xa2, IfICmpGe <$> getWord),
+  (0xa3, IfICmpGt <$> getWord),
+  (0xa4, IfICmpLe <$> getWord),
+  
+  
   -- (0x99, return IfEq),
   -- (0x9a, return IfNe),
   -- (0x9b, return 
