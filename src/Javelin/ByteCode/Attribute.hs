@@ -104,11 +104,11 @@ instructionParsers = Map.fromList [
   (0x14, (Ldc2W . CPIndex16) <$> getWord),
 
   -- Load ops
-  (0x15, (Iload . Local) <$> getWord8),
-  (0x16, (Lload . Local) <$> getWord8),
-  (0x17, (Fload . Local) <$> getWord8),
-  (0x18, (Dload . Local) <$> getWord8),
-  (0x19, (Aload . Local) <$> getWord8),
+  (0x15, Iload <$> getWord8),
+  (0x16, Lload <$> getWord8),
+  (0x17, Fload <$> getWord8),
+  (0x18, Dload <$> getWord8),
+  (0x19, Aload <$> getWord8),
   (0x1a, return Iload0), (0x1b, return Iload1), (0x1c, return Iload2), (0x1d, return Iload3),
   (0x1e, return Lload0), (0x1f, return Lload1), (0x20, return Lload2), (0x21, return Lload3),
   (0x22, return Fload0), (0x23, return Fload1), (0x24, return Fload2), (0x25, return Fload3),
@@ -118,11 +118,11 @@ instructionParsers = Map.fromList [
   (0x32, return Aaload), (0x33, return Baload), (0x34, return Caload), (0x35, return Saload),
 
   -- Store ops
-  (0x36, (Istore . Local) <$> getWord8),
-  (0x37, (Lstore . Local) <$> getWord8),
-  (0x38, (Fstore . Local) <$> getWord8),
-  (0x39, (Dstore . Local) <$> getWord8),
-  (0x3a, (Astore . Local) <$> getWord8),
+  (0x36, Istore <$> getWord8),
+  (0x37, Lstore <$> getWord8),
+  (0x38, Fstore <$> getWord8),
+  (0x39, Dstore <$> getWord8),
+  (0x3a, Astore <$> getWord8),
   (0x3b, return Istore0), (0x3c, return Istore1), (0x3d, return Istore2), (0x3e, return Istore3),
   (0x3f, return Lstore0), (0x40, return Lstore1), (0x41, return Lstore2), (0x42, return Lstore3),
   (0x43, return Fstore0), (0x44, return Fstore1), (0x45, return Fstore2), (0x46, return Fstore3),
@@ -175,15 +175,30 @@ instructionParsers = Map.fromList [
   (0xa2, IfICmpGe <$> getWord),
   (0xa3, IfICmpGt <$> getWord),
   (0xa4, IfICmpLe <$> getWord),
-  
-  
-  -- (0x99, return IfEq),
-  -- (0x9a, return IfNe),
-  -- (0x9b, return 
-  
-  (0xb0, return Areturn),
-  (0xb4, Getfield <$> getWord)]
+  (0xa5, IfACmpEq <$> getWord),
+  (0xa6, IfACmpNe <$> getWord),
 
+  (0xa7, Goto <$> getWord),
+  (0xa8, Jsr <$> getWord),
+  (0xa9, Ret <$> getWord8),
+  (0xaa, return TableSwitch),
+  (0xab, return LookupSwitch),
+  
+  (0xac, return IReturn),
+  (0xad, return LReturn),
+  (0xae, return FReturn),
+  (0xaf, return DReturn),
+  (0xb0, return AReturn),
+  (0xb1, return Return),
+  
+  (0xb2, GetStatic <$> getCPIndex16),
+  (0xb3, PutStatic <$> getCPIndex16),
+  (0xb4, GetField <$> getCPIndex16),
+  (0xb5, PutField <$> getCPIndex16)]
+
+
+getCPIndex16 :: Get CPIndex16
+getCPIndex16 = CPIndex16 <$> getWord
 
 -- -> StackMapTable
 stackMapTableAttr len = do

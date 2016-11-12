@@ -48,7 +48,7 @@ printAttribute p ca@(CodeAttr {}) = out [tab 2 $ printf "Max stack: %d" (maxStac
 printAttribute p ca = show ca
 
 printCode :: [Constant] -> Instruction -> String
-printCode p c@(Getfield cpFieldRef) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
+printCode p c@(GetField (CPIndex16 cpFieldRef)) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
 
 printCode p c@(Ldc (CPIndex8 cpi)) = printLdc "ldc" cpi p
 printCode p c@(LdcW (CPIndex16 cpi)) = printLdc "ldc_w" cpi p
@@ -168,10 +168,9 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
 
 data CPIndex8 = CPIndex8 Word8
               deriving (Show, Eq)
-data CPIndex16 = CPIndex16 Word16
+newtype CPIndex16 = CPIndex16 Word16
                deriving (Show, Eq)
-data Local = Local Word8
-           deriving (Show, Eq)
+type Local = Word8
 
 type BranchOffset = Word16
 
@@ -221,8 +220,17 @@ data Instruction = Nop |
                    IfICmpEq BranchOffset | IfICmpNe BranchOffset|
                    IfICmpLt BranchOffset | IfICmpGe BranchOffset|
                    IfICmpGt BranchOffset | IfICmpLe BranchOffset |
+                   IfACmpEq BranchOffset | IfACmpNe BranchOffset |
 
-                   Areturn | Getfield Word16 | Unknown
+                   Goto BranchOffset | Jsr BranchOffset | Ret Local |
+                   TableSwitch | LookupSwitch |
+
+                   IReturn | LReturn | FReturn | DReturn | AReturn | Return |
+
+                   GetStatic CPIndex16 | PutStatic CPIndex16 |
+                   GetField CPIndex16 | PutField CPIndex16 |
+
+                   Unknown
                  deriving (Show, Eq)
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }
