@@ -171,7 +171,7 @@ data CPIndex8 = CPIndex8 Word8
               deriving (Show, Eq)
 newtype CPIndex16 = CPIndex16 Word16
                deriving (Show, Eq)
-type Local = Word8
+type Local = Byte
 
 type BranchOffset = Word16
 
@@ -183,7 +183,7 @@ data Instruction =
                    LConst0 | LConst1 |
                    FConst0 | FConst1 | FConst2 |
                    DConst0 | DConst1 |
-                   BiPush Word8 | SiPush Word8 |
+                   BiPush Word8 | SiPush Word16 |
                    Ldc CPIndex8 | LdcW CPIndex16 | Ldc2W CPIndex16 |
 
                    -- Loads
@@ -245,7 +245,7 @@ data Instruction =
                    InvokeStatic CPIndex16 | InvokeInterface CPIndex16 Word8 |
                    InvokeDynamic CPIndex16 Word8 |
 
-                   New_ CPIndex16 | NewArray Word8 | ANewArray CPIndex16 |
+                   New_ CPIndex16 | NewArray Byte | ANewArray CPIndex16 |
                    ArrayLength |
 
                    AThrow | CheckCast CPIndex16 | InstanceOf_ CPIndex16 |

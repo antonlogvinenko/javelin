@@ -97,8 +97,8 @@ instructionParsers = Map.fromList [
   (0x09, return LConst0), (0x0a, return LConst1),
   (0x0b, return FConst0), (0x0c, return FConst1), (0x0d, return FConst2),
   (0x0e, return DConst0), (0x0f, return DConst1),
-  (0x10, BiPush <$> getWord8),
-  (0x11, SiPush <$> getWord8),
+  (0x10, BiPush <$> getByte),
+  (0x11, SiPush <$> getWord),
   (0x12, Ldc <$> getCPIndex8),
   (0x13, LdcW <$> getCPIndex16),
   (0x14, Ldc2W <$> getCPIndex16),
@@ -176,7 +176,7 @@ instructionParsers = Map.fromList [
   (0xa5, IfACmpEq <$> getWord), (0xa6, IfACmpNe <$> getWord),
 
   -- Control
-  (0xa7, Goto <$> getWord), (0xa8, Jsr <$> getWord), (0xa9, Ret <$> getWord8),
+  (0xa7, Goto <$> getWord), (0xa8, Jsr <$> getWord), (0xa9, Ret <$> getByte),
   (0xaa, return TableSwitch), (0xab, return LookupSwitch),
   
   (0xac, return IReturn), (0xad, return LReturn), (0xae, return FReturn), (0xaf, return DReturn),
@@ -189,10 +189,10 @@ instructionParsers = Map.fromList [
   (0xb6, InvokeVirtual <$> getCPIndex16),
   (0xb7, InvokeSpecial <$> getCPIndex16),
   (0xb8, InvokeStatic <$> getCPIndex16),
-  (0xb9, InvokeInterface <$> getCPIndex16 <*> getWord8),
-  (0xba, InvokeDynamic <$> getCPIndex16 <*> getWord8),
+  (0xb9, InvokeInterface <$> getCPIndex16 <*> getByte),
+  (0xba, InvokeDynamic <$> getCPIndex16 <*> getByte),
 
-  (0xbb, New_ <$> getCPIndex16), (0xbc, NewArray <$> getWord8), (0xbd, ANewArray <$> getCPIndex16),
+  (0xbb, New_ <$> getCPIndex16), (0xbc, NewArray <$> getByte), (0xbd, ANewArray <$> getCPIndex16),
   (0xbe, return ArrayLength),
 
   (0xbf, return AThrow),
@@ -201,7 +201,7 @@ instructionParsers = Map.fromList [
 
   -- Extended
   (0xc4, return Wide),
-  (0xc5, MultiANewArray <$> getCPIndex16 <*> getWord8),
+  (0xc5, MultiANewArray <$> getCPIndex16 <*> getByte),
   (0xc6, IfNull <$> getCPIndex16),
   (0xc7, IfNotNull <$> getCPIndex16),
   (0xc8, GotoW <$> getDWord),
