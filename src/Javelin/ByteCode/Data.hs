@@ -233,7 +233,7 @@ data Instruction =
 
                    -- Control
                    Goto BranchOffset | Jsr BranchOffset | Ret Local |
-                   TableSwitch | LookupSwitch |
+                   TableSwitch DWord DWord DWord [DWord] | LookupSwitch |
 
                    IReturn | LReturn | FReturn | DReturn | AReturn | Return |
 
