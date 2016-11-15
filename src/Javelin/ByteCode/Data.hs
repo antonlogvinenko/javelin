@@ -214,7 +214,7 @@ data Instruction =
 
                    IShl | LShl | IShr | LShr | IUshr | LUshr |
 
-                   IAnd | LAnd | IOr | LOr | IXor | LXor | IInc |
+                   IAnd | LAnd | IOr | LOr | IXor | LXor | IInc Local Byte |
 
                    -- Conversions
                    I2L | I2F | I2D | L2I | L2F | L2D | F2I | F2L | F2D | D2I | D2L | D2F |
@@ -233,7 +233,7 @@ data Instruction =
 
                    -- Control
                    Goto BranchOffset | Jsr BranchOffset | Ret Local |
-                   TableSwitch DWord DWord DWord [DWord] | LookupSwitch |
+                   TableSwitch DWord DWord DWord [DWord] | LookupSwitch DWord [(DWord, DWord)] |
 
                    IReturn | LReturn | FReturn | DReturn | AReturn | Return |
 

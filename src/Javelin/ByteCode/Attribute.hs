@@ -152,7 +152,7 @@ instructionParsers = Map.fromList [
   (0x7e, return IAnd), (0x7f, return LAnd),
   (0x80, return IOr), (0x81, return LOr),
   (0x82, return IXor), (0x83, return LXor),
-  (0x84, return IInc),
+  (0x84, IInc <$> getLocal <*> getByte),
 
   -- Conversions
   (0x85, return I2L), (0x86, return I2F), (0x87, return I2D),
@@ -188,7 +188,14 @@ instructionParsers = Map.fromList [
       jumps <- times getDWord (fromIntegral $ highDWord - lowDWord + 1)
       return $ TableSwitch defaultDWord lowDWord highDWord jumps
   ),
-  (0xab, return LookupSwitch),
+  (0xab, do
+      read <- bytesRead
+      let off = rem read 4
+      let pad = if off /= 0 then 4 - off else 0
+      defaultDWord <- getDWord
+      npairs <- getDWord
+      pairs <- times ((,) <$> getDWord <*> getDWord) (fromIntegral npairs)
+      return $ LookupSwitch defaultDWord pairs),
   
   (0xac, return IReturn), (0xad, return LReturn), (0xae, return FReturn), (0xaf, return DReturn),
   (0xb0, return AReturn), (0xb1, return Return),
