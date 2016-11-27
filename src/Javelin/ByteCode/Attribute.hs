@@ -86,6 +86,7 @@ findInstructionParser idx = case Map.lookup idx instructionParsers of
   Just p -> p
   Nothing -> return Unknown
 
+
 instructionParsers :: Map.Map Word8 (Get Instruction)
 instructionParsers = Map.fromList [
   -- Constants
@@ -218,7 +219,20 @@ instructionParsers = Map.fromList [
   (0xc2, return MonitorEnter), (0xc3, return MonitorExit),
 
   -- Extended
-  (0xc4, return Wide),
+  (0xc4, do
+      cmd <- getByte
+      case cmd of
+        84 -> WideIInc <$> getCPIndex16 <*> getWord
+        0x15 -> WideILoad <$> getCPIndex16
+        0x16 -> WideLLoad <$> getCPIndex16
+        0x17 -> WideFLoad <$> getCPIndex16
+        0x18 -> WideDLoad <$> getCPIndex16
+        0x19 -> WideALoad <$> getCPIndex16
+        0x36 -> WideIStore <$> getCPIndex16
+        0x37 -> WideLStore <$> getCPIndex16
+        0x38 -> WideFStore <$> getCPIndex16
+        0x39 -> WideDStore <$> getCPIndex16
+        0x3a -> WideAStore <$> getCPIndex16),
   (0xc5, MultiANewArray <$> getCPIndex16 <*> getByte),
   (0xc6, IfNull <$> getCPIndex16),
   (0xc7, IfNotNull <$> getCPIndex16),

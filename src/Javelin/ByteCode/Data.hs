@@ -252,7 +252,14 @@ data Instruction =
                    MonitorEnter | MonitorExit |
 
                    -- Extended
-                   Wide | MultiANewArray CPIndex16 Word8 |
+                   WideIInc CPIndex16 Word16 |
+                   WideILoad CPIndex16 | WideFLoad CPIndex16 |
+                   WideALoad CPIndex16 | WideLLoad CPIndex16 | WideDLoad CPIndex16 |
+                   WideIStore CPIndex16 | WideFStore CPIndex16 |
+                   WideAStore CPIndex16 | WideLStore CPIndex16 | WideDStore CPIndex16 |
+                   WideRet CPIndex16 |
+
+                   MultiANewArray CPIndex16 Word8 |
                    IfNull CPIndex16 | IfNotNull CPIndex16 |
                    GotoW DWord | JsrW DWord  |
 
