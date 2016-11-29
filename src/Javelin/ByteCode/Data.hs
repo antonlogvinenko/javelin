@@ -49,16 +49,9 @@ printAttribute p ca@(CodeAttr {}) = out [tab 2 $ printf "Max stack: %d" (maxStac
 printAttribute p ca = show ca
 
 printCode :: [Constant] -> Instruction -> String
-printCode p c@(GetField (CPIndex cpFieldRef)) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
-
-printCode p c@(Ldc cpi) = printCmd c p cpi
-printCode p c@(LdcW cpi) = printCmd c p cpi
-printCode p c@(Ldc2W cpi) = printCmd c p cpi
-printCode p c = show c
-
-printCmd :: Instruction -> [Constant] -> CPIndex -> String
-printCmd c cp (CPIndex ww) = printf "%s %s" (show c) (showConst 3 cp (at cp ww))
-
+printCode p c = case cpIndex c of
+  Nothing -> show c
+  Just idx -> printf "%s %s" (show c) (showConst 3 p (at p idx))
 
 printField :: [Constant] -> FieldInfo -> String
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
@@ -176,6 +169,44 @@ type Local = Byte
 
 type BranchOffset = Word16
 
+br :: CPIndex -> Maybe Word16
+br (CPIndex idx) = Just idx
+
+cpIndex :: Instruction -> Maybe Word16
+cpIndex (Ldc x) = br x
+cpIndex (LdcW x) = br x
+cpIndex (Ldc2W x) = br x
+cpIndex (GetStatic x) = br x
+cpIndex (PutStatic x) = br x
+cpIndex (GetField x) = br x
+cpIndex (PutField x) = br x
+cpIndex (InvokeVirtual x) = br x
+cpIndex (InvokeSpecial x) = br x
+cpIndex (InvokeStatic x) = br x
+cpIndex (InvokeInterface x _) = br x
+cpIndex (InvokeDynamic x _) = br x
+cpIndex (New_ x) = br x
+cpIndex (ANewArray x) = br x
+cpIndex (CheckCast x) = br x
+cpIndex (InstanceOf_ x) = br x
+cpIndex (WideIInc x _) = br x
+cpIndex (WideILoad x) = br x
+cpIndex (WideFLoad x) = br x
+cpIndex (WideALoad x) = br x
+cpIndex (WideLLoad x) = br x
+cpIndex (WideDLoad x) = br x
+cpIndex (WideIStore x) = br x
+cpIndex (WideFStore x) = br x
+cpIndex (WideAStore x) = br x
+cpIndex (WideLStore x) = br x
+cpIndex (WideDStore x) = br x
+cpIndex (WideRet x) = br x
+cpIndex (MultiANewArray x _) = br x
+cpIndex (IfNull x) = br x
+cpIndex (IfNotNull x) = br x
+cpIndex _ = Nothing
+
+  
 data Instruction =
                    -- Constants
                    Nop |
@@ -185,7 +216,7 @@ data Instruction =
                    FConst0 | FConst1 | FConst2 |
                    DConst0 | DConst1 |
                    BiPush Word8 | SiPush Word16 |
-                   Ldc CPIndex | LdcW CPIndex | Ldc2W CPIndex |
+                   Ldc { cc :: CPIndex } | LdcW CPIndex | Ldc2W CPIndex |
 
                    -- Loads
                    ILoad Local | LLoad Local | FLoad Local | DLoad Local | ALoad Local |
