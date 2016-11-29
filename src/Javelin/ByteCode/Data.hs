@@ -49,14 +49,16 @@ printAttribute p ca@(CodeAttr {}) = out [tab 2 $ printf "Max stack: %d" (maxStac
 printAttribute p ca = show ca
 
 printCode :: [Constant] -> Instruction -> String
-printCode p c@(GetField (CPIndex16 cpFieldRef)) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
+printCode p c@(GetField (CPIndex cpFieldRef)) = printf "getfield #%d %s" cpFieldRef (showConst 3 p (at p cpFieldRef))
 
-printCode p c@(Ldc (CPIndex8 cpi)) = printLdc "ldc" cpi p
-printCode p c@(LdcW (CPIndex16 cpi)) = printLdc "ldc_w" cpi p
-printCode p c@(Ldc2W (CPIndex16 cpi)) = printLdc "ldc2_w" cpi p
+printCode p c@(Ldc cpi) = printCmd c p cpi
+printCode p c@(LdcW cpi) = printCmd c p cpi
+printCode p c@(Ldc2W cpi) = printCmd c p cpi
 printCode p c = show c
 
-printLdc name cpi p = printf "%s #%d %s" name cpi (showConst 3 p (at p cpi))
+printCmd :: Instruction -> [Constant] -> CPIndex -> String
+printCmd c cp (CPIndex ww) = printf "%s %s" (show c) (showConst 3 cp (at cp ww))
+
 
 printField :: [Constant] -> FieldInfo -> String
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
@@ -167,10 +169,9 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
 
-data CPIndex8 = CPIndex8 Word8
-              deriving (Show, Eq)
-newtype CPIndex16 = CPIndex16 Word16
-               deriving (Show, Eq)
+data CPIndex = CPIndex Word16
+             deriving (Show, Eq)
+
 type Local = Byte
 
 type BranchOffset = Word16
@@ -184,7 +185,7 @@ data Instruction =
                    FConst0 | FConst1 | FConst2 |
                    DConst0 | DConst1 |
                    BiPush Word8 | SiPush Word16 |
-                   Ldc CPIndex8 | LdcW CPIndex16 | Ldc2W CPIndex16 |
+                   Ldc CPIndex | LdcW CPIndex | Ldc2W CPIndex |
 
                    -- Loads
                    ILoad Local | LLoad Local | FLoad Local | DLoad Local | ALoad Local |
@@ -238,35 +239,33 @@ data Instruction =
                    IReturn | LReturn | FReturn | DReturn | AReturn | Return |
 
                    -- References
-                   GetStatic CPIndex16 | PutStatic CPIndex16 |
-                   GetField CPIndex16 | PutField CPIndex16 |
+                   GetStatic CPIndex | PutStatic CPIndex |
+                   GetField CPIndex | PutField CPIndex |
 
-                   InvokeVirtual CPIndex16 | InvokeSpecial CPIndex16 |
-                   InvokeStatic CPIndex16 | InvokeInterface CPIndex16 Word8 |
-                   InvokeDynamic CPIndex16 Word8 |
+                   InvokeVirtual CPIndex | InvokeSpecial CPIndex |
+                   InvokeStatic CPIndex | InvokeInterface CPIndex Word8 |
+                   InvokeDynamic CPIndex Word8 |
 
-                   New_ CPIndex16 | NewArray Byte | ANewArray CPIndex16 |
+                   New_ CPIndex | NewArray Byte | ANewArray CPIndex |
                    ArrayLength |
 
-                   AThrow | CheckCast CPIndex16 | InstanceOf_ CPIndex16 |
+                   AThrow | CheckCast CPIndex | InstanceOf_ CPIndex |
                    MonitorEnter | MonitorExit |
 
                    -- Extended
-                   WideIInc CPIndex16 Word16 |
-                   WideILoad CPIndex16 | WideFLoad CPIndex16 |
-                   WideALoad CPIndex16 | WideLLoad CPIndex16 | WideDLoad CPIndex16 |
-                   WideIStore CPIndex16 | WideFStore CPIndex16 |
-                   WideAStore CPIndex16 | WideLStore CPIndex16 | WideDStore CPIndex16 |
-                   WideRet CPIndex16 |
+                   WideIInc CPIndex Word16 |
+                   WideILoad CPIndex | WideFLoad CPIndex |
+                   WideALoad CPIndex | WideLLoad CPIndex | WideDLoad CPIndex |
+                   WideIStore CPIndex | WideFStore CPIndex |
+                   WideAStore CPIndex | WideLStore CPIndex | WideDStore CPIndex |
+                   WideRet CPIndex |
 
-                   MultiANewArray CPIndex16 Word8 |
-                   IfNull CPIndex16 | IfNotNull CPIndex16 |
+                   MultiANewArray CPIndex Word8 |
+                   IfNull CPIndex | IfNotNull CPIndex |
                    GotoW DWord | JsrW DWord  |
 
                    -- Reserved
-                   BreakPoint | ImDep1 | ImDep2 |
-                   
-                   Unknown
+                   BreakPoint | ImDep1 | ImDep2
                  deriving (Show, Eq)
 
 data AttrInfo = UnknownAttr { unknownBytes :: ByteString }

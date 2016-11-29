@@ -84,7 +84,7 @@ parseInstructions = do
 findInstructionParser :: Word8 -> Get Instruction
 findInstructionParser idx = case Map.lookup idx instructionParsers of
   Just p -> p
-  Nothing -> return Unknown
+  Nothing -> undefined -- todo
 
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
@@ -101,8 +101,8 @@ instructionParsers = Map.fromList [
   (0x10, BiPush <$> getByte),
   (0x11, SiPush <$> getWord),
   (0x12, Ldc <$> getCPIndex8),
-  (0x13, LdcW <$> getCPIndex16),
-  (0x14, Ldc2W <$> getCPIndex16),
+  (0x13, LdcW <$> getCPIndex),
+  (0x14, Ldc2W <$> getCPIndex),
 
   -- Loads
   (0x15, ILoad <$> getLocal),
@@ -202,40 +202,40 @@ instructionParsers = Map.fromList [
   (0xb0, return AReturn), (0xb1, return Return),
 
   -- References
-  (0xb2, GetStatic <$> getCPIndex16), (0xb3, PutStatic <$> getCPIndex16),
-  (0xb4, GetField <$> getCPIndex16), (0xb5, PutField <$> getCPIndex16),
+  (0xb2, GetStatic <$> getCPIndex), (0xb3, PutStatic <$> getCPIndex),
+  (0xb4, GetField <$> getCPIndex), (0xb5, PutField <$> getCPIndex),
 
-  (0xb6, InvokeVirtual <$> getCPIndex16),
-  (0xb7, InvokeSpecial <$> getCPIndex16),
-  (0xb8, InvokeStatic <$> getCPIndex16),
-  (0xb9, InvokeInterface <$> getCPIndex16 <*> getByte),
-  (0xba, InvokeDynamic <$> getCPIndex16 <*> getByte),
+  (0xb6, InvokeVirtual <$> getCPIndex),
+  (0xb7, InvokeSpecial <$> getCPIndex),
+  (0xb8, InvokeStatic <$> getCPIndex),
+  (0xb9, InvokeInterface <$> getCPIndex <*> getByte),
+  (0xba, InvokeDynamic <$> getCPIndex <*> getByte),
 
-  (0xbb, New_ <$> getCPIndex16), (0xbc, NewArray <$> getByte), (0xbd, ANewArray <$> getCPIndex16),
+  (0xbb, New_ <$> getCPIndex), (0xbc, NewArray <$> getByte), (0xbd, ANewArray <$> getCPIndex),
   (0xbe, return ArrayLength),
 
   (0xbf, return AThrow),
-  (0xc0, CheckCast <$> getCPIndex16), (0xc1, InstanceOf_ <$> getCPIndex16),
+  (0xc0, CheckCast <$> getCPIndex), (0xc1, InstanceOf_ <$> getCPIndex),
   (0xc2, return MonitorEnter), (0xc3, return MonitorExit),
 
   -- Extended
   (0xc4, do
       cmd <- getByte
       case cmd of
-        84 -> WideIInc <$> getCPIndex16 <*> getWord
-        0x15 -> WideILoad <$> getCPIndex16
-        0x16 -> WideLLoad <$> getCPIndex16
-        0x17 -> WideFLoad <$> getCPIndex16
-        0x18 -> WideDLoad <$> getCPIndex16
-        0x19 -> WideALoad <$> getCPIndex16
-        0x36 -> WideIStore <$> getCPIndex16
-        0x37 -> WideLStore <$> getCPIndex16
-        0x38 -> WideFStore <$> getCPIndex16
-        0x39 -> WideDStore <$> getCPIndex16
-        0x3a -> WideAStore <$> getCPIndex16),
-  (0xc5, MultiANewArray <$> getCPIndex16 <*> getByte),
-  (0xc6, IfNull <$> getCPIndex16),
-  (0xc7, IfNotNull <$> getCPIndex16),
+        84 -> WideIInc <$> getCPIndex <*> getWord
+        0x15 -> WideILoad <$> getCPIndex
+        0x16 -> WideLLoad <$> getCPIndex
+        0x17 -> WideFLoad <$> getCPIndex
+        0x18 -> WideDLoad <$> getCPIndex
+        0x19 -> WideALoad <$> getCPIndex
+        0x36 -> WideIStore <$> getCPIndex
+        0x37 -> WideLStore <$> getCPIndex
+        0x38 -> WideFStore <$> getCPIndex
+        0x39 -> WideDStore <$> getCPIndex
+        0x3a -> WideAStore <$> getCPIndex),
+  (0xc5, MultiANewArray <$> getCPIndex <*> getByte),
+  (0xc6, IfNull <$> getCPIndex),
+  (0xc7, IfNotNull <$> getCPIndex),
   (0xc8, GotoW <$> getDWord),
   (0xc9, JsrW <$> getDWord),
 
@@ -245,11 +245,11 @@ instructionParsers = Map.fromList [
   ]
 
 
-getCPIndex16 :: Get CPIndex16
-getCPIndex16 = CPIndex16 <$> getWord
+getCPIndex :: Get CPIndex
+getCPIndex = CPIndex <$> getWord
 
-getCPIndex8 :: Get CPIndex8
-getCPIndex8 = CPIndex8 <$> getWord8
+getCPIndex8 :: Get CPIndex
+getCPIndex8 = (CPIndex . fromIntegral) <$> getWord8
 
 getLocal :: Get Local
 getLocal = getWord8
