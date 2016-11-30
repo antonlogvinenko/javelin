@@ -2,7 +2,7 @@ module Javelin.ByteCode.Data
 where
   
 import Data.ByteString (ByteString)
-import Data.Word (Word16, Word8)
+import Data.Word (Word16, Word8, Word32, Word64)
 import Data.Int (Int32, Int64)
 import Javelin.Util
 import Data.List (intercalate)
@@ -199,7 +199,7 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           deriving (Show, Eq)
 
 type CPIndex = Word16
-type Local = Byte
+type Local = Word8
 type BranchOffset = Word16
   
 data Instruction =
@@ -241,7 +241,7 @@ data Instruction =
 
                    IShl | LShl | IShr | LShr | IUshr | LUshr |
 
-                   IAnd | LAnd | IOr | LOr | IXor | LXor | IInc Local Byte |
+                   IAnd | LAnd | IOr | LOr | IXor | LXor | IInc Local Word8 |
 
                    -- Conversions
                    I2L | I2F | I2D | L2I | L2F | L2D | F2I | F2L | F2D | D2I | D2L | D2F |
@@ -260,7 +260,7 @@ data Instruction =
 
                    -- Control
                    Goto BranchOffset | Jsr BranchOffset | Ret Local |
-                   TableSwitch DWord DWord DWord [DWord] | LookupSwitch DWord [(DWord, DWord)] |
+                   TableSwitch Word32 Word32 Word32 [Word32] | LookupSwitch Word32 [(Word32, Word32)] |
 
                    IReturn | LReturn | FReturn | DReturn | AReturn | Return |
 
@@ -272,7 +272,7 @@ data Instruction =
                    InvokeStatic CPIndex | InvokeInterface CPIndex Word8 |
                    InvokeDynamic CPIndex Word8 |
 
-                   New_ CPIndex | NewArray Byte | ANewArray CPIndex |
+                   New_ CPIndex | NewArray Word8 | ANewArray CPIndex |
                    ArrayLength |
 
                    AThrow | CheckCast CPIndex | InstanceOf_ CPIndex |
@@ -288,7 +288,7 @@ data Instruction =
 
                    MultiANewArray CPIndex Word8 |
                    IfNull CPIndex | IfNotNull CPIndex |
-                   GotoW DWord | JsrW DWord  |
+                   GotoW Word32 | JsrW Word32  |
 
                    -- Reserved
                    BreakPoint | ImDep1 | ImDep2

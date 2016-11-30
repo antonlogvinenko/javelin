@@ -5,19 +5,14 @@ import Data.ByteString (ByteString)
 import Data.Word (Word16, Word8, Word32, Word64)
 import qualified Data.Map.Lazy as Map (Map, keys, lookup)
 import Data.Bits
-import Data.Binary.Get
+import Data.Binary.Get (getWord8, getWord16be, getWord32be, getWord64be, Get)
 import Data.ByteString.UTF8 (toString)
 import Debug.Trace
 
-type Byte = Word8
-type Word = Word16
-type DWord = Word32
-type DDWord = Word64
-
-getByte = getWord8
-getWord = getWord16be
-getDWord = getWord32be
-getDDWord = getWord64be
+-- getWord8 = getWord8
+getWord16 = getWord16be
+getWord32 = getWord32be
+getWord64 = getWord64be
 
 times :: Get a -> Word16 -> Get [a]
 times _ 0 = return []
@@ -28,7 +23,7 @@ times get n = do
     
 several :: Get a -> Get [a]
 several get = do
-  len <- getWord
+  len <- getWord16
   times get len
 
 addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]

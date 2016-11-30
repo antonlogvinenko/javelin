@@ -23,7 +23,7 @@ getConstants len = do
 
 getConstant :: Get Constant
 getConstant = do
-  tag <- getByte
+  tag <- getWord8
   findWithDefault (failingConstParser tag) tag constantTypeParser
 
 failingConstParser :: Word8 -> Get Constant
@@ -40,33 +40,33 @@ constantTypeParser = fromList [(1, utf8InfoParser), (3, integerInfoParser),
 
 utf8InfoParser :: Get Constant
 utf8InfoParser = do
-  byteStringLen <- getWord
+  byteStringLen <- getWord16
   byteString <- getByteString $ fromIntegral byteStringLen
   return $ Utf8Info $ bytesToString byteString
 
 twoTwoBytesInfoParser :: (Word16 -> Word16 -> Constant) -> Get Constant
-twoTwoBytesInfoParser constConstr = constConstr <$> getWord <*> getWord
+twoTwoBytesInfoParser constConstr = constConstr <$> getWord16 <*> getWord16
 twoFourBytesInfoParser :: (Word32 -> Word32 -> Constant) -> Get Constant
-twoFourBytesInfoParser constConstr = constConstr <$> getDWord <*> getDWord
+twoFourBytesInfoParser constConstr = constConstr <$> getWord32 <*> getWord32
 
 twoBytesInfoParser :: (Word16 -> Constant) -> Get Constant
-twoBytesInfoParser constConstr = constConstr <$> getWord
+twoBytesInfoParser constConstr = constConstr <$> getWord16
 fourBytesInfoParser :: (Word32 -> Constant) -> Get Constant
-fourBytesInfoParser constConstr = constConstr <$> getDWord
+fourBytesInfoParser constConstr = constConstr <$> getWord32
 
 fieldrefParser = twoTwoBytesInfoParser Fieldref
-methodrefParser = Methodref <$> getWord <*> getWord
+methodrefParser = Methodref <$> getWord16 <*> getWord16
 
 interfaceMethodrefParser = twoTwoBytesInfoParser InterfaceMethodref
 nameAndTypeInfoParser = twoTwoBytesInfoParser NameAndTypeInfo
 classInfoParser = twoBytesInfoParser ClassInfo
 stringInfoParser = twoBytesInfoParser StringInfo
 
-integerInfoParser = IntegerInfo <$> unsafeCoerce <$> getDWord
-floatInfoParser = FloatInfo <$> unsafeCoerce <$> getDWord
-longInfoParser = LongInfo <$> unsafeCoerce <$> getDDWord
-doubleInfoParser = DoubleInfo <$> unsafeCoerce <$> getDDWord
+integerInfoParser = IntegerInfo <$> unsafeCoerce <$> getWord32
+floatInfoParser = FloatInfo <$> unsafeCoerce <$> getWord32
+longInfoParser = LongInfo <$> unsafeCoerce <$> getWord64
+doubleInfoParser = DoubleInfo <$> unsafeCoerce <$> getWord64
 
-methodHandleInfoParser = MethodHandleInfo <$> getByte <*> getWord
-methodTypeInfoParser = MethodTypeInfo <$> getWord
+methodHandleInfoParser = MethodHandleInfo <$> getWord8 <*> getWord16
+methodTypeInfoParser = MethodTypeInfo <$> getWord16
 invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo

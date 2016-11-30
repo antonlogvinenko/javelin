@@ -28,11 +28,11 @@ getFieldMethod :: Map Word16 flag ->
                   -> Get x
                   
 getFieldMethod accessFlags constr pool = do
-  maskBytes <- getWord
+  maskBytes <- getWord16
   let mask = foldMask accessFlags maskBytes
-  nameIndex <- getWord
-  descriptorIndex <- getWord
-  attrsCount <- getWord
+  nameIndex <- getWord16
+  descriptorIndex <- getWord16
+  attrsCount <- getWord16
   attributes <- times (getAttr pool) attrsCount
   return $ constr mask nameIndex descriptorIndex attributes
 
