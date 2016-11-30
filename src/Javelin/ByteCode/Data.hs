@@ -53,7 +53,7 @@ printCode p c = case cpIndex c of
   Nothing -> show c
   Just idx -> printf "%s %s" (show c) (showConst 3 p (at p idx))
 br :: CPIndex -> Maybe Word16
-br (CPIndex idx) = Just idx
+br idx = Just idx
 
 cpIndex :: Instruction -> Maybe Word16
 cpIndex (Ldc x) = br x
@@ -198,15 +198,9 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
 
-data CPIndex = CPIndex Word16
-             deriving (Show, Eq)
-
+type CPIndex = Word16
 type Local = Byte
-
 type BranchOffset = Word16
-
-
-
   
 data Instruction =
                    -- Constants
@@ -217,7 +211,7 @@ data Instruction =
                    FConst0 | FConst1 | FConst2 |
                    DConst0 | DConst1 |
                    BiPush Word8 | SiPush Word16 |
-                   Ldc { cc :: CPIndex } | LdcW CPIndex | Ldc2W CPIndex |
+                   Ldc CPIndex | LdcW CPIndex | Ldc2W CPIndex |
 
                    -- Loads
                    ILoad Local | LLoad Local | FLoad Local | DLoad Local | ALoad Local |
@@ -258,7 +252,7 @@ data Instruction =
                    LCmp | FCmpL | FCmpG | DCmpL | DCmpG |
 
                    IfEq BranchOffset | IfNe BranchOffset |
-                   IfLt BranchOffset | IfGe BranchOffset| IfGt BranchOffset | IfLe BranchOffset|
+                   IfLt BranchOffset | IfGe BranchOffset| IfGt BranchOffset | IfLe BranchOffset |
                    IfICmpEq BranchOffset | IfICmpNe BranchOffset|
                    IfICmpLt BranchOffset | IfICmpGe BranchOffset|
                    IfICmpGt BranchOffset | IfICmpLe BranchOffset |
