@@ -41,7 +41,7 @@ runClass path = do
 
 runFunction arg = print $ parseClassSignature arg
 
-printHelp = putStrLn "Specify mode: [disasm|f|cs|jvm] for function/class/classes and mode argument"
+printHelp = putStrLn "Specify mode: [disasm|stats|f|cs|jvm] for function/class/classes and mode argument"
   
 main = do
   args <- getArgs
@@ -56,4 +56,5 @@ main = do
                     in do
                       traces <- runJVM classPath arg1 mainArgs
                       print traces
+           "stats" -> putStrLn "not yet implemented"
            _ -> (putStrLn $ arg0 ++ "is an unknown command") >> printHelp

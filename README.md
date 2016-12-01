@@ -7,6 +7,10 @@ Modes
 
         stack exec javelin c acceptance/TreeMultimapNaturalTest.class
 
+* Bytecode statistics
+
+        stack exec javelin stats acceptance
+
 *Long term*
 * Bytecode parser [**Done**]
 * Runtime data structures [**Done**]
