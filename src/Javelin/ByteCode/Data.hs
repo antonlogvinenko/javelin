@@ -16,11 +16,13 @@ tab n str = (take n $ repeat '\t') ++ str
 out :: [String] -> String
 out = intercalate "\n"  
 
+-- ByteCode
 instance Show ByteCode where
   show (ByteCode min maj body) = out [space 2 $ "minor version: " ++ show min,
                                       space 2 $ "major version: " ++ show maj,
                                       show body]
 
+-- ClassBody
 instance Show ClassBody where
   show body@(ClassBody {constPool = (ConstantPool p)}) = out $ [space 2 $ "flags: " ++ intercalate ", " (map show (classAccessFlags body)),
                      show (constPool body),
@@ -101,6 +103,7 @@ printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
   (show attributes)
 
 
+-- Constant pool
 instance Show ConstantPool where
   show (ConstantPool p) = out $ "Constant pool:" : (map showConstLine $ zip (iterate (1+) 0) (map (showConst 0 p) p))
 showConstLine :: (Int, String) -> String

@@ -39,19 +39,21 @@ runClass path = do
                                            -- show (words !! ((fromIntegral off) - 1)),
                                             "\n"]
 
-runFunction arg = do
-  print $ parseClassSignature arg
+runFunction arg = print $ parseClassSignature arg
 
+printHelp = putStrLn "Specify mode: [disasm|f|cs|jvm] for function/class/classes and mode argument"
+  
 main = do
   args <- getArgs
   if length args < 2
-    then putStrLn "Specify mode: [f|c|cs|jvm] for function/class/classes and mode argument"
+    then printHelp
     else let (arg0:arg1:restArgs) = args
          in case arg0 of
            "f" -> runFunction arg1
-           "c" -> runClass arg1
+           "disasm" -> runClass arg1
            "cs" -> runClasses arg1
            "jvm" -> let (classPath:mainArgs) = restArgs
                     in do
                       traces <- runJVM classPath arg1 mainArgs
                       print traces
+           _ -> (putStrLn $ arg0 ++ "is an unknown command") >> printHelp

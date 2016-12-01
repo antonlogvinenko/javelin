@@ -2,6 +2,10 @@ Javelin
 =======
 JVM 8 spec implementation in Haskell.
 
+Usage
+* Disassembler mode
+stack exec javelin c acceptance/TreeMultimapNaturalTest.class
+
 *Long term*
 * Bytecode parser [**Done**]
 * Runtime data structures [**Done**]
@@ -21,17 +25,35 @@ JVM 8 spec implementation in Haskell.
  * multiple threads (use haskell threads and transactions for shared memory?)
  * user derined class loaders (only boostrap)
 
-commands with indices
-constant pool: index -> symbolic reference
+1. Bytecode printing:
+ - Commands
+   - use vector
+   - Cleanup:
+     - pretty print ref to constant pool
+     - inside reference following formatting
+     - common formatting
+ - move printing to another file?
+ - Running disassembler + doc
+ - Write test on many files
+ - Write application: parser analyzer, cmd stats
+
+2. Write loading part
+ - print all runtime structures
+
+3. Simple executions of commands
+
 
 1. Loading
+ - printing classes
+ - printing current runtime (with derived constant pool)
+ - fix runtime structures
+ - loading array class
  - update scheme of LLI on image (loading -> resolve)
  - check derive
  - check bytes loading
  - errors during class loading
 
 2. Resolving
-
 3. Linking, init
 4. Altogether
  
