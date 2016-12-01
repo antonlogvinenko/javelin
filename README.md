@@ -1,8 +1,8 @@
 Javelin
 =======
-JVM 8 spec implementation in Haskell.
+JVM SE8 implementation in Haskell.
 
-Modes
+Usage
 * Disassembler
 
         stack exec javelin c acceptance/TreeMultimapNaturalTest.class
