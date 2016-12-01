@@ -4,7 +4,6 @@ JVM 8 spec implementation in Haskell.
 
 Modes
 * Disassembler
-
         stack exec javelin c acceptance/TreeMultimapNaturalTest.class
 
 *Long term*
