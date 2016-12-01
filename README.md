@@ -9,7 +9,7 @@ Modes
 
 * Bytecode statistics
 
-        stack exec javelin stats acceptance
+        stack exec javelin stats acceptance/
 
 *Long term*
 * Bytecode parser [**Done**]
