@@ -2,17 +2,16 @@ Javelin
 =======
 JVM SE8 implementation in Haskell.
 
-Usage
+Usage:
 * Disassembler
 
-        stack exec javelin c acceptance/TreeMultimapNaturalTest.class
+        stack exec javelin disasm acceptance/TreeMultimapNaturalTest.class
 
 * Bytecode statistics
 
         stack exec javelin stats acceptance/
 
 *Long term*
-* Bytecode parser [**Done**]
 * Runtime data structures [**Done**]
 * Loading
  * Symtable, 2 cases [**In progress**]
