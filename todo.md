@@ -1,4 +1,3 @@
-
 *Long term*
 * Runtime data structures [**Done**]
 * Loading
@@ -18,7 +17,6 @@
  * user derined class loaders (only boostrap)
 
 1. Bytecode printing:
- - Move todo to another file
  - Write application: parser analyzer, cmd stats
  - Write test on many files
  - Cleanup:

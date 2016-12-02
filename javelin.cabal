@@ -23,6 +23,7 @@ library
                      Javelin.ByteCode.Attribute,
                      Javelin.ByteCode.ClassFile,
                      Javelin.ByteCode.DescSign,
+                     Javelin.ByteCode.Stats,
                      Javelin.Runtime.Instructions,
                      Javelin.Runtime.Thread,
                      Javelin.Runtime.LLI.ClassPath,

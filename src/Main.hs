@@ -8,6 +8,7 @@ import System.Directory
 import System.Environment
 import Control.Monad
 import Javelin.Runtime.Thread (runJVM)
+import Javelin.ByteCode.Stats (stats)
 
 validate className = case className of
     Right _ -> True
@@ -56,5 +57,7 @@ main = do
                     in do
                       traces <- runJVM classPath arg1 mainArgs
                       print traces
-           "stats" -> putStrLn "not yet implemented"
+           "stats" -> do
+             opCodeUsage <- stats arg1
+             putStrLn opCodeUsage
            _ -> (putStrLn $ arg0 ++ "is an unknown command") >> printHelp
