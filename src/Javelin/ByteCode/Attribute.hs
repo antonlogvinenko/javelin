@@ -80,12 +80,10 @@ parseInstructions = do
       instructions <- parseInstructions
       return $ instruction : instructions
 
--- Remove when all parsers are defined!
 findInstructionParser :: Word8 -> Get Instruction
 findInstructionParser idx = case Map.lookup idx instructionParsers of
   Just p -> p
   Nothing -> undefined -- todo
-
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
 instructionParsers = Map.fromList [
