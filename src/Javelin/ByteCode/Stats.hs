@@ -27,22 +27,26 @@ stats :: FilePath -> Maybe FilePath -> IO ()
 stats path output = do
   files <- getDirectoryContents path
   let filePaths = map ((path ++ "/") ++) .filter (`notElem` [".", ".."]) $ files
-  freqs <- runExceptT $ calcFreqs mempty filePaths
-  maybe mempty (textile freqs) output
-  printConsole freqs
+  result <- runExceptT $ calcFreqs mempty filePaths
+  case result of
+    Left msg -> putStrLn msg
+    Right freqs ->
+      let list = sortOn (Down . snd) $ Map.foldrWithKey (\k v list -> (k, v) : list) [] freqs
+          amount = fromIntegral $ foldl (\c (k, v) -> c + v) 0 list 
+          normalize x = ((fromIntegral $ 100 * x) / amount) :: Double
+          normalized = map (\(k, v) -> (k, normalize v)) list
+          formatted = map (\(k, v) -> (k, printf "%.2f" v)) normalized
+      in do
+        maybe mempty (textile formatted) output
+        printConsole formatted
 
-printConsole :: Either String (Map.Map String Integer)-> IO ()
-printConsole x = print x
+printConsole :: [(OpCode, String)] -> IO ()
+printConsole freqs = putStrLn $ concatMap (\(k, v) -> printf "%s: %s%%\n" k v) freqs
 
-textile :: Either String (Map.Map String Integer) -> FilePath -> IO ()
-textile (Left msg) path = print msg
-textile (Right freqs) path = do
+textile :: [(OpCode, String)] -> FilePath -> IO ()
+textile freqs path = do
   writeFile path "| OpCpde | Frequency |\n"
-  let list = sortOn (Down . snd) $ Map.foldrWithKey (\k v list -> (k, v) : list) [] freqs
-      amount = fromIntegral $ foldl (\c (k, v) -> c + v) 0 list
-      normalizedList = map (\(k, v) -> (k, normalizer v)) list
-      normalizer x = (fromIntegral $ 100 * x) / amount :: Double
-  appendFile path $ concatMap (\(k, v) -> printf "| %s | %.2f |\n" k v) normalizedList
+  appendFile path $ concatMap (\(k, v) -> printf "| %s | %s |\n" k v) freqs
 
 calcFreqs :: Map.Map String Integer -> [FilePath] -> ExceptT String IO (Map.Map String Integer)
 calcFreqs accum [] = return $ accum
