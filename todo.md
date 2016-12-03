@@ -15,16 +15,21 @@
  * invokedynamic
  * multiple threads (use haskell threads and transactions for shared memory?)
  * user derined class loaders (only boostrap)
+use vector for bytecodes
 
 1. Bytecode printing:
+ - finish stats
+   - all instructions
+   - pretty printing
+   - error messages
+   - eithert?
  - Write test on many files
  - Cleanup:
-   - use vector
    - pretty print ref to constant pool
    - inside reference following formatting
    - common formatting
    - move printing to another file?
-
+ - Fix all bugs
 
 2. Write loading part
  - print all runtime structures

@@ -6,6 +6,9 @@ where
 import Javelin.ByteCode.ClassFile (parse)
 import qualified Data.Map.Strict as Map
 import Control.Monad
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Class
+import Control.Monad.IO.Class
 import System.Directory
 import Data.Word (Word8)
 import Data.Binary.Get
@@ -20,19 +23,17 @@ stats :: FilePath -> IO String
 stats path = do
   files <- getDirectoryContents path
   let filePaths = map (path ++) .filter (`notElem` [".", ".."]) $ files
-  freqs <- calcFreqs mempty filePaths
+  freqs <- runExceptT $ calcFreqs mempty filePaths
   return $ prettyPrint freqs
 
 prettyPrint :: Either String (Map.Map String Integer) -> String
 prettyPrint = show -- todo: format
 
-calcFreqs :: Map.Map String Integer -> [FilePath] -> IO (Either String (Map.Map String Integer))
-calcFreqs accum [] = return $ Right accum
+calcFreqs :: Map.Map String Integer -> [FilePath] -> ExceptT String IO (Map.Map String Integer)
+calcFreqs accum [] = return $ accum
 calcFreqs !accum (f:fs) = do
-  parsed <- parseFileContents f
-  case parsed of
-    Left msg -> return $ Left msg
-    Right bc -> calcFreqs (addFreq accum bc) fs
+  bytecode <- parseFileContents f
+  calcFreqs (addFreq accum bytecode) fs
 
 addFreq :: Map.Map OpCode Integer -> ByteCode -> Map.Map OpCode Integer
 addFreq freq bc = let opCodes = do
@@ -52,14 +53,14 @@ isCodeAttr :: AttrInfo -> Bool
 isCodeAttr (CodeAttr _ _ _ _ _) = True
 isCodeAttr _ = False
 
-readFileContents :: FilePath -> IO [Word8]
-readFileContents path = BS.unpack <$> BS.readFile path
+readFileContents :: FilePath -> ExceptT String IO [Word8]
+readFileContents path = liftIO $ BS.unpack <$> BS.readFile path
 
-parseFileContents :: FilePath -> IO (Either String ByteCode)
+parseFileContents :: FilePath -> ExceptT String IO ByteCode
 parseFileContents path = do
   contents <- readFileContents path
   let parsed = parse contents
-  return $ either formatParseError validateParseResult parsed
+  ExceptT $ return $ either formatParseError validateParseResult parsed
 
 formatParseError :: (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
 formatParseError (_, _, msg) = Left msg
@@ -70,14 +71,102 @@ validateParseResult (_, _, bc) = Right bc
 type OpCode = String
 
 oc :: Instruction -> String
+-- Constants
 oc Nop = "nop"
 oc AConstNull = "aconst_null"
 oc IConstM1 =  "iconst_m1"
 oc IConst0 = "iconst_0"
 oc IConst1 = "iconst_1"
+oc IConst2 = "iconst_2"
+oc IConst3 = "iconst_3"
+oc IConst4 = "iconst_4"
+oc IConst5 = "iconst_5"
+oc LConst0 = "lconst_0"
+oc LConst1 = "lconst_1"
+oc FConst0 = "fconst_0"
+oc FConst1 = "fconst_1"
+oc FConst2 = "fconst_2"
+oc DConst0 = "dconst_0"
+oc DConst1 = "dconst_1"
+oc (BiPush _) = "bipush"
+oc (SiPush _) = "sipush"
+oc (Ldc _) = "ldc"
+oc (LdcW _) = "ldc_w"
+oc (Ldc2W _) = "ldc2_w"
+
+-- Loads
+oc (ILoad _) = "iload"
+oc (LLoad _) = "lload"
+oc (FLoad _) = "fload"
+oc (DLoad _) = "dload"
+oc (ALoad _) = "aload"
+oc ILoad0 = "iload_0"
+oc ILoad1 = "iload_1"
+oc ILoad2 = "iload_2"
+oc ILoad3 = "iload_3"
+oc LLoad0 = "lload_0"
+oc LLoad1 = "lload_1"
+oc LLoad2 = "lload_2"
+oc LLoad3 = "lload_3"
+oc FLoad0 = "fload_0"
+oc FLoad1 = "fload_1"
+oc FLoad2 = "fload_2"
+oc FLoad3 = "fload_3"
+oc DLoad0 = "dload_0"
+oc DLoad1 = "dload_1"
+oc DLoad2 = "dload_2"
+oc DLoad3 = "dload_3"
+oc IaLoad = "iaload"
+oc LaLoad = "laload"
+oc FaLoad = "faload"
+oc DaLoad = "daload"
+oc AaLoad = "aaload"
+oc BaLoad = "baload"
+oc CaLoad = "caload"
+oc SaLoad = "saload"
+
+-- Stores
+oc (IStore _) = "istore"
+oc (LStore _) = "lstore"
+oc (FStore _) = "fstore"
+oc (DStore _) = "dstore"
+oc (AStore _) = "astore"
+oc IStore0 = "istore_0"
+oc IStore1 = "istore_1"
+oc IStore2 = "istore_2"
+oc IStore3 = "istore_3"
+oc LStore0 = "lstore_0"
+oc LStore1 = "lstore_1"
+oc LStore2 = "lstore_2"
+oc LStore3 = "lstore_3"
+oc FStore0 = "fstore_0"
+oc FStore1 = "fstore_1"
+oc FStore2 = "fstore_2"
+oc FStore3 = "fstore_3"
+oc DStore0 = "dstore_0"
+oc DStore1 = "dstore_1"
+oc DStore2 = "dstore_2"
+oc DStore3 = "dstore_3"
+oc IaStore = "iastore"
+oc LaStore = "lastore"
+oc FaStore = "fastore"
+oc DaStore = "dastore"
+oc AaStore = "aastore"
+oc BaStore = "bastore"
+oc CaStore = "castore"
+oc SaStore = "sastore"
+
+-- Stack
+oc Pop = "pop"
+oc Pop2 = "pop2"
+oc Dup = "dup"
+oc DupX1 = "dup_x1"
+oc DupX2 = "dup_x2"
+oc Dup2 = "dup2"
+oc Dup2X1 = "dup2_x1"
+oc Dup2X2 = "dup2_x2"
+oc Swap = "swap"
+
+-- Math
 
 oc _ = "unknown"
-
--- all instructions
--- pretty printing
--- error messages
