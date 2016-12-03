@@ -16,9 +16,6 @@ import Debug.Trace
 import qualified Data.ByteString.Lazy as LBS (ByteString)
 import qualified Data.ByteString as BS (unpack, readFile)
 
--- all instructions
--- pretty printing
--- error messages
 
 stats :: FilePath -> IO String
 stats path = do
@@ -81,29 +78,6 @@ oc IConst1 = "iconst_1"
 
 oc _ = "unknown"
 
-
-traverse' :: (Applicative m) => (a -> m b) -> [a] -> m [b]
-traverse' _ [] = pure []
-traverse' f (x:xs) = (:) <$> f x <*> traverse' f xs
-
-ap :: Maybe (a -> b) -> Maybe a -> Maybe b
-ap iof ioa = do
-  f <- iof
-  a <- ioa
-  return $ f a
-
-x :: IO [()]
-x = mapM (\_ -> print "cake") [1..]
-mapMExample = do
-  list <- x
-  print $ list !! 0
-
-y :: IO [()]
-y = sequence $ map (\_ -> print "cake") [1..]
-sequenceExample = do
-  list <- y
-  print $ list !! 0
-
-z :: [IO ()]
-z = map (const $ print "cake") [1..]
-mapExample = z !! 0
+-- all instructions
+-- pretty printing
+-- error messages
