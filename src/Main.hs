@@ -57,7 +57,8 @@ main = do
                     in do
                       traces <- runJVM classPath arg1 mainArgs
                       print traces
-           "stats" -> do
-             opCodeUsage <- stats arg1
-             putStrLn opCodeUsage
+           "stats" -> let outputFile = if (length restArgs > 0)
+                                       then Just $ restArgs !! 0
+                                       else Nothing
+                      in stats arg1 outputFile
            _ -> (putStrLn $ arg0 ++ "is an unknown command") >> printHelp

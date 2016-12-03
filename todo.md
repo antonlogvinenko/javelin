@@ -19,17 +19,17 @@ use vector for bytecodes
 
 1. Bytecode printing:
  - finish stats
-   - all instructions
-   - pretty printing
+   - all instructions 
+   - bug
+   - pretty printing to file *.textile - argument
+   - pretty printing to console
    - error messages
-   - eithert?
  - Write test on many files
  - Cleanup:
    - pretty print ref to constant pool
    - inside reference following formatting
    - common formatting
    - move printing to another file?
- - Fix all bugs
 
 2. Write loading part
  - print all runtime structures

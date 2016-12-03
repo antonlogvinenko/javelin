@@ -14,20 +14,35 @@ import Data.Word (Word8)
 import Data.Binary.Get
 import Javelin.ByteCode.Data
 import Data.Foldable
+import Data.List (sortOn)
+import Data.Ord (Down(..))
+import Text.Printf
+import System.IO (writeFile, appendFile)
 
 import qualified Data.ByteString.Lazy as LBS (ByteString)
 import qualified Data.ByteString as BS (unpack, readFile)
 
 
-stats :: FilePath -> IO String
-stats path = do
+stats :: FilePath -> Maybe FilePath -> IO ()
+stats path output = do
   files <- getDirectoryContents path
-  let filePaths = map (path ++) .filter (`notElem` [".", ".."]) $ files
+  let filePaths = map ((path ++ "/") ++) .filter (`notElem` [".", ".."]) $ files
   freqs <- runExceptT $ calcFreqs mempty filePaths
-  return $ prettyPrint freqs
+  maybe mempty (textile freqs) output
+  printConsole freqs
 
-prettyPrint :: Either String (Map.Map String Integer) -> String
-prettyPrint = show -- todo: format
+printConsole :: Either String (Map.Map String Integer)-> IO ()
+printConsole x = print x
+
+textile :: Either String (Map.Map String Integer) -> FilePath -> IO ()
+textile (Left msg) path = print msg
+textile (Right freqs) path = do
+  writeFile path "| OpCpde | Frequency |\n"
+  let list = sortOn (Down . snd) $ Map.foldrWithKey (\k v list -> (k, v) : list) [] freqs
+      amount = fromIntegral $ foldl (\c (k, v) -> c + v) 0 list
+      normalizedList = map (\(k, v) -> (k, normalizer v)) list
+      normalizer x = (fromIntegral $ 100 * x) / amount :: Double
+  appendFile path $ concatMap (\(k, v) -> printf "| %s | %.2f |\n" k v) normalizedList
 
 calcFreqs :: Map.Map String Integer -> [FilePath] -> ExceptT String IO (Map.Map String Integer)
 calcFreqs accum [] = return $ accum
