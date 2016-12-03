@@ -3,25 +3,22 @@
 module Javelin.ByteCode.Stats
 where
 
-import Javelin.ByteCode.ClassFile (parse)
-import qualified Data.Map.Strict as Map
-import Control.Monad
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Class
-import Control.Monad.IO.Class
-import System.Directory
-import Data.Word (Word8)
-import Data.Binary.Get
-import Javelin.ByteCode.Data
-import Data.Foldable
 import Data.List (sortOn)
 import Data.Ord (Down(..))
-import Text.Printf
+import qualified Data.Map.Strict as Map (Map(..), foldrWithKey, alter)
+import Control.Monad (guard)
+import Control.Monad.Trans.Except (ExceptT(..), runExceptT)
+import Control.Monad.IO.Class (liftIO)
+import System.Directory (getDirectoryContents)
 import System.IO (writeFile, appendFile)
-
+import Data.Word (Word8)
+import Data.Binary.Get (ByteOffset)
+import Text.Printf (printf)
 import qualified Data.ByteString.Lazy as LBS (ByteString)
 import qualified Data.ByteString as BS (unpack, readFile)
 
+import Javelin.ByteCode.Data
+import Javelin.ByteCode.ClassFile (parse)
 
 stats :: FilePath -> Maybe FilePath -> IO ()
 stats path output = do

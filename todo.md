@@ -18,11 +18,11 @@
 use vector for bytecodes
 
 1. Bytecode printing:
- - finish stats
+ - finish stats 
+   - document pretty printing
    - all instructions 
    - bug
-   - pretty printing to file *.textile - argument
-   - pretty printing to console
+   - end newline?
    - error messages
  - Write test on many files
  - Cleanup:
