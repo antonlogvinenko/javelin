@@ -22,7 +22,10 @@ stats path = do
   files <- getDirectoryContents path
   let filePaths = map (path ++) .filter (`notElem` [".", ".."]) $ files
   freqs <- calcFreqs mempty filePaths
-  return $ show freqs
+  return $ prettyPrint freqs
+
+prettyPrint :: Either String (Map.Map String Integer) -> String
+prettyPrint = show -- todo: format
 
 calcFreqs :: Map.Map String Integer -> [FilePath] -> IO (Either String (Map.Map String Integer))
 calcFreqs accum [] = return $ Right accum
