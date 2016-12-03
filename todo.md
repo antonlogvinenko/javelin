@@ -17,7 +17,6 @@
  * user derined class loaders (only boostrap)
 
 1. Bytecode printing:
- - Write application: parser analyzer, cmd stats
  - Write test on many files
  - Cleanup:
    - use vector

@@ -11,7 +11,6 @@ import Data.Word (Word8)
 import Data.Binary.Get
 import Javelin.ByteCode.Data
 import Data.Foldable
-import Debug.Trace
 
 import qualified Data.ByteString.Lazy as LBS (ByteString)
 import qualified Data.ByteString as BS (unpack, readFile)
@@ -47,28 +46,26 @@ addFreq freq bc = let opCodes = do
 composeFreqs :: Map.Map OpCode Integer -> [OpCode] -> Map.Map OpCode Integer
 composeFreqs x [] = x
 composeFreqs x (c:cs) = composeFreqs (Map.alter statsAlter c x) cs
-  where statsAlter = trace "cake" $ Just . maybe 1 (1 + )
+  where statsAlter = Just . maybe 1 (1 + )
 
 isCodeAttr :: AttrInfo -> Bool
 isCodeAttr (CodeAttr _ _ _ _ _) = True
 isCodeAttr _ = False
 
 readFileContents :: FilePath -> IO [Word8]
-readFileContents path = print "reading" >> BS.unpack <$> BS.readFile path
+readFileContents path = BS.unpack <$> BS.readFile path
 
 parseFileContents :: FilePath -> IO (Either String ByteCode)
 parseFileContents path = do
   contents <- readFileContents path
-  print "parsing"
   let parsed = parse contents
-  print "parsed"
   return $ either formatParseError validateParseResult parsed
 
 formatParseError :: (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
 formatParseError (_, _, msg) = Left msg
 
 validateParseResult :: (LBS.ByteString, ByteOffset, ByteCode) -> Either String ByteCode
-validateParseResult (_, _, bc) = trace "validate" $ Right bc
+validateParseResult (_, _, bc) = Right bc
 
 type OpCode = String
 
