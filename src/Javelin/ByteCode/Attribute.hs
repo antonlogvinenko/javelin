@@ -82,8 +82,8 @@ parseInstructions = do
 
 findInstructionParser :: Word8 -> Get Instruction
 findInstructionParser idx = case Map.lookup idx instructionParsers of
-  Just p -> p
-  Nothing -> undefined -- todo
+   Just p -> p
+   Nothing -> undefined -- todo
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
 instructionParsers = Map.fromList [
@@ -191,6 +191,7 @@ instructionParsers = Map.fromList [
       read <- bytesRead
       let off = rem read 4
       let pad = if off /= 0 then 4 - off else 0
+      times getWord8 (fromIntegral pad)
       defaultDWord <- getWord32
       npairs <- getWord32
       pairs <- times ((,) <$> getWord32 <*> getWord32) (fromIntegral npairs)

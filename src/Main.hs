@@ -29,15 +29,13 @@ runClasses path = do
   mapM_ print io
   putStrLn $ ("All files passed: " ++) . show $ result
 
-runClass path = do
+disasmClass path = do
   bytestring <- BS.readFile path
   let words = BS.unpack bytestring
   case parse words of
     Right (_, _, v) -> print v
     Left (_, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
-                                           -- show (take ((fromIntegral off) + 5) words),
                                             "\n",
-                                           -- show (words !! ((fromIntegral off) - 1)),
                                             "\n"]
 
 runFunction arg = print $ parseClassSignature arg
@@ -51,7 +49,7 @@ main = do
     else let (arg0:arg1:restArgs) = args
          in case arg0 of
            "f" -> runFunction arg1
-           "disasm" -> runClass arg1
+           "disasm" -> disasmClass arg1
            "cs" -> runClasses arg1
            "jvm" -> let (classPath:mainArgs) = restArgs
                     in do
