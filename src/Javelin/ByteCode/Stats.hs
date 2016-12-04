@@ -32,7 +32,7 @@ stats path output = do
           amount = fromIntegral $ foldl (\c (k, v) -> c + v) 0 list 
           normalize x = ((fromIntegral $ 100 * x) / amount) :: Double
           normalized = map (\(k, v) -> (k, normalize v)) list
-          formatted = map (\(k, v) -> (k, printf "%.4f" v)) normalized
+          formatted = map (\(k, v) -> (k, printf "%.4f%%" v)) normalized
       in do
         maybe mempty (textile formatted) output
         printConsole formatted
