@@ -24,7 +24,6 @@ import Javelin.ByteCode.ClassFile (parse)
 
 listDir :: FilePath -> ListT IO FilePath
 listDir path = do
-    guard (notElem path [".", ".."])
     isDirectory <- lift $ doesDirectoryExist path
     if not isDirectory
       then ListT $ return [path]
