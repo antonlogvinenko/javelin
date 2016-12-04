@@ -24,15 +24,13 @@ import Javelin.ByteCode.ClassFile (parse)
 
 listDir :: FilePath -> ListT IO FilePath
 listDir path = do
-    lift $ print path
-    guard ( notElem path [".", ".."])
+    guard (notElem path [".", ".."])
     isDirectory <- lift $ doesDirectoryExist path
     if not isDirectory
       then ListT $ return [path]
       else do
         contents <- lift $ getDirectoryContents path
         let files = map ((path ++ "/") ++) . filter (`notElem` [".", ".."]) $ contents
-        lift $ print files
         (ListT $ return files) >>= listDir
 
 stats :: FilePath -> Maybe FilePath -> IO ()
@@ -52,7 +50,7 @@ stats path output = do
         printConsole formatted
 
 printConsole :: [(OpCode, String)] -> IO ()
-printConsole freqs = putStrLn $ concatMap (\(k, v) -> printf "%s: %s%%\n" k v) freqs
+printConsole freqs = putStrLn $ concatMap (\(k, v) -> printf "%s: %s\n" k v) freqs
 
 textile :: [(OpCode, String)] -> FilePath -> IO ()
 textile freqs path = do
