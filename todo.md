@@ -18,7 +18,8 @@
 use vector for bytecodes
 
 1. Bytecode printing:
- - Write test on many files
+ - Write test for parsing many files & succeeding
+ - Write test for collecting stats
  - finish stats 
    - end newline?
    - error messages

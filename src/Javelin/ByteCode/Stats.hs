@@ -46,7 +46,7 @@ textile freqs path = do
   appendFile path $ concatMap (\(k, v) -> printf "| %s | %s |\n" k v) freqs
 
 calcFreqs :: Map.Map String Integer -> [FilePath] -> ExceptT String IO (Map.Map String Integer)
-calcFreqs accum [] = return $ accumc
+calcFreqs accum [] = return $ accum
 calcFreqs !accum (f:fs) = do
   liftIO $ print f
   bytecode <- parseFileContents f
