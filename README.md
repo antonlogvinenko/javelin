@@ -9,5 +9,5 @@ Usage:
 
 * Bytecode statistics
 
-        stack exec javelin stats acceptance/
+        stack exec javelin stats acceptance/ [output.textile]
 
