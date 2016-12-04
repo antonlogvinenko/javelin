@@ -19,7 +19,6 @@ use vector for bytecodes
 
 1. Bytecode printing:
  - finish stats 
-   - all instructions 
    - bug
    - end newline?
    - error messages

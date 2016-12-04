@@ -76,13 +76,13 @@ parseFileContents :: FilePath -> ExceptT String IO ByteCode
 parseFileContents path = do
   contents <- readFileContents path
   let parsed = parse contents
-  ExceptT $ return $ either formatParseError validateParseResult parsed
+  ExceptT $ return $ either (formatParseError path) (validateParseResult path) parsed
 
-formatParseError :: (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
-formatParseError (_, _, msg) = Left msg
+formatParseError :: FilePath -> (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
+formatParseError path (_, _, msg) = Left $ printf "File %s:%s" path msg
 
-validateParseResult :: (LBS.ByteString, ByteOffset, ByteCode) -> Either String ByteCode
-validateParseResult (_, _, bc) = Right bc
+validateParseResult :: FilePath -> (LBS.ByteString, ByteOffset, ByteCode) -> Either String ByteCode
+validateParseResult path (_, _, bc) = Right bc
 
 type OpCode = String
 
