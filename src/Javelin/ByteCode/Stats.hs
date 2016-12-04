@@ -8,8 +8,10 @@ import Data.Ord (Down(..))
 import qualified Data.Map.Strict as Map (Map(..), foldrWithKey, alter)
 import Control.Monad (guard)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT)
+import Control.Monad.Trans.List (ListT(..))
 import Control.Monad.IO.Class (liftIO)
-import System.Directory (getDirectoryContents)
+import Control.Monad.Trans (lift)
+import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.IO (writeFile, appendFile)
 import Data.Word (Word8)
 import Data.Binary.Get (ByteOffset)
@@ -20,10 +22,22 @@ import qualified Data.ByteString as BS (unpack, readFile)
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.ClassFile (parse)
 
+listDir :: FilePath -> ListT IO FilePath
+listDir path = do
+    lift $ print path
+    guard ( notElem path [".", ".."])
+    isDirectory <- lift $ doesDirectoryExist path
+    if not isDirectory
+      then ListT $ return [path]
+      else do
+        contents <- lift $ getDirectoryContents path
+        let files = map ((path ++ "/") ++) . filter (`notElem` [".", ".."]) $ contents
+        lift $ print files
+        (ListT $ return files) >>= listDir
+
 stats :: FilePath -> Maybe FilePath -> IO ()
 stats path output = do
-  files <- getDirectoryContents path
-  let filePaths = map ((path ++ "/") ++) . filter (`notElem` [".", ".."]) $ files
+  filePaths <- runListT $ listDir path
   result <- runExceptT $ calcFreqs mempty filePaths
   case result of
     Left msg -> putStrLn msg

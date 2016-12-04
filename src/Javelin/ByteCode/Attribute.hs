@@ -221,7 +221,7 @@ instructionParsers = Map.fromList [
   (0xc4, do
       cmd <- getWord8
       case cmd of
-        84 -> WideIInc <$> getCPIndex <*> getWord16
+        0x84 -> WideIInc <$> getCPIndex <*> getWord16
         0x15 -> WideILoad <$> getCPIndex
         0x16 -> WideLLoad <$> getCPIndex
         0x17 -> WideFLoad <$> getCPIndex
@@ -231,7 +231,8 @@ instructionParsers = Map.fromList [
         0x37 -> WideLStore <$> getCPIndex
         0x38 -> WideFStore <$> getCPIndex
         0x39 -> WideDStore <$> getCPIndex
-        0x3a -> WideAStore <$> getCPIndex),
+        0x3a -> WideAStore <$> getCPIndex
+        0xa9 -> WideRet <$> getCPIndex),
   (0xc5, MultiANewArray <$> getCPIndex <*> getWord8),
   (0xc6, IfNull <$> getCPIndex),
   (0xc7, IfNotNull <$> getCPIndex),
