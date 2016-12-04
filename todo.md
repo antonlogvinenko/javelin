@@ -19,7 +19,6 @@ use vector for bytecodes
 
 1. Bytecode printing:
  - finish stats 
-   - document pretty printing
    - all instructions 
    - bug
    - end newline?
@@ -33,12 +32,11 @@ use vector for bytecodes
 
 2. Write loading part
  - print all runtime structures
-
-3. Simple executions of commands
+ - mimimal loading/resolving
+ - minimal execution
 
 
 1. Loading
- - printing classes
  - printing current runtime (with derived constant pool)
  - fix runtime structures
  - loading array class

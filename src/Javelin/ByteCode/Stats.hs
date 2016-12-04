@@ -247,5 +247,18 @@ oc (IfICmpLe _) = "if_icmple"
 oc (IfACmpEq _) = "if_acmpeq"
 oc (IfACmpNe _) = "if_acmpne"
 
+-- Control
+oc (Goto _) = "goto"
+oc (Jsr _) = "jsr"
+oc (Ret _) = "ret"
+oc (TableSwitch _ _ _ _) = "tableswitch"
+oc (LookupSwitch _ _) = "lookupswitch"
+oc IReturn = "ireturn"
+oc LReturn = "lreturn"
+oc FReturn = "freturn"
+oc DReturn = "dreturn"
+oc AReturn = "areturn"
+oc Return = "return"
+
 
 oc _ = "unknown"
