@@ -18,11 +18,10 @@
 use vector for bytecodes
 
 1. Bytecode printing:
+ - Write test on many files
  - finish stats 
-   - bug
    - end newline?
    - error messages
- - Write test on many files
  - Cleanup:
    - pretty print ref to constant pool
    - inside reference following formatting

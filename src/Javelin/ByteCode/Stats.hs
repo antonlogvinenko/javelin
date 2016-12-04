@@ -23,7 +23,7 @@ import Javelin.ByteCode.ClassFile (parse)
 stats :: FilePath -> Maybe FilePath -> IO ()
 stats path output = do
   files <- getDirectoryContents path
-  let filePaths = map ((path ++ "/") ++) .filter (`notElem` [".", ".."]) $ files
+  let filePaths = map ((path ++ "/") ++) . filter (`notElem` [".", ".."]) $ files
   result <- runExceptT $ calcFreqs mempty filePaths
   case result of
     Left msg -> putStrLn msg
@@ -46,7 +46,7 @@ textile freqs path = do
   appendFile path $ concatMap (\(k, v) -> printf "| %s | %s |\n" k v) freqs
 
 calcFreqs :: Map.Map String Integer -> [FilePath] -> ExceptT String IO (Map.Map String Integer)
-calcFreqs accum [] = return $ accum
+calcFreqs accum [] = return $ accumc
 calcFreqs !accum (f:fs) = do
   liftIO $ print f
   bytecode <- parseFileContents f
