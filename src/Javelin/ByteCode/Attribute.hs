@@ -246,10 +246,10 @@ instructionParsers = Map.fromList [
 
 
 getCPIndex :: Get CPIndex
-getCPIndex = getWord16
+getCPIndex = CPIndex <$> getWord16
 
 getCPIndex8 :: Get CPIndex
-getCPIndex8 = fromIntegral <$> getWord8
+getCPIndex8 = (CPIndex . fromIntegral) <$> getWord8
 
 getLocal :: Get Local
 getLocal = getWord8

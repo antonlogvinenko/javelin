@@ -9,6 +9,16 @@ import Data.List (intercalate)
 import Text.Printf
 import Javelin.ByteCode.Utils
 
+
+data Pilcrow = P { heading :: String, text :: [Pilcrow] }
+
+alignLines :: Pilcrow -> [String]
+alignLines P { heading = h, text = t } = [h ++ "\n"] ++
+                                         (map ("\t" ++) (t >>= alignLines))
+
+display :: Pilcrow -> String
+display = concat . alignLines
+
 -- Outputtab :: Int -> String -> String
 space n str = (take n $ repeat ' ') ++ str
 tab n str = (take n $ repeat '\t') ++ str
@@ -18,20 +28,22 @@ out = intercalate "\n"
 
 -- ByteCode
 instance Show ByteCode where
-  show (ByteCode min maj body) = out [space 2 $ "minor version: " ++ show min,
-                                      space 2 $ "major version: " ++ show maj,
-                                      show body]
+  show (ByteCode min maj body) = display $
+                                 P "Bytecode" [P ("minor version: " ++ show min) [],
+                                               P ("major version: " ++ show maj) [],
+                                               P ("flags: " ++ intercalate ", " (map show (classAccessFlags body))) [],
+                                               P (show (constPool body)) [],
+                                               displayBody body]
 
--- ClassBody
-instance Show ClassBody where
-  show body@(ClassBody {constPool = (ConstantPool p)}) = out $ [space 2 $ "flags: " ++ intercalate ", " (map show (classAccessFlags body)),
-                     show (constPool body),
-                     printf "This: %s" (showConstant p (at p (this body))),
-                     printf "Superclass: %s" (showConstant p (at p (super body))),
-                     printf "Interfaces:\n%s" $ out $ map (showConstant p . (at p)) (interfaces body),
-                     printf "Fields:\n%s" $ out $ map (printField p) (fields body),
-                     printf "Methods:\n%s" $ out $ map (printMethod p) (methods body),
-                     printf "Class attributes:\n%s" $ out $ map show (attrs body)]
+displayBody :: ClassBody -> Pilcrow
+displayBody body@(ClassBody {constPool = (ConstantPool p)}) =
+  P "ClassBody" [P (printf "This: %s" (showConstant p (at p (this body)))) [],
+                 P (printf "Superclass: %s" (showConstant p (at p (super body)))) [],
+                 P (printf "Interfaces:\n%s" $ out $ map (showConstant p . (at p)) (interfaces body)) [],
+                 P (printf "Fields:\n%s" $ out $ map (printField p) (fields body)) [],
+                 P (printf "Methods:\n%s" $ out $ map (printMethod p) (methods body)) [],
+                 P (printf "Class attributes:\n%s" $ out $ map show (attrs body)) []]
+                 
 
 printMethod :: [Constant] -> MethodInfo -> String
 printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
@@ -45,17 +57,22 @@ printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
   (out $ map (printAttribute p) attributes)
 
 printAttribute :: [Constant] ->  AttrInfo -> String
-printAttribute p ca@(CodeAttr {}) = out [tab 2 $ printf "Max stack: %d" (maxStack ca),
-                                         tab 2 $ printf "Max locals: %d" (maxLocals ca),
-                                         tab 2 $ printf "Code: \n%s" $ out $ map (tab 3 . printCode p) (code ca)]
+printAttribute p ca@(CodeAttr {}) = out $ [tab 2 $ printf "Max stack: %d" (maxStack ca),
+                                           tab 2 $ printf "Max locals: %d" (maxLocals ca),
+                                           tab 2 $ printf "Code:"] ++
+                                    (map (tab 3 . printCode p) (code ca))
 printAttribute p ca = show ca
+
+
+
 
 printCode :: [Constant] -> Instruction -> String
 printCode p c = case cpIndex c of
   Nothing -> show c
-  Just idx -> printf "%s %s" (show c) (showConst 3 p (at p idx))
+  Just idx -> out $ [show c,
+                     tab 4 (showConst 3 p (at p idx))]
 br :: CPIndex -> Maybe Word16
-br idx = Just idx
+br (CPIndex idx) = Just idx
 
 cpIndex :: Instruction -> Maybe Word16
 cpIndex (Ldc x) = br x
@@ -201,7 +218,8 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           | MethodAbstract | MethodStrict | MethodSynthetic
                           deriving (Show, Eq)
 
-type CPIndex = Word16
+newtype CPIndex = CPIndex Word16
+                deriving (Eq, Show)
 type Local = Word8
 type BranchOffset = Word16
   
