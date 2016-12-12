@@ -83,7 +83,7 @@ parseInstructions = do
 findInstructionParser :: Word8 -> Get Instruction
 findInstructionParser idx = case Map.lookup idx instructionParsers of
    Just p -> p
-   Nothing -> undefined -- todo
+   Nothing -> fail $ "No instruction parser for opcode " ++ show idx
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
 instructionParsers = Map.fromList [

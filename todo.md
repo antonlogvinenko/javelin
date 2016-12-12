@@ -18,22 +18,23 @@
 use vector for bytecodes
 
 1. Bytecode printing:
- - Write test for parsing many files & succeeding
- - Write test for collecting stats
- - finish stats 
-   - end newline?
-   - error messages
  - Cleanup:
    - pretty print ref to constant pool
    - inside reference following formatting
    - common formatting
-   - move printing to another file?
+   - move all
+
+- Write test for parsing many files & succeeding
+ - Write test for collecting stats - we're not failing
+ - finish stats 
+   - end newline?
+   - error messages - move to common bytecode parsing?
 
 2. Write loading part
  - print all runtime structures
  - mimimal loading/resolving
  - minimal execution
-
+ - fail messages in parser
 
 1. Loading
  - printing current runtime (with derived constant pool)

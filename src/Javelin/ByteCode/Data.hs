@@ -28,33 +28,37 @@ out = intercalate "\n"
 
 -- ByteCode
 instance Show ByteCode where
-  show (ByteCode min maj body) = display $
+  show (ByteCode min maj body@(ClassBody {constPool = (ConstantPool p)})) = display $
                                  P "Bytecode" [P ("minor version: " ++ show min) [],
                                                P ("major version: " ++ show maj) [],
                                                P ("flags: " ++ intercalate ", " (map show (classAccessFlags body))) [],
+                                               P (printf "This: %s" (showConstant p (at p (this body)))) [],
+                                               P (printf "Superclass: %s" (showConstant p (at p (super body)))) [],
+                                               P (printf "Interfaces:\n%s" $ out $ map (showConstant p . (at p)) (interfaces body)) [],
                                                P (show (constPool body)) [],
-                                               displayBody body]
+                                               P ("Fields") (map (printField p) (fields body)),
+                                               P ("Methods:") (map (printMethod p) (methods body)),
+                                               P (printf "Class attributes:\n%s" $ out $ map show (attrs body)) []]
 
-displayBody :: ClassBody -> Pilcrow
-displayBody body@(ClassBody {constPool = (ConstantPool p)}) =
-  P "ClassBody" [P (printf "This: %s" (showConstant p (at p (this body)))) [],
-                 P (printf "Superclass: %s" (showConstant p (at p (super body)))) [],
-                 P (printf "Interfaces:\n%s" $ out $ map (showConstant p . (at p)) (interfaces body)) [],
-                 P (printf "Fields:\n%s" $ out $ map (printField p) (fields body)) [],
-                 P (printf "Methods:\n%s" $ out $ map (printMethod p) (methods body)) [],
-                 P (printf "Class attributes:\n%s" $ out $ map show (attrs body)) []]
-                 
+printField :: [Constant] -> FieldInfo -> Pilcrow
+printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
+                           fieldNameIndex = name,
+                           fieldDescriptorIndex = descriptor,
+                           fieldAttrs = attributes}) =
+  P "FieldInfo" [P (printf "Name\t\t #%d %s" name (showConstant p (at p name))) [],
+                 P (printf "Descriptor\t #%d %s"  descriptor (showConstant p (at p descriptor))) [],
+                 P (printf "AccessFlags\t %s"  (show accessFlags)) [],
+                 P (printf "Attributes\t %s" (show attributes)) []]  
 
-printMethod :: [Constant] -> MethodInfo -> String
+printMethod :: [Constant] -> MethodInfo -> Pilcrow
 printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
                              methodNameIndex = name,
                              methodInfoDescriptorIndex = descriptor,
                              methodAttrs = attributes}) =
-  printf "MethodInfo \n\tName: #%d %s,\n\tDescriptor: #%d %s,\n\tAccessFlags = %s,\n\tAttributes:\n %s\n"
-  name (showConstant p (at p name))
-  descriptor (showConstant p (at p descriptor))
-  (show accessFlags)
-  (out $ map (printAttribute p) attributes)
+  P "MethodInfo" [P (printf "Name: #%d %s" name (showConstant p (at p name))) [],
+                  P (printf "Descriptor: #%d %s" descriptor (showConstant p (at p descriptor))) [],
+                  P (printf "AccessFlags = %s" (show accessFlags)) [],
+                  P (printf "Attributes: %s" (out $ map (printAttribute p) attributes)) []]
 
 printAttribute :: [Constant] ->  AttrInfo -> String
 printAttribute p ca@(CodeAttr {}) = out $ [tab 2 $ printf "Max stack: %d" (maxStack ca),
@@ -108,16 +112,6 @@ cpIndex (IfNull x) = br x
 cpIndex (IfNotNull x) = br x
 cpIndex _ = Nothing
 
-printField :: [Constant] -> FieldInfo -> String
-printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
-                           fieldNameIndex = name,
-                           fieldDescriptorIndex = descriptor,
-                           fieldAttrs = attributes}) =
-  printf "FieldInfo { name = #%d %s,\n\tdescriptor = #%d %s,\n\taccessFlags = %s,\n\tattributes = %s }"
-  name (showConstant p (at p name))
-  descriptor (showConstant p (at p descriptor))
-  (show accessFlags)
-  (show attributes)
 
 
 -- Constant pool
