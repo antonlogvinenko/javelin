@@ -117,18 +117,18 @@ showConstant _ (DoubleInfo d) = L ("Double " ++ (show d))
 showConstant p (StringInfo s) = P ("String " ++ (show s)) [showConst p s]
 showConstant p (ClassInfo i) = P ("Class " ++ (show i)) [showConst p i]
 showConstant p (NameAndTypeInfo n t) = P "NameAndType" [P ("name: " ++ (show n)) [showConst p n],
-                                                     P ("descriptor: " ++ (show t)) [showConst p t]]
+                                                        P ("descriptor: " ++ (show t)) [showConst p t]]
 showConstant p (Fieldref c nt) = P "Fieldref" [P (printf "class = #%d" c) [showConst p c],
-                                            P (printf "name_and_type = #%d" nt) [showConst p nt]]
+                                               P (printf "name_and_type = #%d" nt) [showConst p nt]]
 showConstant p (Methodref c nt) = P "Methodref" [P (printf "class = #%d" c) [showConst p c],
-                                              P (printf "name_and_type = #%d" nt) [showConst p nt]]
+                                                 P (printf "name_and_type = #%d" nt) [showConst p nt]]
 showConstant p (InterfaceMethodref c nt) = P "InterfaceMethodref" [P (printf "class = #%d" c) [showConst p c],
-                                                                P (printf "name_and_type = #%d" nt) [showConst p nt]]
+                                                                   P (printf "name_and_type = #%d" nt) [showConst p nt]]
 showConstant p (MethodHandleInfo rk ri) = P "MethodHandleInfo" [L (printf "reference_kind = #%d" rk),
-                                                             P (printf "reference = #%d" ri) [showConst p ri]]
+                                                                P (printf "reference = #%d" ri) [showConst p ri]]
 showConstant p (MethodTypeInfo i) = P "MethodTypeInfo" [P (printf "descriptor = #%d " i) [showConst p i]]
 showConstant p (InvokeDynamicInfo bi ti) = P "InvokeDynamicInfo" [P (printf "bootstrap_method_attr = #%d" bi) [showConst p bi],
-                                                               P (printf "name_and_type = #%d" ti) [showConst p ti]]
+                                                                  P (printf "name_and_type = #%d" ti) [showConst p ti]]
 -- Definitions
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
