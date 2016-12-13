@@ -30,14 +30,14 @@ showByteCode opt (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool
   concat . alignLines opt $
   P "Bytecode" [L ("Minor version: " ++ show min),
                 L ("Major version: " ++ show maj),
-                L ("flags: " ++ intercalate ", " (map show (classAccessFlags body))),
+                L ("Flags: " ++ intercalate ", " (map show (classAccessFlags body))),
                 P "This" [showConst p (this body)],
-                P "Superclass:" [showConst p (super body)],
-                P "Interfaces:" $ map (showConst p) (interfaces body),
-                P "Constant pool: " [showPool cp],
+                P "Superclass" [showConst p (super body)],
+                P "Interfaces" $ map (showConst p) (interfaces body),
+                P "Constant pool " [showPool cp],
                 P "Fields" (map (printField p) (fields body)),
-                P "Methods:" (map (printMethod p) (methods body)),
-                P "Class attributes:" $ map (printAttribute p) (attrs body)]
+                P "Methods" (map (printMethod p) (methods body)),
+                P "Class attributes" $ map (printAttribute p) (attrs body)]
 
 -- ByteCode
 instance Show ByteCode where
@@ -48,7 +48,7 @@ printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
                            fieldNameIndex = name,
                            fieldDescriptorIndex = descriptor,
                            fieldAttrs = attributes}) =
-  P "FieldInfo" [POpt (printf "Name %d" name) [showConst p name],
+  P "FieldInfo" [POpt (printf "Name #%d" name) [showConst p name],
                  POpt (printf "Descriptor #%d"  descriptor) [showConst p descriptor],
                  L (printf "AccessFlags %s" (show accessFlags)),
                  P "Attributes" (map (printAttribute p) attributes)]
@@ -58,15 +58,15 @@ printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
                              methodNameIndex = name,
                              methodInfoDescriptorIndex = descriptor,
                              methodAttrs = attributes}) =
-  P "MethodInfo" [POpt (printf "Name: #%d" name) [showConst p name],
-                  POpt (printf "Descriptor: #%d" descriptor) [showConst p descriptor],
-                  L (printf "AccessFlags = %s" (show accessFlags)),
-                  P (printf "Attributes:") (map (printAttribute p) attributes)]
+  P "MethodInfo" [POpt (printf "Name #%d" name) [showConst p name],
+                  POpt (printf "Descriptor #%d" descriptor) [showConst p descriptor],
+                  L (printf "AccessFlags %s" (show accessFlags)),
+                  P (printf "Attributes") (map (printAttribute p) attributes)]
 
 printAttribute :: [Constant] ->  AttrInfo -> Paragraph
 printAttribute p ca@(CodeAttr {}) = P "Code attribute" [L (printf "Max stack: %d" (maxStack ca)),
                                                         L (printf "Max locals: %d" (maxLocals ca)),
-                                                        P ("Code:") (map (printCode p) (code ca))]
+                                                        P ("Code") (map (printCode p) (code ca))]
 printAttribute p ca = L (show ca)
 
 printCode :: [Constant] -> Instruction -> Paragraph
@@ -127,19 +127,19 @@ showConstant _ (LongInfo l) = L ("Long " ++ (show l))
 showConstant _ (DoubleInfo d) = L ("Double " ++ (show d))
 showConstant p (StringInfo s) = POpt ("String " ++ (show s)) [showConst p s]
 showConstant p (ClassInfo i) = POpt ("Class " ++ (show i)) [showConst p i]
-showConstant p (NameAndTypeInfo n t) = POpt "NameAndType" [P ("name: " ++ (show n)) [showConst p n],
-                                                           P ("descriptor: " ++ (show t)) [showConst p t]]
-showConstant p (Fieldref c nt) = POpt "Fieldref" [P (printf "class = #%d" c) [showConst p c],
-                                               P (printf "name_and_type = #%d" nt) [showConst p nt]]
-showConstant p (Methodref c nt) = POpt "Methodref" [P (printf "class = #%d" c) [showConst p c],
-                                                    P (printf "name_and_type = #%d" nt) [showConst p nt]]
-showConstant p (InterfaceMethodref c nt) = POpt "InterfaceMethodref" [P (printf "class = #%d" c) [showConst p c],
-                                                                      P (printf "name_and_type = #%d" nt) [showConst p nt]]
-showConstant p (MethodHandleInfo rk ri) = POpt "MethodHandleInfo" [L (printf "reference_kind = #%d" rk),
-                                                                   P (printf "reference = #%d" ri) [showConst p ri]]
-showConstant p (MethodTypeInfo i) = POpt "MethodTypeInfo" [P (printf "descriptor = #%d " i) [showConst p i]]
-showConstant p (InvokeDynamicInfo bi ti) = POpt "InvokeDynamicInfo" [P (printf "bootstrap_method_attr = #%d" bi) [showConst p bi],
-                                                                     P (printf "name_and_type = #%d" ti) [showConst p ti]]
+showConstant p (NameAndTypeInfo n t) = POpt "NameAndType" [P ("name " ++ (show n)) [showConst p n],
+                                                           P ("descriptor #" ++ (show t)) [showConst p t]]
+showConstant p (Fieldref c nt) = POpt "Fieldref" [P (printf "class #%d" c) [showConst p c],
+                                               P (printf "name_and_type #%d" nt) [showConst p nt]]
+showConstant p (Methodref c nt) = POpt "Methodref" [P (printf "class #%d" c) [showConst p c],
+                                                    P (printf "name_and_type #%d" nt) [showConst p nt]]
+showConstant p (InterfaceMethodref c nt) = POpt "InterfaceMethodref" [P (printf "class #%d" c) [showConst p c],
+                                                                      P (printf "name_and_type #%d" nt) [showConst p nt]]
+showConstant p (MethodHandleInfo rk ri) = POpt "MethodHandleInfo" [L (printf "reference_kind #%d" rk),
+                                                                   P (printf "reference #%d" ri) [showConst p ri]]
+showConstant p (MethodTypeInfo i) = POpt "MethodTypeInfo" [P (printf "descriptor #%d " i) [showConst p i]]
+showConstant p (InvokeDynamicInfo bi ti) = POpt "InvokeDynamicInfo" [P (printf "bootstrap_method_attr #%d" bi) [showConst p bi],
+                                                                     P (printf "name_and_type #%d" ti) [showConst p ti]]
 -- Definitions
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}

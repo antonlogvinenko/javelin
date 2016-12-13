@@ -5,7 +5,7 @@ import Javelin.Runtime.LLI.ClassPath
 import Javelin.Runtime.Structures
 import Javelin.ByteCode.Data
 import Javelin.Runtime.LLI.Resolving
-import Javelin.ByteCode.ClassFile (parse)
+import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
 import Data.Map as Map (insert, lookup)
@@ -97,7 +97,7 @@ checkInitiatingClassLoader initCL name rt = do
     else Right rt
 
 checkClassFileFormat :: ByteString -> Runtime -> Either VMError ByteCode
-checkClassFileFormat bs rt = let body = parse $ unpack bs in
+checkClassFileFormat bs rt = let body = parseRaw $ unpack bs in
   case body of
     Left (_, _, msg) -> linkageLeft ClassFormatError
     Right (_, _, byteCode) -> Right byteCode

@@ -81,20 +81,8 @@ isCodeAttr :: AttrInfo -> Bool
 isCodeAttr (CodeAttr _ _ _ _ _) = True
 isCodeAttr _ = False
 
-readFileContents :: FilePath -> ExceptT String IO [Word8]
-readFileContents path = liftIO $ BS.unpack <$> BS.readFile path
-
 parseFileContents :: FilePath -> ExceptT String IO ByteCode
-parseFileContents path = do
-  contents <- readFileContents path
-  let parsed = parse contents
-  ExceptT $ return $ either (formatParseError path) (validateParseResult path) parsed
-
-formatParseError :: FilePath -> (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
-formatParseError path (_, _, msg) = Left $ printf "File %s:%s" path msg
-
-validateParseResult :: FilePath -> (LBS.ByteString, ByteOffset, ByteCode) -> Either String ByteCode
-validateParseResult path (_, _, bc) = Right bc
+parseFileContents path = ExceptT $ parse <$> BS.unpack <$> BS.readFile path
 
 type OpCode = String
 

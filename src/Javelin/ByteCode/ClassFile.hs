@@ -1,10 +1,10 @@
-module Javelin.ByteCode.ClassFile (parse, magicNumber, version, classBody)
+module Javelin.ByteCode.ClassFile (parse, parseRaw, magicNumber, version, classBody)
 where
 
 import Data.Map (fromList, Map)
 import Control.Applicative
 import Data.Binary.Get
-import qualified Data.ByteString.Lazy as BS (pack, ByteString)
+import qualified Data.ByteString.Lazy as LBS (pack, null, ByteString)
 import Data.Word
 
 import Javelin.ByteCode.Data
@@ -56,6 +56,18 @@ parseByteCode = do
   body <- classBody
   return $ ByteCode minor major body
 
-parse :: [Word8] -> Either (BS.ByteString, ByteOffset, String) (BS.ByteString, ByteOffset, ByteCode)
-parse bytes = runGetOrFail parseByteCode $ BS.pack bytes
+parseRaw :: [Word8] -> Either (LBS.ByteString, ByteOffset, String) (LBS.ByteString, ByteOffset, ByteCode)
+parseRaw bytes = runGetOrFail parseByteCode $ LBS.pack bytes
 
+
+parse :: [Word8] -> Either String ByteCode
+parse = (either formatParseError validateParseResult) . parseRaw
+
+formatParseError :: (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
+formatParseError (_, _, msg) = Left msg
+
+validateParseResult :: (LBS.ByteString, ByteOffset, ByteCode) -> Either String ByteCode
+validateParseResult (bs, off, bc) =
+  if LBS.null bs
+  then Right bc
+  else Left $ "Bytes left after parsing. Offset: " ++ (show off)

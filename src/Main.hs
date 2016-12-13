@@ -2,7 +2,7 @@ module Main
 where
 
 import Javelin.ByteCode.DescSign
-import Javelin.ByteCode.ClassFile (parse)
+import Javelin.ByteCode.ClassFile (parseRaw)
 import qualified Data.ByteString as BS (readFile, unpack)
 import System.Directory
 import System.Environment
@@ -21,7 +21,7 @@ testClasses path = do
   let names = map (path ++) .
               filter (`notElem` [".", ".."]) $
               files
-  parsed <- mapM (liftM (validate . parse . BS.unpack) . BS.readFile) names
+  parsed <- mapM (liftM (validate . parseRaw. BS.unpack) . BS.readFile) names
   return (zipWith (curry show) names parsed, and parsed)
 
 runClasses :: FilePath -> IO ()
@@ -33,7 +33,7 @@ runClasses path = do
 disasmClass opt path = do
   bytestring <- BS.readFile path
   let words = BS.unpack bytestring
-  case parse words of
+  case parseRaw words of
     Right (_, _, v) -> putStrLn $ showByteCode opt v
     Left (_, off, v) -> putStrLn $ concat [v, show off, "/", show (length words)]
 
