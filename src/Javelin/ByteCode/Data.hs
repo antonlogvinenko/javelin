@@ -125,8 +125,8 @@ showConstant _ (IntegerInfo i) = L ("Int " ++ (show i))
 showConstant _ (FloatInfo f) = L ("Float " ++ (show f))
 showConstant _ (LongInfo l) = L ("Long " ++ (show l))
 showConstant _ (DoubleInfo d) = L ("Double " ++ (show d))
-showConstant p (StringInfo s) = POpt ("String " ++ (show s)) [showConst p s]
-showConstant p (ClassInfo i) = POpt ("Class " ++ (show i)) [showConst p i]
+showConstant p (StringInfo s) = POpt ("String #" ++ (show s)) [showConst p s]
+showConstant p (ClassInfo i) = POpt ("Class #" ++ (show i)) [showConst p i]
 showConstant p (NameAndTypeInfo n t) = POpt "NameAndType" [P ("name " ++ (show n)) [showConst p n],
                                                            P ("descriptor #" ++ (show t)) [showConst p t]]
 showConstant p (Fieldref c nt) = POpt "Fieldref" [P (printf "class #%d" c) [showConst p c],
