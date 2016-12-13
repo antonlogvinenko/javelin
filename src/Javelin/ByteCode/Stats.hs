@@ -82,7 +82,11 @@ isCodeAttr (CodeAttr _ _ _ _ _) = True
 isCodeAttr _ = False
 
 parseFileContents :: FilePath -> ExceptT String IO ByteCode
-parseFileContents path = ExceptT $ parse <$> BS.unpack <$> BS.readFile path
+parseFileContents path =
+  ExceptT $ (either (addPath path) Right) <$> parse <$> BS.unpack <$> BS.readFile path
+
+addPath :: String -> String -> Either String ByteCode
+addPath path msg = Left $ "Failed parsing file " ++ path ++ ". " ++ msg
 
 type OpCode = String
 
