@@ -7,7 +7,7 @@ Usage:
 
         stack exec javelin disasm acceptance/TreeMultimapNaturalTest.class
 
-* Disassembler with unfolded references to constant pool
+* Disassembler with traced references to constant pool
 
         stack exec javelin disasmFull acceptance/TreeMultimapNaturalTest.class
 
