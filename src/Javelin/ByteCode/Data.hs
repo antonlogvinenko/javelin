@@ -11,70 +11,60 @@ import Javelin.ByteCode.Utils
 
 
 data Pilcrow = P { heading :: String, text :: [Pilcrow] }
+               | L { heading :: String }
 
 alignLines :: Pilcrow -> [String]
+alignLines L { heading = h } = [h ++ "\n"]
 alignLines P { heading = h, text = t } = [h ++ "\n"] ++
                                          (map ("\t" ++) (t >>= alignLines))
 
 display :: Pilcrow -> String
 display = concat . alignLines
 
--- Outputtab :: Int -> String -> String
-space n str = (take n $ repeat ' ') ++ str
-tab n str = (take n $ repeat '\t') ++ str
-
-out :: [String] -> String
-out = intercalate "\n"  
-
 -- ByteCode
 instance Show ByteCode where
-  show (ByteCode min maj body@(ClassBody {constPool = (ConstantPool p)})) = display $
-                                 P "Bytecode" [P ("minor version: " ++ show min) [],
-                                               P ("major version: " ++ show maj) [],
-                                               P ("flags: " ++ intercalate ", " (map show (classAccessFlags body))) [],
-                                               P (printf "This: %s" (showConstant p (at p (this body)))) [],
-                                               P (printf "Superclass: %s" (showConstant p (at p (super body)))) [],
-                                               P (printf "Interfaces:\n%s" $ out $ map (showConstant p . (at p)) (interfaces body)) [],
-                                               P (show (constPool body)) [],
+  show (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool p)})) = display $
+                                 P "Bytecode" [L ("Minor version: " ++ show min),
+                                               L ("Major version: " ++ show maj),
+                                               L ("flags: " ++ intercalate ", " (map show (classAccessFlags body))),
+                                               P "This" [showConst p (at p (this body))],
+                                               P "Superclass:" [showConst p (at p (super body))],
+                                               P "Interfaces:" $ map (showConst p . (at p)) (interfaces body),
+                                               P "Constant pool: " [showPool cp],
                                                P ("Fields") (map (printField p) (fields body)),
                                                P ("Methods:") (map (printMethod p) (methods body)),
-                                               P (printf "Class attributes:\n%s" $ out $ map show (attrs body)) []]
+                                               P ("Class attributes:") $ map (printAttribute p) (attrs body)]
 
 printField :: [Constant] -> FieldInfo -> Pilcrow
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
                            fieldNameIndex = name,
                            fieldDescriptorIndex = descriptor,
                            fieldAttrs = attributes}) =
-  P "FieldInfo" [P (printf "Name\t\t #%d %s" name (showConstant p (at p name))) [],
-                 P (printf "Descriptor\t #%d %s"  descriptor (showConstant p (at p descriptor))) [],
-                 P (printf "AccessFlags\t %s"  (show accessFlags)) [],
-                 P (printf "Attributes\t %s" (show attributes)) []]  
+  P "FieldInfo" [P (printf "Name\t\t %d" name) [showConst p (at p name)],
+                 P (printf "Descriptor\t #%d"  descriptor) [showConst p (at p descriptor)],
+                 L (printf "AccessFlags\t %s" (show accessFlags)),
+                 P "Attributes" (map (printAttribute p) attributes)]
 
 printMethod :: [Constant] -> MethodInfo -> Pilcrow
 printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
                              methodNameIndex = name,
                              methodInfoDescriptorIndex = descriptor,
                              methodAttrs = attributes}) =
-  P "MethodInfo" [P (printf "Name: #%d %s" name (showConstant p (at p name))) [],
-                  P (printf "Descriptor: #%d %s" descriptor (showConstant p (at p descriptor))) [],
-                  P (printf "AccessFlags = %s" (show accessFlags)) [],
-                  P (printf "Attributes: %s" (out $ map (printAttribute p) attributes)) []]
+  P "MethodInfo" [P (printf "Name: #%d" name) [showConst p (at p name)],
+                  P (printf "Descriptor: #%d" descriptor) [showConst p (at p descriptor)],
+                  L (printf "AccessFlags = %s" (show accessFlags)),
+                  P (printf "Attributes:") (map (printAttribute p) attributes)]
 
-printAttribute :: [Constant] ->  AttrInfo -> String
-printAttribute p ca@(CodeAttr {}) = out $ [tab 2 $ printf "Max stack: %d" (maxStack ca),
-                                           tab 2 $ printf "Max locals: %d" (maxLocals ca),
-                                           tab 2 $ printf "Code:"] ++
-                                    (map (tab 3 . printCode p) (code ca))
-printAttribute p ca = show ca
+printAttribute :: [Constant] ->  AttrInfo -> Pilcrow
+printAttribute p ca@(CodeAttr {}) = P "Code attribute" [L (printf "Max stack: %d" (maxStack ca)),
+                                                        L (printf "Max locals: %d" (maxLocals ca)),
+                                                        P ("Code:") (map (printCode p) (code ca))]
+printAttribute p ca = L (show ca)
 
-
-
-
-printCode :: [Constant] -> Instruction -> String
+printCode :: [Constant] -> Instruction -> Pilcrow
 printCode p c = case cpIndex c of
-  Nothing -> show c
-  Just idx -> out $ [show c,
-                     tab 4 (showConst 3 p (at p idx))]
+  Nothing -> L (show c)
+  Just idx -> P (show c) [showConst p (at p idx)]
 br :: CPIndex -> Maybe Word16
 br (CPIndex idx) = Just idx
 
@@ -115,39 +105,31 @@ cpIndex _ = Nothing
 
 
 -- Constant pool
-instance Show ConstantPool where
-  show (ConstantPool p) = out $ "Constant pool:" : (map showConstLine $ zip (iterate (1+) 0) (map (showConst 0 p) p))
-showConstLine :: (Int, String) -> String
-showConstLine (i, c) = space 2 $ printf "#%d\t%s" (i + 1) c
+showPool :: ConstantPool -> Pilcrow
+showPool (ConstantPool p) = P "Constant pool" $ map (showConst p) p
 
-showConstant :: [Constant] -> Constant -> String
-showConstant = showConst 0
-
-showConst :: Int -> [Constant] -> Constant -> String
-showConst pad _ (Utf8Info s) = printf "Utf8 { %s }" s
-showConst pad _ (IntegerInfo i) = printf "Int { %d }" i
-showConst pad _ (FloatInfo f) = printf "Float { %f }" f
-showConst pad _ (LongInfo l) = printf "Long { %d }" l
-showConst pad _ (DoubleInfo d) = printf "Double { %f }" d
-
-showConst pad p (StringInfo s) = printf "String { string = #%d: %s }" s (showConstant p (at p s))
-showConst pad p (ClassInfo i) = printf "Class { name = #%d: %s }" i (showConstant p (at p i))
-showConst pad p (NameAndTypeInfo n t) = out [printf "NameAndType {\tname = #%d %s" n (showConstant p (at p n)),
-                                             tab (pad + 3) $ printf "descriptor = #%d %s }" t (showConstant p (at p t))]
+showConst :: [Constant] -> Constant -> Pilcrow
+showConst _ (Utf8Info s) = L ("Utf8 " ++ s)
+showConst _ (IntegerInfo i) = L ("Int " ++ (show i))
+showConst _ (FloatInfo f) = L ("Float " ++ (show f))
+showConst _ (LongInfo l) = L ("Long " ++ (show l))
+showConst _ (DoubleInfo d) = L ("Double " ++ (show d))
+showConst p (StringInfo s) = P ("String " ++ (show s)) [showConst p (at p s)]
+showConst p (ClassInfo i) = P ("Class " ++ (show i)) [showConst p (at p i)]
+showConst p (NameAndTypeInfo n t) = P "NameAndType" [P ("name: " ++ (show n)) [showConst p (at p n)],
+                                                     P ("descriptor: " ++ (show t)) [showConst p (at p t)]]
                                     
-showConst pad p (Fieldref c nt) = out [printf "Fieldref {\tclass = #%d %s" c (showConstant p (at p c)),
-                                       tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
-showConst pad p (Methodref c nt) = out [printf "Methodref {\tclass = #%d %s" c (showConstant p (at p c)),
-                                        tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
-showConst pad p (InterfaceMethodref c nt) = out [printf "InterfaceMethodref {\tclass = #%d %s" c (showConstant p (at p c)),
-                                                 tab (pad + 3) $ printf "name_and_type = #%d %s }" nt (showConst (pad + 5) p (at p nt))]
-showConst pad p (MethodHandleInfo rk ri) = out [printf "MethodHandleInfo {\treference_kind = #%d" rk,
-                                                tab (pad + 3) $ printf "reference = #%d %s }" ri (showConst 0 p (at p ri))]
-showConst pad p (MethodTypeInfo i) = out [printf "MethodTypeInfo {\tdescriptor = #%d %s }" i (showConst 0 p (at p i))]
-showConst pad p (InvokeDynamicInfo bi ti) = out [printf "InvokeDynamicInfo {\tbootstrap_method_attr = #%d %s }" bi (showConst 0 p (at p bi)),
-                                                 tab (pad + 3) $ printf "name_and_type = #%d %s }" ti (showConst 0 p (at p ti))]
-
-
+showConst p (Fieldref c nt) = P "Fieldref" [P (printf "class = #%d" c) [showConst p (at p c)],
+                                            P (printf "name_and_type = #%d" nt) [showConst p (at p nt)]]
+showConst p (Methodref c nt) = P "Methodref" [P (printf "class = #%d" c) [showConst p (at p c)],
+                                              P (printf "name_and_type = #%d" nt) [showConst p (at p nt)]]
+showConst p (InterfaceMethodref c nt) = P "InterfaceMethodref" [P (printf "class = #%d" c) [showConst p (at p c)],
+                                                                P (printf "name_and_type = #%d" nt) [showConst p (at p nt)]]
+showConst p (MethodHandleInfo rk ri) = P "MethodHandleInfo" [L (printf "reference_kind = #%d" rk),
+                                                             P (printf "reference = #%d" ri) [showConst p (at p ri)]]
+showConst p (MethodTypeInfo i) = P "MethodTypeInfo" [P (printf "descriptor = #%d " i) [showConst p (at p i)]]
+showConst p (InvokeDynamicInfo bi ti) = P "InvokeDynamicInfo" [P (printf "bootstrap_method_attr = #%d" bi) [showConst p (at p bi)],
+                                                               P (printf "name_and_type = #%d" ti) [showConst p (at p ti)]]
 -- Definitions
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
