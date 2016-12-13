@@ -9,6 +9,7 @@ import System.Environment
 import Control.Monad
 import Javelin.Runtime.Thread (runJVM)
 import Javelin.ByteCode.Stats (stats)
+import Javelin.ByteCode.Data (showByteCode)
 
 validate className = case className of
     Right _ -> True
@@ -29,18 +30,16 @@ runClasses path = do
   mapM_ print io
   putStrLn $ ("All files passed: " ++) . show $ result
 
-disasmClass path = do
+disasmClass opt path = do
   bytestring <- BS.readFile path
   let words = BS.unpack bytestring
   case parse words of
-    Right (_, _, v) -> print v
-    Left (_, off, v) -> putStrLn $ concat [v, show off, "/", show (length words), "\n",
-                                            "\n",
-                                            "\n"]
+    Right (_, _, v) -> putStrLn $ showByteCode opt v
+    Left (_, off, v) -> putStrLn $ concat [v, show off, "/", show (length words)]
 
 runFunction arg = print $ parseClassSignature arg
 
-printHelp = putStrLn "Specify mode: [disasm|stats|f|cs|jvm] for function/class/classes and mode argument"
+printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|f|cs|jvm] for function/class/classes and mode argument"
   
 main = do
   args <- getArgs
@@ -49,7 +48,8 @@ main = do
     else let (arg0:arg1:restArgs) = args
          in case arg0 of
            "f" -> runFunction arg1
-           "disasm" -> disasmClass arg1
+           "disasm" -> disasmClass False arg1
+           "disasmFull" -> disasmClass True arg1
            "cs" -> runClasses arg1
            "jvm" -> let (classPath:mainArgs) = restArgs
                     in do
