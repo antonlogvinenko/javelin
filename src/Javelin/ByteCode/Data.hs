@@ -10,20 +10,17 @@ import Text.Printf
 import Javelin.ByteCode.Utils
 
 
-data Pilcrow = P { heading :: String, text :: [Pilcrow] }
+data Paragraph = P { heading :: String, text :: [Paragraph] }
                | L { heading :: String }
 
-alignLines :: Pilcrow -> [String]
+alignLines :: Paragraph -> [String]
 alignLines L { heading = h } = [h ++ "\n"]
 alignLines P { heading = h, text = t } = [h ++ "\n"] ++
                                          (map ("\t" ++) (t >>= alignLines))
 
-display :: Pilcrow -> String
-display = concat . alignLines
-
 -- ByteCode
 instance Show ByteCode where
-  show (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool p)})) = display $
+  show (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool p)})) = concat . alignLines $
                                  P "Bytecode" [L ("Minor version: " ++ show min),
                                                L ("Major version: " ++ show maj),
                                                L ("flags: " ++ intercalate ", " (map show (classAccessFlags body))),
@@ -35,7 +32,7 @@ instance Show ByteCode where
                                                P ("Methods:") (map (printMethod p) (methods body)),
                                                P ("Class attributes:") $ map (printAttribute p) (attrs body)]
 
-printField :: [Constant] -> FieldInfo -> Pilcrow
+printField :: [Constant] -> FieldInfo -> Paragraph
 printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
                            fieldNameIndex = name,
                            fieldDescriptorIndex = descriptor,
@@ -45,7 +42,7 @@ printField p f@(FieldInfo {fieldAccessFlags = accessFlags,
                  L (printf "AccessFlags\t %s" (show accessFlags)),
                  P "Attributes" (map (printAttribute p) attributes)]
 
-printMethod :: [Constant] -> MethodInfo -> Pilcrow
+printMethod :: [Constant] -> MethodInfo -> Paragraph
 printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
                              methodNameIndex = name,
                              methodInfoDescriptorIndex = descriptor,
@@ -55,13 +52,13 @@ printMethod p m@(MethodInfo {methodAccessFlags = accessFlags,
                   L (printf "AccessFlags = %s" (show accessFlags)),
                   P (printf "Attributes:") (map (printAttribute p) attributes)]
 
-printAttribute :: [Constant] ->  AttrInfo -> Pilcrow
+printAttribute :: [Constant] ->  AttrInfo -> Paragraph
 printAttribute p ca@(CodeAttr {}) = P "Code attribute" [L (printf "Max stack: %d" (maxStack ca)),
                                                         L (printf "Max locals: %d" (maxLocals ca)),
                                                         P ("Code:") (map (printCode p) (code ca))]
 printAttribute p ca = L (show ca)
 
-printCode :: [Constant] -> Instruction -> Pilcrow
+printCode :: [Constant] -> Instruction -> Paragraph
 printCode p c = case cpIndex c of
   Nothing -> L (show c)
   Just idx -> P (show c) [showConst p (at p idx)]
@@ -105,10 +102,10 @@ cpIndex _ = Nothing
 
 
 -- Constant pool
-showPool :: ConstantPool -> Pilcrow
+showPool :: ConstantPool -> Paragraph
 showPool (ConstantPool p) = P "Constant pool" $ map (showConst p) p
 
-showConst :: [Constant] -> Constant -> Pilcrow
+showConst :: [Constant] -> Constant -> Paragraph
 showConst _ (Utf8Info s) = L ("Utf8 " ++ s)
 showConst _ (IntegerInfo i) = L ("Int " ++ (show i))
 showConst _ (FloatInfo f) = L ("Float " ++ (show f))
