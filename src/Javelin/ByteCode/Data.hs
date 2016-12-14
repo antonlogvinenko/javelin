@@ -77,7 +77,7 @@ printAttribute p ca = L (show ca)
 printCode :: [Constant] -> Instruction -> Paragraph
 printCode p c = case cpIndex c of
   Nothing -> L (show c)
-  Just idx -> POpt (show c) [showConst p idx]
+  Just idx -> POpt ((show c) ++ " -> " ++ (showConstRefShort p idx)) [showConst p idx]
 br :: CPIndex -> Maybe Word16
 br (CPIndex idx) = Just idx
 
@@ -135,7 +135,7 @@ showConstShort _ (LongInfo l) = show l
 showConstShort _ (DoubleInfo d) = show d
 showConstShort p (StringInfo s) = showConstRefShort p s
 showConstShort p (ClassInfo i) = showConstRefShort p i
-showConstShort p (NameAndTypeInfo n t) = (showConstRefShort p n) ++ "#" ++ (showConstRefShort p t)
+showConstShort p (NameAndTypeInfo n t) = (showConstRefShort p n) ++ " of type " ++ (showConstRefShort p t)
 showConstShort p (Fieldref c nt) = (showConstRefShort p c) ++ "#" ++ (showConstRefShort p nt)
 showConstShort p (Methodref c nt) = (showConstRefShort p c) ++ "#" ++ (showConstRefShort p nt)
 showConstShort p (InterfaceMethodref c nt) = (showConstRefShort p c) ++ "#" ++ (showConstRefShort p nt)
@@ -230,7 +230,9 @@ data MethodInfoAccessFlag = MethodPublic | MethodPrivate | MethodProtected
                           deriving (Show, Eq)
 
 newtype CPIndex = CPIndex Word16
-                deriving (Eq, Show)
+                deriving Eq
+instance Show CPIndex where
+  show (CPIndex x) = "#" ++ show x
 type Local = Word8
 type BranchOffset = Word16
   
