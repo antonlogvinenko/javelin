@@ -18,17 +18,13 @@
 use vector for bytecodes
 
 1. Bytecode printing: 
-- printf and ++
-- finish stats 
-  end newline?
-Main: fix parse call, remove validate
 short view from constant pool
 other attributes?
 parse descriptors?
 
-
- - Write test for parsing many files & succeeding
- - Write test for collecting stats - we're not failing
+Main: fix parse call, remove validate
+Write test for parsing many files & succeeding
+Write test for collecting stats - we're not failing
 
 2. Write loading part
  - print all runtime structures

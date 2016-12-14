@@ -35,7 +35,7 @@ disasmClass opt path = do
   let words = BS.unpack bytestring
   case parseRaw words of
     Right (_, _, v) -> putStrLn $ showByteCode opt v
-    Left (_, off, v) -> putStrLn $ concat [v, show off, "/", show (length words)]
+    Left (_, off, v) -> putStrLn $ "Failed to parse file " ++ path ++ ". Offset " ++ show off
 
 runFunction arg = print $ parseClassSignature arg
 
