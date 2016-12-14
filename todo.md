@@ -17,18 +17,18 @@
  * user derined class loaders (only boostrap)
 use vector for bytecodes
 
-1. Bytecode printing:
- - Cleanup:
-   - pretty print ref to constant pool
-   - inside reference following formatting
-   - common formatting
-   - move all
+1. Bytecode printing: 
+- printf and ++
+- finish stats 
+  end newline?
+Main: fix parse call, remove validate
+short view from constant pool
+other attributes?
+parse descriptors?
 
-- Write test for parsing many files & succeeding
+
+ - Write test for parsing many files & succeeding
  - Write test for collecting stats - we're not failing
- - finish stats 
-   - end newline?
-   - error messages - move to common bytecode parsing?
 
 2. Write loading part
  - print all runtime structures

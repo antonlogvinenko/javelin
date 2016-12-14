@@ -1,6 +1,6 @@
 Javelin
 =======
-JVM SE8 implementation in Haskell.
+JVM SE8 implementation in Haskell
 
 Usage:
 * Disassembler
