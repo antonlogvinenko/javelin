@@ -39,7 +39,7 @@ showByteCode opt (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool
                 P "Class attributes" $ map (printAttribute p) (attrs body)]
 
 nameAndId :: String -> Word16 -> String
-nameAndId name id = nameAndValue (name ++ " #") id
+nameAndId name id = name ++ " #" ++ (show id)
 
 nameAndValue :: (Show s) => String -> s -> String
 nameAndValue name value = name ++ " " ++ (show value)
