@@ -124,6 +124,26 @@ showPool (ConstantPool p) = P "Constant pool" $ map (showConstant p) p
 showConst :: [Constant] -> Word16 -> Paragraph
 showConst p idx = showConstant p (at p idx)
 
+showConstRefShort :: [Constant] -> Word16 -> String
+showConstRefShort p idx = showConstShort p (at p idx)
+
+showConstShort :: [Constant] -> Constant -> String
+showConstShort _ (Utf8Info s) = s
+showConstShort _ (IntegerInfo i) = show i
+showConstShort _ (FloatInfo f) = show f
+showConstShort _ (LongInfo l) = show l
+showConstShort _ (DoubleInfo d) = show d
+showConstShort p (StringInfo s) = showConstRefShort p s
+showConstShort p (ClassInfo i) = showConstRefShort p i
+showConstShort p (NameAndTypeInfo n t) = (showConstRefShort p n) ++ "#" ++ (showConstRefShort p t)
+showConstShort p (Fieldref c nt) = (showConstRefShort p c) ++ "#" ++ (showConstRefShort p nt)
+showConstShort p (Methodref c nt) = (showConstRefShort p c) ++ "#" ++ (showConstRefShort p nt)
+showConstShort p (InterfaceMethodref c nt) = (showConstRefShort p c) ++ "#" ++ (showConstRefShort p nt)
+showConstShort p (MethodHandleInfo rk ri) = "Kind " ++ (show rk) ++ " " ++ (showConstRefShort p ri)
+showConstShort p (MethodTypeInfo i) = (showConstRefShort p i)
+showConstShort p (InvokeDynamicInfo bi ti) = (showConstRefShort p bi) ++ ", " ++ (showConstRefShort p ti)
+                                           
+
 showConstant :: [Constant] -> Constant -> Paragraph
 showConstant _ (Utf8Info s) = L $ nameAndValue "Utf8 " s
 showConstant _ (IntegerInfo i) = L $ nameAndValue "Int " i
