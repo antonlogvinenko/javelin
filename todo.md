@@ -17,10 +17,11 @@
  * user derined class loaders (only boostrap)
 use vector for bytecodes
 
-1. Bytecode printing: 
-parse descriptors?
-other attributes?
+Other
 Main: fix parse call, remove validate
+
+1. Bytecode printing: 
+other attributes?
 Write test for parsing many files & succeeding
 Write test for collecting stats - we're not failing
 

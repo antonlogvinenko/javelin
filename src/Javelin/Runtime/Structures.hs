@@ -1,5 +1,4 @@
 module Javelin.Runtime.Structures
-
 where 
 
 import Control.Applicative

@@ -143,6 +143,8 @@ showConstShort p (MethodHandleInfo rk ri) = "Kind " ++ (show rk) ++ " " ++ (show
 showConstShort p (MethodTypeInfo i) = (showConstRefShort p i)
 showConstShort p (InvokeDynamicInfo bi ti) = (showConstRefShort p bi) ++ ", " ++ (showConstRefShort p ti)
                                            
+shortName :: [Constant] -> String -> Constant -> String
+shortName p name c = name ++ " -> " ++ (showConstShort p c)
 
 showConstant :: [Constant] -> Constant -> Paragraph
 showConstant _ (Utf8Info s) = L $ nameAndValue "Utf8 " s
@@ -150,21 +152,21 @@ showConstant _ (IntegerInfo i) = L $ nameAndValue "Int " i
 showConstant _ (FloatInfo f) = L $ nameAndValue "Float " f
 showConstant _ (LongInfo l) = L $ nameAndValue "Long " l
 showConstant _ (DoubleInfo d) = L $ nameAndValue "Double " d
-showConstant p (StringInfo s) = POpt (nameAndId "String" s) [showConst p s]
-showConstant p (ClassInfo i) = POpt (nameAndId "Class" i) [showConst p i]
-showConstant p (NameAndTypeInfo n t) = POpt "NameAndType" [P (nameAndId "name" n) [showConst p n],
-                                                           P (nameAndId "descriptor" t) [showConst p t]]
-showConstant p (Fieldref c nt) = POpt "Fieldref" [P (nameAndId "class" c) [showConst p c],
-                                               P (nameAndId "name_and_type" nt) [showConst p nt]]
-showConstant p (Methodref c nt) = POpt "Methodref" [P (nameAndId "class" c) [showConst p c],
-                                                    P (nameAndId "name_and_type" nt) [showConst p nt]]
-showConstant p (InterfaceMethodref c nt) = POpt "InterfaceMethodref" [P (nameAndId "class" c) [showConst p c],
-                                                                      P (nameAndId "name_and_type" nt) [showConst p nt]]
-showConstant p (MethodHandleInfo rk ri) = POpt "MethodHandleInfo" [L (nameAndValue "reference_kind" rk),
-                                                                   P (nameAndId "reference" ri) [showConst p ri]]
-showConstant p (MethodTypeInfo i) = POpt "MethodTypeInfo" [P (nameAndId "descriptor" i) [showConst p i]]
-showConstant p (InvokeDynamicInfo bi ti) = POpt "InvokeDynamicInfo" [P (nameAndId "bootstrap_method_attr" bi) [showConst p bi],
-                                                                     P (nameAndId "name_and_type" ti) [showConst p ti]]
+showConstant p c@(StringInfo s) = POpt (shortName p "String" c) [P (nameAndId "string" s) [showConst p s]]
+showConstant p c@(ClassInfo i) = POpt (shortName p "Class" c) [P (nameAndId "class" i) [showConst p i]]
+showConstant p c@(NameAndTypeInfo n t) = POpt (shortName p "NameAndType" c) [P (nameAndId "name" n) [showConst p n],
+                                                                             P (nameAndId "descriptor" t) [showConst p t]]
+showConstant p c@(Fieldref cl nt) = POpt (shortName p "Fieldref" c) [P (nameAndId "class" cl) [showConst p cl],
+                                                                     P (nameAndId "name_and_type" nt) [showConst p nt]]
+showConstant p c@(Methodref cl nt) = POpt (shortName p "Methodref" c) [P (nameAndId "class" cl) [showConst p cl],
+                                                                       P (nameAndId "name_and_type" nt) [showConst p nt]]
+showConstant p c@(InterfaceMethodref cl nt) = POpt (shortName p "InterfaceMethodref" c) [P (nameAndId "class" cl) [showConst p cl],
+                                                                                         P (nameAndId "name_and_type" nt) [showConst p nt]]
+showConstant p c@(MethodHandleInfo rk ri) = POpt (shortName p "MethodHandleInfo" c) [L (nameAndValue "reference_kind" rk),
+                                                                                     P (nameAndId "reference" ri) [showConst p ri]]
+showConstant p c@(MethodTypeInfo i) = POpt (shortName p "MethodTypeInfo" c) [P (nameAndId "descriptor" i) [showConst p i]]
+showConstant p c@(InvokeDynamicInfo bi ti) = POpt (shortName p "InvokeDynamicInfo" c) [P (nameAndId "bootstrap_method_attr" bi) [showConst p bi],
+                                                                                       P (nameAndId "name_and_type" ti) [showConst p ti]]
 -- Definitions
 
 data ByteCode = ByteCode {minVer :: Word16, majVer :: Word16, body :: ClassBody}
