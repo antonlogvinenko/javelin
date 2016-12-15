@@ -10,6 +10,7 @@ import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray
 
 import Javelin.ByteCode.Data
+import Javelin.Runtime.DescSign
 import Control.Arrow ((>>>))
 import Javelin.Util
 

@@ -9,8 +9,9 @@ import Control.Arrow ((>>>))
 import Javelin.Util
 
 import Javelin.Runtime.Structures
+import Javelin.Runtime.DescSign
 import Javelin.ByteCode.Data
-import Javelin.ByteCode.DescSign
+
 
 
 linking :: ClassName -> Runtime -> Either VMError Runtime

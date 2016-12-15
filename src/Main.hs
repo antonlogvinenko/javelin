@@ -1,7 +1,6 @@
 module Main
 where
 
-import Javelin.ByteCode.DescSign
 import Javelin.ByteCode.ClassFile (parseRaw)
 import qualified Data.ByteString as BS (readFile, unpack)
 import System.Directory
@@ -37,9 +36,7 @@ disasmClass opt path = do
     Right (_, _, v) -> putStrLn $ showByteCode opt v
     Left (_, off, v) -> putStrLn $ "Failed to parse file " ++ path ++ ". Offset " ++ show off
 
-runFunction arg = print $ parseClassSignature arg
-
-printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|f|cs|jvm] for function/class/classes and mode argument"
+printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|cs|jvm] for function/class/classes and mode argument"
   
 main = do
   args <- getArgs
@@ -47,7 +44,6 @@ main = do
     then printHelp
     else let (arg0:arg1:restArgs) = args
          in case arg0 of
-           "f" -> runFunction arg1
            "disasm" -> disasmClass False arg1
            "disasmFull" -> disasmClass True arg1
            "cs" -> runClasses arg1

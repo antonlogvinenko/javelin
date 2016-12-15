@@ -18,10 +18,8 @@
 use vector for bytecodes
 
 1. Bytecode printing: 
-short view from constant pool
-other attributes?
 parse descriptors?
-
+other attributes?
 Main: fix parse call, remove validate
 Write test for parsing many files & succeeding
 Write test for collecting stats - we're not failing
