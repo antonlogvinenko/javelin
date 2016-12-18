@@ -72,7 +72,36 @@ printAttribute :: [Constant] ->  AttrInfo -> Paragraph
 printAttribute p ca@(CodeAttr {}) = P "Code attribute" [L $ nameAndValue "Max stack:" $ maxStack ca,
                                                         L $ nameAndValue "Max locals:" $ maxLocals ca,
                                                         P "Code" (map (printCode p) (code ca))]
+printAttribute p ca@(SourceFile idx) = L $ constHeadingRef p "Source file" idx
 printAttribute p ca = L (show ca)
+
+--  UnknownAttr { unknownBytes :: ByteString }
+--               | Synthetic
+--               | Deprecated
+
+--               | ConstantValue { constantValueIndex :: Word16 }
+--               | StackMapTable { entries :: [StackMapFrame] }
+--               | Exceptions { exceptionIndexTable :: [Word16] }
+--               | InnerClasses { classes :: [InnerClassInfo] }
+--               | EnclosingMethod { enclosingClassIndex :: Word16,
+--                                   enclosingMethodIndex :: Word16 }
+--               | Signature { signatureIndex :: Word16 }
+
+--               | SourceDebugExtension { debugExtension :: String }
+--               | LineNumberTable { lineNumberTable :: [LineNumber] }
+--               | LocalVariableTable { localVariableTable :: [LocalVariableInfo] }
+--               | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableInfo] }
+
+--               | RTVisibleAnns { annotations :: [Ann] }
+--               | RTInvisibleAnns { annotations :: [Ann] }
+--               | RTVisibleParamAnns { paramAnns :: [[Ann]] }
+--               | RTInvisibleParamAnns { paramAnns :: [[Ann]] }
+--               | RTVisibleTypeAnns { typeAnns :: [TypeAnn] }
+--               | RTInvisibleTypeAnns { typeAnns :: [TypeAnn] }
+--               | AnnDefault { defaultValue :: [Word8] }
+--               | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
+--               | MethodParameters { parameters :: [MethodParameter] }
+--               deriving (Show, Eq)
 
 printCode :: [Constant] -> Instruction -> Paragraph
 printCode p c = case cpIndex c of
@@ -143,8 +172,12 @@ showConstShort p (MethodHandleInfo rk ri) = "Kind " ++ (show rk) ++ " " ++ (show
 showConstShort p (MethodTypeInfo i) = (showConstRefShort p i)
 showConstShort p (InvokeDynamicInfo bi ti) = (showConstRefShort p bi) ++ ", " ++ (showConstRefShort p ti)
                                            
-shortName :: [Constant] -> String -> Constant -> String
-shortName p name c = name ++ " -> " ++ (showConstShort p c)
+constHeading :: [Constant] -> String -> Constant -> String
+constHeading p name c = name ++ " -> " ++ (showConstShort p c)
+
+constHeadingRef :: [Constant] -> String -> Word16 -> String
+constHeadingRef p name idx = constHeading p name (at p idx)
+
 
 showConstant :: [Constant] -> Constant -> Paragraph
 showConstant _ (Utf8Info s) = L $ nameAndValue "Utf8 " s
@@ -152,20 +185,20 @@ showConstant _ (IntegerInfo i) = L $ nameAndValue "Int " i
 showConstant _ (FloatInfo f) = L $ nameAndValue "Float " f
 showConstant _ (LongInfo l) = L $ nameAndValue "Long " l
 showConstant _ (DoubleInfo d) = L $ nameAndValue "Double " d
-showConstant p c@(StringInfo s) = POpt (shortName p "String" c) [P (nameAndId "string" s) [showConst p s]]
-showConstant p c@(ClassInfo i) = POpt (shortName p "Class" c) [P (nameAndId "class" i) [showConst p i]]
-showConstant p c@(NameAndTypeInfo n t) = POpt (shortName p "NameAndType" c) [P (nameAndId "name" n) [showConst p n],
+showConstant p c@(StringInfo s) = POpt (constHeading p "String" c) [P (nameAndId "string" s) [showConst p s]]
+showConstant p c@(ClassInfo i) = POpt (constHeading p "Class" c) [P (nameAndId "class" i) [showConst p i]]
+showConstant p c@(NameAndTypeInfo n t) = POpt (constHeading p "NameAndType" c) [P (nameAndId "name" n) [showConst p n],
                                                                              P (nameAndId "descriptor" t) [showConst p t]]
-showConstant p c@(Fieldref cl nt) = POpt (shortName p "Fieldref" c) [P (nameAndId "class" cl) [showConst p cl],
+showConstant p c@(Fieldref cl nt) = POpt (constHeading p "Fieldref" c) [P (nameAndId "class" cl) [showConst p cl],
                                                                      P (nameAndId "name_and_type" nt) [showConst p nt]]
-showConstant p c@(Methodref cl nt) = POpt (shortName p "Methodref" c) [P (nameAndId "class" cl) [showConst p cl],
+showConstant p c@(Methodref cl nt) = POpt (constHeading p "Methodref" c) [P (nameAndId "class" cl) [showConst p cl],
                                                                        P (nameAndId "name_and_type" nt) [showConst p nt]]
-showConstant p c@(InterfaceMethodref cl nt) = POpt (shortName p "InterfaceMethodref" c) [P (nameAndId "class" cl) [showConst p cl],
+showConstant p c@(InterfaceMethodref cl nt) = POpt (constHeading p "InterfaceMethodref" c) [P (nameAndId "class" cl) [showConst p cl],
                                                                                          P (nameAndId "name_and_type" nt) [showConst p nt]]
-showConstant p c@(MethodHandleInfo rk ri) = POpt (shortName p "MethodHandleInfo" c) [L (nameAndValue "reference_kind" rk),
+showConstant p c@(MethodHandleInfo rk ri) = POpt (constHeading p "MethodHandleInfo" c) [L (nameAndValue "reference_kind" rk),
                                                                                      P (nameAndId "reference" ri) [showConst p ri]]
-showConstant p c@(MethodTypeInfo i) = POpt (shortName p "MethodTypeInfo" c) [P (nameAndId "descriptor" i) [showConst p i]]
-showConstant p c@(InvokeDynamicInfo bi ti) = POpt (shortName p "InvokeDynamicInfo" c) [P (nameAndId "bootstrap_method_attr" bi) [showConst p bi],
+showConstant p c@(MethodTypeInfo i) = POpt (constHeading p "MethodTypeInfo" c) [P (nameAndId "descriptor" i) [showConst p i]]
+showConstant p c@(InvokeDynamicInfo bi ti) = POpt (constHeading p "InvokeDynamicInfo" c) [P (nameAndId "bootstrap_method_attr" bi) [showConst p bi],
                                                                                        P (nameAndId "name_and_type" ti) [showConst p ti]]
 -- Definitions
 

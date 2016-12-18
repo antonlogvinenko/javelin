@@ -3,43 +3,53 @@ where
 import Test.Tasty (testGroup, TestTree)
 import Test.Tasty.HUnit
 import Javelin.ByteCode.ClassFile
-import Javelin.ByteCode.DescSign
+import Javelin.Runtime.DescSign
 import Data.Word (Word16)
-import Javelin.Main
+--import Main
+import Javelin.ByteCode.Stats (getStats)
+import Data.Map.Strict (member)
+import Test.Tasty.Providers
 
 byteCodeTest = testGroup "ByteCode parser test"
-               [byteCodeParserTest,
-                signatureTest, descriptorTest]
+               [statsAndParserTest]
+                --,byteCodeParserTest, signatureTest, descriptorTest]
 
-byteCodeParserTest = 
-  testCase "functional" $
+statsAndParserTest =
+  testCase "stats" $
   do
-    (io, result) <- testClasses "./acceptance/"
---    sequence_ $ map (putStrLn . show) io
-    result @=? True
+    stats <- getStats "./acceptance/"
+    case stats of
+      Left msg -> assertFailure $ "Couldn't parse it! " ++ msg
+      Right st -> assertBool "" $ member "aload_0" st
 
--- These tests need refactoring
+-- byteCodeParserTest = 
+--   testCase "functional" $
+--   do
+--     (io, result) <- testClasses "./acceptance/"
+--     result @=? True
 
-signatureTest = testGroup "signatures" [
-  testCase "class signature" $
-  validate (parseClassSignature "<T:Ljava/lang/Object;>Ljava/lang/Object;") @=? True,
+-- -- These tests need refactoring
 
-  testGroup "method signatures" [
-    testCase "1" $
-    validate (parseMethodSignature "<T:Ljava/lang/Object;>(TT;)Lorg/springframework/http/HttpEntity<TT;>;" ) @=? True,
+-- signatureTest = testGroup "signatures" [
+--   testCase "class signature" $
+--   validate (parseClassSignature "<T:Ljava/lang/Object;>Ljava/lang/Object;") @=? True,
 
-    testCase "2" $
-    validate (parseMethodSignature "(Lorg/apache/lucene/search/Query;Lcom/farpost/search/Sort;ILjava/util/Map<Ljava/lang/String;Lorg/apache/lucene/search/Query;>;)Lcom/farpost/search/IndexResult;") @=? True,
+--   testGroup "method signatures" [
+--     testCase "1" $
+--     validate (parseMethodSignature "<T:Ljava/lang/Object;>(TT;)Lorg/springframework/http/HttpEntity<TT;>;" ) @=? True,
 
-    testCase "3" $
-    validate (parseMethodSignature "(Lorg/apache/lucene/search/Query;Lcom/farpost/search/Sort;ILjava/util/Map;)Lcom/farpost/search/IndexResult;") @=? True
-              ]
-  ]
+--     testCase "2" $
+--     validate (parseMethodSignature "(Lorg/apache/lucene/search/Query;Lcom/farpost/search/Sort;ILjava/util/Map<Ljava/lang/String;Lorg/apache/lucene/search/Query;>;)Lcom/farpost/search/IndexResult;") @=? True,
 
-descriptorTest = testGroup "descriptors" [
-  testCase "method descriptor" $
-  validate (parseMethodDescriptor "(Lorg/apache/lucene/search/Query;Lcom/farpost/search/Sort;ILjava/util/Map;)Lcom/farpost/search/IndexResult;") @=? True,
+--     testCase "3" $
+--     validate (parseMethodSignature "(Lorg/apache/lucene/search/Query;Lcom/farpost/search/Sort;ILjava/util/Map;)Lcom/farpost/search/IndexResult;") @=? True
+--               ]
+--   ]
 
-  testCase "class descriptor" $
-  validate (parseFieldDescriptor "Lcom/farpost/search/index/QueryMapper;") @=? True
-  ]
+-- descriptorTest = testGroup "descriptors" [
+--   testCase "method descriptor" $
+--   validate (parseMethodDescriptor "(Lorg/apache/lucene/search/Query;Lcom/farpost/search/Sort;ILjava/util/Map;)Lcom/farpost/search/IndexResult;") @=? True,
+
+--   testCase "class descriptor" $
+--   validate (parseFieldDescriptor "Lcom/farpost/search/index/QueryMapper;") @=? True
+--   ]

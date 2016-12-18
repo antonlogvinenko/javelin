@@ -54,6 +54,7 @@ test-suite test
   main-is:           Main.hs
   Type:              exitcode-stdio-1.0
   build-depends:     base >=4.7 && < 5, Cabal >= 1.16.0,
+                     containers ==0.5.*,
                      javelin,
                      tasty,
                      HUnit,

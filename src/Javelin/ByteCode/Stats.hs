@@ -32,10 +32,14 @@ listDir path = do
         let files = map ((path ++ "/") ++) . filter (`notElem` [".", ".."]) $ contents
         (ListT $ return files) >>= listDir
 
+getStats :: FilePath -> IO (Either String (Map.Map String Integer))
+getStats path = do
+  filePaths <- runListT $ listDir path
+  runExceptT $ calcFreqs mempty filePaths
+
 stats :: FilePath -> Maybe FilePath -> IO ()
 stats path output = do
-  filePaths <- runListT $ listDir path
-  result <- runExceptT $ calcFreqs mempty filePaths
+  result <- getStats path
   case result of
     Left msg -> putStrLn msg
     Right freqs ->
