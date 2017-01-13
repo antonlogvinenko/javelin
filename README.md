@@ -18,4 +18,4 @@ Usage:
         stack exec javelin stats acceptance/ [output.textile]
  Examples:
  * <a href="https://gist.github.com/antonlogvinenko/a9d8f813b4ceb4eebf1ebec598882f2a" target="_blank">Guava opcodes statistics</a>
- * <a href="https://gist.github.com/antonlogvinenko/e5461abdd1431c231a6a8e7734c04a05" target="_blank">Java 8 standard library (rt.jar) statistics</a>
+ * <a href="http://gist.github.com/antonlogvinenko/e5461abdd1431c231a6a8e7734c04a05" target="_blank">Java 8 standard library (rt.jar) statistics</a>
