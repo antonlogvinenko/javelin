@@ -6,7 +6,7 @@ Usage:
 * Disassembler
 
         stack exec javelin disasm acceptance/TreeMultimapNaturalTest.class
- [See result here](https://gist.github.com/antonlogvinenko/9a6dcc4dbabe0acef90df3a7f9fd7d0b)
+ <a href="https://gist.github.com/antonlogvinenko/9a6dcc4dbabe0acef90df3a7f9fd7d0b">See result here</a>
 
 * Disassembler with traced references to constant pool
 
