@@ -15,4 +15,4 @@ Usage:
 
         stack exec javelin stats acceptance/ [output.textile]
  Examples:
- ** [Guava opcodes statistics](https://gist.github.com/antonlogvinenko/a9d8f813b4ceb4eebf1ebec598882f2a)
+ * [Guava opcodes statistics](https://gist.github.com/antonlogvinenko/a9d8f813b4ceb4eebf1ebec598882f2a)
