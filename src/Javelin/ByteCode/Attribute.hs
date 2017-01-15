@@ -10,6 +10,7 @@ import Control.Applicative
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.Utils
 
+
 innerClassAccessFlagsMap = Map.fromList [(0x0001, InnerClassPublic), (0x0002, InnerClassPrivate),
                                          (0x0004, InnerClassProtected), (0x0008, InnerClassStatic),
                                          (0x0010, InnerClassFinal), (0x0200, InnerClassInterface),
