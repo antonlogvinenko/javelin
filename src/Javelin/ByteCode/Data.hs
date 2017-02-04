@@ -75,33 +75,6 @@ printAttribute p ca@(CodeAttr {}) = P "Code attribute" [L $ nameAndValue "Max st
 printAttribute p ca@(SourceFile idx) = L $ constHeadingRef p "Source file" idx
 printAttribute p ca = L (show ca)
 
---  UnknownAttr { unknownBytes :: ByteString }
---               | Synthetic
---               | Deprecated
-
---               | ConstantValue { constantValueIndex :: Word16 }
---               | StackMapTable { entries :: [StackMapFrame] }
---               | Exceptions { exceptionIndexTable :: [Word16] }
---               | InnerClasses { classes :: [InnerClassInfo] }
---               | EnclosingMethod { enclosingClassIndex :: Word16,
---                                   enclosingMethodIndex :: Word16 }
---               | Signature { signatureIndex :: Word16 }
-
---               | SourceDebugExtension { debugExtension :: String }
---               | LineNumberTable { lineNumberTable :: [LineNumber] }
---               | LocalVariableTable { localVariableTable :: [LocalVariableInfo] }
---               | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableInfo] }
-
---               | RTVisibleAnns { annotations :: [Ann] }
---               | RTInvisibleAnns { annotations :: [Ann] }
---               | RTVisibleParamAnns { paramAnns :: [[Ann]] }
---               | RTInvisibleParamAnns { paramAnns :: [[Ann]] }
---               | RTVisibleTypeAnns { typeAnns :: [TypeAnn] }
---               | RTInvisibleTypeAnns { typeAnns :: [TypeAnn] }
---               | AnnDefault { defaultValue :: [Word8] }
---               | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
---               | MethodParameters { parameters :: [MethodParameter] }
---               deriving (Show, Eq)
 
 printCode :: [Constant] -> Instruction -> Paragraph
 printCode p c = case cpIndex c of
