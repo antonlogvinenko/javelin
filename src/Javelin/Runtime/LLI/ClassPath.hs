@@ -9,7 +9,7 @@ import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (fromList, lookup)
+import Data.Map.Lazy as Map (fromList, lookup, unions)
 import Data.List
 
 import Control.Monad.Trans.Maybe
@@ -19,14 +19,19 @@ import Data.List.Split
 import Codec.Archive.Zip
 
 import Javelin.Runtime.Structures
+import Data.List.Split (splitOn)
 import Javelin.Util
 
 
-
 -- Getting layout for classpath
+getClassSourcesLayout :: String -> IO ClassPathLayout
+getClassSourcesLayout paths =
+  let pathsList = splitOn ";" paths
+      layoutList = sequence $ map getClassSourceLayout pathsList :: IO [ClassPathLayout]
+  in unions <$> layoutList :: IO ClassPathLayout
 
-getClassSourcesLayout :: FilePath -> IO ClassPathLayout
-getClassSourcesLayout dir = do
+getClassSourceLayout :: FilePath -> IO ClassPathLayout
+getClassSourceLayout dir = do
   files <- getClassPathFiles dir
   let sources = foldl folder [] files
   classes <- mapM extractClasses sources
@@ -69,7 +74,6 @@ pathToClass path = replace '/' '.' $ head $ splitOn "." path
 
 classToPath :: ClassName -> FilePath
 classToPath name = (replace '.' '/' name) ++ ".class"
-
 
 
 

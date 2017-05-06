@@ -13,10 +13,6 @@ import Control.Monad.Trans.Maybe
 toMaybeT :: (Monad m) => Maybe a -> MaybeT m a
 toMaybeT = MaybeT . return
 
-
-cake :: String -> Integer
-cake x = 42
-
 -- Srsly, Haskell, where is my 'replace' function?
 replace :: Char -> Char -> String -> String
 replace co cr = map (\c -> if c == co then cr else c)
