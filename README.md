@@ -16,11 +16,8 @@ Usage:
 * Bytecode statistics
 
         stack exec javelin stats acceptance/ [output.textile]
- Examples:
- * [Guava opcodes statistics](https://gist.github.com/antonlogvinenko/a9d8f813b4ceb4eebf1ebec598882f2a)
- * [Java 8 standard library (rt.jar) statistics](https://gist.github.com/antonlogvinenko/e5461abdd1431c231a6a8e7734c04a05)
+ Examples: [Guava opcodes statistics](https://gist.github.com/antonlogvinenko/a9d8f813b4ceb4eebf1ebec598882f2a), [Java 8 standard library (rt.jar) statistics](https://gist.github.com/antonlogvinenko/e5461abdd1431c231a6a8e7734c04a05)
 
 * Parsing classpath, traversing it and loading class bytes
 
         stack exec javelin classpath "./sample-classpath/" "com.google.common.collect.Lists"
- [See result here](https://gist.github.com/antonlogvinenko/cdc157a251efe965b9af2244ba41fcf6)
