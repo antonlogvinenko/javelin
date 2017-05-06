@@ -4,7 +4,6 @@ where
 import Javelin.Runtime.LLI.ClassPath
 import Javelin.Runtime.Structures
 import Javelin.ByteCode.Data
-import Javelin.Runtime.LLI.Resolving
 import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
@@ -14,6 +13,7 @@ import Data.ByteString (ByteString, unpack)
 import Control.Monad.Trans.Maybe
 import Javelin.Util
 import Data.Either.Utils (maybeToEither)
+import Control.Arrow ((>>>))
 
 
 -- 5.1 Deriving the Run-Time Constant Pool
@@ -21,7 +21,7 @@ import Data.Either.Utils (maybeToEither)
 --- of a class or interface is used to construct the run-time
 --- constant pool upon class or interface creation (§5.3). 
 deriveUtf8 :: [Constant] -> Word16 -> String
-deriveUtf8 p idx = stringValue $ p !! fromIntegral idx
+deriveUtf8 p idx = stringValue $ p # idx
 -- note: fix, value at index could be not Utf8Info, stringValue not applicable
 -- or throw an exception: invalid bytecode
 
@@ -70,11 +70,11 @@ appendString str st = (fromIntegral $ length st, newSymTable)
 
 deriveFromClass :: (Integral i) => i -> i -> [Constant] -> PartReference
 deriveFromClass classIdx nameAndTypeIdx p =
-  let classInfo = p !! fromIntegral classIdx
-      nameAndTypeInfo = p !! fromIntegral nameAndTypeIdx
-      className = stringValue $ p !! fromIntegral (nameIndex classInfo)
-      memberName = stringValue $ p !! fromIntegral (nameIndex nameAndTypeInfo)
-      memberDescriptor = stringValue $ p !! fromIntegral (nameAndTypeDescriptorIndex nameAndTypeInfo)
+  let classInfo = p # classIdx
+      nameAndTypeInfo = p # nameAndTypeIdx
+      className = stringValue $ p # (nameIndex classInfo)
+      memberName = stringValue $ p # (nameIndex nameAndTypeInfo)
+      memberDescriptor = stringValue $ p # (nameAndTypeDescriptorIndex nameAndTypeInfo)
   in PartReference className memberName memberDescriptor
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 
@@ -114,10 +114,11 @@ checkRepresentedClass name rt bc =
   let pool = constPool $ body bc
       symTable = deriveSymTable pool
       thisIndex = this $ body bc
-  in case symTable !! (fromIntegral thisIndex) of
+  in case symTable # thisIndex of
     (ClassOrInterface actualName) -> if actualName == name
                                      then return symTable
-                                     else linkageLeft NoClassDefFoundError
+                                     else linkageLeft $
+                                          NoClassDefFoundError (name ++ actualName ++ (show thisIndex))
     _ -> linkageLeft ClassFormatError
 -- last case is due to invalid bytecode; throw an exception and terminate?
 
@@ -129,13 +130,13 @@ checkSuperClass request defCL bc sym rt =
     ("java.lang.Object", 0) -> Right rt
     ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
     (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
-    (_, idx) -> case sym !! fromIntegral idx of
+    (_, idx) -> case sym # idx of
       -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
         rt <- resolve (ClassRequest defCL parent) rt
         case isInterface parent rt of
           -- bytecode error
-          Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags
+          Nothing -> linkageLeft $ InternalError $ CouldNotFindAccessFlags parent
           Just True -> linkageLeft IncompatibleClassChangeError
           Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                             thisIsInterface = elem AccInterface thisAccessFlags
@@ -155,12 +156,12 @@ checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Ei
 checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   let name = getName request
-  case sym !! fromIntegral interfaceIdx of
+  case sym # interfaceIdx of
     --other constructor? bytecode error
     (ClassOrInterface parent) -> do
       rt <- resolve (ClassRequest defCL parent) rt
       case isInterface parent rt of
-        Nothing -> linkageLeft $ InternalError CouldNotFindAccessFlags 
+        Nothing -> linkageLeft $ InternalError $ CouldNotFindAccessFlags parent
         Just False -> linkageLeft $ IncompatibleClassChangeError
         Just True -> if parent == name
                      then linkageLeft ClassCircularityError
@@ -179,8 +180,13 @@ recordClassLoading name bc sym defCL initCL
 
 -- 5.3 Creation and Loading top level code
 load :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
-load request@(ClassRequest _ name) rt =
-  (if isArray name then loadArray else loadClass) request rt
+load request@(ClassRequest initCL name) rt =
+  let loaderFn = if isArray name then loadArray else loadClass
+  in case getInitiatingClassLoader rt name of
+    Just recordedInitCL -> if recordedInitCL == initCL
+                           then return $ Right rt
+                           else loaderFn request rt
+    Nothing -> loaderFn request rt
 
 loadClass :: ClassLoadMethod
 loadClass request@(ClassRequest BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
@@ -194,14 +200,12 @@ type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
 -- 5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
 loadClassWithBootstrap request@(ClassRequest _ name) rt@(Runtime {classPathLayout = layout}) = 
-  case getInitiatingClassLoader rt name of
-    Just BootstrapClassLoader -> return $ Right rt
-    _ -> do
-      maybeBytes <- runMaybeT $ getClassBytes name layout
-      let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
-      return $ do
-        bytes <- eitherBytes
-        deriveClass request rt BootstrapClassLoader bytes
+  do
+    maybeBytes <- runMaybeT $ getClassBytes name layout
+    let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
+    return $ do
+      bytes <- eitherBytes
+      deriveClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader
 loadClassWithUserDefCL :: ClassLoadMethod
@@ -213,3 +217,32 @@ loadArray request rt = undefined
 
 -- 5.3.4 Loading Constraints
 -- not implemented yet
+
+
+
+
+-- first need to check whether resolution already happened, 3 possible outcomes:
+-- 1. not yet resolved
+-- 2. successfilly resolved
+-- 3. resolution failed on the previous attempt 
+resolve :: ClassRequest -> Runtime -> Either VMError Runtime
+resolve request rt = do
+  case rt $> classResolving >>> (Map.lookup $ getName request) of
+    Just Nothing -> return rt
+    Just (Just err) -> linkageLeft err
+    Nothing -> return rt --todo
+
+
+resolveField :: ClassName -> Runtime -> Either VMError Runtime
+resolveField = undefined
+
+resolveMethod :: ClassName -> Runtime -> Either VMError Runtime
+resolveMethod = undefined
+
+resolveInterfaceMethod :: ClassName -> Runtime -> Either VMError Runtime
+resolveInterfaceMethod = undefined
+
+
+-- for some successful resolution or error must be persistent between invokations
+-- errors: generate classchange, react to linkage error
+-- class, interface, field, method, interface method

@@ -11,6 +11,8 @@ import Javelin.ByteCode.Stats (stats)
 import Javelin.ByteCode.Data (showByteCode)
 import Control.Monad.Trans.Maybe (runMaybeT)
 import Javelin.Runtime.LLI.ClassPath
+import Javelin.Runtime.Structures (newRuntime, ClassRequest(..), ClassLoader(..))
+import Javelin.Runtime.LLI.Loading (load)
 
 validate className = case className of
     Right _ -> True
@@ -44,7 +46,7 @@ disasmClass2 opt bs =
     Right (_, _, v) -> putStrLn $ showByteCode opt v
     Left (_, off, v) -> putStrLn $ "Failed to parse file"
 
-printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|classpath|cs|jvm] for function/class/classes and mode argument"
+printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|classpath|loadClass|cs|jvm] for function/class/classes and mode argument"
   
 main = do
   args <- getArgs
@@ -66,6 +68,14 @@ main = do
                             case classBytes of
                               Nothing -> print "Class not found in classpath"
                               Just c -> disasmClass2 False c
+           "loadClass" -> let classPath = arg1
+                              (className:_) = restArgs
+                          in do
+                            layout <- getClassSourcesLayout classPath
+                            let rt = newRuntime layout
+                            classBytes <- runMaybeT $ getClassBytes className layout
+                            result <- load (ClassRequest BootstrapClassLoader className) rt
+                            print result
            "cs" -> runClasses arg1
            "jvm" -> let (classPath:mainArgs) = restArgs
                     in do

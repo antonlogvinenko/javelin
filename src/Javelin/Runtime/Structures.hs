@@ -138,7 +138,7 @@ data ClassNotFoundException = ClassNotFoundException
 data InternalLoadingError = ClassLoaderNotFound
                           | OnlyClassObjectHasNoSuperClass
                           | ClassObjectHasNoSuperClasses
-                          | CouldNotFindAccessFlags
+                          | CouldNotFindAccessFlags String
                           | InterfaceMustHaveObjectAsSuperClass
                           | SymTableHasNoClassEntryAtIndex
                           deriving (Show, Eq)
@@ -147,7 +147,7 @@ data LinkageError = LinkageError
                   | UnsupportedClassVersionError
 
                   | NoClassDefFoundClassNotFoundError { notFound :: ClassNotFoundException }
-                  | NoClassDefFoundError
+                  | NoClassDefFoundError String
                     
                   | IncompatibleClassChangeError
                   | AbstractMethodError

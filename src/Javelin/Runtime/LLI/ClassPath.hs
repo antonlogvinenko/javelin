@@ -70,10 +70,10 @@ getJarClasses path = do
   return $ map getPath $ foldl folder [] allFiles
   
 pathToClass :: FilePath -> ClassName
-pathToClass path = replace '/' '.' $ head $ splitOn "." path
+pathToClass path = head $ splitOn "." path
 
 classToPath :: ClassName -> FilePath
-classToPath name = (replace '.' '/' name) ++ ".class"
+classToPath name = name ++ ".class"
 
 
 

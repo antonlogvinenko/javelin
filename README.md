@@ -20,4 +20,4 @@ Usage:
 
 * Parsing classpath, traversing it and loading class bytes
 
-        stack exec javelin classpath "./sample-classpath/" "com.google.common.collect.Lists"
+        stack exec javelin classpath "./sample-classpath/" "com/google/common/collect/Lists"
