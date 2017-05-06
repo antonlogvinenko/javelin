@@ -11,7 +11,7 @@ import Javelin.Util
 import Javelin.Runtime.Structures
 import Javelin.Runtime.DescSign
 import Javelin.ByteCode.Data
-
+import Data.Either.Utils (maybeToEither)
 
 
 linking :: ClassName -> Runtime -> Either VMError Runtime

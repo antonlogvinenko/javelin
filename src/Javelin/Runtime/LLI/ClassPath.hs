@@ -1,9 +1,9 @@
-module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes, maybeToEither)
+module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes)
 
 where
 
-import Data.ByteString.Lazy (ByteString)
-import Data.ByteString.Lazy as BS (readFile)
+import Data.ByteString.Lazy as BSL (ByteString, toStrict, readFile)
+import Data.ByteString as BSS (ByteString)
 import Control.Monad (forM)
 import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
@@ -11,7 +11,6 @@ import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
 import Data.Map.Lazy as Map (fromList, lookup)
 import Data.List
-
 
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans
@@ -60,7 +59,7 @@ extractClasses s@(ClassFile p) = return [(pathToClass p, s)]
 
 getJarClasses :: FilePath -> IO [FilePath]
 getJarClasses path = do
-  raw <- BS.readFile path
+  raw <- BSL.readFile path
   let arc = toArchive raw
   let allFiles = filesInArchive arc
   return $ map getPath $ foldl folder [] allFiles
@@ -75,22 +74,22 @@ classToPath name = (replace '.' '/' name) ++ ".class"
 
 
 -- using MaybeT { IO (Maybe a) }
-getClassBytes :: ClassName -> ClassPathLayout -> MaybeT IO ByteString
+getClassBytes :: ClassName -> ClassPathLayout -> MaybeT IO BSS.ByteString
 getClassBytes name layout = do
   source <- toMaybeT $ Map.lookup name layout
   getClassFromSource name source
 
-getClassFromSource :: ClassName -> ClassSource -> MaybeT IO ByteString
+getClassFromSource :: ClassName -> ClassSource -> MaybeT IO BSS.ByteString
 getClassFromSource name (ClassFile path) = do
   x <- toMaybeT $ classMatchesPath name path
-  lift $ BS.readFile x
+  lift $ BSL.toStrict <$> BSL.readFile x
 getClassFromSource name (JarFile path) = MaybeT $ do
-  raw <- BS.readFile path
+  raw <- BSL.readFile path
   return $ do
     let arc = toArchive raw
         classPath = classToPath name
     entry <- findEntryByPath classPath arc
-    return $ fromEntry entry
+    return $ BSL.toStrict $ fromEntry entry
 
 classMatchesPath :: String -> FilePath -> Maybe FilePath
 classMatchesPath name path = if classToPath name /= path then Nothing else Just path

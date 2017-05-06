@@ -13,11 +13,9 @@ import Control.Monad.Trans.Maybe
 toMaybeT :: (Monad m) => Maybe a -> MaybeT m a
 toMaybeT = MaybeT . return
 
-maybeToEither :: e -> Maybe a -> Either e a
-maybeToEither e (Just a) = Right a
-maybeToEither e Nothing = Left e
 
-m2e = maybeToEither
+cake :: String -> Integer
+cake x = 42
 
 -- Srsly, Haskell, where is my 'replace' function?
 replace :: Char -> Char -> String -> String

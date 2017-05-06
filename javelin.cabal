@@ -48,7 +48,8 @@ library
                      zip-archive ==0.3.0.5,
                      filepath ==1.4.1.0,
                      transformers ==0.5.2.0,
-                     split ==0.2.3.1
+                     split ==0.2.3.1,
+                     MissingH ==1.4.0.1
 test-suite test
   hs-source-dirs:    test
   main-is:           Main.hs
@@ -81,4 +82,5 @@ executable javelin
                        filepath ==1.4.1.0,
                        mtl ==2.2.1,
                        transformers ==0.5.2.0,
-                       split ==0.2.3.1
+                       split ==0.2.3.1,
+                       MissingH ==1.4.0.1

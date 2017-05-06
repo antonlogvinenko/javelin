@@ -9,15 +9,17 @@ import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
 import Data.Map as Map (insert, lookup)
-import Data.ByteString.Lazy (ByteString, unpack)
+import Data.ByteString (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
-
-
+import Javelin.Util
+import Data.Either.Utils (maybeToEither)
 
 
 -- 5.1 Deriving the Run-Time Constant Pool
-
+--- The constant_pool table (§4.4) in the binary representation
+--- of a class or interface is used to construct the run-time
+--- constant pool upon class or interface creation (§5.3). 
 deriveUtf8 :: [Constant] -> Word16 -> String
 deriveUtf8 p idx = stringValue $ p !! fromIntegral idx
 -- note: fix, value at index could be not Utf8Info, stringValue not applicable

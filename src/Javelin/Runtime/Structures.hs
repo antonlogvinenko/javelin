@@ -12,6 +12,7 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.DescSign
 import Control.Arrow ((>>>))
 import Javelin.Util
+import Data.Either.Utils (maybeToEither)
 
 
 -- Thread
