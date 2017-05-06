@@ -9,6 +9,8 @@ import Control.Monad
 import Javelin.Runtime.Thread (runJVM)
 import Javelin.ByteCode.Stats (stats)
 import Javelin.ByteCode.Data (showByteCode)
+import Control.Monad.Trans.Maybe (runMaybeT)
+import Javelin.Runtime.LLI.ClassPath
 
 validate className = case className of
     Right _ -> True
@@ -36,7 +38,13 @@ disasmClass opt path = do
     Right (_, _, v) -> putStrLn $ showByteCode opt v
     Left (_, off, v) -> putStrLn $ "Failed to parse file " ++ path ++ ". Offset " ++ show off
 
-printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|cs|jvm] for function/class/classes and mode argument"
+disasmClass2 opt bs = 
+  let words = BS.unpack bs
+  in case parseRaw words of
+    Right (_, _, v) -> putStrLn $ showByteCode opt v
+    Left (_, off, v) -> putStrLn $ "Failed to parse file"
+
+printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|classpath|cs|jvm] for function/class/classes and mode argument"
   
 main = do
   args <- getArgs
@@ -46,13 +54,21 @@ main = do
          in case arg0 of
            "disasm" -> disasmClass False arg1
            "disasmFull" -> disasmClass True arg1
+           "stats" -> let outputFile = if (length restArgs > 0)
+                                       then Just $ restArgs !! 0
+                                       else Nothing
+                      in stats arg1 outputFile
+           "classpath" -> let classPath = arg1
+                              (className:_) = restArgs
+                          in do
+                            layout <- getClassSourcesLayout classPath
+                            classBytes <- runMaybeT $ getClassBytes className layout
+                            case classBytes of
+                              Nothing -> print "Class not found in classpath"
+                              Just c -> disasmClass2 False c
            "cs" -> runClasses arg1
            "jvm" -> let (classPath:mainArgs) = restArgs
                     in do
                       traces <- runJVM classPath arg1 mainArgs
                       print traces
-           "stats" -> let outputFile = if (length restArgs > 0)
-                                       then Just $ restArgs !! 0
-                                       else Nothing
-                      in stats arg1 outputFile
            _ -> (putStrLn $ arg0 ++ "is an unknown command") >> printHelp
