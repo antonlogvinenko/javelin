@@ -31,7 +31,8 @@ showByteCode opt (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool
                 L (nameAndValue "Major version: " maj),
                 L (nameAndValue "Flags: " $ intercalate ", " (map show (classAccessFlags body))),
                 P "This" [showConst p (this body)],
-                P "Superclass" [showConst p (super body)],
+                let superIdx = super body
+                in P "Superclass" [if superIdx > 0 then showConst p superIdx else P "" []],
                 P "Interfaces" $ map (showConst p) (interfaces body),
                 P "Constant pool " [showPool cp],
                 P "Fields" (map (printField p) (fields body)),
