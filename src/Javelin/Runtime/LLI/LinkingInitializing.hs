@@ -30,7 +30,7 @@ prepare name rt@(Runtime {classLoading = classLoadingInfo}) =
       (rt1, ref) = malloc rt
   in do
     rt2 <- writeStaticFields name rt1 ref
-    return rt2{classLoading = Map.insert name classLoaderInfo{staticRef = Just ref} classLoadingInfo}
+    return rt2{classLoading = Map.insert name classLoaderInfo classLoadingInfo}
 
 writeStaticFields :: String -> Runtime -> Ref -> Either VMError Runtime
 writeStaticFields name rt ref = let (s, h) = heap rt

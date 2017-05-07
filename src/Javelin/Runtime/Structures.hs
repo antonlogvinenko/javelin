@@ -90,10 +90,10 @@ getClassLoaderInfo rt name = Map.lookup name (classLoading rt)
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
 
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
-                         classResolving :: Map.Map ClassName (Maybe LinkageError),
-
                          symbolics :: Map ClassName SymTable,
                          bytecodes :: Map.Map ClassName ByteCode,
+
+                         classResolving :: Map.Map ClassName (Maybe LinkageError),
 
                          heap :: (Int, Array Int JObject),
                          threads :: [Thread] }
@@ -117,12 +117,6 @@ data ClassSource = JarFile { getPath :: FilePath }
                           
 
 
--- LLI state
-data LoadLinkInitializeState = Loaded | Linked | Initialized
-                             deriving (Show, Eq)
-
-
-
 -- ClassLoading Info
 data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { instanceReference :: Integer }
@@ -130,10 +124,7 @@ data ClassLoader = BootstrapClassLoader
 
 data ClassLoaderInfo = ClassLoaderInfo { defining :: ClassLoader,
                                          initiating :: ClassLoader,
-                                         runtimePackage :: (String, ClassLoader),
-                                         lliState :: LoadLinkInitializeState,
-                                         resolved :: Bool,
-                                         staticRef :: Maybe Int }
+                                         runtimePackage :: (String, ClassLoader) }
                      deriving (Show, Eq)
 
 
