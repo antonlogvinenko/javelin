@@ -9,7 +9,7 @@ import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (fromList, lookup, unions)
+import Data.Map.Lazy as Map (Map, fromList, lookup, unions)
 import Data.List
 
 import Control.Monad.Trans
@@ -31,10 +31,12 @@ import Control.Monad.Trans.Class
 getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
 getClassSourcesLayout paths =
   let pathsList = splitOn ";" paths
-      layoutList = sequence $ map getClassSourceLayout2 pathsList :: IO [ClassPathLayout]
-  in lift $ unions <$> layoutList
+      layoutList = sequence $ map getClassSourceLayout2 pathsList :: IO [Map ClassName ClassSource]
+  in lift $ do
+    layout <- unions <$> layoutList
+    return $ ClassPathLayout layout pathsList
 
-getClassSourceLayout2 :: FilePath -> IO ClassPathLayout
+getClassSourceLayout2 :: FilePath -> IO (Map ClassName ClassSource)
 getClassSourceLayout2 dir = do
   files <- getClassPathFiles dir
   let sources = foldl folder [] files
@@ -83,8 +85,8 @@ classToPath name = name ++ ".class"
 
 -- using MaybeT { IO (Maybe a) }
 getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
-getClassBytes name layout = do
-  source <- ExceptT $ return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ Map.lookup name layout
+getClassBytes name (ClassPathLayout classes _) = do
+  source <- ExceptT $ return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ Map.lookup name classes
   getClassFromSource name source
 
 getClassFromSource :: ClassName -> ClassSource -> ExceptT VMError IO BSS.ByteString

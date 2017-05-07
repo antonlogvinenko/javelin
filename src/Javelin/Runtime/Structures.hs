@@ -4,7 +4,7 @@ where
 import Control.Applicative
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Array.IArray (Array)
-import Data.Map.Lazy as Map (fromList, Map, lookup, insert)
+import Data.Map.Lazy as Map (fromList, Map, lookup, insert, size)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray
 
@@ -104,7 +104,12 @@ isInterface name rt = (elem AccInterface) <$> classAccessFlags <$> body <$> (Map
 
 
 -- LLI ClassPath
-type ClassPathLayout = Map ClassName ClassSource
+data ClassPathLayout = ClassPathLayout { classes :: Map ClassName ClassSource,
+                                         classPath :: [String] }
+                     deriving Eq
+instance Show ClassPathLayout where
+  show cpl@(ClassPathLayout classes classPath) =
+    "ClassPathLayout: " ++ show (size classes) ++ " classes loaded from " ++ show classPath
 type ClassName = String
 data ClassSource = JarFile { getPath :: FilePath }
                  | ClassFile { getPath :: FilePath }
