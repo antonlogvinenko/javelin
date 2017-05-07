@@ -12,26 +12,30 @@ import System.FilePath ((</>))
 import Data.Map.Lazy as Map (fromList, lookup, unions)
 import Data.List
 
-import Control.Monad.Trans.Maybe
 import Control.Monad.Trans
 
 import Data.List.Split
 import Codec.Archive.Zip
+import Data.Either.Utils (maybeToEither)
 
 import Javelin.Runtime.Structures
 import Data.List.Split (splitOn)
 import Javelin.Util
 
+import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Class
+
 
 -- Getting layout for classpath
-getClassSourcesLayout :: String -> IO ClassPathLayout
+getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
 getClassSourcesLayout paths =
   let pathsList = splitOn ";" paths
-      layoutList = sequence $ map getClassSourceLayout pathsList :: IO [ClassPathLayout]
-  in unions <$> layoutList :: IO ClassPathLayout
+      layoutList = sequence $ map getClassSourceLayout2 pathsList :: IO [ClassPathLayout]
+  in lift $ unions <$> layoutList
 
-getClassSourceLayout :: FilePath -> IO ClassPathLayout
-getClassSourceLayout dir = do
+getClassSourceLayout2 :: FilePath -> IO ClassPathLayout
+getClassSourceLayout2 dir = do
   files <- getClassPathFiles dir
   let sources = foldl folder [] files
   classes <- mapM extractClasses sources
@@ -78,18 +82,18 @@ classToPath name = name ++ ".class"
 
 
 -- using MaybeT { IO (Maybe a) }
-getClassBytes :: ClassName -> ClassPathLayout -> MaybeT IO BSS.ByteString
+getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
 getClassBytes name layout = do
-  source <- toMaybeT $ Map.lookup name layout
+  source <- ExceptT $ return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ Map.lookup name layout
   getClassFromSource name source
 
-getClassFromSource :: ClassName -> ClassSource -> MaybeT IO BSS.ByteString
+getClassFromSource :: ClassName -> ClassSource -> ExceptT VMError IO BSS.ByteString
 getClassFromSource name (ClassFile path) = do
-  x <- toMaybeT $ classMatchesPath name path
+  x <- ExceptT $ return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ classMatchesPath name path
   lift $ BSL.toStrict <$> BSL.readFile x
-getClassFromSource name (JarFile path) = MaybeT $ do
+getClassFromSource name (JarFile path) = ExceptT $ do
   raw <- BSL.readFile path
-  return $ do
+  return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ do
     let arc = toArchive raw
         classPath = classToPath name
     entry <- findEntryByPath classPath arc

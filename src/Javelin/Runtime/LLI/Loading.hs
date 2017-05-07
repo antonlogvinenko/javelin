@@ -11,9 +11,12 @@ import Data.Map as Map (insert, lookup)
 import Data.ByteString (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Class
 import Javelin.Util
 import Data.Either.Utils (maybeToEither)
 import Control.Arrow ((>>>))
+
 
 
 -- 5.1 Deriving the Run-Time Constant Pool
@@ -53,7 +56,9 @@ deriveRef p (LongInfo val) =
   LongLiteral val
 deriveRef p (IntegerInfo val) =
   IntegerLiteral val
-
+deriveRef p _ =
+  IntegerLiteral 0
+    
 internString :: SymTable -> String -> (Word16, SymTable)
 internString st str = case findString 0 str st of
   Just idx -> (idx, st)
@@ -81,7 +86,7 @@ deriveFromClass classIdx nameAndTypeIdx p =
 
 
 -- 5.3.5 Deriving a Class from a class File Representation
-deriveClass :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> Either VMError Runtime
+deriveClass :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> ExceptT VMError IO Runtime
 deriveClass request@(ClassRequest initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
@@ -91,68 +96,68 @@ deriveClass request@(ClassRequest initCL name) rt defCL bs = do
     >>= checkSuperInterfaces request defCL bc syms
     >>= recordClassLoading name bc syms initCL defCL
 
-checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> Either VMError Runtime
+checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
 checkInitiatingClassLoader initCL name rt = do
   let actualInitCl = getInitiatingClassLoader rt name
   if Just initCL == actualInitCl
-    then linkageLeft LinkageError
-    else Right rt
+    then throwE $ Linkage LinkageError
+    else lift $ return rt
 
-checkClassFileFormat :: ByteString -> Runtime -> Either VMError ByteCode
+checkClassFileFormat :: ByteString -> Runtime -> ExceptT VMError IO ByteCode
 checkClassFileFormat bs rt = let body = parseRaw $ unpack bs in
   case body of
-    Left (_, _, msg) -> linkageLeft ClassFormatError
-    Right (_, _, byteCode) -> Right byteCode
+    Left (_, _, msg) -> throwE $ Linkage ClassFormatError
+    Right (_, _, byteCode) -> lift $ return byteCode
     
-checkClassVersion :: ByteCode -> Either VMError ()
+checkClassVersion :: ByteCode -> ExceptT VMError IO ()
 checkClassVersion bc = if minVer bc < 0 || majVer bc > 1050
-                       then linkageLeft UnsupportedClassVersionError
-                       else Right ()
+                       then throwE $ Linkage UnsupportedClassVersionError
+                       else lift $ return ()
 
-checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> Either VMError SymTable
+checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> ExceptT VMError IO SymTable
 checkRepresentedClass name rt bc =
   let pool = constPool $ body bc
       symTable = deriveSymTable pool
       thisIndex = this $ body bc
   in case symTable # thisIndex of
     (ClassOrInterface actualName) -> if actualName == name
-                                     then return symTable
-                                     else linkageLeft $
+                                     then lift $ return symTable
+                                     else throwE $ Linkage $
                                           NoClassDefFoundError (name ++ actualName ++ (show thisIndex))
-    _ -> linkageLeft ClassFormatError
+    _ -> throwE $ Linkage ClassFormatError
 -- last case is due to invalid bytecode; throw an exception and terminate?
 
-checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
+checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
 checkSuperClass request defCL bc sym rt =
   let superClassIdx = super $ body bc
       name = getName request
   in case (name, superClassIdx) of
-    ("java.lang.Object", 0) -> Right rt
-    ("java.lang.Object", _) -> linkageLeft $ InternalError ClassObjectHasNoSuperClasses
-    (_, 0) -> linkageLeft $ InternalError OnlyClassObjectHasNoSuperClass
+    ("java/lang/Object", 0) -> lift $ return rt
+    ("java/lang/Object", _) -> throwE $ Linkage $ InternalError ClassObjectHasNoSuperClasses
+    (_, 0) -> throwE $ Linkage $ InternalError $ OnlyClassObjectHasNoSuperClass name
     (_, idx) -> case sym # idx of
       -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
         rt <- resolve (ClassRequest defCL parent) rt
         case isInterface parent rt of
           -- bytecode error
-          Nothing -> linkageLeft $ InternalError $ CouldNotFindAccessFlags parent
-          Just True -> linkageLeft IncompatibleClassChangeError
+          Nothing -> throwE $ Linkage $ InternalError $ CouldNotFindAccessFlags parent
+          Just True -> throwE $ Linkage IncompatibleClassChangeError
           Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                             thisIsInterface = elem AccInterface thisAccessFlags
                         in case (thisIsInterface, parent) of
-                          (True, "java.lang.Object") -> Right rt
+                          (True, "java/lang/Object") -> lift $ return rt
                           -- bytecode error
-                          (True, _) -> linkageLeft $ InternalError InterfaceMustHaveObjectAsSuperClass
+                          (True, _) -> throwE $ Linkage $ InternalError InterfaceMustHaveObjectAsSuperClass
                           (False, parentName) -> if parentName == name
-                                                 then linkageLeft ClassCircularityError
-                                                 else Right rt
+                                                 then throwE $ Linkage ClassCircularityError
+                                                 else lift $ return rt
 
 
-checkSuperInterfaces :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> Either VMError Runtime
+checkSuperInterfaces :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
 checkSuperInterfaces request defCL bc syms rt = let superInterfaces = interfaces $ body bc
-                                                in foldl (checkSuperInterface request defCL bc syms) (Right rt) superInterfaces
-checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Either VMError Runtime -> Word16 -> Either VMError Runtime
+                                                in foldl (checkSuperInterface request defCL bc syms) (lift $ return rt) superInterfaces
+checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> ExceptT VMError IO Runtime -> Word16 -> ExceptT VMError IO Runtime
 checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   let name = getName request
@@ -161,30 +166,30 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
     (ClassOrInterface parent) -> do
       rt <- resolve (ClassRequest defCL parent) rt
       case isInterface parent rt of
-        Nothing -> linkageLeft $ InternalError $ CouldNotFindAccessFlags parent
-        Just False -> linkageLeft $ IncompatibleClassChangeError
+        Nothing -> throwE $ Linkage $ InternalError $ CouldNotFindAccessFlags parent
+        Just False -> throwE $ Linkage IncompatibleClassChangeError
         Just True -> if parent == name
-                     then linkageLeft ClassCircularityError
-                     else Right rt
+                     then throwE $ Linkage ClassCircularityError
+                     else lift $ return rt
 
 
-recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> Either VMError Runtime
+recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL
   rt@(Runtime {classLoading = cls, symbolics = syms, bytecodes = bcs}) =
     let clInfo = ClassLoaderInfo defCL initCL (name, defCL) Loaded False Nothing
-    in Right $ rt {classLoading = insert name clInfo cls,
-                   symbolics = insert name sym syms,
-                   bytecodes = insert name bc bcs}
+    in lift $ return $ rt {classLoading = insert name clInfo cls,
+                           symbolics = insert name sym syms,
+                           bytecodes = insert name bc bcs}
 
 
 
 -- 5.3 Creation and Loading top level code
-load :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
+load :: ClassRequest -> Runtime -> ExceptT VMError IO Runtime
 load request@(ClassRequest initCL name) rt =
   let loaderFn = if isArray name then loadArray else loadClass
   in case getInitiatingClassLoader rt name of
     Just recordedInitCL -> if recordedInitCL == initCL
-                           then return $ Right rt
+                           then lift $ return rt
                            else loaderFn request rt
     Nothing -> loaderFn request rt
 
@@ -195,17 +200,14 @@ loadClass request rt = loadClassWithUserDefCL request rt
 isArray :: ClassName -> Bool
 isArray name = head name == '['
 
-type ClassLoadMethod = ClassRequest -> Runtime -> IO (Either VMError Runtime)
+type ClassLoadMethod = ClassRequest -> Runtime -> ExceptT VMError IO Runtime
 
 -- 5.3.1 Loading Using the Bootstrap Class Loader
-loadClassWithBootstrap :: ClassRequest -> Runtime -> IO (Either VMError Runtime)
+loadClassWithBootstrap :: ClassRequest -> Runtime -> ExceptT VMError IO Runtime
 loadClassWithBootstrap request@(ClassRequest _ name) rt@(Runtime {classPathLayout = layout}) = 
   do
-    maybeBytes <- runMaybeT $ getClassBytes name layout
-    let eitherBytes = maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError ClassNotFoundException) maybeBytes
-    return $ do
-      bytes <- eitherBytes
-      deriveClass request rt BootstrapClassLoader bytes
+    bytes <- getClassBytes name layout
+    deriveClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader
 loadClassWithUserDefCL :: ClassLoadMethod
@@ -225,21 +227,21 @@ loadArray request rt = undefined
 -- 1. not yet resolved
 -- 2. successfilly resolved
 -- 3. resolution failed on the previous attempt 
-resolve :: ClassRequest -> Runtime -> Either VMError Runtime
+resolve :: ClassRequest -> Runtime -> ExceptT VMError IO Runtime
 resolve request rt = do
   case rt $> classResolving >>> (Map.lookup $ getName request) of
-    Just Nothing -> return rt
-    Just (Just err) -> linkageLeft err
-    Nothing -> return rt --todo
+    Just Nothing -> lift $ return rt
+    Just (Just err) -> throwE $ Linkage err
+    Nothing -> load request rt --todo
 
 
-resolveField :: ClassName -> Runtime -> Either VMError Runtime
+resolveField :: ClassName -> Runtime -> ExceptT VMError IO Runtime
 resolveField = undefined
 
-resolveMethod :: ClassName -> Runtime -> Either VMError Runtime
+resolveMethod :: ClassName -> Runtime -> ExceptT VMError IO Runtime
 resolveMethod = undefined
 
-resolveInterfaceMethod :: ClassName -> Runtime -> Either VMError Runtime
+resolveInterfaceMethod :: ClassName -> Runtime -> ExceptT VMError IO Runtime
 resolveInterfaceMethod = undefined
 
 

@@ -25,7 +25,7 @@ runJVM classPath mainClass args = do
 
 bootstrap :: String -> String -> [String] -> IO Thread
 bootstrap classPath mainClass mainArgs = do
-  layout <- getClassSourcesLayout classPath
+  layout <- undefined --getClassSourcesLayout classPath
   let frame = undefined
   -- args, create frame for invokation, lli main class
   return $ newThread frame layout

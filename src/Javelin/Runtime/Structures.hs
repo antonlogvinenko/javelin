@@ -132,11 +132,11 @@ data ClassLoaderInfo = ClassLoaderInfo { defining :: ClassLoader,
                      deriving (Show, Eq)
 
 
-data ClassNotFoundException = ClassNotFoundException
+data ClassNotFoundException = ClassNotFoundException String
                             deriving (Show, Eq)
 
 data InternalLoadingError = ClassLoaderNotFound
-                          | OnlyClassObjectHasNoSuperClass
+                          | OnlyClassObjectHasNoSuperClass String
                           | ClassObjectHasNoSuperClasses
                           | CouldNotFindAccessFlags String
                           | InterfaceMustHaveObjectAsSuperClass

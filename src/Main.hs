@@ -11,8 +11,10 @@ import Javelin.ByteCode.Stats (stats)
 import Javelin.ByteCode.Data (showByteCode)
 import Control.Monad.Trans.Maybe (runMaybeT)
 import Javelin.Runtime.LLI.ClassPath
-import Javelin.Runtime.Structures (newRuntime, ClassRequest(..), ClassLoader(..))
+import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.Loading (load)
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Class
 
 validate className = case className of
     Right _ -> True
@@ -47,7 +49,14 @@ disasmClass2 opt bs =
     Left (_, off, v) -> putStrLn $ "Failed to parse file"
 
 printHelp = putStrLn "Specify mode: [disasm|disasmFull|stats|classpath|loadClass|cs|jvm] for function/class/classes and mode argument"
-  
+
+cake :: FilePath -> String -> ExceptT VMError IO Runtime
+cake classPath className = do
+  layout <- getClassSourcesLayout classPath
+  let rt = newRuntime layout
+  classBytes <- getClassBytes className layout
+  load (ClassRequest BootstrapClassLoader className) rt
+            
 main = do
   args <- getArgs
   if length args < 2
@@ -62,20 +71,19 @@ main = do
                       in stats arg1 outputFile
            "classpath" -> let classPath = arg1
                               (className:_) = restArgs
+                              bb = runExceptT $ do
+                                layout <- getClassSourcesLayout classPath
+                                classBytes <- getClassBytes className layout
+                                lift $ disasmClass2 False classBytes
                           in do
-                            layout <- getClassSourcesLayout classPath
-                            classBytes <- runMaybeT $ getClassBytes className layout
-                            case classBytes of
-                              Nothing -> print "Class not found in classpath"
-                              Just c -> disasmClass2 False c
+                            b <- bb
+                            print b
            "loadClass" -> let classPath = arg1
                               (className:_) = restArgs
+                              bb = runExceptT $ cake classPath className
                           in do
-                            layout <- getClassSourcesLayout classPath
-                            let rt = newRuntime layout
-                            classBytes <- runMaybeT $ getClassBytes className layout
-                            result <- load (ClassRequest BootstrapClassLoader className) rt
-                            print result
+                            b <- bb
+                            print b
            "cs" -> runClasses arg1
            "jvm" -> let (classPath:mainArgs) = restArgs
                     in do
