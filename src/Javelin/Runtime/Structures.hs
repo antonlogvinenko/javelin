@@ -37,7 +37,7 @@ newRuntime :: ClassPathLayout -> Runtime
 newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout
-                       classLoadingInfo (fromList []) (fromList []) (fromList [])
+                       classLoadingInfo (fromList [])
                        (0, (array (0, 0) [(0, (fromList [("", JReference 0)]))]))
                        emptyThreads
 
@@ -64,10 +64,12 @@ writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
   return $ rt{heap = (s, h // [(ref, newObject)])}
 
 getSymTable :: Runtime -> ClassName -> Either VMError SymTable
-getSymTable = rtlookup symbolics
+getSymTable rt name = maybeToEither (StateError rt "") $
+  symtable <$> Map.lookup name (classLoading rt)
 
 getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
-getByteCode = rtlookup bytecodes
+getByteCode rt name = maybeToEither (StateError rt "") $
+  bytecode <$> Map.lookup name (classLoading rt)
 
 data ClassRequest = ClassRequest { getInitCL :: ClassLoader,
                                    getName :: ClassName }
@@ -88,10 +90,7 @@ getClassLoaderInfo :: Runtime -> ClassName -> Maybe ClassLoaderInfo
 getClassLoaderInfo rt name = Map.lookup name (classLoading rt)
 
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
-
                          classLoading :: Map.Map ClassName ClassLoaderInfo,
-                         symbolics :: Map ClassName SymTable,
-                         bytecodes :: Map.Map ClassName ByteCode,
 
                          classResolving :: Map.Map ClassName (Maybe LinkageError),
 
@@ -100,7 +99,7 @@ data Runtime = Runtime { classPathLayout :: ClassPathLayout,
              deriving (Show, Eq)
 
 isInterface :: ClassName -> Runtime -> Maybe Bool
-isInterface name rt = (elem AccInterface) <$> classAccessFlags <$> body <$> (Map.lookup name $ bytecodes rt)
+isInterface name rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> (Map.lookup name $ classLoading rt)
 
 
 -- LLI ClassPath
@@ -124,7 +123,9 @@ data ClassLoader = BootstrapClassLoader
 
 data ClassLoaderInfo = ClassLoaderInfo { defining :: ClassLoader,
                                          initiating :: ClassLoader,
-                                         runtimePackage :: (String, ClassLoader) }
+                                         runtimePackage :: (String, ClassLoader),
+                                         symtable :: SymTable,
+                                         bytecode :: ByteCode}
                      deriving (Show, Eq)
 
 
