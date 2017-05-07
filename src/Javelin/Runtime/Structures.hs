@@ -63,34 +63,34 @@ writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
       newObject = Map.insert name value jobject
   return $ rt{heap = (s, h // [(ref, newObject)])}
 
-getSymTable :: Runtime -> ClassRequest -> Either VMError SymTable
+getSymTable :: Runtime -> ClassId -> Either VMError SymTable
 getSymTable rt classId = maybeToEither (StateError rt "") $
   symtable <$> Map.lookup classId (loadedClasses rt)
 
-getByteCode :: Runtime -> ClassRequest -> Either VMError ByteCode
+getByteCode :: Runtime -> ClassId -> Either VMError ByteCode
 getByteCode rt classId = maybeToEither (StateError rt "") $
   bytecode <$> Map.lookup classId (loadedClasses rt)
 
-data ClassRequest = ClassRequest { getInitCL :: ClassLoader,
+data ClassId = ClassId { getInitCL :: ClassLoader,
                                    getName :: ClassName }
                   deriving (Show, Eq, Ord)
 
 --getInitiatingClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
 --getInitiatingClassLoader rt name = getClassLoader rt name initiating
 
-getDefiningClassLoader :: Runtime -> ClassRequest -> Maybe ClassLoader
+getDefiningClassLoader :: Runtime -> ClassId -> Maybe ClassLoader
 getDefiningClassLoader rt classId = getClassLoader rt classId defining
 
-getClassLoader :: Runtime -> ClassRequest -> (LoadedClass -> ClassLoader) -> Maybe ClassLoader
+getClassLoader :: Runtime -> ClassId -> (LoadedClass -> ClassLoader) -> Maybe ClassLoader
 getClassLoader rt classId clType = do
   info <- getLoadedClass rt classId
   return $ clType info
 
-getLoadedClass :: Runtime -> ClassRequest -> Maybe LoadedClass
+getLoadedClass :: Runtime -> ClassId -> Maybe LoadedClass
 getLoadedClass rt classId = Map.lookup classId (loadedClasses rt)
 
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
-                         loadedClasses :: Map.Map ClassRequest LoadedClass,
+                         loadedClasses :: Map.Map ClassId LoadedClass,
 
                          classResolving :: Map.Map ClassName (Maybe LinkageError),
 
@@ -98,7 +98,7 @@ data Runtime = Runtime { classPathLayout :: ClassPathLayout,
                          threads :: [Thread] }
              deriving (Show, Eq)
 
-isInterface ::  ClassRequest -> Runtime -> Maybe Bool
+isInterface ::  ClassId -> Runtime -> Maybe Bool
 isInterface classId rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> (Map.lookup classId $ loadedClasses rt)
 
 

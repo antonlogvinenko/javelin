@@ -55,7 +55,7 @@ cake classPath className = do
   layout <- getClassSourcesLayout classPath
   let rt = newRuntime layout
   classBytes <- getClassBytes className layout
-  load (ClassRequest BootstrapClassLoader className) rt
+  load (ClassId BootstrapClassLoader className) rt
             
 main = do
   args <- getArgs

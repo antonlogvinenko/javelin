@@ -26,13 +26,13 @@ verify name rt = Right rt
 -- §5.4.2 Preparation
 prepare :: ClassName -> Runtime -> Either VMError Runtime
 prepare name rt@(Runtime {loadedClasses = classLoadingInfo}) =
-  let classLoaderInfo = classLoadingInfo Map.! (ClassRequest undefined undefined)
+  let classLoaderInfo = classLoadingInfo Map.! (ClassId undefined undefined)
       (rt1, ref) = malloc rt
   in do
-    rt2 <- writeStaticFields (ClassRequest undefined undefined) rt1 ref
-    return rt2{loadedClasses = Map.insert (ClassRequest undefined undefined) classLoaderInfo classLoadingInfo}
+    rt2 <- writeStaticFields (ClassId undefined undefined) rt1 ref
+    return rt2{loadedClasses = Map.insert (ClassId undefined undefined) classLoaderInfo classLoadingInfo}
 
-writeStaticFields :: ClassRequest -> Runtime -> Ref -> Either VMError Runtime
+writeStaticFields :: ClassId -> Runtime -> Ref -> Either VMError Runtime
 writeStaticFields classId rt ref = let (s, h) = heap rt
                                        jobject = h ! ref
                                    in do

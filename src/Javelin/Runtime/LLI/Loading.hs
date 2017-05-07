@@ -89,8 +89,8 @@ deriveFromClass classIdx nameAndTypeIdx p =
 
 
 -- 5.3.5 Deriving a Class from a class File Representation
-deriveClass :: ClassRequest -> Runtime -> ClassLoader -> ByteString -> ExceptT VMError IO Runtime
-deriveClass request@(ClassRequest initCL name) rt defCL bs = do
+deriveClass :: ClassId -> Runtime -> ClassLoader -> ByteString -> ExceptT VMError IO Runtime
+deriveClass request@(ClassId initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc
@@ -101,7 +101,7 @@ deriveClass request@(ClassRequest initCL name) rt defCL bs = do
 
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
 checkInitiatingClassLoader initCL name rt@(Runtime {loadedClasses = cls}) = do
-  if Map.member (ClassRequest initCL name) cls
+  if Map.member (ClassId initCL name) cls
     then throwE $ Linkage LinkageError
     else lift $ return rt
 
@@ -129,7 +129,7 @@ checkRepresentedClass name rt bc =
     _ -> throwE $ Linkage ClassFormatError
 -- last case is due to invalid bytecode; throw an exception and terminate?
 
-checkSuperClass :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
+checkSuperClass :: ClassId -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
 checkSuperClass request defCL bc sym rt =
   let superClassIdx = super $ body bc
       name = getName request
@@ -140,7 +140,7 @@ checkSuperClass request defCL bc sym rt =
     (_, idx) -> case sym # idx of
       -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
-        let parentId = ClassRequest defCL parent
+        let parentId = ClassId defCL parent
         rt <- resolve parentId rt
         case isInterface parentId rt of
           -- bytecode error
@@ -157,17 +157,17 @@ checkSuperClass request defCL bc sym rt =
                                                  else lift $ return rt
 
 
-checkSuperInterfaces :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
+checkSuperInterfaces :: ClassId -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
 checkSuperInterfaces request defCL bc syms rt = let superInterfaces = interfaces $ body bc
                                                 in foldl (checkSuperInterface request defCL bc syms) (lift $ return rt) superInterfaces
-checkSuperInterface :: ClassRequest -> ClassLoader -> ByteCode -> SymTable -> ExceptT VMError IO Runtime -> Word16 -> ExceptT VMError IO Runtime
+checkSuperInterface :: ClassId -> ClassLoader -> ByteCode -> SymTable -> ExceptT VMError IO Runtime -> Word16 -> ExceptT VMError IO Runtime
 checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   rt <- eitherRt
   let name = getName request
   case sym # interfaceIdx of
     --other constructor? bytecode error
     (ClassOrInterface parent) -> do
-      let parentClassId = ClassRequest defCL parent
+      let parentClassId = ClassId defCL parent
       rt <- resolve parentClassId rt
       case isInterface parentClassId rt of
         Nothing -> throwE $ Linkage $ InternalError $ CouldNotFindAccessFlags parent
@@ -182,29 +182,29 @@ recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassL
 recordClassLoading name bc sym defCL initCL
   rt@(Runtime {loadedClasses = cls}) =
     let clInfo = LoadedClass defCL initCL (name, defCL) sym bc
-    in lift $ return $ rt {loadedClasses = insert (ClassRequest initCL name) clInfo cls}
+    in lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
 
 
 -- 5.3 Creation and Loading top level code
-load :: ClassRequest -> Runtime -> ExceptT VMError IO Runtime
-load request@(ClassRequest initCL name) rt@(Runtime {loadedClasses = cls}) =
+load :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+load request@(ClassId initCL name) rt@(Runtime {loadedClasses = cls}) =
   let loaderFn = if isArray name then loadArray else loadClass
   in case Map.lookup request cls of
     Just _ -> lift $ return rt
     Nothing -> loaderFn request rt
 
 loadClass :: ClassLoadMethod
-loadClass request@(ClassRequest BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
+loadClass request@(ClassId BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
 loadClass request rt = loadClassWithUserDefCL request rt
 
 isArray :: ClassName -> Bool
 isArray name = head name == '['
 
-type ClassLoadMethod = ClassRequest -> Runtime -> ExceptT VMError IO Runtime
+type ClassLoadMethod = ClassId -> Runtime -> ExceptT VMError IO Runtime
 
 -- 5.3.1 Loading Using the Bootstrap Class Loader
-loadClassWithBootstrap :: ClassRequest -> Runtime -> ExceptT VMError IO Runtime
-loadClassWithBootstrap request@(ClassRequest _ name) rt@(Runtime {classPathLayout = layout}) = 
+loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {classPathLayout = layout}) = 
   do
     bytes <- getClassBytes name layout
     deriveClass request rt BootstrapClassLoader bytes
@@ -227,7 +227,7 @@ loadArray request rt = undefined
 -- 1. not yet resolved
 -- 2. successfilly resolved
 -- 3. resolution failed on the previous attempt 
-resolve :: ClassRequest -> Runtime -> ExceptT VMError IO Runtime
+resolve :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolve request rt = do
   case rt $> classResolving >>> (Map.lookup $ getName request) of
     Just Nothing -> lift $ return rt
