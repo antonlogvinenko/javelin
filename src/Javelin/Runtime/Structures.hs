@@ -63,34 +63,34 @@ writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
       newObject = Map.insert name value jobject
   return $ rt{heap = (s, h // [(ref, newObject)])}
 
-getSymTable :: Runtime -> ClassName -> Either VMError SymTable
-getSymTable rt name = maybeToEither (StateError rt "") $
-  symtable <$> Map.lookup name (loadedClasses rt)
+getSymTable :: Runtime -> ClassRequest -> Either VMError SymTable
+getSymTable rt classId = maybeToEither (StateError rt "") $
+  symtable <$> Map.lookup classId (loadedClasses rt)
 
-getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
-getByteCode rt name = maybeToEither (StateError rt "") $
-  bytecode <$> Map.lookup name (loadedClasses rt)
+getByteCode :: Runtime -> ClassRequest -> Either VMError ByteCode
+getByteCode rt classId = maybeToEither (StateError rt "") $
+  bytecode <$> Map.lookup classId (loadedClasses rt)
 
 data ClassRequest = ClassRequest { getInitCL :: ClassLoader,
                                    getName :: ClassName }
-                  deriving (Show, Eq)
+                  deriving (Show, Eq, Ord)
 
-getInitiatingClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
-getInitiatingClassLoader rt name = getClassLoader rt name initiating
+--getInitiatingClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
+--getInitiatingClassLoader rt name = getClassLoader rt name initiating
 
-getDefiningClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
-getDefiningClassLoader rt name = getClassLoader rt name defining
+getDefiningClassLoader :: Runtime -> ClassRequest -> Maybe ClassLoader
+getDefiningClassLoader rt classId = getClassLoader rt classId defining
 
-getClassLoader :: Runtime -> ClassName -> (LoadedClass -> ClassLoader) -> Maybe ClassLoader
-getClassLoader rt name clType = do
-  info <- getLoadedClass rt name
+getClassLoader :: Runtime -> ClassRequest -> (LoadedClass -> ClassLoader) -> Maybe ClassLoader
+getClassLoader rt classId clType = do
+  info <- getLoadedClass rt classId
   return $ clType info
 
-getLoadedClass :: Runtime -> ClassName -> Maybe LoadedClass
-getLoadedClass rt name = Map.lookup name (loadedClasses rt)
+getLoadedClass :: Runtime -> ClassRequest -> Maybe LoadedClass
+getLoadedClass rt classId = Map.lookup classId (loadedClasses rt)
 
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
-                         loadedClasses :: Map.Map ClassName LoadedClass,
+                         loadedClasses :: Map.Map ClassRequest LoadedClass,
 
                          classResolving :: Map.Map ClassName (Maybe LinkageError),
 
@@ -98,8 +98,8 @@ data Runtime = Runtime { classPathLayout :: ClassPathLayout,
                          threads :: [Thread] }
              deriving (Show, Eq)
 
-isInterface :: ClassName -> Runtime -> Maybe Bool
-isInterface name rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> (Map.lookup name $ loadedClasses rt)
+isInterface ::  ClassRequest -> Runtime -> Maybe Bool
+isInterface classId rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> (Map.lookup classId $ loadedClasses rt)
 
 
 -- LLI ClassPath
@@ -119,7 +119,7 @@ data ClassSource = JarFile { getPath :: FilePath }
 -- ClassLoading Info
 data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { instanceReference :: Integer }
-                 deriving (Show, Eq)
+                 deriving (Show, Eq, Ord)
 
 data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  initiating :: ClassLoader,

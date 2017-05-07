@@ -26,20 +26,20 @@ verify name rt = Right rt
 -- §5.4.2 Preparation
 prepare :: ClassName -> Runtime -> Either VMError Runtime
 prepare name rt@(Runtime {loadedClasses = classLoadingInfo}) =
-  let classLoaderInfo = classLoadingInfo Map.! name
+  let classLoaderInfo = classLoadingInfo Map.! (ClassRequest undefined undefined)
       (rt1, ref) = malloc rt
   in do
-    rt2 <- writeStaticFields name rt1 ref
-    return rt2{loadedClasses = Map.insert name classLoaderInfo classLoadingInfo}
+    rt2 <- writeStaticFields (ClassRequest undefined undefined) rt1 ref
+    return rt2{loadedClasses = Map.insert (ClassRequest undefined undefined) classLoaderInfo classLoadingInfo}
 
-writeStaticFields :: String -> Runtime -> Ref -> Either VMError Runtime
-writeStaticFields name rt ref = let (s, h) = heap rt
-                                    jobject = h ! ref
-                                in do
-                                   sym <- getSymTable rt name
-                                   bc <- getByteCode rt name 
-                                   let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
-                                   bc $> body >>> fields >>> filter staticSearch >>> foldl (prepareStaticField sym ref) (return rt)
+writeStaticFields :: ClassRequest -> Runtime -> Ref -> Either VMError Runtime
+writeStaticFields classId rt ref = let (s, h) = heap rt
+                                       jobject = h ! ref
+                                   in do
+                                     sym <- getSymTable rt classId
+                                     bc <- getByteCode rt classId
+                                     let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
+                                     bc $> body >>> fields >>> filter staticSearch >>> foldl (prepareStaticField sym ref) (return rt)
 
 
 getDefaultValue :: Runtime -> String -> Either VMError JValue

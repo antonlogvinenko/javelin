@@ -7,7 +7,7 @@ import Javelin.ByteCode.Data
 import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
-import Data.Map as Map (insert, lookup)
+import Data.Map as Map (insert, lookup, member)
 import Data.ByteString (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
@@ -100,9 +100,8 @@ deriveClass request@(ClassRequest initCL name) rt defCL bs = do
     >>= recordClassLoading name bc syms initCL defCL
 
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
-checkInitiatingClassLoader initCL name rt = do
-  let actualInitCl = getInitiatingClassLoader rt name
-  if Just initCL == actualInitCl
+checkInitiatingClassLoader initCL name rt@(Runtime {loadedClasses = cls}) = do
+  if Map.member (ClassRequest initCL name) cls
     then throwE $ Linkage LinkageError
     else lift $ return rt
 
@@ -141,8 +140,9 @@ checkSuperClass request defCL bc sym rt =
     (_, idx) -> case sym # idx of
       -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
-        rt <- resolve (ClassRequest defCL parent) rt
-        case isInterface parent rt of
+        let parentId = ClassRequest defCL parent
+        rt <- resolve parentId rt
+        case isInterface parentId rt of
           -- bytecode error
           Nothing -> throwE $ Linkage $ InternalError $ CouldNotFindAccessFlags parent
           Just True -> throwE $ Linkage IncompatibleClassChangeError
@@ -167,30 +167,30 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
   case sym # interfaceIdx of
     --other constructor? bytecode error
     (ClassOrInterface parent) -> do
-      rt <- resolve (ClassRequest defCL parent) rt
-      case isInterface parent rt of
+      let parentClassId = ClassRequest defCL parent
+      rt <- resolve parentClassId rt
+      case isInterface parentClassId rt of
         Nothing -> throwE $ Linkage $ InternalError $ CouldNotFindAccessFlags parent
         Just False -> throwE $ Linkage IncompatibleClassChangeError
         Just True -> if parent == name
                      then throwE $ Linkage ClassCircularityError
                      else lift $ return rt
+    _ -> throwE $ undefined
 
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL
   rt@(Runtime {loadedClasses = cls}) =
     let clInfo = LoadedClass defCL initCL (name, defCL) sym bc
-    in lift $ return $ rt {loadedClasses = insert name clInfo cls}
+    in lift $ return $ rt {loadedClasses = insert (ClassRequest initCL name) clInfo cls}
 
 
 -- 5.3 Creation and Loading top level code
 load :: ClassRequest -> Runtime -> ExceptT VMError IO Runtime
-load request@(ClassRequest initCL name) rt =
+load request@(ClassRequest initCL name) rt@(Runtime {loadedClasses = cls}) =
   let loaderFn = if isArray name then loadArray else loadClass
-  in case getInitiatingClassLoader rt name of
-    Just recordedInitCL -> if recordedInitCL == initCL
-                           then lift $ return rt
-                           else loaderFn request rt
+  in case Map.lookup request cls of
+    Just _ -> lift $ return rt
     Nothing -> loaderFn request rt
 
 loadClass :: ClassLoadMethod
