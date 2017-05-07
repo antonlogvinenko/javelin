@@ -56,8 +56,11 @@ deriveRef p (LongInfo val) =
   LongLiteral val
 deriveRef p (IntegerInfo val) =
   IntegerLiteral val
-deriveRef p _ =
-  IntegerLiteral 0
+-- Following don't have referrers
+deriveRef p (Utf8Info _) =
+  EmptyLiteral
+deriveRef p (NameAndTypeInfo _ _) =
+  EmptyLiteral
     
 internString :: SymTable -> String -> (Word16, SymTable)
 internString st str = case findString 0 str st of

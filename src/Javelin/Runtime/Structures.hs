@@ -38,7 +38,7 @@ newRuntime layout = let emptyThreads = []
                         classLoadingInfo = fromList []
                     in Runtime layout
                        classLoadingInfo (fromList []) (fromList []) (fromList [])
-                       (0, (array (0, 1000) []))
+                       (0, (array (0, 0) [(0, (fromList [("", JReference 0)]))]))
                        emptyThreads
 
 
@@ -206,6 +206,7 @@ data SymbolicReference = ClassOrInterface { classOrInterfaceName :: String }
                        | FloatLiteral { float :: Float }
                        | IntegerLiteral { integer :: Int32 }
                        | LongLiteral { long :: Int64 }
+                       | EmptyLiteral
                        deriving (Show, Eq)
 
 data PartReference = PartReference { partName :: String,

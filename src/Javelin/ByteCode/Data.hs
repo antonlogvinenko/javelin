@@ -32,7 +32,7 @@ showByteCode opt (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool
                 L (nameAndValue "Flags: " $ intercalate ", " (map show (classAccessFlags body))),
                 P "This" [showConst p (this body)],
                 let superIdx = super body
-                in P "Superclass" [if superIdx > 0 then showConst p superIdx else P "" []],
+                in P "Superclass" [if superIdx > 1 then showConst p superIdx else P "" []],
                 P "Interfaces" $ map (showConst p) (interfaces body),
                 P "Constant pool " [showPool cp],
                 P "Fields" (map (printField p) (fields body)),
@@ -212,7 +212,7 @@ data Constant = Utf8Info { stringValue :: String }
 
               | MethodHandleInfo { referenceKind :: Word8, referenceIndex :: Word16 }
               | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
-              | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving Eq
+              | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Eq, Show)
 
 data FieldInfo = FieldInfo { fieldAccessFlags :: [FieldInfoAccessFlag],
                              fieldNameIndex :: Word16,
