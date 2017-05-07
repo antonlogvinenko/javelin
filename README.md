@@ -24,5 +24,5 @@ Usage:
 
 * Loading class with all dependencies
 
-        stack exec javelin classpath "./sample-classpath/" "com/google/common/collect/Lists"
+        stack exec javelin loadClass "./sample-classpath/" "com/google/common/collect/Lists"
 	
