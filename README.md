@@ -21,3 +21,8 @@ Usage:
 * Parsing classpath, traversing it and loading class bytes
 
         stack exec javelin classpath "./sample-classpath/" "com/google/common/collect/Lists"
+
+* Loading class with all dependencies
+
+        exec javelin classpath "./sample-classpath/" "com/google/common/collect/Lists"
+	

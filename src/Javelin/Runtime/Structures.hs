@@ -35,9 +35,9 @@ data Locals = Locals { vars :: Array Int Word32 } deriving (Show, Eq)
 -- Runtime
 newRuntime :: ClassPathLayout -> Runtime
 newRuntime layout = let emptyThreads = []
-                        classLoadingInfo = fromList []
+                        loadedClassesInfo = fromList []
                     in Runtime layout
-                       classLoadingInfo (fromList [])
+                       loadedClassesInfo (fromList [])
                        (0, (array (0, 0) [(0, (fromList [("", JReference 0)]))]))
                        emptyThreads
 
@@ -65,11 +65,11 @@ writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
 
 getSymTable :: Runtime -> ClassName -> Either VMError SymTable
 getSymTable rt name = maybeToEither (StateError rt "") $
-  symtable <$> Map.lookup name (classLoading rt)
+  symtable <$> Map.lookup name (loadedClasses rt)
 
 getByteCode :: Runtime -> ClassName -> Either VMError ByteCode
 getByteCode rt name = maybeToEither (StateError rt "") $
-  bytecode <$> Map.lookup name (classLoading rt)
+  bytecode <$> Map.lookup name (loadedClasses rt)
 
 data ClassRequest = ClassRequest { getInitCL :: ClassLoader,
                                    getName :: ClassName }
@@ -81,16 +81,16 @@ getInitiatingClassLoader rt name = getClassLoader rt name initiating
 getDefiningClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
 getDefiningClassLoader rt name = getClassLoader rt name defining
 
-getClassLoader :: Runtime -> ClassName -> (ClassLoaderInfo -> ClassLoader) -> Maybe ClassLoader
+getClassLoader :: Runtime -> ClassName -> (LoadedClass -> ClassLoader) -> Maybe ClassLoader
 getClassLoader rt name clType = do
-  info <- getClassLoaderInfo rt name
+  info <- getLoadedClass rt name
   return $ clType info
 
-getClassLoaderInfo :: Runtime -> ClassName -> Maybe ClassLoaderInfo
-getClassLoaderInfo rt name = Map.lookup name (classLoading rt)
+getLoadedClass :: Runtime -> ClassName -> Maybe LoadedClass
+getLoadedClass rt name = Map.lookup name (loadedClasses rt)
 
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
-                         classLoading :: Map.Map ClassName ClassLoaderInfo,
+                         loadedClasses :: Map.Map ClassName LoadedClass,
 
                          classResolving :: Map.Map ClassName (Maybe LinkageError),
 
@@ -99,7 +99,7 @@ data Runtime = Runtime { classPathLayout :: ClassPathLayout,
              deriving (Show, Eq)
 
 isInterface :: ClassName -> Runtime -> Maybe Bool
-isInterface name rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> (Map.lookup name $ classLoading rt)
+isInterface name rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> (Map.lookup name $ loadedClasses rt)
 
 
 -- LLI ClassPath
@@ -121,12 +121,12 @@ data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { instanceReference :: Integer }
                  deriving (Show, Eq)
 
-data ClassLoaderInfo = ClassLoaderInfo { defining :: ClassLoader,
-                                         initiating :: ClassLoader,
-                                         runtimePackage :: (String, ClassLoader),
-                                         symtable :: SymTable,
-                                         bytecode :: ByteCode}
-                     deriving (Show, Eq)
+data LoadedClass = LoadedClass { defining :: ClassLoader,
+                                 initiating :: ClassLoader,
+                                 runtimePackage :: (String, ClassLoader),
+                                 symtable :: SymTable,
+                                 bytecode :: ByteCode}
+                 deriving (Show, Eq)
 
 
 data ClassNotFoundException = ClassNotFoundException String

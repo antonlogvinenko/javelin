@@ -178,9 +178,9 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL
-  rt@(Runtime {classLoading = cls}) =
-    let clInfo = ClassLoaderInfo defCL initCL (name, defCL) sym bc
-    in lift $ return $ rt {classLoading = insert name clInfo cls}
+  rt@(Runtime {loadedClasses = cls}) =
+    let clInfo = LoadedClass defCL initCL (name, defCL) sym bc
+    in lift $ return $ rt {loadedClasses = insert name clInfo cls}
 
 
 -- 5.3 Creation and Loading top level code
