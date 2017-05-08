@@ -127,9 +127,6 @@ data LoadedClass = LoadedClass { defining :: ClassLoader,
                  deriving (Show, Eq)
 
 
-data ClassNotFoundException = ClassNotFoundException String
-                            deriving (Show, Eq)
-
 data InternalLoadingError = ClassLoaderNotFound
                           | OnlyClassObjectHasNoSuperClass String
                           | ClassObjectHasNoSuperClasses
@@ -142,7 +139,7 @@ data LinkageError = LinkageError
                   | ClassFormatError
                   | UnsupportedClassVersionError
 
-                  | NoClassDefFoundClassNotFoundError { notFound :: ClassNotFoundException }
+                  | NoClassDefFoundClassNotFoundError { notFound :: VMError }
                   | NoClassDefFoundError String
                     
                   | IncompatibleClassChangeError
@@ -158,7 +155,9 @@ data LinkageError = LinkageError
 
 data VMError = StateError { rt :: Runtime,
                             reason :: InternalLoadingError }
-             | Linkage { le :: LinkageError }
+             | Linkage { rt :: Runtime,
+                         le :: LinkageError }
+             | ClassNotFoundException { notFoundClass :: String }
              deriving (Show, Eq)
 
 linkageLeft = Left . Linkage

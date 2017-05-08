@@ -93,7 +93,7 @@ deriveClass :: ClassId -> Runtime -> ClassLoader -> ByteString -> ExceptT VMErro
 deriveClass request@(ClassId initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
-  checkClassVersion bc
+  checkClassVersion bc rt
   syms <- checkRepresentedClass name rt bc
   checkSuperClass request defCL bc syms rt
     >>= checkSuperInterfaces request defCL bc syms
@@ -102,19 +102,19 @@ deriveClass request@(ClassId initCL name) rt defCL bs = do
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
 checkInitiatingClassLoader initCL name rt@(Runtime {loadedClasses = cls}) = do
   if Map.member (ClassId initCL name) cls
-    then throwE $ Linkage LinkageError
+    then throwE $ Linkage rt LinkageError
     else lift $ return rt
 
 checkClassFileFormat :: ByteString -> Runtime -> ExceptT VMError IO ByteCode
 checkClassFileFormat bs rt = let body = parseRaw $ unpack bs in
   case body of
-    Left (_, _, msg) -> throwE $ Linkage ClassFormatError
+    Left (_, _, msg) -> throwE $ Linkage rt  ClassFormatError
     Right (_, _, byteCode) -> lift $ return byteCode
     
-checkClassVersion :: ByteCode -> ExceptT VMError IO ()
-checkClassVersion bc = if minVer bc < 0 || majVer bc > 1050
-                       then throwE $ Linkage UnsupportedClassVersionError
-                       else lift $ return ()
+checkClassVersion :: ByteCode -> Runtime -> ExceptT VMError IO ()
+checkClassVersion bc rt = if minVer bc < 0 || majVer bc > 1050
+                          then throwE $ Linkage rt UnsupportedClassVersionError
+                          else lift $ return ()
 
 checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> ExceptT VMError IO SymTable
 checkRepresentedClass name rt bc =
@@ -124,9 +124,9 @@ checkRepresentedClass name rt bc =
   in case symTable # thisIndex of
     (ClassOrInterface actualName) -> if actualName == name
                                      then lift $ return symTable
-                                     else throwE $ Linkage $
+                                     else throwE $ Linkage rt $
                                           NoClassDefFoundError (name ++ actualName ++ (show thisIndex))
-    _ -> throwE $ Linkage ClassFormatError
+    _ -> throwE $ Linkage rt ClassFormatError
 -- last case is due to invalid bytecode; throw an exception and terminate?
 
 checkSuperClass :: ClassId -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
@@ -135,8 +135,8 @@ checkSuperClass request defCL bc sym rt =
       name = getName request
   in case (name, superClassIdx) of
     ("java/lang/Object", 0) -> lift $ return rt
-    ("java/lang/Object", _) -> throwE $ Linkage $ ClassFormatError
-    (_, 0) -> throwE $ Linkage $ ClassFormatError
+    ("java/lang/Object", _) -> throwE $ Linkage rt $ ClassFormatError
+    (_, 0) -> throwE $ Linkage rt $ ClassFormatError
     (_, idx) -> case sym # idx of
       -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
@@ -145,7 +145,7 @@ checkSuperClass request defCL bc sym rt =
         case isInterface parentId rt of
           -- bytecode error
           Nothing -> throwE $ StateError rt SpecifyMeError
-          Just True -> throwE $ Linkage IncompatibleClassChangeError
+          Just True -> throwE $ Linkage rt IncompatibleClassChangeError
           Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                             thisIsInterface = elem AccInterface thisAccessFlags
                         in case (thisIsInterface, parent) of
@@ -153,7 +153,7 @@ checkSuperClass request defCL bc sym rt =
                           -- bytecode error
                           (True, _) -> throwE $ StateError rt InterfaceMustHaveObjectAsSuperClass
                           (False, parentName) -> if parentName == name
-                                                 then throwE $ Linkage ClassCircularityError
+                                                 then throwE $ Linkage rt ClassCircularityError
                                                  else lift $ return rt
       _ -> throwE $ undefined
 
@@ -172,9 +172,9 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
       rt <- resolve parentClassId rt
       case isInterface parentClassId rt of
         Nothing -> throwE $ StateError rt $ CouldNotFindAccessFlags parent
-        Just False -> throwE $ Linkage IncompatibleClassChangeError
+        Just False -> throwE $ Linkage rt IncompatibleClassChangeError
         Just True -> if parent == name
-                     then throwE $ Linkage ClassCircularityError
+                     then throwE $ Linkage rt ClassCircularityError
                      else lift $ return rt
     _ -> throwE $ undefined
 
@@ -232,7 +232,7 @@ resolve :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolve request rt = do
   case rt $> classResolving >>> (Map.lookup $ getName request) of
     Just Nothing -> lift $ return rt
-    Just (Just err) -> throwE $ Linkage err
+    Just (Just err) -> throwE $ Linkage rt err
     Nothing -> load request rt --todo
 
 

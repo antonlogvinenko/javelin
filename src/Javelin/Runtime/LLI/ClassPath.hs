@@ -86,16 +86,16 @@ classToPath name = name ++ ".class"
 -- using MaybeT { IO (Maybe a) }
 getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
 getClassBytes name (ClassPathLayout classes _) = do
-  source <- ExceptT $ return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ Map.lookup name classes
+  source <- ExceptT $ return $ maybeToEither (ClassNotFoundException name) $ Map.lookup name classes
   getClassFromSource name source
 
 getClassFromSource :: ClassName -> ClassSource -> ExceptT VMError IO BSS.ByteString
 getClassFromSource name (ClassFile path) = do
-  x <- ExceptT $ return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ classMatchesPath name path
+  x <- ExceptT $ return $ maybeToEither (ClassNotFoundException name) $ classMatchesPath name path
   lift $ BSL.toStrict <$> BSL.readFile x
 getClassFromSource name (JarFile path) = ExceptT $ do
   raw <- BSL.readFile path
-  return $ maybeToEither (Linkage $ NoClassDefFoundClassNotFoundError $ ClassNotFoundException name) $ do
+  return $ maybeToEither (ClassNotFoundException name) $ do
     let arc = toArchive raw
         classPath = classToPath name
     entry <- findEntryByPath classPath arc
