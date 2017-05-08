@@ -143,18 +143,16 @@ checkSuperClass request defCL bc sym rt =
         let parentId = ClassId defCL parent
         rt <- resolve parentId rt
         case isInterface parentId rt of
-          -- bytecode error
-          Nothing -> throwE $ StateError rt SpecifyMeError
-          Just True -> throwE $ Linkage rt IncompatibleClassChangeError
-          Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
-                            thisIsInterface = elem AccInterface thisAccessFlags
-                        in case (thisIsInterface, parent) of
-                          (True, "java/lang/Object") -> lift $ return rt
-                          -- bytecode error
-                          (True, _) -> throwE $ StateError rt InterfaceMustHaveObjectAsSuperClass
-                          (False, parentName) -> if parentName == name
-                                                 then throwE $ Linkage rt ClassCircularityError
-                                                 else lift $ return rt
+          Left error -> throwE error
+          Right True -> throwE $ Linkage rt IncompatibleClassChangeError
+          Right False -> let thisAccessFlags = classAccessFlags $ body $ bc
+                             thisIsInterface = elem AccInterface thisAccessFlags
+                         in case (thisIsInterface, parent) of
+                           (True, "java/lang/Object") -> lift $ return rt
+                           (True, _) -> throwE $ StateError rt InterfaceMustHaveObjectAsSuperClass
+                           (False, parentName) -> if parentName == name
+                                                  then throwE $ Linkage rt ClassCircularityError
+                                                  else lift $ return rt
       _ -> throwE $ undefined
 
 
@@ -171,9 +169,9 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
       let parentClassId = ClassId defCL parent
       rt <- resolve parentClassId rt
       case isInterface parentClassId rt of
-        Nothing -> throwE $ StateError rt $ CouldNotFindAccessFlags parent
-        Just False -> throwE $ Linkage rt IncompatibleClassChangeError
-        Just True -> if parent == name
+        Left e -> throwE e
+        Right False -> throwE $ Linkage rt IncompatibleClassChangeError
+        Right True -> if parent == name
                      then throwE $ Linkage rt ClassCircularityError
                      else lift $ return rt
     _ -> throwE $ undefined
@@ -182,7 +180,7 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL
   rt@(Runtime {loadedClasses = cls}) =
-    let clInfo = LoadedClass defCL initCL (name, defCL) sym bc
+    let clInfo = Right $ LoadedClass defCL initCL (name, defCL) sym bc
     in lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
 
 
