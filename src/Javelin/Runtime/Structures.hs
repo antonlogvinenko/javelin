@@ -51,11 +51,11 @@ malloc rt@(Runtime {heap = (s, h)}) = (rt{heap = (s + 1, h)}, s)
 getField :: Runtime -> Ref -> String -> Either VMError JValue
 getField rt ref name = let h = snd $ heap rt
                        in if ref < (snd . bounds) h
-                          then maybeToEither (StateError rt "") $ Map.lookup name (h ! ref)
-                          else Left $ StateError rt ""
+                          then maybeToEither (StateError rt SpecifyMeError) $ Map.lookup name (h ! ref)
+                          else Left $ StateError rt SpecifyMeError
 
 rtlookup :: (Ord k) => (Runtime -> Map k v) -> Runtime -> k -> Either VMError v
-rtlookup f rt k = maybeToEither (StateError rt "") $ Map.lookup k $ f rt
+rtlookup f rt k = maybeToEither (StateError rt SpecifyMeError) $ Map.lookup k $ f rt
 
 writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
 writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
@@ -64,11 +64,11 @@ writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
   return $ rt{heap = (s, h // [(ref, newObject)])}
 
 getSymTable :: Runtime -> ClassId -> Either VMError SymTable
-getSymTable rt classId = maybeToEither (StateError rt "") $
+getSymTable rt classId = maybeToEither (StateError rt SpecifyMeError) $
   symtable <$> Map.lookup classId (loadedClasses rt)
 
 getByteCode :: Runtime -> ClassId -> Either VMError ByteCode
-getByteCode rt classId = maybeToEither (StateError rt "") $
+getByteCode rt classId = maybeToEither (StateError rt SpecifyMeError) $
   bytecode <$> Map.lookup classId (loadedClasses rt)
 
 data ClassId = ClassId { getInitCL :: ClassLoader,
@@ -136,6 +136,7 @@ data InternalLoadingError = ClassLoaderNotFound
                           | CouldNotFindAccessFlags String
                           | InterfaceMustHaveObjectAsSuperClass
                           | SymTableHasNoClassEntryAtIndex
+                          | SpecifyMeError
                           deriving (Show, Eq)
 data LinkageError = LinkageError
                   | ClassFormatError
@@ -152,13 +153,11 @@ data LinkageError = LinkageError
                   | NoSuchMethodError
                     
                   | ClassCircularityError
-                  | InternalError { internal :: InternalLoadingError }
-                  | UnknownError { message :: String }
                   | ExceptionInInitializerError
                   deriving (Show, Eq)
 
 data VMError = StateError { rt :: Runtime,
-                            msg :: String }
+                            reason :: InternalLoadingError }
              | Linkage { le :: LinkageError }
              deriving (Show, Eq)
 

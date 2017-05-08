@@ -135,8 +135,8 @@ checkSuperClass request defCL bc sym rt =
       name = getName request
   in case (name, superClassIdx) of
     ("java/lang/Object", 0) -> lift $ return rt
-    ("java/lang/Object", _) -> throwE $ Linkage $ InternalError ClassObjectHasNoSuperClasses
-    (_, 0) -> throwE $ Linkage $ InternalError $ OnlyClassObjectHasNoSuperClass name
+    ("java/lang/Object", _) -> throwE $ Linkage $ ClassFormatError
+    (_, 0) -> throwE $ Linkage $ ClassFormatError
     (_, idx) -> case sym # idx of
       -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
@@ -144,14 +144,14 @@ checkSuperClass request defCL bc sym rt =
         rt <- resolve parentId rt
         case isInterface parentId rt of
           -- bytecode error
-          Nothing -> throwE $ Linkage $ InternalError $ CouldNotFindAccessFlags parent
+          Nothing -> throwE $ StateError rt SpecifyMeError
           Just True -> throwE $ Linkage IncompatibleClassChangeError
           Just False -> let thisAccessFlags = classAccessFlags $ body $ bc
                             thisIsInterface = elem AccInterface thisAccessFlags
                         in case (thisIsInterface, parent) of
                           (True, "java/lang/Object") -> lift $ return rt
                           -- bytecode error
-                          (True, _) -> throwE $ Linkage $ InternalError InterfaceMustHaveObjectAsSuperClass
+                          (True, _) -> throwE $ StateError rt InterfaceMustHaveObjectAsSuperClass
                           (False, parentName) -> if parentName == name
                                                  then throwE $ Linkage ClassCircularityError
                                                  else lift $ return rt
@@ -171,7 +171,7 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
       let parentClassId = ClassId defCL parent
       rt <- resolve parentClassId rt
       case isInterface parentClassId rt of
-        Nothing -> throwE $ Linkage $ InternalError $ CouldNotFindAccessFlags parent
+        Nothing -> throwE $ StateError rt $ CouldNotFindAccessFlags parent
         Just False -> throwE $ Linkage IncompatibleClassChangeError
         Just True -> if parent == name
                      then throwE $ Linkage ClassCircularityError
