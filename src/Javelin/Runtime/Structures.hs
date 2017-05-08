@@ -72,11 +72,8 @@ getByteCode rt classId = maybeToEither (StateError rt "") $
   bytecode <$> Map.lookup classId (loadedClasses rt)
 
 data ClassId = ClassId { getInitCL :: ClassLoader,
-                                   getName :: ClassName }
-                  deriving (Show, Eq, Ord)
-
---getInitiatingClassLoader :: Runtime -> ClassName -> Maybe ClassLoader
---getInitiatingClassLoader rt name = getClassLoader rt name initiating
+                         getName :: ClassName }
+             deriving (Show, Eq, Ord)
 
 getDefiningClassLoader :: Runtime -> ClassId -> Maybe ClassLoader
 getDefiningClassLoader rt classId = getClassLoader rt classId defining
@@ -109,6 +106,7 @@ data ClassPathLayout = ClassPathLayout { classes :: Map ClassName ClassSource,
 instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
     "ClassPathLayout: " ++ show (size classes) ++ " classes loaded from " ++ show classPath
+
 type ClassName = String
 data ClassSource = JarFile { getPath :: FilePath }
                  | ClassFile { getPath :: FilePath }

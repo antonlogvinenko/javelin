@@ -155,6 +155,7 @@ checkSuperClass request defCL bc sym rt =
                           (False, parentName) -> if parentName == name
                                                  then throwE $ Linkage ClassCircularityError
                                                  else lift $ return rt
+      _ -> throwE $ undefined
 
 
 checkSuperInterfaces :: ClassId -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
