@@ -201,11 +201,16 @@ isArray name = head name == '['
 
 type ClassLoadMethod = ClassId -> Runtime -> ExceptT VMError IO Runtime
 
+
+wrapClassNotFound :: Runtime -> VMError -> VMError
+wrapClassNotFound rt x@(ClassNotFoundException _) = Linkage rt $ NoClassDefFoundClassNotFoundError x
+wrapClassNotFound _ x = x
+
 -- 5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {classPathLayout = layout}) = 
   do
-    bytes <- getClassBytes name layout
+    bytes <- withExceptT (wrapClassNotFound rt) (getClassBytes name layout)
     deriveClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader
