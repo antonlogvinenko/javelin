@@ -9,7 +9,7 @@ import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (Map, fromList, lookup, unions)
+import Data.Map.Lazy as Map (Map, fromList, lookup, unions, empty)
 import Data.List
 
 import Control.Monad.Trans
@@ -31,50 +31,56 @@ import Control.Monad.Trans.Class
 getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
 getClassSourcesLayout paths =
   let pathsList = splitOn ";" paths
-      layoutList = sequence $ map getClassSourceLayout2 pathsList :: IO [Map ClassName ClassSource]
+      layoutList = sequence $ map getClassPathElementLayout pathsList :: IO [Map ClassName ClassSource]
   in lift $ do
     layout <- unions <$> layoutList
     return $ ClassPathLayout layout pathsList
 
-getClassSourceLayout2 :: FilePath -> IO (Map ClassName ClassSource)
-getClassSourceLayout2 dir = do
-  files <- getClassPathFiles dir
-  let sources = foldl folder [] files
-  classes <- mapM extractClasses sources
-  return $ Map.fromList $ concat classes
+zipSuffixes = [".jar", ".zip", ".war", ".ear"]
+isZip :: FilePath -> Bool
+isZip path = any (\s -> isSuffixOf s path) zipSuffixes
 
+getClassPathElementLayout :: FilePath -> IO (Map ClassName ClassSource)
+getClassPathElementLayout path
+  | ".class" `isSuffixOf` path = extractFileClass path
+  | isZip path = extractZipClasses path
+  | otherwise = do
+    isDirectory <- doesDirectoryExist path
+    if not isDirectory
+      then return Map.empty
+      else do
+        pathes <- getClassPathFiles path :: IO [FilePath]
+        let layouts = mapM getClassPathElementLayout pathes :: IO [Map ClassName ClassSource]
+        unions <$> layouts
+                
 getClassPathFiles :: FilePath -> IO [FilePath]
-getClassPathFiles dir = do
-  files <- map (dir </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents dir
-  allFiles <- forM files weNeedToGoDeeper
-  return $ concat allFiles
-  
-weNeedToGoDeeper :: FilePath -> IO [FilePath]
-weNeedToGoDeeper path = do
+getClassPathFiles path = do
   isDirectory <- doesDirectoryExist path
-  if isDirectory
-    then getClassPathFiles path
-    else return [path]
+  if not isDirectory
+    then return [path]
+    else do
+         files <- map (path </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents path
+         allFiles <- mapM getClassPathFiles files :: IO [[FilePath]]
+         return $ concat allFiles
 
-folder :: [ClassSource] -> FilePath -> [ClassSource]
-folder list path
-  | ".class" `isSuffixOf` path = ClassFile path : list
-  | ".jar" `isSuffixOf` path = JarFile path : list
+zipContentFold :: [ClassSource] -> FilePath -> [ClassSource]
+zipContentFold list path
+  | isSuffixOf ".class" path = ClassFile path : list
+  | isZip path = JarFile path : list
   | otherwise = list
 
-extractClasses :: ClassSource -> IO [(ClassName, ClassSource)]
-extractClasses s@(JarFile path) = do
-  paths <- getJarClasses path
-  map pathToClass >>> map (\c -> (c, s)) >>> return $ paths
-extractClasses s@(ClassFile p) = return [(pathToClass p, s)]
-
-getJarClasses :: FilePath -> IO [FilePath]
-getJarClasses path = do
+extractZipClasses :: FilePath -> IO (Map ClassName ClassSource)
+extractZipClasses path = do
   raw <- BSL.readFile path
   let arc = toArchive raw
   let allFiles = filesInArchive arc
-  return $ map getPath $ foldl folder [] allFiles
-  
+  let paths = map getPath $ foldl zipContentFold [] allFiles
+  let s = JarFile path
+  map pathToClass >>> map (\c -> (c, s)) >>> Map.fromList >>> return $ paths
+
+extractFileClass :: FilePath -> IO (Map ClassName ClassSource)
+extractFileClass path = return $ Map.fromList [(pathToClass path, ClassFile path)]
+
 pathToClass :: FilePath -> ClassName
 pathToClass path = head $ splitOn "." path
 
@@ -83,7 +89,6 @@ classToPath name = name ++ ".class"
 
 
 
--- using MaybeT { IO (Maybe a) }
 getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
 getClassBytes name (ClassPathLayout classes _) = do
   source <- ExceptT $ return $ maybeToEither (ClassNotFoundException name) $ Map.lookup name classes
