@@ -4,7 +4,6 @@ where
 
 import Data.ByteString.Lazy as BSL (ByteString, toStrict, readFile)
 import Data.ByteString as BSS (ByteString)
-import Control.Monad (forM)
 import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
@@ -14,7 +13,6 @@ import Data.List
 
 import Control.Monad.Trans
 
-import Data.List.Split
 import Codec.Archive.Zip
 import Data.Either.Utils (maybeToEither)
 import Data.String.Utils (strip)
@@ -32,14 +30,12 @@ import Control.Monad.Trans.Class
 getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
 getClassSourcesLayout paths =
   let pathsList = strip <$> splitOn ";" paths
-      layoutList = sequence $ getClassPathElementLayout <$> pathsList :: IO [Map ClassName ClassSource]
   in lift $ do
-    layout <- unions <$> layoutList
+    layout <- getClassPathLayout pathsList
     return $ ClassPathLayout layout pathsList
 
-zipSuffixes = [".jar", ".zip", ".war", ".ear"]
-isZip :: FilePath -> Bool
-isZip path = any (\s -> isSuffixOf s path) zipSuffixes
+getClassPathLayout :: [FilePath] -> IO (Map ClassName ClassSource)
+getClassPathLayout paths = unions <$> mapM getClassPathElementLayout paths
 
 getClassPathElementLayout :: FilePath -> IO (Map ClassName ClassSource)
 getClassPathElementLayout path
@@ -49,19 +45,16 @@ getClassPathElementLayout path
     isDirectory <- doesDirectoryExist path
     if not isDirectory
       then return Map.empty
-      else do
-        pathes <- getClassPathFiles path :: IO [FilePath]
-        let layouts = mapM getClassPathElementLayout pathes :: IO [Map ClassName ClassSource]
-        unions <$> layouts
+      else getFilesInClassPath path >>= getClassPathLayout
                 
-getClassPathFiles :: FilePath -> IO [FilePath]
-getClassPathFiles path = do
+getFilesInClassPath :: FilePath -> IO [FilePath]
+getFilesInClassPath path = do
   isDirectory <- doesDirectoryExist path
   if not isDirectory
     then return [path]
     else do
          files <- map (path </>) <$> filter (`notElem` [".", ".."]) <$> getDirectoryContents path
-         allFiles <- mapM getClassPathFiles files :: IO [[FilePath]]
+         allFiles <- mapM getFilesInClassPath files :: IO [[FilePath]]
          return $ concat allFiles
 
 zipContentFold :: [ClassSource] -> FilePath -> [ClassSource]
@@ -74,9 +67,9 @@ extractZipClasses :: FilePath -> IO (Map ClassName ClassSource)
 extractZipClasses path = do
   raw <- BSL.readFile path
   let arc = toArchive raw
-  let allFiles = filesInArchive arc
-  let paths = map getPath $ foldl zipContentFold [] allFiles
-  let s = JarFile path
+      allFiles = filesInArchive arc
+      paths = map getPath $ foldl zipContentFold [] allFiles
+      s = JarFile path
   map pathToClass >>> map (\c -> (c, s)) >>> Map.fromList >>> return $ paths
 
 extractFileClass :: FilePath -> IO (Map ClassName ClassSource)
@@ -85,6 +78,9 @@ extractFileClass path = return $ Map.fromList [(pathToClass path, ClassFile path
 pathToClass :: FilePath -> ClassName
 pathToClass path = head $ splitOn "." path
 
+zipSuffixes = [".jar", ".zip", ".war", ".ear"]
+isZip :: FilePath -> Bool
+isZip path = any (\s -> isSuffixOf s path) zipSuffixes
 
 
 getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
