@@ -1,32 +1,25 @@
 module Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout, getClassBytes)
-
 where
 
+import Data.Map as Map (Map, fromList, lookup, unions, empty)
+import Data.List
 import Data.ByteString.Lazy as BSL (ByteString, toStrict, readFile)
 import Data.ByteString as BSS (ByteString)
-import Control.Arrow ((>>>))
-import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
-import Data.Map.Lazy as Map (Map, fromList, lookup, unions, empty)
-import Data.List
-
-import Control.Monad.Trans
 
 import Codec.Archive.Zip
 import Data.Either.Utils (maybeToEither)
 import Data.String.Utils (strip)
+import Data.List.Split (splitOn)
 
 import Javelin.Runtime.Structures
-import Data.List.Split (splitOn)
-import Javelin.Util
 
-import Control.Monad.Trans.Maybe
+import Control.Applicative ((<$>))
+import Control.Monad.Trans
 import Control.Monad.Trans.Except
-import Control.Monad.Trans.Class
 
 
--- Getting layout for classpath
 getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
 getClassSourcesLayout paths =
   let pathsList = strip <$> splitOn ";" paths
@@ -68,9 +61,10 @@ extractZipClasses path = do
   raw <- BSL.readFile path
   let arc = toArchive raw
       allFiles = filesInArchive arc
-      paths = map getPath $ foldl zipContentFold [] allFiles
+      paths = (map getPath $ foldl zipContentFold [] allFiles) :: [FilePath]
       s = JarFile path
-  map pathToClass >>> map (\c -> (c, s)) >>> Map.fromList >>> return $ paths
+  return $ Map.fromList $ (\c -> (c, s)) <$> pathToClass <$> paths
+
 
 extractFileClass :: FilePath -> IO (Map ClassName ClassSource)
 extractFileClass path = return $ Map.fromList [(pathToClass path, ClassFile path)]
@@ -78,9 +72,8 @@ extractFileClass path = return $ Map.fromList [(pathToClass path, ClassFile path
 pathToClass :: FilePath -> ClassName
 pathToClass path = head $ splitOn "." path
 
-zipSuffixes = [".jar", ".zip", ".war", ".ear"]
 isZip :: FilePath -> Bool
-isZip path = any (\s -> isSuffixOf s path) zipSuffixes
+isZip path = any (\s -> isSuffixOf s path) [".jar", ".zip", ".war", ".ear"]
 
 
 getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
@@ -89,9 +82,11 @@ getClassBytes name (ClassPathLayout classes _) = do
   getClassFromSource name source
 
 getClassFromSource :: ClassName -> ClassSource -> ExceptT VMError IO BSS.ByteString
-getClassFromSource name (ClassFile path) = do
-  x <- ExceptT $ return $ maybeToEither (ClassNotFoundException name) $ classMatchesPath name path
-  lift $ BSL.toStrict <$> BSL.readFile x
+getClassFromSource name (ClassFile path) =
+  if classToPath name == path
+  then lift $ BSL.toStrict <$> BSL.readFile path
+  else throwE $ ClassNotFoundException name
+       
 getClassFromSource name (JarFile path) = ExceptT $ do
   raw <- BSL.readFile path
   return $ maybeToEither (ClassNotFoundException name) $ do
@@ -99,9 +94,6 @@ getClassFromSource name (JarFile path) = ExceptT $ do
         classPath = classToPath name
     entry <- findEntryByPath classPath arc
     return $ BSL.toStrict $ fromEntry entry
-
-classMatchesPath :: String -> FilePath -> Maybe FilePath
-classMatchesPath name path = if classToPath name /= path then Nothing else Just path
 
 classToPath :: ClassName -> FilePath
 classToPath name = name ++ ".class"
