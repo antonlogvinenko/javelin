@@ -17,6 +17,7 @@ import Control.Monad.Trans
 import Data.List.Split
 import Codec.Archive.Zip
 import Data.Either.Utils (maybeToEither)
+import Data.String.Utils (strip)
 
 import Javelin.Runtime.Structures
 import Data.List.Split (splitOn)
@@ -30,8 +31,8 @@ import Control.Monad.Trans.Class
 -- Getting layout for classpath
 getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
 getClassSourcesLayout paths =
-  let pathsList = splitOn ";" paths
-      layoutList = sequence $ map getClassPathElementLayout pathsList :: IO [Map ClassName ClassSource]
+  let pathsList = strip <$> splitOn ";" paths
+      layoutList = sequence $ getClassPathElementLayout <$> pathsList :: IO [Map ClassName ClassSource]
   in lift $ do
     layout <- unions <$> layoutList
     return $ ClassPathLayout layout pathsList
@@ -84,9 +85,6 @@ extractFileClass path = return $ Map.fromList [(pathToClass path, ClassFile path
 pathToClass :: FilePath -> ClassName
 pathToClass path = head $ splitOn "." path
 
-classToPath :: ClassName -> FilePath
-classToPath name = name ++ ".class"
-
 
 
 getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
@@ -108,3 +106,6 @@ getClassFromSource name (JarFile path) = ExceptT $ do
 
 classMatchesPath :: String -> FilePath -> Maybe FilePath
 classMatchesPath name path = if classToPath name /= path then Nothing else Just path
+
+classToPath :: ClassName -> FilePath
+classToPath name = name ++ ".class"
