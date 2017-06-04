@@ -5,9 +5,9 @@
   * efficiency?
 * handle exceptions
  * does it return the same error after the error happened?
- * establish some basic integraion testing
- * make printing Runtime better
- * review class loading implementation
+* establish some basic integraion testing
+* make printing Runtime better
+* review class loading implementation
  
 
 *Long term*
