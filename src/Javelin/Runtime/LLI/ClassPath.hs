@@ -18,6 +18,7 @@ import Javelin.Runtime.Structures
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
+import Flow
 
 
 getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
@@ -78,7 +79,7 @@ isZip path = any (\s -> isSuffixOf s path) [".jar", ".zip", ".war", ".ear"]
 
 getClassBytes :: ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
 getClassBytes name (ClassPathLayout classes _) = do
-  source <- ExceptT $ return $ maybeToEither (ClassNotFoundException name) $ Map.lookup name classes
+  source <- classes |> Map.lookup name |> maybeToEither (ClassNotFoundException name) |> return |> ExceptT
   getClassFromSource name source
 
 getClassFromSource :: ClassName -> ClassSource -> ExceptT VMError IO BSS.ByteString
