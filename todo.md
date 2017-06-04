@@ -1,10 +1,10 @@
 *Current*
 * loadArray
- * fix classpath + efficiency
- * return [(…)], not Map?
- * efficiency?
+ ** fix classpath + efficiency
+ ** return [(…)], not Map?
+ ** efficiency?
 * handle exceptions
- * does it return the same error after the error happened?
+ ** does it return the same error after the error happened?
 * establish some basic integraion testing
 * make printing Runtime better
 * review class loading implementation
@@ -13,29 +13,29 @@
 *Long term*
 * Runtime data structures [**Done**]
 * Loading
- * Symtable, 2 cases [**In progress**]
- * Deriving class [**In progress**]
- * Top level class loading [**In progress**]
- * Test these parts of loading
- * Change type of class loading status type
+ ** Symtable, 2 cases [**In progress**]
+ ** Deriving class [**In progress**]
+ ** Top level class loading [**In progress**]
+ ** Test these parts of loading
+ ** Change type of class loading status type
 * Linking, initializing: light version [**In progress**]
 * Executing instructions
 * All features skipped
- * verification
- * exceptions
- * synchronization
- * invokedynamic
- * multiple threads (use haskell threads and transactions for shared memory?)
- * user derined class loaders (only boostrap)
+ ** verification
+ ** exceptions
+ ** synchronization
+ ** invokedynamic
+ ** multiple threads (use haskell threads and transactions for shared memory?)
+ ** user derined class loaders (only boostrap)
 * User classpath suport
 * Improve class path handling
- * simpler zip condition - check file signature?
- * .class files in path
- * zip, ear, war files in classpath
- * rename JarFile to ZipFile
- * recursibe Zip files
- * common code with statistics?
- * use vector for bytecodes
+ ** simpler zip condition - check file signature?
+ ** .class files in path
+ ** zip, ear, war files in classpath
+ ** rename JarFile to ZipFile
+ ** recursibe Zip files
+ ** common code with statistics?
+ ** use vector for bytecodes
 
 *notes*
 runtime constant pool must be map
