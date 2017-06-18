@@ -70,9 +70,11 @@ getByteCode :: Runtime -> ClassId -> Either VMError ByteCode
 getByteCode rt classId = bytecode <$> getLoadedClass rt classId
 
 getLoadedClass :: Runtime -> ClassId -> Either VMError LoadedClass
-getLoadedClass rt classId = do
-  loadedClass <- maybeToEither (StateError rt SpecifyMeError) (Map.lookup classId (loadedClasses rt))
-  loadedClass
+getLoadedClass rt classId =
+  maybe (Left $ StateError rt SpecifyMeError) id (findLoadedClass rt classId)
+
+findLoadedClass :: Runtime -> ClassId -> Maybe (Either VMError LoadedClass)
+findLoadedClass rt classId = Map.lookup classId (loadedClasses rt)
 
 data ClassId = ClassId { getInitCL :: ClassLoader,
                          getName :: ClassName }
@@ -107,7 +109,6 @@ type ClassName = String
 data ClassSource = JarFile { getPath :: FilePath }
                  | ClassFile { getPath :: FilePath }
                  deriving (Show, Eq)
-                          
 
 
 -- ClassLoading Info
@@ -120,6 +121,10 @@ data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  runtimePackage :: (String, ClassLoader),
                                  symtable :: SymTable,
                                  bytecode :: ByteCode}
+                   | LoadedArrayClass { defining :: ClassLoader,
+                                        initiating :: ClassLoader,
+                                        runtimePackage :: (String, ClassLoader),
+                                        dimensions :: Int }
                  deriving (Show, Eq)
 
 

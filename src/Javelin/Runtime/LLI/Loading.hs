@@ -219,12 +219,36 @@ loadClassWithUserDefCL request rt = undefined
 
 -- 5.3.3 Creating Array Classes
 loadArray :: ClassLoadMethod
-loadArray request rt = undefined
+loadArray request@(ClassId initCL name) rt@(Runtime {loadedClasses = cls}) = do
+  (rt, defCL) <- loadAndGetDefCLOfComponentType request rt
+  let clInfo = Right $ LoadedArrayClass defCL initCL (name, defCL) (getDimensions name)
+  lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
 
+loadAndGetDefCLOfComponentType :: ClassId -> Runtime -> ExceptT VMError IO (Runtime, ClassLoader)
+loadAndGetDefCLOfComponentType classId@(ClassId initCL name) rt =
+  if isReferenceArray name
+  then do
+    let componentClassId = ClassId initCL (getArrayComponentType name)
+    rt <- loadClass componentClassId rt
+    definingComponentCL <- ExceptT . return $ getDefiningClassLoader rt componentClassId
+    lift $ return (rt, definingComponentCL)
+  else return (rt, BootstrapClassLoader)
+    
+getDimensions :: String -> Int
+getDimensions name = undefined
+
+isReferenceArray :: String -> Bool
+isReferenceArray [] = False
+isReferenceArray ('[' : other) = isReferenceArray other
+isReferenceArray ('L' : other) = True
+
+getArrayComponentType :: String -> String
+getArrayComponentType [] = []
+getArrayComponentType ('[' : other) = getArrayComponentType other
+getArrayComponentType ('L' : other) = take ((length other) - 1) other
+  
 -- 5.3.4 Loading Constraints
 -- not implemented yet
-
-
 
 
 -- first need to check whether resolution already happened, 3 possible outcomes:

@@ -3,12 +3,12 @@ Javelin
 JVM SE8 implementation in Haskell
 
 Usage:
-* Decompiler
+* Disassemler
 
         stack exec javelin disasm acceptance/TreeMultimapNaturalTest.class
  [See result here](https://gist.github.com/antonlogvinenko/9a6dcc4dbabe0acef90df3a7f9fd7d0b)
 
-* Decompiler with traced references to constant pool
+* Disassembler with traced references to constant pool
 
         stack exec javelin disasmFull acceptance/TreeMultimapNaturalTest.class
  [See result here](https://gist.github.com/antonlogvinenko/cdc157a251efe965b9af2244ba41fcf6)
