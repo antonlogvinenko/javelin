@@ -51,11 +51,11 @@ malloc rt@(Runtime {heap = (s, h)}) = (rt{heap = (s + 1, h)}, s)
 getField :: Runtime -> Ref -> String -> Either VMError JValue
 getField rt ref name = let h = snd $ heap rt
                        in if ref < (snd . bounds) h
-                          then maybeToEither (StateError rt SpecifyMeError) $ Map.lookup name (h ! ref)
-                          else Left $ StateError rt SpecifyMeError
+                          then maybeToEither (InternalError rt SpecifyMeError) $ Map.lookup name (h ! ref)
+                          else Left $ InternalError rt SpecifyMeError
 
 rtlookup :: (Ord k) => (Runtime -> Map k v) -> Runtime -> k -> Either VMError v
-rtlookup f rt k = maybeToEither (StateError rt SpecifyMeError) $ Map.lookup k $ f rt
+rtlookup f rt k = maybeToEither (InternalError rt SpecifyMeError) $ Map.lookup k $ f rt
 
 writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
 writeField rt@(Runtime {heap = (s, h)}) ref (name, value) = do
@@ -71,7 +71,7 @@ getByteCode rt classId = bytecode <$> getLoadedClass rt classId
 
 getLoadedClass :: Runtime -> ClassId -> Either VMError LoadedClass
 getLoadedClass rt classId =
-  maybe (Left $ StateError rt SpecifyMeError) id (findLoadedClass rt classId)
+  maybe (Left $ InternalError rt SpecifyMeError) id (findLoadedClass rt classId)
 
 findLoadedClass :: Runtime -> ClassId -> Maybe (Either VMError LoadedClass)
 findLoadedClass rt classId = Map.lookup classId (loadedClasses rt)
@@ -154,8 +154,8 @@ data LinkageError = LinkageError
                   | ExceptionInInitializerError
                   deriving (Show, Eq)
 
-data VMError = StateError { rt :: Runtime,
-                            reason :: InternalLoadingError }
+data VMError = InternalError { rt :: Runtime,
+                               reason :: InternalLoadingError }
              | Linkage { rt :: Runtime,
                          le :: LinkageError }
              | ClassNotFoundException { notFoundClass :: String }

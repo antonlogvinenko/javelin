@@ -149,7 +149,7 @@ checkSuperClass request defCL bc sym rt =
                              thisIsInterface = elem AccInterface thisAccessFlags
                          in case (thisIsInterface, parent) of
                            (True, "java/lang/Object") -> lift $ return rt
-                           (True, _) -> throwE $ StateError rt InterfaceMustHaveObjectAsSuperClass
+                           (True, _) -> throwE $ InternalError rt InterfaceMustHaveObjectAsSuperClass
                            (False, parentName) -> if parentName == name
                                                   then throwE $ Linkage rt ClassCircularityError
                                                   else lift $ return rt
@@ -220,32 +220,30 @@ loadClassWithUserDefCL request rt = undefined
 -- 5.3.3 Creating Array Classes
 loadArray :: ClassLoadMethod
 loadArray request@(ClassId initCL name) rt@(Runtime {loadedClasses = cls}) = do
-  (rt, defCL) <- loadAndGetDefCLOfComponentType request rt
-  let clInfo = Right $ LoadedArrayClass defCL initCL (name, defCL) (getDimensions name)
+  let arrayRepr@(ArrayRepr {depth = d}) = parseSignature name
+  (rt, defCL) <- loadAndGetDefCLOfComponentType request rt arrayRepr
+  let clInfo = Right $ LoadedArrayClass defCL initCL (name, defCL) d
   lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
 
-loadAndGetDefCLOfComponentType :: ClassId -> Runtime -> ExceptT VMError IO (Runtime, ClassLoader)
-loadAndGetDefCLOfComponentType classId@(ClassId initCL name) rt =
-  if isReferenceArray name
-  then do
-    let componentClassId = ClassId initCL (getArrayComponentType name)
-    rt <- loadClass componentClassId rt
-    definingComponentCL <- ExceptT . return $ getDefiningClassLoader rt componentClassId
-    lift $ return (rt, definingComponentCL)
-  else return (rt, BootstrapClassLoader)
-    
-getDimensions :: String -> Int
-getDimensions name = undefined
+loadAndGetDefCLOfComponentType :: ClassId -> Runtime -> ArrayRepr -> ExceptT VMError IO (Runtime, ClassLoader)
+loadAndGetDefCLOfComponentType classId@(ClassId initCL name) rt repr@(ArrayRepr {depth = d, componentType = refType}) = do
+  case refType of
+    Just ref -> do
+      let componentClassId = ClassId initCL ref
+      rt <- loadClass componentClassId rt
+      definingComponentCL <- ExceptT . return $ getDefiningClassLoader rt componentClassId
+      lift $ return (rt, definingComponentCL)
+    Nothing ->  return (rt, BootstrapClassLoader)
 
-isReferenceArray :: String -> Bool
-isReferenceArray [] = False
-isReferenceArray ('[' : other) = isReferenceArray other
-isReferenceArray ('L' : other) = True
-
-getArrayComponentType :: String -> String
-getArrayComponentType [] = []
-getArrayComponentType ('[' : other) = getArrayComponentType other
-getArrayComponentType ('L' : other) = take ((length other) - 1) other
+-- to be rewritten with introduction of parsed types
+data ArrayRepr = ArrayRepr { depth :: Int,
+                             componentType :: Maybe String }
+parseSignature :: String -> ArrayRepr
+parseSignature name = bla name (ArrayRepr 0 Nothing)
+bla :: String -> ArrayRepr -> ArrayRepr
+bla [] r = r
+bla ('[' : s) r = bla s r{depth = (depth r) + 1}
+bla ('L' : s) r = r{componentType = Just $ take ((length s) - 1) s}
   
 -- 5.3.4 Loading Constraints
 -- not implemented yet

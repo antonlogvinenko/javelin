@@ -1,13 +1,15 @@
 *Current*
 * test loadArray
-* better parsing of load array component parts
 * does it return the same error after the error happened?
 * constraints - later
 
 * establish some basic integraion testing
 * make printing Runtime better
 * review class loading implementation
- 
+
+Linking
+* constraints
+* access rights
 
 *Long term*
 * Runtime data structures [**Done**]

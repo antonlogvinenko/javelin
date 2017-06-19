@@ -44,9 +44,9 @@ writeStaticFields classId rt ref = let (s, h) = heap rt
 
 getDefaultValue :: Runtime -> String -> Either VMError JValue
 getDefaultValue rt name = case parseFieldDescriptor name of
-  Left err -> Left $ StateError rt SpecifyMeError
+  Left err -> Left $ InternalError rt SpecifyMeError
   Right d -> case fieldType d of
-    BaseType t -> maybeToEither (StateError rt SpecifyMeError) $ Map.lookup t baseDefaultValues
+    BaseType t -> maybeToEither (InternalError rt SpecifyMeError) $ Map.lookup t baseDefaultValues
     _ -> return nullReference
 
 prepareStaticField :: SymTable -> Ref -> Either VMError Runtime -> FieldInfo -> Either VMError Runtime
