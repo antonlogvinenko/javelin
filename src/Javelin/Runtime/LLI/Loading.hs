@@ -15,8 +15,7 @@ import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class
 import Javelin.Util
 import Data.Either.Utils (maybeToEither)
-import Control.Arrow ((>>>))
-
+import Flow
 
 
 -- 5.1 Deriving the Run-Time Constant Pool
@@ -255,7 +254,7 @@ bla ('L' : s) r = r{componentType = Just $ take ((length s) - 1) s}
 -- 3. resolution failed on the previous attempt 
 resolve :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolve request rt = do
-  case rt $> classResolving >>> (Map.lookup $ getName request) of
+  case rt |> classResolving |> (Map.lookup request) of
     Just Nothing -> lift $ return rt
     Just (Just err) -> throwE $ Linkage rt err
     Nothing -> load request rt --todo

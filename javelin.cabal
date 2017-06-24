@@ -29,7 +29,6 @@ library
                      Javelin.Runtime.DescSign,
                      Javelin.Runtime.LLI.Loading,
                      Javelin.Runtime.LLI.LinkingInitializing,
-                     Javelin.Runtime.LLI.Resolving,
                      Javelin.Runtime.Structures,
                      Javelin.Util
 -- ghc-options:       -Wall

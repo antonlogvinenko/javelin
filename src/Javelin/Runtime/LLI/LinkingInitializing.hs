@@ -5,14 +5,13 @@ import qualified Data.Map.Lazy as Map (fromList, Map, lookup, insert, (!))
 import Data.Array.IArray as Array ((!), (//))
 import Data.Word (Word16)
 import Control.Applicative ((<$>))
-import Control.Arrow ((>>>))
 import Javelin.Util
 
 import Javelin.Runtime.Structures
 import Javelin.Runtime.DescSign
 import Javelin.ByteCode.Data
 import Data.Either.Utils (maybeToEither)
-
+import Flow
 
 linking :: ClassName -> Runtime -> Either VMError Runtime
 linking name rt = verify name rt >>= prepare name
@@ -39,7 +38,7 @@ writeStaticFields classId rt ref = let (s, h) = heap rt
                                      sym <- getSymTable rt classId
                                      bc <- getByteCode rt classId
                                      let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
-                                     bc $> body >>> fields >>> filter staticSearch >>> foldl (prepareStaticField sym ref) (return rt)
+                                     bc |> body |> fields |> filter staticSearch |> foldl (prepareStaticField sym ref) (return rt)
 
 
 getDefaultValue :: Runtime -> String -> Either VMError JValue
@@ -52,7 +51,7 @@ getDefaultValue rt name = case parseFieldDescriptor name of
 prepareStaticField :: SymTable -> Ref -> Either VMError Runtime -> FieldInfo -> Either VMError Runtime
 prepareStaticField sym ref ert fi = do
   rt <- ert
-  fieldName <- fieldNameIndex >>> getStringLiteral sym $ fi
+  fieldName <- getStringLiteral sym $ fieldNameIndex fi
   descriptorName <- getStringLiteral sym $ fieldDescriptorIndex fi
   defaultValue <- getDefaultValue rt descriptorName
   writeField rt ref (fieldName, defaultValue)

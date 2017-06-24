@@ -22,9 +22,5 @@ toMaybeT = MaybeT . return
 replace :: Char -> Char -> String -> String
 replace co cr = map (\c -> if c == co then cr else c)
 
-infix 0 $>
-($>) :: a -> (a -> b) -> b
-($>) x f = f x
-
 at :: Integral b => [a] -> b -> a
 at cc i = cc !! ((fromIntegral i) - 1)

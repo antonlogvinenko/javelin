@@ -10,7 +10,6 @@ import Data.Array.IArray
 
 import Javelin.ByteCode.Data
 import Javelin.Runtime.DescSign
-import Control.Arrow ((>>>))
 import Javelin.Util
 import Data.Either.Utils (maybeToEither)
 
@@ -87,7 +86,7 @@ getDefiningClassLoader rt classId = defining <$> getLoadedClass rt classId
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
                          loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
 
-                         classResolving :: Map.Map ClassName (Maybe LinkageError),
+                         classResolving :: Map.Map ClassId (Maybe LinkageError),
 
                          heap :: (Int, Array Int JObject),
                          threads :: [Thread] }

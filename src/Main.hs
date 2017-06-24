@@ -16,9 +16,7 @@ import Javelin.Runtime.LLI.Loading (load)
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class
 
-validate className = case className of
-    Right _ -> True
-    Left _ -> False
+validate = either (const False) (const True)
 
 testClasses :: FilePath -> IO ([String], Bool)
 testClasses path = do
