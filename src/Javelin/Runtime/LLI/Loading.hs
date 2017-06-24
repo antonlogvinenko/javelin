@@ -255,9 +255,9 @@ bla ('L' : s) r = r{componentType = Just $ take ((length s) - 1) s}
 resolve :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolve request rt = do
   case rt |> classResolving |> (Map.lookup request) of
-    Just Nothing -> lift $ return rt
-    Just (Just err) -> throwE $ Linkage rt err
-    Nothing -> load request rt --todo
+    Just Success -> lift $ return rt
+    Just (Failure err) -> throwE err
+    Nothing -> load request rt --array/reference? result separate from loading status!
 
 
 resolveField :: ClassName -> Runtime -> ExceptT VMError IO Runtime

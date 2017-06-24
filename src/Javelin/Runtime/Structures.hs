@@ -82,11 +82,14 @@ data ClassId = ClassId { getInitCL :: ClassLoader,
 getDefiningClassLoader :: Runtime -> ClassId -> Either VMError ClassLoader
 getDefiningClassLoader rt classId = defining <$> getLoadedClass rt classId
 
+data ResolvingStatus = Success
+                     | Failure { resolvingFailure :: VMError }
+                     deriving (Show, Eq)
 
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
                          loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
 
-                         classResolving :: Map.Map ClassId (Maybe LinkageError),
+                         classResolving :: Map.Map ClassId ResolvingStatus,
 
                          heap :: (Int, Array Int JObject),
                          threads :: [Thread] }
