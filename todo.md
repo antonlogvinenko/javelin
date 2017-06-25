@@ -1,33 +1,21 @@
-*Current*
-* test loadArray
-* does it return the same error after the error happened?
-* constraints - later
+Phase I
+* field resolution p361
+* method resolution
+* establish min integration testing
+* initialization
+* execution of commands
+* Run sum of two numbers and println result
+* Make printing Runtime readable: what is important in its contents?
 
-* establish some basic integraion testing
-* make printing Runtime better
-* review class loading implementation
-
-Linking
-* constraints
-* access rights
+Phase II
+- all instructions
+- exceptions, monitor locks
+- resolution: interface methods, etc
+- constaints in loading
+- access rights in linking
+- custom class loaders
 
 *Long term*
-* Runtime data structures [**Done**]
-* Loading
-  * Symtable, 2 cases [**In progress**]
-  * Deriving class [**In progress**]
-  * Top level class loading [**In progress**]
-  * Test these parts of loading
-  * Change type of class loading status type
-* Linking, initializing: light version [**In progress**]
-* Executing instructions
-* All features skipped
-  * verification
-  * exceptions
-  * synchronization
-  * invokedynamic
-  * multiple threads (use haskell threads and transactions for shared memory?)
-  * user derined class loaders (only boostrap)
 * User classpath suport
 * Improve class path handling
   * simpler zip condition - check file signature?
@@ -39,13 +27,12 @@ Linking
   * use vector for bytecodes
 
 *notes*
+in load function - maybe return tuple with runtime
 runtime constant pool must be map
 	- not all indices are referenced, see definition of deriveRef - empty results there
 SpecifyMeError - replace with detailed, maybe use LinkageError; add messages
 VMError and contents: add messages
 VMError: use interfaces, less data types? not sure
-error is per thread!
-
 
 - why check not already asked by initCL, but then fail?
 - how can be loaded multiple times? different init CLs?

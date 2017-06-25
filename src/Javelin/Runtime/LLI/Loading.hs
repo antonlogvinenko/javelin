@@ -243,6 +243,7 @@ bla :: String -> ArrayRepr -> ArrayRepr
 bla [] r = r
 bla ('[' : s) r = bla s r{depth = (depth r) + 1}
 bla ('L' : s) r = r{componentType = Just $ take ((length s) - 1) s}
+bla (_ : xs) r = bla xs r
   
 -- 5.3.4 Loading Constraints
 -- not implemented yet
@@ -253,12 +254,19 @@ bla ('L' : s) r = r{componentType = Just $ take ((length s) - 1) s}
 -- 2. successfilly resolved
 -- 3. resolution failed on the previous attempt 
 resolve :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-resolve request rt = do
-  case rt |> classResolving |> (Map.lookup request) of
+resolve request@(ClassId initCL name) rt =
+  case rt |> classResolving |> Map.lookup request of
     Just Success -> lift $ return rt
     Just (Failure err) -> throwE err
-    Nothing -> load request rt --array/reference? result separate from loading status!
-
+    Nothing -> do
+      rt <- load request rt
+      let (ArrayRepr d mt) = parseSignature name
+      if d > 0
+        then case mt of
+        Nothing -> lift $ return rt
+        Just t -> resolve (ClassId initCL t) rt
+        else lift $ return rt
+  
 
 resolveField :: ClassName -> Runtime -> ExceptT VMError IO Runtime
 resolveField = undefined
