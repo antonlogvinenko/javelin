@@ -1,9 +1,10 @@
 Phase I
 * field resolution p361
 * method resolution
-* establish min integration testing
+* preparation
 * initialization
 * execution of commands
+* establish min integration testing
 * Run sum of two numbers and println result
 * Make printing Runtime readable: what is important in its contents?
 

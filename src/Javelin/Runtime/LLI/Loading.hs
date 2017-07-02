@@ -256,8 +256,8 @@ bla (_ : xs) r = bla xs r
 resolve :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolve request@(ClassId initCL name) rt =
   case rt |> classResolving |> Map.lookup request of
-    Just Success -> lift $ return rt
-    Just (Failure err) -> throwE err
+    Just (ClassResOk _ _) -> lift $ return rt
+    Just (ClassResFail err) -> throwE err
     Nothing -> do
       rt <- load request rt
       let (ArrayRepr d mt) = parseSignature name
@@ -268,13 +268,13 @@ resolve request@(ClassId initCL name) rt =
         else lift $ return rt
   
 
-resolveField :: ClassName -> Runtime -> ExceptT VMError IO Runtime
+resolveField :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveField = undefined
 
-resolveMethod :: ClassName -> Runtime -> ExceptT VMError IO Runtime
+resolveMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveMethod = undefined
 
-resolveInterfaceMethod :: ClassName -> Runtime -> ExceptT VMError IO Runtime
+resolveInterfaceMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveInterfaceMethod = undefined
 
 
