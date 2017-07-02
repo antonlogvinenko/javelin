@@ -7,7 +7,7 @@ import Javelin.ByteCode.Data
 import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
-import Data.Map as Map (insert, lookup, member)
+import Data.Map as Map (insert, lookup, member, Map(..), empty)
 import Data.ByteString (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
@@ -75,14 +75,14 @@ appendString :: String -> SymTable -> (Word16, SymTable)
 appendString str st = (fromIntegral $ length st, newSymTable)
   where newSymTable = st ++ [StringLiteral str]
 
-deriveFromClass :: (Integral i) => i -> i -> [Constant] -> PartReference
+deriveFromClass :: (Integral i) => i -> i -> [Constant] -> ClassPartReference
 deriveFromClass classIdx nameAndTypeIdx p =
   let classInfo = p # classIdx
       nameAndTypeInfo = p # nameAndTypeIdx
       className = stringValue $ p # (nameIndex classInfo)
       memberName = stringValue $ p # (nameIndex nameAndTypeInfo)
       memberDescriptor = stringValue $ p # (nameAndTypeDescriptorIndex nameAndTypeInfo)
-  in PartReference className memberName memberDescriptor
+  in ClassPartReference className memberName memberDescriptor
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 
 
@@ -175,13 +175,31 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
                      else lift $ return rt
     _ -> throwE $ undefined
 
-
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL
   rt@(Runtime {loadedClasses = cls}) =
     let clInfo = Right $ LoadedClass defCL initCL (name, defCL) sym bc
+                 (recordFields bc sym) (recordMethods bc sym)
     in lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
 
+recordFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
+recordFields bc sym =
+  bc
+  |> body
+  |> fields
+  |> foldl fieldsFold Map.empty
+  where fieldsFold = \acc field -> Map.insert (buildClassPartReference field) field acc
+        buildClassPartReference (FieldInfo _ nameIdx descrIdx _ ) =
+          PartReference (string $ sym # nameIdx) (string $ sym # descrIdx)
+
+recordMethods :: ByteCode -> SymTable -> Map PartReference MethodInfo
+recordMethods bc sym =   bc
+  |> body
+  |> methods
+  |> foldl fieldsFold Map.empty
+  where fieldsFold = \acc field -> Map.insert (buildClassPartReference field) field acc
+        buildClassPartReference (MethodInfo _ nameIdx descrIdx _ ) =
+          PartReference (string $ sym # nameIdx) (string $ sym # descrIdx)
 
 -- 5.3 Creation and Loading top level code
 load :: ClassId -> Runtime -> ExceptT VMError IO Runtime

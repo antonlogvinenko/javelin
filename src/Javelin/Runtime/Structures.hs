@@ -87,6 +87,10 @@ data ClassPartRes = ClassPartResOk
                   | ClassPartResFail VMError
                   deriving (Show, Eq)
 
+data PartReference = PartReference { part :: String,
+                                     descriptor :: String }
+                     deriving (Show, Eq, Ord)
+
 data ClassRes = ClassResOk { resolvedFields  :: Map.Map PartReference ClassPartRes,
                              resolvedMethods :: Map.Map PartReference ClassPartRes }
               | ClassResFail { resolvingFailure :: VMError }
@@ -128,7 +132,9 @@ data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  initiating :: ClassLoader,
                                  runtimePackage :: (String, ClassLoader),
                                  symtable :: SymTable,
-                                 bytecode :: ByteCode}
+                                 bytecode :: ByteCode,
+                                 classFields :: Map.Map PartReference FieldInfo,
+                                 classMethods :: Map.Map PartReference MethodInfo }
                    | LoadedArrayClass { defining :: ClassLoader,
                                         initiating :: ClassLoader,
                                         runtimePackage :: (String, ClassLoader),
@@ -197,9 +203,9 @@ baseDefaultValues = Map.fromList [
 type SymTable = [SymbolicReference]
 
 data SymbolicReference = ClassOrInterface { classOrInterfaceName :: String }
-                       | FieldReference { field :: PartReference }
-                       | ClassMethodReference { classMethod :: PartReference }
-                       | InterfaceMethodReference { interfaceMethod :: PartReference }
+                       | FieldReference { field :: ClassPartReference }
+                       | ClassMethodReference { classMethod :: ClassPartReference }
+                       | InterfaceMethodReference { interfaceMethod :: ClassPartReference }
                        | MethodHandleReference
                        | MethodTypeReference { typeReference :: String }
                        | CallSiteSpecifierReference
@@ -211,10 +217,10 @@ data SymbolicReference = ClassOrInterface { classOrInterfaceName :: String }
                        | EmptyLiteral
                        deriving (Show, Eq)
 
-data PartReference = PartReference { partName :: String,
-                                     partDescriptor :: String,
-                                     ownerName :: String }
-                   deriving (Show, Eq)
+data ClassPartReference = ClassPartReference { partName :: String,
+                                               partDescriptor :: String,
+                                               ownerName :: String }
+                        deriving (Show, Eq, Ord)
 
 getStringLiteral :: SymTable -> Word16 -> Either VMError String
 getStringLiteral t i = maybeToEither undefined $ do
