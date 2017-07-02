@@ -87,9 +87,14 @@ data ClassPartRes = ClassPartResOk
                   | ClassPartResFail VMError
                   deriving (Show, Eq)
 
+data ClassPartReference = ClassPartReference { partName :: String,
+                                               partDescriptor :: String,
+                                               ownerName :: String }
+                        deriving (Show, Eq, Ord)
+
 data PartReference = PartReference { part :: String,
                                      descriptor :: String }
-                     deriving (Show, Eq, Ord)
+                   deriving (Show, Eq, Ord)
 
 data ClassRes = ClassResOk { resolvedFields  :: Map.Map PartReference ClassPartRes,
                              resolvedMethods :: Map.Map PartReference ClassPartRes }
@@ -216,11 +221,6 @@ data SymbolicReference = ClassOrInterface { classOrInterfaceName :: String }
                        | LongLiteral { long :: Int64 }
                        | EmptyLiteral
                        deriving (Show, Eq)
-
-data ClassPartReference = ClassPartReference { partName :: String,
-                                               partDescriptor :: String,
-                                               ownerName :: String }
-                        deriving (Show, Eq, Ord)
 
 getStringLiteral :: SymTable -> Word16 -> Either VMError String
 getStringLiteral t i = maybeToEither undefined $ do
