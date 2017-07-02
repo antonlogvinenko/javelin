@@ -179,26 +179,26 @@ recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassL
 recordClassLoading name bc sym defCL initCL
   rt@(Runtime {loadedClasses = cls}) =
     let clInfo = Right $ LoadedClass defCL initCL (name, defCL) sym bc
-                 (recordFields bc sym) (recordMethods bc sym)
+                 (getFields bc sym) (getMethods bc sym)
     in lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
 
-recordFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
-recordFields bc sym =
+getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
+getFields bc sym =
   bc
   |> body
   |> fields
   |> foldl fieldsFold Map.empty
-  where fieldsFold = \acc field -> Map.insert (buildClassPartReference field) field acc
-        buildClassPartReference (FieldInfo _ nameIdx descrIdx _ ) =
+  where fieldsFold = \acc field -> Map.insert (buildPartReference field) field acc
+        buildPartReference (FieldInfo _ nameIdx descrIdx _ ) =
           PartReference (string $ sym # nameIdx) (string $ sym # descrIdx)
 
-recordMethods :: ByteCode -> SymTable -> Map PartReference MethodInfo
-recordMethods bc sym =   bc
+getMethods :: ByteCode -> SymTable -> Map PartReference MethodInfo
+getMethods bc sym =   bc
   |> body
   |> methods
   |> foldl fieldsFold Map.empty
-  where fieldsFold = \acc field -> Map.insert (buildClassPartReference field) field acc
-        buildClassPartReference (MethodInfo _ nameIdx descrIdx _ ) =
+  where fieldsFold = \acc field -> Map.insert (buildPartReference field) field acc
+        buildPartReference (MethodInfo _ nameIdx descrIdx _ ) =
           PartReference (string $ sym # nameIdx) (string $ sym # descrIdx)
 
 -- 5.3 Creation and Loading top level code
