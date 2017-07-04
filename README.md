@@ -28,9 +28,7 @@ Usage:
 
 
 Roadmap:
-* Phase I, reconnaissance
-
-Provide the most basic implementation of every level (loading, resolution, init, runtime structures, command execution, etc). These implementations may skip some essential functionality, but will make it possible to execute JVM bytecode. Implementations don't contradict spec, but do not reflect all spec requirements.
+* Phase I, Reconnaissance. Provide the most basic implementation of every level (loading, resolution, init, runtime structures, command execution, etc). These implementations may skip some essential functionality, but will make it possible to execute JVM bytecode. Implementations don't contradict spec, but do not reflect all spec requirements.
   * field resolution
   * method resolution
   * preparation
@@ -39,11 +37,7 @@ Provide the most basic implementation of every level (loading, resolution, init,
   * establish min integration testing
   * Run sum of two numbers and println result
   * Make printing Runtime readable: what is important in its contents?
-
-
-* Phase II
-
-Implement stuff that was left out in phase I, but still skip parts of spec that are not of any interest to the author (for now)
+* Phase II. Implement stuff that was left out in phase I, but still skip parts of spec that are not of any interest to the author (for now)
   * all instructions
   * exceptions, monitor locks
   * resolution: interface methods, etc
