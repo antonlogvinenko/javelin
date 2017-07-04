@@ -1,18 +1,8 @@
-Phase I
-* field resolution p361
-* method resolution
-* preparation
-* initialization
-* execution of commands
-* establish min integration testing
-* Run sum of two numbers and println result
-* Make printing Runtime readable: what is important in its contents?
-
 Phase II
 - all instructions
 - exceptions, monitor locks
 - resolution: interface methods, etc
-- constaints in loading
+- constraints in loading
 - access rights in linking
 - custom class loaders
 
