@@ -35,8 +35,8 @@ Roadmap:
   * initialization
   * execution of commands
   * establish min integration testing
-  * Run sum of two numbers and println result
-  * Make printing Runtime readable: what is important in its contents?
+  * use case: sum of two numbers and println result
+  * printing Runtime readable: most important in its contents
 * Phase II. Implement stuff that was left out in phase I, but still skip parts of spec that are not of any interest to the author (for now)
   * all instructions
   * exceptions, monitor locks
