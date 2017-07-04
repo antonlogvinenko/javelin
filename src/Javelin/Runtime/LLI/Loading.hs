@@ -140,7 +140,7 @@ checkSuperClass request defCL bc sym rt =
       -- what if other constructor? bytecode error
       (ClassOrInterface parent) -> do
         let parentId = ClassId defCL parent
-        rt <- resolve parentId rt
+        rt <- resolveClass parentId rt
         case isInterface parentId rt of
           Left error -> throwE error
           Right True -> throwE $ Linkage rt IncompatibleClassChangeError
@@ -166,7 +166,7 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
     --other constructor? bytecode error
     (ClassOrInterface parent) -> do
       let parentClassId = ClassId defCL parent
-      rt <- resolve parentClassId rt
+      rt <- resolveClass parentClassId rt
       case isInterface parentClassId rt of
         Left e -> throwE e
         Right False -> throwE $ Linkage rt IncompatibleClassChangeError
@@ -268,11 +268,8 @@ bla (_ : xs) r = bla xs r
 
 
 -- first need to check whether resolution already happened, 3 possible outcomes:
--- 1. not yet resolved
--- 2. successfilly resolved
--- 3. resolution failed on the previous attempt 
-resolve :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-resolve request@(ClassId initCL name) rt =
+resolveClass :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+resolveClass request@(ClassId initCL name) rt =
   case rt |> classResolving |> Map.lookup request of
     Just (ClassResOk _ _) -> lift $ return rt
     Just (ClassResFail err) -> throwE err
@@ -282,7 +279,7 @@ resolve request@(ClassId initCL name) rt =
       if d > 0
         then case mt of
         Nothing -> lift $ return rt
-        Just t -> resolve (ClassId initCL t) rt
+        Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
   
 
@@ -294,8 +291,3 @@ resolveMethod = undefined
 
 resolveInterfaceMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveInterfaceMethod = undefined
-
-
--- for some successful resolution or error must be persistent between invokations
--- errors: generate classchange, react to linkage error
--- class, interface, field, method, interface method
