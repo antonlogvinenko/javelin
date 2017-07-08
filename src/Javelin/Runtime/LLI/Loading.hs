@@ -281,12 +281,30 @@ resolveClass request@(ClassId initCL name) rt =
         Nothing -> lift $ return rt
         Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
-  
 
-resolveField :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-resolveField = undefined
 
-resolveMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+recordClassFieldResolved :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+recordClassFieldResolved = undefined
+
+classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
+classDefinesField classId partRef rt = undefined
+
+resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+resolveClassFieldInParents classId partRef rt = undefined
+
+resolveField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+resolveField classId partRef rt = do
+  rt <- resolveClass classId rt
+  resolveFieldInClass classId partRef rt
+
+resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+resolveFieldInClass classId partRef rt =
+  if classDefinesField classId partRef rt
+  then recordClassFieldResolved classId partRef rt
+  else resolveClassFieldInParents classId partRef rt
+
+
+resolveMethod :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveMethod = undefined
 
 resolveInterfaceMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime

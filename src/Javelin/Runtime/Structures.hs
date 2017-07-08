@@ -100,7 +100,20 @@ data ClassRes = ClassResOk { resolvedFields  :: Map.Map PartReference ClassPartR
                              resolvedMethods :: Map.Map PartReference ClassPartRes }
               | ClassResFail { resolvingFailure :: VMError }
               deriving (Show, Eq)
-                       
+
+data LoadedClass = LoadedClass { defining :: ClassLoader,
+                                 initiating :: ClassLoader,
+                                 runtimePackage :: (String, ClassLoader),
+                                 symtable :: SymTable,
+                                 bytecode :: ByteCode,
+                                 classFields :: Map.Map PartReference FieldInfo,
+                                 classMethods :: Map.Map PartReference MethodInfo }
+                   | LoadedArrayClass { defining :: ClassLoader,
+                                        initiating :: ClassLoader,
+                                        runtimePackage :: (String, ClassLoader),
+                                        dimensions :: Int }
+                 deriving (Show, Eq)
+
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
                          loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
 
@@ -132,19 +145,6 @@ data ClassSource = JarFile { getPath :: FilePath }
 data ClassLoader = BootstrapClassLoader
                  | UserDefinedClassLoader { instanceReference :: Integer }
                  deriving (Show, Eq, Ord)
-
-data LoadedClass = LoadedClass { defining :: ClassLoader,
-                                 initiating :: ClassLoader,
-                                 runtimePackage :: (String, ClassLoader),
-                                 symtable :: SymTable,
-                                 bytecode :: ByteCode,
-                                 classFields :: Map.Map PartReference FieldInfo,
-                                 classMethods :: Map.Map PartReference MethodInfo }
-                   | LoadedArrayClass { defining :: ClassLoader,
-                                        initiating :: ClassLoader,
-                                        runtimePackage :: (String, ClassLoader),
-                                        dimensions :: Int }
-                 deriving (Show, Eq)
 
 
 data InternalLoadingError = ClassLoaderNotFound
