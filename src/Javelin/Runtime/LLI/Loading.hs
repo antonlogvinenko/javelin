@@ -7,7 +7,7 @@ import Javelin.ByteCode.Data
 import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
-import Data.Map as Map (insert, lookup, member, Map(..), empty)
+import Data.Map as Map (insert, lookup, member, Map(..), empty, (!))
 import Data.ByteString (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
@@ -284,7 +284,11 @@ resolveClass request@(ClassId initCL name) rt =
 
 
 recordClassFieldResolved :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-recordClassFieldResolved = undefined
+recordClassFieldResolved classId partRef rt@(Runtime {classResolving = cr}) =
+    let resC@(ClassResOk {resolvedFields = resF, resolvedMethods = resM}) = cr Map.! classId
+        newResClass = (ClassResOk (insert partRef ClassPartResOk resF) resM)
+    in lift $ return $ rt {classResolving = insert classId newResClass cr}
+  
 
 classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
 classDefinesField classId partRef rt = undefined
