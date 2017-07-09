@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Javelin.Runtime.LLI.Loading
 where
 
@@ -16,6 +18,7 @@ import Control.Monad.Trans.Class
 import Javelin.Util
 import Data.Either.Utils (maybeToEither)
 import Flow
+import Control.Lens hiding ((|>), (#))
 
 
 -- 5.1 Deriving the Run-Time Constant Pool
@@ -270,7 +273,7 @@ bla (_ : xs) r = bla xs r
 -- first need to check whether resolution already happened, 3 possible outcomes:
 resolveClass :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveClass request@(ClassId initCL name) rt =
-  case rt |> classResolving |> Map.lookup request of
+  case rt |> _classResolving |> Map.lookup request of
     Just (ClassResOk _ _) -> lift $ return rt
     Just (ClassResFail err) -> throwE err
     Nothing -> do
@@ -283,11 +286,17 @@ resolveClass request@(ClassId initCL name) rt =
         else lift $ return rt
 
 
+data K = K { _x :: (Int, String) }
+makeLenses ''K
+
+cake =
+  let k = K (0, "asd")
+      l = k & x . _1 %~ (\n -> n+1)
+  in k
+
 recordClassFieldResolved :: ClassId -> PartReference -> Runtime -> Runtime
-recordClassFieldResolved classId partRef rt@(Runtime {classResolving = cr}) =
-    let resC@(ClassResOk {resolvedFields = resF, resolvedMethods = resM}) = cr Map.! classId
-        newResClass = (ClassResOk (insert partRef ClassPartResOk resF) resM)
-    in rt {classResolving = insert classId newResClass cr}
+recordClassFieldResolved classId partRef rt =
+  rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
 
 classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
 classDefinesField classId partRef rt = undefined

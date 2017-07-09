@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Javelin.Runtime.Structures
 where 
 
@@ -12,6 +14,7 @@ import Javelin.ByteCode.Data
 import Javelin.Runtime.DescSign
 import Javelin.Util
 import Data.Either.Utils (maybeToEither)
+import Control.Lens
 
 
 -- Thread
@@ -96,8 +99,8 @@ data PartReference = PartReference { part :: String,
                                      descriptor :: String }
                    deriving (Show, Eq, Ord)
 
-data ClassRes = ClassResOk { resolvedFields  :: Map.Map PartReference ClassPartRes,
-                             resolvedMethods :: Map.Map PartReference ClassPartRes }
+data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPartRes,
+                             _resolvedMethods :: Map.Map PartReference ClassPartRes }
               | ClassResFail { resolvingFailure :: VMError }
               deriving (Show, Eq)
 
@@ -114,14 +117,18 @@ data LoadedClass = LoadedClass { defining :: ClassLoader,
                                         dimensions :: Int }
                  deriving (Show, Eq)
 
+
+
 data Runtime = Runtime { classPathLayout :: ClassPathLayout,
                          loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
 
-                         classResolving :: Map.Map ClassId ClassRes,
+                         _classResolving :: Map.Map ClassId ClassRes,
 
                          heap :: (Int, Array Int JObject),
                          threads :: [Thread] }
              deriving (Show, Eq)
+
+data P = P { _p :: Int }
 
 isInterface ::  ClassId -> Runtime -> Either VMError Bool
 isInterface classId rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> getLoadedClass rt classId
@@ -228,3 +235,6 @@ getStringLiteral t i = maybeToEither undefined $ do
   case elem of
     StringLiteral x -> return x
     _ -> Nothing
+
+makeLenses ''Runtime
+makeLenses ''ClassRes
