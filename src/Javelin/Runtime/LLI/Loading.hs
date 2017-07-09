@@ -283,12 +283,11 @@ resolveClass request@(ClassId initCL name) rt =
         else lift $ return rt
 
 
-recordClassFieldResolved :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+recordClassFieldResolved :: ClassId -> PartReference -> Runtime -> Runtime
 recordClassFieldResolved classId partRef rt@(Runtime {classResolving = cr}) =
     let resC@(ClassResOk {resolvedFields = resF, resolvedMethods = resM}) = cr Map.! classId
         newResClass = (ClassResOk (insert partRef ClassPartResOk resF) resM)
-    in lift $ return $ rt {classResolving = insert classId newResClass cr}
-  
+    in rt {classResolving = insert classId newResClass cr}
 
 classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
 classDefinesField classId partRef rt = undefined
@@ -304,7 +303,7 @@ resolveField classId partRef rt = do
 resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveFieldInClass classId partRef rt =
   if classDefinesField classId partRef rt
-  then recordClassFieldResolved classId partRef rt
+  then lift $ return $ recordClassFieldResolved classId partRef rt
   else resolveClassFieldInParents classId partRef rt
 
 
