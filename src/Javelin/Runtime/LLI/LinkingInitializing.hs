@@ -32,7 +32,7 @@ prepare name rt@(Runtime {loadedClasses = classLoadingInfo}) =
     return rt2{loadedClasses = Map.insert (ClassId undefined undefined) classLoaderInfo classLoadingInfo}
 
 writeStaticFields :: ClassId -> Runtime -> Ref -> Either VMError Runtime
-writeStaticFields classId rt ref = let (s, h) = heap rt
+writeStaticFields classId rt ref = let (s, h) = _heap rt
                                        jobject = h ! ref
                                    in do
                                      sym <- getSymTable rt classId
