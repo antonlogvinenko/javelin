@@ -290,7 +290,9 @@ recordClassFieldResolved classId partRef rt =
   rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
 
 classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
-classDefinesField classId partRef rt = undefined
+classDefinesField classId partRef rt =
+  let fieldResStatus = rt ^? classResolving . ix classId . resolvedFields . ix partRef
+  in Nothing /= fieldResStatus
 
 resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveClassFieldInParents classId partRef rt = undefined
