@@ -285,15 +285,6 @@ resolveClass request@(ClassId initCL name) rt =
         Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
 
-
-data K = K { _x :: (Int, String) }
-makeLenses ''K
-
-cake =
-  let k = K (0, "asd")
-      l = k & x . _1 %~ (\n -> n+1)
-  in k
-
 recordClassFieldResolved :: ClassId -> PartReference -> Runtime -> Runtime
 recordClassFieldResolved classId partRef rt =
   rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
