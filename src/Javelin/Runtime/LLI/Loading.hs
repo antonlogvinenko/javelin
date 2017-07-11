@@ -101,9 +101,11 @@ deriveClass request@(ClassId initCL name) rt defCL bs = do
     >>= checkSuperInterfaces request defCL bc syms
     >>= recordClassLoading name bc syms initCL defCL
 
+
+      
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
-checkInitiatingClassLoader initCL name rt@(Runtime {loadedClasses = cls}) = do
-  if Map.member (ClassId initCL name) cls
+checkInitiatingClassLoader initCL name rt = do
+  if rt ^. loadedClasses . (to $ Map.member (ClassId initCL name))
     then throwE $ Linkage rt LinkageError
     else lift $ return rt
 
@@ -179,11 +181,10 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
     _ -> throwE $ undefined
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
-recordClassLoading name bc sym defCL initCL
-  rt@(Runtime {loadedClasses = cls}) =
+recordClassLoading name bc sym defCL initCL rt=
     let clInfo = Right $ LoadedClass defCL initCL (name, defCL) sym bc
                  (getFields bc sym) (getMethods bc sym)
-    in lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
+    in lift $ return $ rt & loadedClasses %~insert (ClassId initCL name) clInfo
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =
@@ -206,9 +207,9 @@ getMethods bc sym =   bc
 
 -- 5.3 Creation and Loading top level code
 load :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-load request@(ClassId initCL name) rt@(Runtime {loadedClasses = cls}) =
+load request@(ClassId initCL name) rt =
   let loaderFn = if isArray name then loadArray else loadClass
-  in case Map.lookup request cls of
+  in case rt ^. loadedClasses . to (Map.lookup request) of
     Just _ -> lift $ return rt
     Nothing -> loaderFn request rt
 
@@ -228,9 +229,9 @@ wrapClassNotFound _ x = x
 
 -- 5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {classPathLayout = layout}) = 
+loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {_classPathLayout = layout}) = 
   do
-    bytes <- withExceptT (wrapClassNotFound rt) (getClassBytes name layout)
+    bytes <- withExceptT (wrapClassNotFound rt) (getClassBytes name $ rt ^. classPathLayout)
     deriveClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader
@@ -239,11 +240,11 @@ loadClassWithUserDefCL request rt = undefined
 
 -- 5.3.3 Creating Array Classes
 loadArray :: ClassLoadMethod
-loadArray request@(ClassId initCL name) rt@(Runtime {loadedClasses = cls}) = do
+loadArray request@(ClassId initCL name) rt = do
   let arrayRepr@(ArrayRepr {depth = d}) = parseSignature name
   (rt, defCL) <- loadAndGetDefCLOfComponentType request rt arrayRepr
   let clInfo = Right $ LoadedArrayClass defCL initCL (name, defCL) d
-  lift $ return $ rt {loadedClasses = insert (ClassId initCL name) clInfo cls}
+  lift $ return $ rt & loadedClasses %~ insert (ClassId initCL name) clInfo
 
 loadAndGetDefCLOfComponentType :: ClassId -> Runtime -> ArrayRepr -> ExceptT VMError IO (Runtime, ClassLoader)
 loadAndGetDefCLOfComponentType classId@(ClassId initCL name) rt repr@(ArrayRepr {depth = d, componentType = refType}) = do

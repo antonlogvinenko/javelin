@@ -24,12 +24,12 @@ verify name rt = Right rt
 
 -- §5.4.2 Preparation
 prepare :: ClassName -> Runtime -> Either VMError Runtime
-prepare name rt@(Runtime {loadedClasses = classLoadingInfo}) =
+prepare name rt@(Runtime {_loadedClasses = classLoadingInfo}) =
   let classLoaderInfo = classLoadingInfo Map.! (ClassId undefined undefined)
       (rt1, ref) = malloc rt
   in do
     rt2 <- writeStaticFields (ClassId undefined undefined) rt1 ref
-    return rt2{loadedClasses = Map.insert (ClassId undefined undefined) classLoaderInfo classLoadingInfo}
+    return rt2{_loadedClasses = Map.insert (ClassId undefined undefined) classLoaderInfo classLoadingInfo}
 
 writeStaticFields :: ClassId -> Runtime -> Ref -> Either VMError Runtime
 writeStaticFields classId rt ref = let (s, h) = _heap rt

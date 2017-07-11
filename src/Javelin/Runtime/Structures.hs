@@ -9,6 +9,8 @@ import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map, lookup, insert, size)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Array.IArray
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Class
 
 import Javelin.ByteCode.Data
 import Javelin.Runtime.DescSign
@@ -16,13 +18,13 @@ import Javelin.Util
 import Data.Either.Utils (maybeToEither)
 import Control.Lens
 
-data Runtime = Runtime { classPathLayout :: ClassPathLayout,
-                         loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
+data Runtime = Runtime { _classPathLayout :: ClassPathLayout,
+                         _loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
 
                          _classResolving :: Map.Map ClassId ClassRes,
 
                          _heap :: (Int, Array Int JObject),
-                         threads :: [Thread] }
+                         _threads :: [Thread] }
              deriving (Show, Eq)
 
 data ClassId = ClassId { getInitCL :: ClassLoader,
@@ -207,8 +209,11 @@ getLoadedClass rt classId =
   maybe (Left $ InternalError rt SpecifyMeError) id (findLoadedClass rt classId)
 
 findLoadedClass :: Runtime -> ClassId -> Maybe (Either VMError LoadedClass)
-findLoadedClass rt classId = Map.lookup classId (loadedClasses rt)
+findLoadedClass rt classId = rt ^? loadedClasses . ix classId
 
+addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
+addLoadedClass classId loadedClass rt = lift $ return $
+                                        rt & loadedClasses %~ insert classId (Right loadedClass)
 
 getDefiningClassLoader :: Runtime -> ClassId -> Either VMError ClassLoader
 getDefiningClassLoader rt classId = defining <$> getLoadedClass rt classId
