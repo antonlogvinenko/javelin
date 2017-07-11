@@ -273,7 +273,7 @@ bla (_ : xs) r = bla xs r
 -- first need to check whether resolution already happened, 3 possible outcomes:
 resolveClass :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveClass request@(ClassId initCL name) rt =
-  case rt |> _classResolving |> Map.lookup request of
+  case rt ^? classResolving . ix request of
     Just (ClassResOk _ _) -> lift $ return rt
     Just (ClassResFail err) -> throwE err
     Nothing -> do
@@ -286,10 +286,6 @@ resolveClass request@(ClassId initCL name) rt =
         else lift $ return rt
 
 
-classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
-classDefinesField classId partRef rt =
-  let fieldResStatus = rt ^? classResolving . ix classId . resolvedFields . ix partRef
-  in Nothing /= fieldResStatus
 
 resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveClassFieldInParents classId partRef rt = undefined
@@ -302,7 +298,7 @@ resolveField classId partRef rt = do
 resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveFieldInClass classId partRef rt =
   if classDefinesField classId partRef rt
-  then lift $ return $ addResolvedClassField classId partRef rt
+  then addResolvedClassField classId partRef rt
   else resolveClassFieldInParents classId partRef rt
 
 
