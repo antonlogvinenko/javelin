@@ -182,9 +182,8 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL rt=
-    let clInfo = Right $ LoadedClass defCL initCL (name, defCL) sym bc
-                 (getFields bc sym) (getMethods bc sym)
-    in lift $ return $ rt & loadedClasses %~insert (ClassId initCL name) clInfo
+    let c = LoadedClass defCL initCL (name, defCL) sym bc (getFields bc sym) (getMethods bc sym)
+    in addLoadedClass (ClassId initCL name) c rt
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =
@@ -243,8 +242,8 @@ loadArray :: ClassLoadMethod
 loadArray request@(ClassId initCL name) rt = do
   let arrayRepr@(ArrayRepr {depth = d}) = parseSignature name
   (rt, defCL) <- loadAndGetDefCLOfComponentType request rt arrayRepr
-  let clInfo = Right $ LoadedArrayClass defCL initCL (name, defCL) d
-  lift $ return $ rt & loadedClasses %~ insert (ClassId initCL name) clInfo
+  let c = LoadedArrayClass defCL initCL (name, defCL) d
+  addLoadedClass (ClassId initCL name) c rt
 
 loadAndGetDefCLOfComponentType :: ClassId -> Runtime -> ArrayRepr -> ExceptT VMError IO (Runtime, ClassLoader)
 loadAndGetDefCLOfComponentType classId@(ClassId initCL name) rt repr@(ArrayRepr {depth = d, componentType = refType}) = do
@@ -286,9 +285,6 @@ resolveClass request@(ClassId initCL name) rt =
         Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
 
-recordClassFieldResolved :: ClassId -> PartReference -> Runtime -> Runtime
-recordClassFieldResolved classId partRef rt =
-  rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
 
 classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
@@ -306,7 +302,7 @@ resolveField classId partRef rt = do
 resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveFieldInClass classId partRef rt =
   if classDefinesField classId partRef rt
-  then lift $ return $ recordClassFieldResolved classId partRef rt
+  then lift $ return $ addResolvedClassField classId partRef rt
   else resolveClassFieldInParents classId partRef rt
 
 

@@ -214,6 +214,9 @@ findLoadedClass rt classId = rt ^? loadedClasses . ix classId
 addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
 addLoadedClass classId loadedClass rt = lift $ return $
                                         rt & loadedClasses %~ insert classId (Right loadedClass)
+addResolvedClassField :: ClassId -> PartReference -> Runtime -> Runtime
+addResolvedClassField classId partRef rt =
+  rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
 
 getDefiningClassLoader :: Runtime -> ClassId -> Either VMError ClassLoader
 getDefiningClassLoader rt classId = defining <$> getLoadedClass rt classId
