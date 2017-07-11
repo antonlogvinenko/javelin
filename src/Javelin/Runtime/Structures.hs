@@ -62,8 +62,8 @@ data LoadedClass = LoadedClass { defining :: ClassLoader,
                                         dimensions :: Int }
                  deriving (Show, Eq)
 
-data ClassPathLayout = ClassPathLayout { classes :: Map ClassName ClassSource,
-                                         classPath :: [String] }
+data ClassPathLayout = ClassPathLayout { _classes :: Map ClassName ClassSource,
+                                         _classPath :: [String] }
                      deriving Eq
 instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
@@ -165,7 +165,7 @@ makeLenses ''Runtime
 makeLenses ''ClassRes
 makeLenses ''ClassPartReference
 makeLenses ''LoadedClass
-
+makeLenses ''ClassPathLayout
 
 
 -- Thread
