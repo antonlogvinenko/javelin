@@ -168,35 +168,13 @@ makeLenses ''LoadedClass
 makeLenses ''ClassPathLayout
 
 
--- Thread
-newThread frame = Thread 0 [frame] . newRuntime
-malloc :: Runtime -> (Runtime, Ref)
-malloc rt = let old = rt ^. heap . _1
-            in (rt & heap . _1 %~ (+ 1), old)
 
--- Runtime
-newRuntime :: ClassPathLayout -> Runtime
-newRuntime layout = let emptyThreads = []
-                        loadedClassesInfo = fromList []
-                    in Runtime layout
-                       loadedClassesInfo (fromList [])
-                       (0, (array (0, 0) [(0, (fromList [("", JReference 0)]))]))
-                       emptyThreads
+-- Querying class info
+getSuperInterfaces :: Runtime -> ClassId -> ExceptT VMError IO [String]
+getSuperInterfaces = undefined
 
-getField :: Runtime -> Ref -> String -> Either VMError JValue
-getField rt ref name = let h = rt ^. heap . _2
-                       in if ref < (snd . bounds) h
-                          then maybeToEither (InternalError rt SpecifyMeError) $ Map.lookup name (h ! ref)
-                          else Left $ InternalError rt SpecifyMeError
-
-rtlookup :: (Ord k) => (Runtime -> Map k v) -> Runtime -> k -> Either VMError v
-rtlookup f rt k = maybeToEither (InternalError rt SpecifyMeError) $ Map.lookup k $ f rt
-
-writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
-writeField rt@(Runtime {_heap = (s, h)}) ref (name, value) = do
-  let jobject = h ! ref
-      newObject = Map.insert name value jobject
-  return $ rt & heap . _2 %~ (// [(ref, newObject)])
+getSuperClass :: Runtime -> ClassId -> ExceptT VMError IO String
+getSuperClass = undefined
 
 getSymTable :: Runtime -> ClassId -> Either VMError SymTable
 getSymTable rt classId = symtable <$> getLoadedClass rt classId
@@ -211,10 +189,30 @@ getLoadedClass rt classId =
 findLoadedClass :: Runtime -> ClassId -> Maybe (Either VMError LoadedClass)
 findLoadedClass rt classId = rt ^? loadedClasses . ix classId
 
+getDefiningClassLoader :: Runtime -> ClassId -> Either VMError ClassLoader
+getDefiningClassLoader rt classId = defining <$> getLoadedClass rt classId
+
+getStringLiteral :: SymTable -> Word16 -> Either VMError String
+getStringLiteral t i = maybeToEither undefined $ do
+  let elem = t !! fromIntegral i
+  case elem of
+    StringLiteral x -> return x
+    _ -> Nothing
+
+
+
+-- Updating class info
+newRuntime :: ClassPathLayout -> Runtime
+newRuntime layout = let emptyThreads = []
+                        loadedClassesInfo = fromList []
+                    in Runtime layout
+                       loadedClassesInfo (fromList [])
+                       (0, (array (0, 0) [(0, (fromList [("", JReference 0)]))]))
+                       emptyThreads
+
 addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
 addLoadedClass classId loadedClass rt = lift $ return $
                                         rt & loadedClasses %~ insert classId (Right loadedClass)
--- Field resolution
 addResolvedClassField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 addResolvedClassField classId partRef rt =
   lift $ return $
@@ -225,21 +223,32 @@ classDefinesField classId partRef rt =
   let fieldResStatus = rt ^? classResolving . ix classId . resolvedFields . ix partRef
   in Nothing /= fieldResStatus
 
-getDefiningClassLoader :: Runtime -> ClassId -> Either VMError ClassLoader
-getDefiningClassLoader rt classId = defining <$> getLoadedClass rt classId
-
-
-
 isInterface ::  ClassId -> Runtime -> Either VMError Bool
 isInterface classId rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> getLoadedClass rt classId
 
 
--- LLI ClassPath
-
-linkageLeft = Left . Linkage
 
 -- Heap contents
+newThread frame = Thread 0 [frame] . newRuntime
+malloc :: Runtime -> (Runtime, Ref)
+malloc rt = let old = rt ^. heap . _1
+            in (rt & heap . _1 %~ (+ 1), old)
 
+getField :: Runtime -> Ref -> String -> Either VMError JValue
+getField rt ref name = let h = rt ^. heap . _2
+                       in if ref < (snd . bounds) h
+                          then maybeToEither (InternalError rt SpecifyMeError) $ Map.lookup name (h ! ref)
+                          else Left $ InternalError rt SpecifyMeError
+
+writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
+writeField rt@(Runtime {_heap = (s, h)}) ref (name, value) = do
+  let jobject = h ! ref
+      newObject = Map.insert name value jobject
+  return $ rt & heap . _2 %~ (// [(ref, newObject)])
+
+
+
+-- LLI ClassPath
 nullReference = JReference (-1)
 
 baseDefaultValues :: Map.Map BaseType JValue
@@ -247,13 +256,3 @@ baseDefaultValues = Map.fromList [
   (ByteT, JByte 0), (CharT, JChar 0), (DoubleT, JDouble 0), (FloatT, JFloat 0),
   (IntT, JInt 0), (LongT, JLong 0), (ShortT, JShort 0), (BooleanT, JBoolean 0)
   ]
-
-
--- Data structures
-
-getStringLiteral :: SymTable -> Word16 -> Either VMError String
-getStringLiteral t i = maybeToEither undefined $ do
-  let elem = t !! fromIntegral i
-  case elem of
-    StringLiteral x -> return x
-    _ -> Nothing

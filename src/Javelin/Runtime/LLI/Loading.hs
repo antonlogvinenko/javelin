@@ -10,6 +10,8 @@ import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
 import Data.Map as Map (insert, lookup, member, Map(..), empty, (!))
+import Data.Maybe
+import Data.Either
 import Data.ByteString (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
@@ -274,7 +276,7 @@ bla (_ : xs) r = bla xs r
 resolveClass :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveClass request@(ClassId initCL name) rt =
   case rt ^? classResolving . ix request of
-    Just (ClassResOk _ _) -> lift $ return rt
+    Just (ClassResOk _ _) -> return rt
     Just (ClassResFail err) -> throwE err
     Nothing -> do
       rt <- load request rt
@@ -285,10 +287,30 @@ resolveClass request@(ClassId initCL name) rt =
         Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
 
-
-
 resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-resolveClassFieldInParents classId partRef rt = undefined
+resolveClassFieldInParents classId partRef rt = do
+  superInterfaces <- getSuperInterfaces rt classId
+  interfaceResolution <- superInterfaces
+                         |> map (\superInterface -> ClassId (getInitCL classId) superInterface)
+                         |> map (\classId -> resolveField classId partRef rt)
+                         |> findSuccessfulResolution
+  case interfaceResolution of
+    Just r -> return r
+    Nothing -> do
+      superClass <- getSuperClass rt classId
+      let superClassResolution = resolveField (ClassId (getInitCL classId) superClass) partRef rt
+        in withExceptT (\e -> Linkage rt NoSuchFieldError) superClassResolution
+
+findSuccessfulResolution :: [ExceptT VMError IO Runtime] -> ExceptT VMError IO (Maybe Runtime)
+findSuccessfulResolution [] = return Nothing
+findSuccessfulResolution ((ExceptT io):xs) = ExceptT $ do
+  eitherResult <- io
+  case eitherResult of
+    Right rt -> return $ Right $ Just rt
+    Left _ -> let xsRes@(ExceptT y) = findSuccessfulResolution xs
+              in y
+  
+
 
 resolveField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveField classId partRef rt = do
