@@ -319,7 +319,7 @@ resolveFieldInClass classId partRef rt =
 
 resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe Runtime)
 resolveClassFieldInParents classId partRef rt = do
-  superInterfaces <- getSuperInterfaces rt classId
+  superInterfaces <- ExceptT $ return $ getSuperInterfaces rt classId
   interfaceResolution <- superInterfaces
                          |> map (\superInterface -> ClassId (getInitCL classId) superInterface)
                          |> map (\classId -> resolveFieldSearch classId partRef rt)

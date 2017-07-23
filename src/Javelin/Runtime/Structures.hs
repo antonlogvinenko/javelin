@@ -170,12 +170,13 @@ makeLenses ''ClassPathLayout
 
 
 -- Querying class info
-getSuperInterfaces :: Runtime -> ClassId -> ExceptT VMError IO [String]
-getSuperInterfaces = undefined
+getSuperInterfaces :: Runtime -> ClassId -> Either VMError [String]
+getSuperInterfaces rt classId = do
+  interfacesIdx <- interfaces <$> getBody rt classId
+  sequenceA $ getClassOrInterfaceReference rt classId <$> interfacesIdx
 
 getSuperClass :: Runtime -> ClassId -> Either VMError String
 getSuperClass rt classId = do
-  loadedClass <- getLoadedClass rt classId
   superIdx <- super <$> getBody rt classId
   getClassOrInterfaceReference rt classId superIdx
 
