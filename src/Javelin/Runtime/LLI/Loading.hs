@@ -307,6 +307,10 @@ resolveFieldSearch classId partRef rt = do
     Just rt -> return $ Just rt
 
 -- Resolving field in a specific class
+
+-- todo write getInterfaces
+-- todo terminate on Object parent; for interfaces?
+-- todo what error to record?
 resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe Runtime)
 resolveFieldInClass classId partRef rt = 
   if classDefinesField classId partRef rt
@@ -323,9 +327,9 @@ resolveClassFieldInParents classId partRef rt = do
                          |> ExceptT
   case interfaceResolution of
     Just r -> return $ Just r
-    Nothing -> do
-      superClass <- getSuperClass rt classId
-      resolveFieldSearch (ClassId (getInitCL classId) superClass) partRef rt
+    Nothing -> case getSuperClass rt classId of
+                 Left err -> throwE err
+                 Right superClass -> resolveFieldSearch (ClassId (getInitCL classId) superClass) partRef rt
 
 findSuccessfulResolution :: [ExceptT VMError IO (Maybe Runtime)] -> IO (Either VMError (Maybe Runtime))
 findSuccessfulResolution [] = return $ Right Nothing

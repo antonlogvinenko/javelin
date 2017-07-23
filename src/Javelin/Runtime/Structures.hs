@@ -86,7 +86,7 @@ data InternalLoadingError = ClassLoaderNotFound
                           | ClassObjectHasNoSuperClasses
                           | CouldNotFindAccessFlags String
                           | InterfaceMustHaveObjectAsSuperClass
-                          | SymTableHasNoClassEntryAtIndex
+                          | SymTableHasNoProperEntryAtIndex
                           | SpecifyMeError
                           deriving (Show, Eq)
 data LinkageError = LinkageError
@@ -173,14 +173,20 @@ makeLenses ''ClassPathLayout
 getSuperInterfaces :: Runtime -> ClassId -> ExceptT VMError IO [String]
 getSuperInterfaces = undefined
 
-getSuperClass :: Runtime -> ClassId -> ExceptT VMError IO String
-getSuperClass = undefined
+getSuperClass :: Runtime -> ClassId -> Either VMError String
+getSuperClass rt classId = do
+  loadedClass <- getLoadedClass rt classId
+  superIdx <- super <$> getBody rt classId
+  getClassOrInterfaceReference rt classId superIdx
 
 getSymTable :: Runtime -> ClassId -> Either VMError SymTable
 getSymTable rt classId = symtable <$> getLoadedClass rt classId
 
 getByteCode :: Runtime -> ClassId -> Either VMError ByteCode
 getByteCode rt classId = bytecode <$> getLoadedClass rt classId
+
+getBody :: Runtime -> ClassId -> Either VMError ClassBody
+getBody rt classId = body <$> getByteCode rt classId
 
 getLoadedClass :: Runtime -> ClassId -> Either VMError LoadedClass
 getLoadedClass rt classId =
@@ -198,6 +204,18 @@ getStringLiteral t i = maybeToEither undefined $ do
   case elem of
     StringLiteral x -> return x
     _ -> Nothing
+
+getSymbolicReference :: Runtime -> ClassId -> Word16 -> Either VMError SymbolicReference
+getSymbolicReference rt classId idx = do
+  symTable <- getSymTable rt classId
+  return $ symTable !! fromIntegral idx
+
+getClassOrInterfaceReference :: Runtime -> ClassId -> Word16 -> Either VMError String
+getClassOrInterfaceReference rt classId idx = do
+  ref <- getSymbolicReference rt classId idx
+  case ref of
+    ClassOrInterface str -> return str
+    _ -> Left $ InternalError rt SymTableHasNoProperEntryAtIndex
 
 
 

@@ -194,9 +194,9 @@ newtype ConstantPool = ConstantPool [Constant] deriving (Eq)
 
   
 data ClassAccessFlags = AccPublic | AccFinal
-                    | AccSuper | AccInterface | AccAbstract
-                    | AccSynthetic | AccAnn | AccEnum
-                    deriving (Show, Eq)
+                      | AccSuper | AccInterface | AccAbstract
+                      | AccSynthetic | AccAnn | AccEnum
+                      deriving (Show, Eq)
 
 data Constant = Utf8Info { stringValue :: String }
               | IntegerInfo { integer :: Int32 }
