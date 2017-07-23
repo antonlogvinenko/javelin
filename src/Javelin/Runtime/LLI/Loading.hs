@@ -287,41 +287,55 @@ resolveClass request@(ClassId initCL name) rt =
         Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
 
-resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+
+  
+-- API fn for resolving a field
+resolveField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+resolveField classId partRef rt = do
+  r <- resolveFieldSearch classId partRef rt
+  case r of
+    Nothing -> throwE $ Linkage rt NoSuchFieldError
+    Just rt -> return rt
+
+-- Recursive fn for looking for a field
+resolveFieldSearch :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe Runtime)
+resolveFieldSearch classId partRef rt = do
+  rt <- resolveClass classId rt
+  maybeRt <- resolveFieldInClass classId partRef rt
+  case maybeRt of
+    Nothing -> resolveClassFieldInParents classId partRef rt
+    Just rt -> return $ Just rt
+
+-- Resolving field in a specific class
+resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe Runtime)
+resolveFieldInClass classId partRef rt = 
+  if classDefinesField classId partRef rt
+  then Just <$> addResolvedClassField classId partRef rt
+  else return Nothing
+
+resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe Runtime)
 resolveClassFieldInParents classId partRef rt = do
   superInterfaces <- getSuperInterfaces rt classId
   interfaceResolution <- superInterfaces
                          |> map (\superInterface -> ClassId (getInitCL classId) superInterface)
-                         |> map (\classId -> resolveField classId partRef rt)
+                         |> map (\classId -> resolveFieldSearch classId partRef rt)
                          |> findSuccessfulResolution
+                         |> ExceptT
   case interfaceResolution of
-    Just r -> return r
+    Just r -> return $ Just r
     Nothing -> do
       superClass <- getSuperClass rt classId
-      let superClassResolution = resolveField (ClassId (getInitCL classId) superClass) partRef rt
-        in withExceptT (\e -> Linkage rt NoSuchFieldError) superClassResolution
+      resolveFieldSearch (ClassId (getInitCL classId) superClass) partRef rt
 
-findSuccessfulResolution :: [ExceptT VMError IO Runtime] -> ExceptT VMError IO (Maybe Runtime)
-findSuccessfulResolution [] = return Nothing
-findSuccessfulResolution ((ExceptT io):xs) = ExceptT $ do
+findSuccessfulResolution :: [ExceptT VMError IO (Maybe Runtime)] -> IO (Either VMError (Maybe Runtime))
+findSuccessfulResolution [] = return $ Right Nothing
+findSuccessfulResolution ((ExceptT io):xs) = do
   eitherResult <- io
   case eitherResult of
-    Right rt -> return $ Right $ Just rt
-    Left _ -> let xsRes@(ExceptT y) = findSuccessfulResolution xs
-              in y
-  
+    Left err -> return $ Left err
+    Right (Just rt) -> return $ Right $ Just rt
+    Right Nothing -> findSuccessfulResolution xs
 
-
-resolveField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-resolveField classId partRef rt = do
-  rt <- resolveClass classId rt
-  resolveFieldInClass classId partRef rt
-
-resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-resolveFieldInClass classId partRef rt =
-  if classDefinesField classId partRef rt
-  then addResolvedClassField classId partRef rt
-  else resolveClassFieldInParents classId partRef rt
 
 
 resolveMethod :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
