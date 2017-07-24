@@ -308,7 +308,6 @@ resolveFieldSearch classId partRef rt = do
 
 -- Resolving field in a specific class
 
--- todo write getInterfaces
 -- todo terminate on Object parent; for interfaces?
 -- todo what error to record?
 resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe Runtime)
