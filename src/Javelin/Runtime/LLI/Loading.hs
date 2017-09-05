@@ -342,7 +342,22 @@ findSuccessfulResolution ((ExceptT io):xs) = do
 
 
 resolveMethod :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-resolveMethod = undefined
+resolveMethod classId partRef rt = do
+  rt <- resolveClass classId rt
+  requireNotInterface rt partRef
+  inClass <- resolveMethodInClassOrSuperclass rt classId partRef
+  case inClass of
+    Just rt -> return rt
+    Nothing -> resolveMethodInSuperInterfaces rt classId partRef
+
+resolveMethodInClassOrSuperclass :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Maybe Runtime)
+resolveMethodInClassOrSuperclass = undefined
+
+resolveMethodInSuperInterfaces :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
+resolveMethodInSuperInterfaces = undefined
+
+requireNotInterface :: Runtime -> PartReference -> ExceptT VMError IO Runtime
+requireNotInterface = undefined
 
 resolveInterfaceMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveInterfaceMethod = undefined
