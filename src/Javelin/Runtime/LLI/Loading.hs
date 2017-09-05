@@ -10,16 +10,14 @@ import Javelin.ByteCode.ClassFile (parseRaw)
 
 import Data.Word (Word16)
 import Data.Map as Map (insert, lookup, member, Map(..), empty, (!))
-import Data.Maybe
-import Data.Either
 import Data.ByteString (ByteString, unpack)
 
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class
-import Javelin.Util
+import Javelin.Util ((#))
 import Data.Either.Utils (maybeToEither)
-import Flow
+import Flow ((|>))
 import Control.Lens hiding ((|>), (#))
 
 

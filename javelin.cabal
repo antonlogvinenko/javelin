@@ -31,9 +31,10 @@ library
                      Javelin.Runtime.LLI.LinkingInitializing,
                      Javelin.Runtime.Structures,
                      Javelin.Util
-  ghc-options:       -Wall
-                     -Wincomplete-uni-patterns
-                     -Wincomplete-record-updates
+  ghc-options:
+--                     -Wall
+--                     -Wincomplete-uni-patterns
+--                     -Wincomplete-record-updates
                      -Wmissing-import-lists
   build-depends:     base >=4.7 && < 5
   hs-source-dirs:    src
