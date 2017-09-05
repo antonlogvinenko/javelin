@@ -31,7 +31,10 @@ library
                      Javelin.Runtime.LLI.LinkingInitializing,
                      Javelin.Runtime.Structures,
                      Javelin.Util
-  ghc-options:       -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
+  ghc-options:       -Wall
+                     -Wincomplete-uni-patterns
+                     -Wincomplete-record-updates
+                     -Wmissing-import-lists
   build-depends:     base >=4.7 && < 5
   hs-source-dirs:    src
   build-depends:     base >=4.7 && < 5,
@@ -49,7 +52,7 @@ library
                      transformers ==0.5.2.0,
                      split ==0.2.3.2,
                      MissingH ==1.4.0.1,
-                     flow ==1.0.8,
+                     flow ==1.0.9,
                      lens ==4.15.4
 test-suite test
   hs-source-dirs:    test
@@ -85,5 +88,5 @@ executable javelin
                        transformers ==0.5.2.0,
                        split ==0.2.3.2,
                        MissingH ==1.4.0.1,
-                       flow ==1.0.8,
+                       flow ==1.0.9,
                        lens ==4.15.4
