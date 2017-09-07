@@ -338,8 +338,8 @@ findSuccessfulResolution ((ExceptT io):xs) = do
 
 
 
-resolveMethod :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-resolveMethod classId partRef rt = do
+resolveMethod :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
+resolveMethod rt classId partRef = do
   rt <- resolveClass classId rt
   requireNotInterface rt classId
   inClass <- resolveMethodInClassOrSuperclass rt classId partRef
@@ -359,5 +359,5 @@ requireNotInterface rt classId = case isInterface rt classId of
   Right False -> throwE $ Linkage rt IncompatibleClassChangeError
   Left err -> throwE err
 
-resolveInterfaceMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+resolveInterfaceMethod :: Runtime -> ClassId -> ExceptT VMError IO Runtime
 resolveInterfaceMethod = undefined

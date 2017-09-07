@@ -3,20 +3,18 @@
 module Javelin.Runtime.Structures
 where 
 
-import Control.Applicative
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map, lookup, insert, size)
 import Data.Int (Int8, Int16, Int32, Int64)
-import Data.Array.IArray
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Class
+import Data.Array.IArray (array, bounds, (!), (//))
+import Control.Monad.Trans.Except (ExceptT(..))
+import Control.Monad.Trans.Class (lift)
 
 import Javelin.ByteCode.Data
 import Javelin.Runtime.DescSign
-import Javelin.Util
 import Data.Either.Utils (maybeToEither)
-import Control.Lens
+import Control.Lens (makeLenses, (&), (%~), ix, _1, _2, (^?), (^.))
 
 data Runtime = Runtime { _classPathLayout :: ClassPathLayout,
                          _loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
