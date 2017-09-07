@@ -12,9 +12,8 @@ import Data.Word (Word16)
 import Data.Map as Map (insert, lookup, member, Map(..), empty, (!))
 import Data.ByteString (ByteString, unpack)
 
-import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Class
+import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
+import Control.Monad.Trans.Class (lift)
 import Javelin.Util ((#))
 import Data.Either.Utils (maybeToEither)
 import Flow ((|>))
@@ -146,7 +145,7 @@ checkSuperClass request defCL bc sym rt =
       (ClassOrInterface parent) -> do
         let parentId = ClassId defCL parent
         rt <- resolveClass parentId rt
-        case isInterface parentId rt of
+        case isInterface rt parentId of
           Left error -> throwE error
           Right True -> throwE $ Linkage rt IncompatibleClassChangeError
           Right False -> let thisAccessFlags = classAccessFlags $ body $ bc
@@ -172,7 +171,7 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
     (ClassOrInterface parent) -> do
       let parentClassId = ClassId defCL parent
       rt <- resolveClass parentClassId rt
-      case isInterface parentClassId rt of
+      case isInterface rt parentClassId of
         Left e -> throwE e
         Right False -> throwE $ Linkage rt IncompatibleClassChangeError
         Right True -> if parent == name
@@ -342,7 +341,7 @@ findSuccessfulResolution ((ExceptT io):xs) = do
 resolveMethod :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveMethod classId partRef rt = do
   rt <- resolveClass classId rt
-  requireNotInterface rt partRef
+  requireNotInterface rt classId
   inClass <- resolveMethodInClassOrSuperclass rt classId partRef
   case inClass of
     Just rt -> return rt
@@ -354,8 +353,11 @@ resolveMethodInClassOrSuperclass = undefined
 resolveMethodInSuperInterfaces :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
 resolveMethodInSuperInterfaces = undefined
 
-requireNotInterface :: Runtime -> PartReference -> ExceptT VMError IO Runtime
-requireNotInterface = undefined
+requireNotInterface :: Runtime -> ClassId -> ExceptT VMError IO Runtime
+requireNotInterface rt classId = case isInterface rt classId of
+  Right True -> lift $ return rt
+  Right False -> throwE $ Linkage rt IncompatibleClassChangeError
+  Left err -> throwE err
 
 resolveInterfaceMethod :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 resolveInterfaceMethod = undefined

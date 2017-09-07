@@ -175,6 +175,9 @@ getSuperInterfaces rt classId = do
   interfacesIdx <- interfaces <$> getBody rt classId
   sequenceA $ getClassOrInterfaceReference rt classId <$> interfacesIdx
 
+isInterface :: Runtime -> ClassId -> Either VMError Bool
+isInterface rt classId = (elem AccInterface) <$> classAccessFlags <$> getBody rt classId
+
 getSuperClass :: Runtime -> ClassId -> Either VMError String
 getSuperClass rt classId = do
   superIdx <- super <$> getBody rt classId
@@ -242,8 +245,6 @@ classDefinesField classId partRef rt =
   let fieldResStatus = rt ^? classResolving . ix classId . resolvedFields . ix partRef
   in Nothing /= fieldResStatus
 
-isInterface ::  ClassId -> Runtime -> Either VMError Bool
-isInterface classId rt = (elem AccInterface) <$> classAccessFlags <$> body <$> bytecode <$> getLoadedClass rt classId
 
 
 
