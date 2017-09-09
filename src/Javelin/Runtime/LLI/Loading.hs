@@ -58,8 +58,8 @@ deriveRef p (LongInfo val) =
 deriveRef p (IntegerInfo val) =
   IntegerLiteral val
 -- Following don't have referrers
-deriveRef p (Utf8Info _) =
-  EmptyLiteral
+deriveRef p (Utf8Info val) =
+  StringLiteral val
 deriveRef p (NameAndTypeInfo _ _) =
   EmptyLiteral
     
@@ -201,7 +201,12 @@ reformatWithSymlinks bc =
   in Class className superName [] "sourceFile" (ClassAccess False False False False False False False False) classFields classMethods
 
 deriveClassFields :: SymTable -> ClassBody -> FieldInfo -> Field
-deriveClassFields sym body fieldInfo = Field "name" "descriptor" Nothing (FieldAccess False False False False False False False False False)
+deriveClassFields sym body fieldInfo =
+  let nameIdx = fieldNameIndex fieldInfo
+      descriptorIndex = fieldDescriptorIndex fieldInfo
+      fieldName = string $ sym # nameIdx
+      fieldDescriptor = string $ sym # descriptorIndex
+  in Field fieldName fieldDescriptor Nothing (FieldAccess False False False False False False False False False)
 
 deriveClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
 deriveClassMethods sym body fieldInfo = Method "name" "descriptor" (MethodAccess False False False False False False False False False False False False) []
