@@ -206,7 +206,14 @@ deriveClassFields sym body fieldInfo =
       descriptorIndex = fieldDescriptorIndex fieldInfo
       fieldName = string $ sym # nameIdx
       fieldDescriptor = string $ sym # descriptorIndex
-  in Field fieldName fieldDescriptor Nothing (FieldAccess False False False False False False False False False)
+      fieldAttrs = attrs body
+  in Field fieldName fieldDescriptor (deriveDefaultFieldValue sym fieldAttrs) (FieldAccess False False False False False False False False False)
+
+deriveDefaultFieldValue :: SymTable -> [AttrInfo] -> Maybe ConstantValue
+deriveDefaultFieldValue sym [] = Nothing
+deriveDefaultFieldValue sym (a@((ConstantValue idx):as)) = Just $ ConstantString ""
+deriveDefaultFieldValue sym (a@(_:as)) = deriveDefaultFieldValue sym as
+
 
 deriveClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
 deriveClassMethods sym body fieldInfo = Method "name" "descriptor" (MethodAccess False False False False False False False False False False False False) []
