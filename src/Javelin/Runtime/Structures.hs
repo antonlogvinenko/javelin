@@ -47,23 +47,45 @@ data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPart
               | ClassResFail { resolvingFailure :: VMError }
               deriving (Show, Eq)
 
+data Class = Class {
+  classVisibility :: ClassAccess,
+  className :: String,
+  superName :: String,
+  classInterfaces :: [String],
+  methodsList :: [Method],
+  fieldsList :: [Field]
+  }
+  deriving (Show, Eq)
+
+data ClassAccess = ClassAccess {
+  isClassPublic :: Bool, isClassFinal :: Bool, isClassTreatSuperSpecially :: Bool,
+  isClassInterface :: Bool, isClassAbstract :: Bool, isClassSynthetic :: Bool,
+  isClassAnnotation :: Bool, isClassEnum :: Bool }
+  deriving (Show, Eq)
+  
 data Method = Method {
-  isPublic :: Bool,
-  isPrivate :: Bool,
-  isProtected :: Bool,
-  isStatic :: Bool,
-  isFinal :: Bool,
-  isSynchronized :: Bool,
-  isBridge :: Bool,
-  isVarargs :: Bool,
-  isNative :: Bool,
-  isAbstract :: Bool,
-  isStrict :: Bool,
-  isSynthetic :: Bool,
+  methodAccess :: MethodAccess,
   methodName :: String,
   methodDescriptor :: String }
+  deriving (Show, Eq)
 
-data Class = Class
+data MethodAccess = MethodAccess {
+  isMethodPublic :: Bool, isMethodPrivate :: Bool, isMethodProtected :: Bool,
+  isMethodStatic :: Bool, isMethodFinal :: Bool, isMethodSynchronized :: Bool,
+  isMethodBridge :: Bool, isMethodVarargs :: Bool, isMethodNative :: Bool,
+  isMethodAbstract :: Bool, isMethodStrict :: Bool, isMethodSynthetic :: Bool }
+  deriving (Show,Eq)
+
+data Field = Field {
+  fieldAccess :: FieldAccess,
+  fieldName :: String,
+  fieldDescriptor :: String }
+  deriving (Show, Eq)
+
+data FieldAccess = FieldAccess {
+  isFieldPublic :: Bool, isFieldPrivate :: Bool, isFieldProtected :: Bool,
+  isFieldStatic :: Bool, isFieldFinal :: Bool, isFieldVolatile :: Bool,
+  isFieldTransient :: Bool, isFieldSynthetic, isFieldEum :: Bool }
   deriving (Show, Eq)
 
 data LoadedClass = LoadedClass { defining :: ClassLoader,
