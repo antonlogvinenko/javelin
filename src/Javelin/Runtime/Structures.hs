@@ -51,36 +51,55 @@ data Class = Class {
   classVisibility :: ClassAccess,
   className :: String,
   superName :: String,
+  sourceFile :: String,
+  
   classInterfaces :: [String],
   methodsList :: [Method],
   fieldsList :: [Field]
-  }
-  deriving (Show, Eq)
+  } deriving (Show, Eq)
 
 data ClassAccess = ClassAccess {
   isClassPublic :: Bool, isClassFinal :: Bool, isClassTreatSuperSpecially :: Bool,
   isClassInterface :: Bool, isClassAbstract :: Bool, isClassSynthetic :: Bool,
-  isClassAnnotation :: Bool, isClassEnum :: Bool }
-  deriving (Show, Eq)
+  isClassAnnotation :: Bool, isClassEnum :: Bool
+  } deriving (Show, Eq)
   
 data Method = Method {
   methodAccess :: MethodAccess,
   methodName :: String,
-  methodDescriptor :: String }
-  deriving (Show, Eq)
+  methodDescriptor :: String,
+  methodParameters :: [MethodParameter2]
+--  methodCode :: [String], --todo
+--  methodExceptions :: [String], --todo
+  } deriving (Show, Eq)
+
+data MethodParameter2 = MethodParameter2 {
+  parameterName :: Maybe String,
+  isParameterFinal :: Bool,
+  isParameterSynthetic :: Bool,
+  isParameterMandated :: Bool
+  } deriving (Show, Eq)
 
 data MethodAccess = MethodAccess {
   isMethodPublic :: Bool, isMethodPrivate :: Bool, isMethodProtected :: Bool,
   isMethodStatic :: Bool, isMethodFinal :: Bool, isMethodSynchronized :: Bool,
   isMethodBridge :: Bool, isMethodVarargs :: Bool, isMethodNative :: Bool,
-  isMethodAbstract :: Bool, isMethodStrict :: Bool, isMethodSynthetic :: Bool }
-  deriving (Show,Eq)
+  isMethodAbstract :: Bool, isMethodStrict :: Bool, isMethodSynthetic :: Bool
+  } deriving (Show,Eq)
 
 data Field = Field {
   fieldAccess :: FieldAccess,
   fieldName :: String,
-  fieldDescriptor :: String }
-  deriving (Show, Eq)
+  fieldDescriptor :: String,
+  constantValue :: Maybe ConstantValue
+  } deriving (Show, Eq)
+
+data ConstantValue = ConstantLong Word64
+                   | ConstantFloat Float
+                   | ConstantDouble Double
+                   | ConstantInteger Word32
+                   | ConstantString String
+                   deriving (Show, Eq)
 
 data FieldAccess = FieldAccess {
   isFieldPublic :: Bool, isFieldPrivate :: Bool, isFieldProtected :: Bool,
