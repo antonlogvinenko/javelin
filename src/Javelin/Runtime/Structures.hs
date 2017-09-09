@@ -48,14 +48,14 @@ data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPart
               deriving (Show, Eq)
 
 data Class = Class {
-  classVisibility :: ClassAccess,
   className :: String,
   superName :: String,
   sourceFile :: String,
+  classVisibility :: ClassAccess,
   
   classInterfaces :: [String],
-  methodsList :: [Method],
-  fieldsList :: [Field]
+  fieldsList :: [Field],
+  methodsList :: [Method]
   } deriving (Show, Eq)
 
 data ClassAccess = ClassAccess {

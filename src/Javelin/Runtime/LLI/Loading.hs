@@ -180,12 +180,21 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
     _ -> throwE $ undefined
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
-recordClassLoading name bc sym defCL initCL rt=
+recordClassLoading name bc sym defCL initCL rt =
     let c = LoadedClass defCL initCL (name, defCL) sym bc (reformatWithSymlinks bc) (getFields bc sym) (getMethods bc sym)
     in addLoadedClass (ClassId initCL name) c rt
 
 reformatWithSymlinks :: ByteCode -> Class
-reformatWithSymlinks bc = Class (ClassAccess False False False False False False False False) "class" "super" "source" [] [] []
+reformatWithSymlinks bc =
+  let classBody = body bc
+      cp = constPool classBody
+      sym = deriveSymTable cp
+      ClassOrInterface className = sym # (this classBody)
+      superIdx = super classBody
+      superName = if superIdx == 0
+                  then "java/lang/Object"
+                  else classOrInterfaceName $ sym # superIdx
+  in Class className superName "sourceFile" (ClassAccess False False False False False False False False) [] [] []
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =
