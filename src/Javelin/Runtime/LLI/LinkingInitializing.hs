@@ -35,8 +35,8 @@ writeStaticFields :: ClassId -> Runtime -> Ref -> Either VMError Runtime
 writeStaticFields classId rt ref = let (s, h) = _heap rt
                                        jobject = h ! ref
                                    in do
-                                     sym <- getSymTable rt classId
-                                     bc <- getByteCode rt classId
+                                     sym <- undefined -- getSymTable rt classId -- use classInfo
+                                     bc <- undefined -- getByteCode rt classId -- use classInfo
                                      let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
                                      bc |> body |> fields |> filter staticSearch |> foldl (prepareStaticField sym ref) (return rt)
 

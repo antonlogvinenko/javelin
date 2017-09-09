@@ -110,8 +110,6 @@ data FieldAccess = FieldAccess {
 data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  initiating :: ClassLoader,
                                  runtimePackage :: (String, ClassLoader),
-                                 symtable :: SymTable,
-                                 bytecode :: ByteCode,
                                  classInfo :: Class
                                }
                    | LoadedArrayClass { defining :: ClassLoader,
@@ -229,32 +227,21 @@ makeLenses ''ClassPathLayout
 
 -- Querying class info
 getSuperInterfaces :: Runtime -> ClassId -> Either VMError [String]
-getSuperInterfaces rt classId = do
-  interfacesIdx <- interfaces <$> getBody rt classId
-  sequenceA $ getClassOrInterfaceReference rt classId <$> interfacesIdx
+getSuperInterfaces rt classId = classInterfaces <$> getClass rt classId
 
 isInterface :: Runtime -> ClassId -> Either VMError Bool
-isInterface rt classId = (elem AccInterface) <$> classAccessFlags <$> getBody rt classId
+isInterface rt classId = isClassInterface <$> classVisibility <$> getClass rt classId
 
 getSuperClass :: Runtime -> ClassId -> Either VMError String
-getSuperClass rt classId = do
-  superIdx <- super <$> getBody rt classId
-  getClassOrInterfaceReference rt classId superIdx
+getSuperClass rt classId = superName <$> getClass rt classId
 
 findMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError String
 findMethodBySignature rt classId partRef = do
-  classMethods <- methods <$> getBody rt classId
-  symTable <- getSymTable rt classId
+  classMethods <- methodsList <$> getClass rt classId
   undefined
 
-getSymTable :: Runtime -> ClassId -> Either VMError SymTable
-getSymTable rt classId = symtable <$> getLoadedClass rt classId
-
-getByteCode :: Runtime -> ClassId -> Either VMError ByteCode
-getByteCode rt classId = bytecode <$> getLoadedClass rt classId
-
-getBody :: Runtime -> ClassId -> Either VMError ClassBody
-getBody rt classId = body <$> getByteCode rt classId
+getClass :: Runtime -> ClassId -> Either VMError Class
+getClass rt classId = classInfo <$> getLoadedClass rt classId
 
 getLoadedClass :: Runtime -> ClassId -> Either VMError LoadedClass
 getLoadedClass rt classId =
@@ -272,19 +259,6 @@ getStringLiteral t i = maybeToEither undefined $ do
   case elem of
     StringLiteral x -> return x
     _ -> Nothing
-
-getSymbolicReference :: Runtime -> ClassId -> Word16 -> Either VMError SymbolicReference
-getSymbolicReference rt classId idx = do
-  symTable <- getSymTable rt classId
-  return $ symTable !! fromIntegral idx
-
-getClassOrInterfaceReference :: Runtime -> ClassId -> Word16 -> Either VMError String
-getClassOrInterfaceReference rt classId idx = do
-  ref <- getSymbolicReference rt classId idx
-  case ref of
-    ClassOrInterface str -> return str
-    _ -> Left $ InternalError rt SymTableHasNoProperEntryAtIndex
-
 
 
 -- Updating class info
