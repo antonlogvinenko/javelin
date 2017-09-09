@@ -50,10 +50,10 @@ data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPart
 data Class = Class {
   className :: String,
   superName :: String,
+  classInterfaces :: [String],
   sourceFile :: String,
   classVisibility :: ClassAccess,
   
-  classInterfaces :: [String],
   fieldsList :: [Field],
   methodsList :: [Method]
   } deriving (Show, Eq)
@@ -65,9 +65,9 @@ data ClassAccess = ClassAccess {
   } deriving (Show, Eq)
   
 data Method = Method {
-  methodAccess :: MethodAccess,
   methodName :: String,
   methodDescriptor :: String,
+  methodAccess :: MethodAccess,
   methodParameters :: [MethodParameter2]
 --  methodCode :: [String], --todo
 --  methodExceptions :: [String], --todo
@@ -88,10 +88,10 @@ data MethodAccess = MethodAccess {
   } deriving (Show,Eq)
 
 data Field = Field {
-  fieldAccess :: FieldAccess,
   fieldName :: String,
   fieldDescriptor :: String,
-  constantValue :: Maybe ConstantValue
+  constantValue :: Maybe ConstantValue,
+  fieldAccess :: FieldAccess
   } deriving (Show, Eq)
 
 data ConstantValue = ConstantLong Word64

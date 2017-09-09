@@ -54,7 +54,8 @@ library
                      split ==0.2.3.2,
                      MissingH ==1.4.0.1,
                      flow ==1.0.9,
-                     lens ==4.15.4
+                     lens ==4.15.4,
+                     pretty-show ==1.6.13
 test-suite test
   hs-source-dirs:    test
   main-is:           Main.hs
@@ -90,4 +91,5 @@ executable javelin
                        split ==0.2.3.2,
                        MissingH ==1.4.0.1,
                        flow ==1.0.9,
-                       lens ==4.15.4
+                       lens ==4.15.4,
+                       pretty-show ==1.6.13

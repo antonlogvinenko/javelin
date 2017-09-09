@@ -194,7 +194,17 @@ reformatWithSymlinks bc =
       superName = if superIdx == 0
                   then "java/lang/Object"
                   else classOrInterfaceName $ sym # superIdx
-  in Class className superName "sourceFile" (ClassAccess False False False False False False False False) [] [] []
+      classAttrs = attrs classBody
+      classInterfaces = classBody |> interfaces |> map (classOrInterfaceName .  (sym #))
+      classFields = classBody |> fields |> map (deriveClassFields sym classBody)
+      classMethods = classBody |> methods |> map (deriveClassMethods sym classBody)
+  in Class className superName [] "sourceFile" (ClassAccess False False False False False False False False) classFields classMethods
+
+deriveClassFields :: SymTable -> ClassBody -> FieldInfo -> Field
+deriveClassFields sym body fieldInfo = Field "name" "descriptor" Nothing (FieldAccess False False False False False False False False False)
+
+deriveClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
+deriveClassMethods sym body fieldInfo = Method "name" "descriptor" (MethodAccess False False False False False False False False False False False False) []
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =

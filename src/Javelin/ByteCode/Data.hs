@@ -406,7 +406,7 @@ data TypePathElem = TypePathElem { typePathKind :: Word8,
 data TypeTargetType = GenericClassInterface | MethodConstructor
                     | ClassInterfaceExtendsImplements
                     | ClassInterfaceBound | MethodConstructorBound
-                    | Field | ReturnConstructed | MethodConstructorReceiver | MethodConstructorLambda
+                    | FieldTarget | ReturnConstructed | MethodConstructorReceiver | MethodConstructorLambda
                     | Throws
                     | LocalVar | ResourceVar
                     | ExceptionParameter

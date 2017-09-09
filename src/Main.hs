@@ -15,6 +15,7 @@ import Javelin.Runtime.Structures
 import Javelin.Runtime.LLI.Loading (load, reformatWithSymlinks)
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class
+import Text.Show.Pretty
 
 validate = either (const False) (const True)
 
@@ -37,7 +38,7 @@ disasmSemantics path = do
   bytestring <- BS.readFile path
   let words = BS.unpack bytestring
   case parseRaw words of
-    Right (_, _, v) -> print $ reformatWithSymlinks v
+    Right (_, _, v) -> putStrLn $ ppShow $ reformatWithSymlinks v
     Left (_, off, v) -> putStrLn $ "Failed to parse file " ++ path ++ ". Offset " ++ show off
 
 disasmClass opt path = do
