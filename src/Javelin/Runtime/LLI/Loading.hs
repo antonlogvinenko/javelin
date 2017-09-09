@@ -181,7 +181,7 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL rt=
-    let c = LoadedClass defCL initCL (name, defCL) sym bc (getFields bc sym) (getMethods bc sym)
+    let c = LoadedClass defCL initCL (name, defCL) sym bc Class (getFields bc sym) (getMethods bc sym)
     in addLoadedClass (ClassId initCL name) c rt
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
@@ -337,6 +337,7 @@ findSuccessfulResolution ((ExceptT io):xs) = do
     Right Nothing -> findSuccessfulResolution xs
 
 
+type MethodResolution = Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Maybe Runtime)
 
 resolveMethod :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
 resolveMethod rt classId partRef = do
@@ -345,12 +346,26 @@ resolveMethod rt classId partRef = do
   inClass <- resolveMethodInClassOrSuperclass rt classId partRef
   case inClass of
     Just rt -> return rt
-    Nothing -> resolveMethodInSuperInterfaces rt classId partRef
+    Nothing -> do
+      inInterfaces <- resolveMethodInSuperInterfaces rt classId partRef
+      case inInterfaces of
+        Just rt -> undefined
+        Nothing -> undefined
 
-resolveMethodInClassOrSuperclass :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Maybe Runtime)
+resolveMethodInClassOrSuperclass :: MethodResolution
 resolveMethodInClassOrSuperclass = undefined
 
-resolveMethodInSuperInterfaces :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
+-- not important for phase I, skipping
+resolveMethodSignPolymorphic ::MethodResolution
+resolveMethodSignPolymorphic rt classId partRef = lift $ return Nothing
+
+resolveMethodNameDescriptor :: MethodResolution
+resolveMethodNameDescriptor rt classId partRef = undefined
+
+resolveInSuperClass :: MethodResolution
+resolveInSuperClass = undefined
+
+resolveMethodInSuperInterfaces :: MethodResolution
 resolveMethodInSuperInterfaces = undefined
 
 requireNotInterface :: Runtime -> ClassId -> ExceptT VMError IO Runtime
@@ -358,6 +373,3 @@ requireNotInterface rt classId = case isInterface rt classId of
   Right True -> lift $ return rt
   Right False -> throwE $ Linkage rt IncompatibleClassChangeError
   Left err -> throwE err
-
-resolveInterfaceMethod :: Runtime -> ClassId -> ExceptT VMError IO Runtime
-resolveInterfaceMethod = undefined

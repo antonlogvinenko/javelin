@@ -47,11 +47,31 @@ data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPart
               | ClassResFail { resolvingFailure :: VMError }
               deriving (Show, Eq)
 
+data Method = Method {
+  isPublic :: Bool,
+  isPrivate :: Bool,
+  isProtected :: Bool,
+  isStatic :: Bool,
+  isFinal :: Bool,
+  isSynchronized :: Bool,
+  isBridge :: Bool,
+  isVarargs :: Bool,
+  isNative :: Bool,
+  isAbstract :: Bool,
+  isStrict :: Bool,
+  isSynthetic :: Bool,
+  methodName :: String,
+  methodDescriptor :: String }
+
+data Class = Class
+  deriving (Show, Eq)
+
 data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  initiating :: ClassLoader,
                                  runtimePackage :: (String, ClassLoader),
                                  symtable :: SymTable,
                                  bytecode :: ByteCode,
+                                 classInfo :: Class,
                                  classFields :: Map.Map PartReference FieldInfo,
                                  classMethods :: Map.Map PartReference MethodInfo }
                    | LoadedArrayClass { defining :: ClassLoader,
@@ -180,6 +200,12 @@ getSuperClass :: Runtime -> ClassId -> Either VMError String
 getSuperClass rt classId = do
   superIdx <- super <$> getBody rt classId
   getClassOrInterfaceReference rt classId superIdx
+
+findMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError String
+findMethodBySignature rt classId partRef = do
+  classMethods <- methods <$> getBody rt classId
+  symTable <- getSymTable rt classId
+  undefined
 
 getSymTable :: Runtime -> ClassId -> Either VMError SymTable
 getSymTable rt classId = symtable <$> getLoadedClass rt classId
