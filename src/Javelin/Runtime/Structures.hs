@@ -112,9 +112,8 @@ data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  runtimePackage :: (String, ClassLoader),
                                  symtable :: SymTable,
                                  bytecode :: ByteCode,
-                                 classInfo :: Class,
-                                 classFields :: Map.Map PartReference FieldInfo,
-                                 classMethods :: Map.Map PartReference MethodInfo }
+                                 classInfo :: Class
+                               }
                    | LoadedArrayClass { defining :: ClassLoader,
                                         initiating :: ClassLoader,
                                         runtimePackage :: (String, ClassLoader),

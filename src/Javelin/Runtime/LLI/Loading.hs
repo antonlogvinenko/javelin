@@ -181,7 +181,7 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL rt =
-    let c = LoadedClass defCL initCL (name, defCL) sym bc (reformatWithSymlinks bc) (getFields bc sym) (getMethods bc sym)
+    let c = LoadedClass defCL initCL (name, defCL) sym bc (reformatWithSymlinks bc)
     in addLoadedClass (ClassId initCL name) c rt
 
 reformatWithSymlinks :: ByteCode -> Class
@@ -214,7 +214,6 @@ deriveDefaultFieldValue sym [] = Nothing
 deriveDefaultFieldValue sym (a@((ConstantValue idx):as)) = Just $ ConstantString ""
 deriveDefaultFieldValue sym (a@(_:as)) = deriveDefaultFieldValue sym as
 
-
 deriveClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
 deriveClassMethods sym body fieldInfo = Method "name" "descriptor" (MethodAccess False False False False False False False False False False False False) []
 
@@ -229,7 +228,8 @@ getFields bc sym =
           PartReference (string $ sym # nameIdx) (string $ sym # descrIdx)
 
 getMethods :: ByteCode -> SymTable -> Map PartReference MethodInfo
-getMethods bc sym =   bc
+getMethods bc sym =
+  bc
   |> body
   |> methods
   |> foldl fieldsFold Map.empty
