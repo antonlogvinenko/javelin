@@ -3,20 +3,18 @@
 module Javelin.Runtime.Structures
 where 
 
-import Control.Applicative
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Array.IArray (Array)
 import Data.Map.Lazy as Map (fromList, Map, lookup, insert, size)
 import Data.Int (Int8, Int16, Int32, Int64)
-import Data.Array.IArray
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Class
+import Data.Array.IArray (array, bounds, (!), (//))
+import Control.Monad.Trans.Except (ExceptT(..))
+import Control.Monad.Trans.Class (lift)
 
 import Javelin.ByteCode.Data
 import Javelin.Runtime.DescSign
-import Javelin.Util
 import Data.Either.Utils (maybeToEither)
-import Control.Lens
+import Control.Lens (makeLenses, (&), (%~), ix, _1, _2, (^?), (^.))
 
 data Runtime = Runtime { _classPathLayout :: ClassPathLayout,
                          _loadedClasses :: Map.Map ClassId (Either VMError LoadedClass),
@@ -49,11 +47,31 @@ data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPart
               | ClassResFail { resolvingFailure :: VMError }
               deriving (Show, Eq)
 
+data Method = Method {
+  isPublic :: Bool,
+  isPrivate :: Bool,
+  isProtected :: Bool,
+  isStatic :: Bool,
+  isFinal :: Bool,
+  isSynchronized :: Bool,
+  isBridge :: Bool,
+  isVarargs :: Bool,
+  isNative :: Bool,
+  isAbstract :: Bool,
+  isStrict :: Bool,
+  isSynthetic :: Bool,
+  methodName :: String,
+  methodDescriptor :: String }
+
+data Class = Class
+  deriving (Show, Eq)
+
 data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  initiating :: ClassLoader,
                                  runtimePackage :: (String, ClassLoader),
                                  symtable :: SymTable,
                                  bytecode :: ByteCode,
+                                 classInfo :: Class,
                                  classFields :: Map.Map PartReference FieldInfo,
                                  classMethods :: Map.Map PartReference MethodInfo }
                    | LoadedArrayClass { defining :: ClassLoader,
@@ -182,6 +200,12 @@ getSuperClass :: Runtime -> ClassId -> Either VMError String
 getSuperClass rt classId = do
   superIdx <- super <$> getBody rt classId
   getClassOrInterfaceReference rt classId superIdx
+
+findMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError String
+findMethodBySignature rt classId partRef = do
+  classMethods <- methods <$> getBody rt classId
+  symTable <- getSymTable rt classId
+  undefined
 
 getSymTable :: Runtime -> ClassId -> Either VMError SymTable
 getSymTable rt classId = symtable <$> getLoadedClass rt classId

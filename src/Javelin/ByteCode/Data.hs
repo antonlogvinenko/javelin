@@ -211,7 +211,7 @@ data Constant = Utf8Info { stringValue :: String }
               | InterfaceMethodref { classIndex :: Word16, nameAndTypeIndex :: Word16 }
 
               | MethodHandleInfo { referenceKind :: Word8, referenceIndex :: Word16 }
-              | MethodTypeInfo { methodTypeDescriptorIndex :: Word16 }
+              | MethodTypeInfo { methodTypeaDescriptorIndex :: Word16 }
               | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16, nameAndTypeIndex :: Word16 } deriving (Eq, Show)
 
 data FieldInfo = FieldInfo { fieldAccessFlags :: [FieldInfoAccessFlag],
