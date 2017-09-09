@@ -181,11 +181,11 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
 
 recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name bc sym defCL initCL rt=
-    let c = LoadedClass defCL initCL (name, defCL) sym bc (reformatWithSymlinks bc sym) (getFields bc sym) (getMethods bc sym)
+    let c = LoadedClass defCL initCL (name, defCL) sym bc (reformatWithSymlinks bc) (getFields bc sym) (getMethods bc sym)
     in addLoadedClass (ClassId initCL name) c rt
 
-reformatWithSymlinks :: ByteCode -> SymTable -> Class
-reformatWithSymlinks bc sym = undefined
+reformatWithSymlinks :: ByteCode -> Class
+reformatWithSymlinks bc = Class (ClassAccess False False False False False False False False) "class" "super" "source" [] [] []
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =

@@ -12,7 +12,7 @@ import Javelin.ByteCode.Data (showByteCode)
 import Control.Monad.Trans.Maybe (runMaybeT)
 import Javelin.Runtime.LLI.ClassPath
 import Javelin.Runtime.Structures
-import Javelin.Runtime.LLI.Loading (load)
+import Javelin.Runtime.LLI.Loading (load, reformatWithSymlinks)
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class
 
@@ -32,6 +32,13 @@ runClasses path = do
   (io, result) <- testClasses path
   mapM_ print io
   putStrLn $ ("All files passed: " ++) . show $ result
+
+disasmSemantics path = do
+  bytestring <- BS.readFile path
+  let words = BS.unpack bytestring
+  case parseRaw words of
+    Right (_, _, v) -> print $ reformatWithSymlinks v
+    Left (_, off, v) -> putStrLn $ "Failed to parse file " ++ path ++ ". Offset " ++ show off
 
 disasmClass opt path = do
   bytestring <- BS.readFile path
@@ -63,6 +70,7 @@ main = do
          in case arg0 of
            "disasm" -> disasmClass False arg1
            "disasmFull" -> disasmClass True arg1
+           "disasmSemantics" -> disasmSemantics arg1
            "stats" -> let outputFile = if (length restArgs > 0)
                                        then Just $ restArgs !! 0
                                        else Nothing

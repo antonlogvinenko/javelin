@@ -3,6 +3,10 @@ Javelin
 JVM SE8 implementation in Haskell
 
 Usage:
+* Display class contents in relatively human readable form (no constant pool, only symlinks)
+
+        stack exec javelin disasmSemantics acceptance/TreeMultimapNaturalTest.class
+
 * Disassemler
 
         stack exec javelin disasm acceptance/TreeMultimapNaturalTest.class
