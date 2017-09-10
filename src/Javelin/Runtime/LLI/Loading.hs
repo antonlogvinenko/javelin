@@ -90,15 +90,16 @@ deriveFromClass classIdx nameAndTypeIdx p =
 
 
 -- 5.3.5 Deriving a Class from a class File Representation
-deriveClass :: ClassId -> Runtime -> ClassLoader -> ByteString -> ExceptT VMError IO Runtime
-deriveClass request@(ClassId initCL name) rt defCL bs = do
+checkAndRecordLoadedClass :: ClassId -> Runtime -> ClassLoader -> ByteString -> ExceptT VMError IO Runtime
+checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
+  let classInfo = (deriveClass bc)
   checkClassVersion bc rt
   syms <- checkRepresentedClass name rt bc
   checkSuperClass request defCL bc syms rt
     >>= checkSuperInterfaces request defCL bc syms
-    >>= recordClassLoading name bc syms initCL defCL
+    >>= recordClassLoading name classInfo initCL defCL
 
 
       
@@ -179,13 +180,13 @@ checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
                      else lift $ return rt
     _ -> throwE $ undefined
 
-recordClassLoading :: ClassName -> ByteCode -> SymTable -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
-recordClassLoading name bc sym defCL initCL rt =
-    let c = LoadedClass defCL initCL (name, defCL) (reformatWithSymlinks bc)
+recordClassLoading :: ClassName -> Class -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
+recordClassLoading name classInfo defCL initCL rt =
+    let c = LoadedClass defCL initCL (name, defCL) classInfo
     in addLoadedClass (ClassId initCL name) c rt
 
-reformatWithSymlinks :: ByteCode -> Class
-reformatWithSymlinks bc =
+deriveClass :: ByteCode -> Class
+deriveClass bc =
   let classBody = body bc
       cp = constPool classBody
       sym = deriveSymTable cp
@@ -196,12 +197,12 @@ reformatWithSymlinks bc =
                   else classOrInterfaceName $ sym # superIdx
       classAttrs = attrs classBody
       classInterfaces = classBody |> interfaces |> map (classOrInterfaceName .  (sym #))
-      classFields = classBody |> fields |> map (deriveClassFields sym classBody)
-      classMethods = classBody |> methods |> map (deriveClassMethods sym classBody)
+      classFields = classBody |> fields |> map (checkAndRecordLoadedClassFields sym classBody)
+      classMethods = classBody |> methods |> map (checkAndRecordLoadedClassMethods sym classBody)
   in Class className superName [] "sourceFile" (ClassAccess False False False False False False False False) classFields classMethods
 
-deriveClassFields :: SymTable -> ClassBody -> FieldInfo -> Field
-deriveClassFields sym body fieldInfo =
+checkAndRecordLoadedClassFields :: SymTable -> ClassBody -> FieldInfo -> Field
+checkAndRecordLoadedClassFields sym body fieldInfo =
   let nameIdx = fieldNameIndex fieldInfo
       descriptorIndex = fieldDescriptorIndex fieldInfo
       fieldName = string $ sym # nameIdx
@@ -214,8 +215,8 @@ deriveDefaultFieldValue sym [] = Nothing
 deriveDefaultFieldValue sym (a@((ConstantValue idx):as)) = Just $ ConstantString ""
 deriveDefaultFieldValue sym (a@(_:as)) = deriveDefaultFieldValue sym as
 
-deriveClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
-deriveClassMethods sym body fieldInfo = Method "name" "descriptor" (MethodAccess False False False False False False False False False False False False) []
+checkAndRecordLoadedClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
+checkAndRecordLoadedClassMethods sym body fieldInfo = Method "name" "descriptor" (MethodAccess False False False False False False False False False False False False) []
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =
@@ -264,7 +265,7 @@ loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {_classPathLayout = layout}) = 
   do
     bytes <- withExceptT (wrapClassNotFound rt) (getClassBytes name $ rt ^. classPathLayout)
-    deriveClass request rt BootstrapClassLoader bytes
+    checkAndRecordLoadedClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader
 loadClassWithUserDefCL :: ClassLoadMethod

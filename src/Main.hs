@@ -12,7 +12,7 @@ import Javelin.ByteCode.Data (showByteCode)
 import Control.Monad.Trans.Maybe (runMaybeT)
 import Javelin.Runtime.LLI.ClassPath
 import Javelin.Runtime.Structures
-import Javelin.Runtime.LLI.Loading (load, reformatWithSymlinks)
+import Javelin.Runtime.LLI.Loading (load, deriveClass)
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class
 import Text.Show.Pretty
@@ -38,7 +38,7 @@ disasmSemantics path = do
   bytestring <- BS.readFile path
   let words = BS.unpack bytestring
   case parseRaw words of
-    Right (_, _, v) -> putStrLn $ ppShow $ reformatWithSymlinks v
+    Right (_, _, v) -> putStrLn $ ppShow $ deriveClass v
     Left (_, off, v) -> putStrLn $ "Failed to parse file " ++ path ++ ". Offset " ++ show off
 
 disasmClass opt path = do
