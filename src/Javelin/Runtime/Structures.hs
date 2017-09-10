@@ -49,7 +49,7 @@ data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPart
 
 data Class = Class {
   className :: String,
-  superName :: String,
+  superName :: Maybe String,
   classInterfaces :: [String],
   sourceFile :: String,
   classVisibility :: ClassAccess,
@@ -232,7 +232,7 @@ getSuperInterfaces rt classId = classInterfaces <$> getClass rt classId
 isInterface :: Runtime -> ClassId -> Either VMError Bool
 isInterface rt classId = isClassInterface <$> classVisibility <$> getClass rt classId
 
-getSuperClass :: Runtime -> ClassId -> Either VMError String
+getSuperClass :: Runtime -> ClassId -> Either VMError (Maybe String)
 getSuperClass rt classId = superName <$> getClass rt classId
 
 findMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError String

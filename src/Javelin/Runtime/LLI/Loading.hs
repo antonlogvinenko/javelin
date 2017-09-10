@@ -193,8 +193,8 @@ deriveClass bc =
       ClassOrInterface className = sym # (this classBody)
       superIdx = super classBody
       superName = if superIdx == 0
-                  then "java/lang/Object"
-                  else classOrInterfaceName $ sym # superIdx
+                  then Nothing
+                  else Just $ classOrInterfaceName $ sym # superIdx
       classAttrs = attrs classBody
       classInterfaces = classBody |> interfaces |> map (classOrInterfaceName .  (sym #))
       classFields = classBody |> fields |> map (checkAndRecordLoadedClassFields sym classBody)
@@ -360,7 +360,8 @@ resolveClassFieldInParents classId partRef rt = do
     Just r -> return $ Just r
     Nothing -> case getSuperClass rt classId of
                  Left err -> throwE err
-                 Right superClass -> resolveFieldSearch (ClassId (getInitCL classId) superClass) partRef rt
+                 Right Nothing -> return Nothing
+                 Right (Just superClass) -> resolveFieldSearch (ClassId (getInitCL classId) superClass) partRef rt
 
 findSuccessfulResolution :: [ExceptT VMError IO (Maybe Runtime)] -> IO (Either VMError (Maybe Runtime))
 findSuccessfulResolution [] = return $ Right Nothing
