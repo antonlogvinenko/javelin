@@ -88,20 +88,16 @@ deriveFromClass classIdx nameAndTypeIdx p =
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 
 
-
 -- 5.3.5 Deriving a Class from a class File Representation
 checkAndRecordLoadedClass :: ClassId -> Runtime -> ClassLoader -> ByteString -> ExceptT VMError IO Runtime
 checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
-  let classInfo = (deriveClass bc)
   checkClassVersion bc rt
-  syms <- checkRepresentedClass name rt bc
-  checkSuperClass request defCL bc syms rt
-    >>= checkSuperInterfaces request defCL bc syms
+  let classInfo = deriveClass bc
+  checkSuperClass request defCL rt classInfo
+    >>= checkSuperInterfaces request defCL classInfo
     >>= recordClassLoading name classInfo initCL defCL
-
-
       
 checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
 checkInitiatingClassLoader initCL name rt = do
@@ -133,52 +129,43 @@ checkRepresentedClass name rt bc =
     _ -> throwE $ Linkage rt ClassFormatError
 -- last case is due to invalid bytecode; throw an exception and terminate?
 
-checkSuperClass :: ClassId -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
-checkSuperClass request defCL bc sym rt =
-  let superClassIdx = super $ body bc
+checkSuperClass :: ClassId -> ClassLoader -> Runtime -> Class -> ExceptT VMError IO Runtime
+checkSuperClass request defCL rt classInfo =
+  let classSuperName = superName classInfo
       name = getName request
-  in case (name, superClassIdx) of
-    ("java/lang/Object", 0) -> lift $ return rt
+  in case (name, classSuperName) of
+    ("java/lang/Object", Nothing) -> lift $ return rt
     ("java/lang/Object", _) -> throwE $ Linkage rt $ ClassFormatError
-    (_, 0) -> throwE $ Linkage rt $ ClassFormatError
-    (_, idx) -> case sym # idx of
-      -- what if other constructor? bytecode error
-      (ClassOrInterface parent) -> do
-        let parentId = ClassId defCL parent
-        rt <- resolveClass parentId rt
-        case isInterface rt parentId of
-          Left error -> throwE error
-          Right True -> throwE $ Linkage rt IncompatibleClassChangeError
-          Right False -> let thisAccessFlags = classAccessFlags $ body $ bc
-                             thisIsInterface = elem AccInterface thisAccessFlags
-                         in case (thisIsInterface, parent) of
-                           (True, "java/lang/Object") -> lift $ return rt
-                           (True, _) -> throwE $ InternalError rt InterfaceMustHaveObjectAsSuperClass
-                           (False, parentName) -> if parentName == name
-                                                  then throwE $ Linkage rt ClassCircularityError
-                                                  else lift $ return rt
-      _ -> throwE $ undefined
+    (_, Nothing) -> throwE $ Linkage rt $ ClassFormatError
+    (_, Just parent) -> do
+      let parentId = ClassId defCL parent
+      rt <- resolveClass parentId rt
+      case isInterface rt parentId of
+        Left error -> throwE error
+        Right True -> throwE $ Linkage rt IncompatibleClassChangeError
+        Right False -> let thisIsInterface = classInfo |> classVisibility |> isClassInterface
+                       in case (thisIsInterface, parent) of
+                            (True, "java/lang/Object") -> lift $ return rt
+                            (True, _) -> throwE $ InternalError rt InterfaceMustHaveObjectAsSuperClass
+                            (False, parentName) -> if parentName == name
+                                                   then throwE $ Linkage rt ClassCircularityError
+                                                   else lift $ return rt
 
-
-checkSuperInterfaces :: ClassId -> ClassLoader -> ByteCode -> SymTable -> Runtime -> ExceptT VMError IO Runtime
-checkSuperInterfaces request defCL bc syms rt = let superInterfaces = interfaces $ body bc
-                                                in foldl (checkSuperInterface request defCL bc syms) (lift $ return rt) superInterfaces
-checkSuperInterface :: ClassId -> ClassLoader -> ByteCode -> SymTable -> ExceptT VMError IO Runtime -> Word16 -> ExceptT VMError IO Runtime
-checkSuperInterface request defCL bc sym eitherRt interfaceIdx = do
+checkSuperInterfaces :: ClassId -> ClassLoader -> Class -> Runtime -> ExceptT VMError IO Runtime
+checkSuperInterfaces request defCL classInfo rt = let superInterfaces = classInterfaces classInfo
+                                                  in foldl (checkSuperInterface request defCL classInfo) (lift $ return rt) superInterfaces
+checkSuperInterface :: ClassId -> ClassLoader -> Class -> ExceptT VMError IO Runtime -> String -> ExceptT VMError IO Runtime
+checkSuperInterface request defCL classInfo eitherRt parentInterface = do
   rt <- eitherRt
   let name = getName request
-  case sym # interfaceIdx of
-    --other constructor? bytecode error
-    (ClassOrInterface parent) -> do
-      let parentClassId = ClassId defCL parent
-      rt <- resolveClass parentClassId rt
-      case isInterface rt parentClassId of
-        Left e -> throwE e
-        Right False -> throwE $ Linkage rt IncompatibleClassChangeError
-        Right True -> if parent == name
-                     then throwE $ Linkage rt ClassCircularityError
-                     else lift $ return rt
-    _ -> throwE $ undefined
+  let parentClassId = ClassId defCL parentInterface
+  rt <- resolveClass parentClassId rt
+  case isInterface rt parentClassId of
+    Left e -> throwE e
+    Right False -> throwE $ Linkage rt IncompatibleClassChangeError
+    Right True -> if parentInterface == name
+                  then throwE $ Linkage rt ClassCircularityError
+                  else lift $ return rt
 
 recordClassLoading :: ClassName -> Class -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name classInfo defCL initCL rt =
