@@ -278,6 +278,11 @@ addResolvedClassField classId partRef rt =
   lift $ return $
   rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
 
+addResolvedClassMethod :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+addResolvedClassMethod classId partRef rt =
+  lift $ return $
+  rt & classResolving . ix classId . resolvedMethods %~ insert partRef ClassPartResOk
+
 classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
   let fieldResStatus = rt ^? classResolving . ix classId . resolvedFields . ix partRef

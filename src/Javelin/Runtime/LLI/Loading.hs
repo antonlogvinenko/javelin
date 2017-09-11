@@ -110,7 +110,8 @@ checkClassFileFormat bs rt = let body = parseRaw $ unpack bs in
   case body of
     Left (_, _, msg) -> throwE $ Linkage rt  ClassFormatError
     Right (_, _, byteCode) -> lift $ return byteCode
-    
+
+--todo also check class name is correct
 checkClassVersion :: ByteCode -> Runtime -> ExceptT VMError IO ()
 checkClassVersion bc rt = if minVer bc < 0 || majVer bc > 1050
                           then throwE $ Linkage rt UnsupportedClassVersionError
@@ -360,33 +361,49 @@ findSuccessfulResolution ((ExceptT io):xs) = do
     Right Nothing -> findSuccessfulResolution xs
 
 
-type MethodResolution = Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Maybe Runtime)
+type MethodResolution = Runtime -> ClassId -> PartReference -> Class -> ExceptT VMError IO (Maybe Runtime)
 
 resolveMethod :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
 resolveMethod rt classId partRef = do
   rt <- resolveClass classId rt
   requireNotInterface rt classId
-  inClass <- resolveMethodInClassOrSuperclass rt classId partRef
+  classInfo <- ExceptT $ return $ getClass rt classId
+  inClass <- resolveMethodInClassOrSuperclass rt classId partRef classInfo
   case inClass of
     Just rt -> return rt
     Nothing -> do
-      inInterfaces <- resolveMethodInSuperInterfaces rt classId partRef
+      inInterfaces <- resolveMethodInSuperInterfaces rt classId partRef classInfo
       case inInterfaces of
         Just rt -> undefined
         Nothing -> undefined
 
 resolveMethodInClassOrSuperclass :: MethodResolution
-resolveMethodInClassOrSuperclass = undefined
+resolveMethodInClassOrSuperclass rt classId partRef classInfo = do
+  mrt <- resolveMethodSignPolymorphic rt classId partRef classInfo
+  case mrt of
+    Just rt -> lift $ return $ Just rt
+    Nothing -> do
+      mrt <- resolveMethodNameDescriptor rt classId partRef classInfo
+      case mrt of
+        Just rt -> lift $ return $ Just rt
+        Nothing -> resolveInSuperClass rt classId partRef classInfo
 
 -- not important for phase I, skipping
 resolveMethodSignPolymorphic ::MethodResolution
-resolveMethodSignPolymorphic rt classId partRef = lift $ return Nothing
+resolveMethodSignPolymorphic rt classId partRef classInfo = lift $ return Nothing
 
 resolveMethodNameDescriptor :: MethodResolution
-resolveMethodNameDescriptor rt classId partRef = undefined
+resolveMethodNameDescriptor rt classId partRef@(PartReference name descr) classInfo =
+  let methods = methodsList classInfo
+      matchingMethods = filter methodMatch methods
+      methodMatch m = methodName m == name && methodDescriptor m == descr
+  in case matchingMethods of
+    [] -> lift $ return Nothing
+    (m:_) -> Just <$> addResolvedClassMethod classId partRef rt
+  
 
 resolveInSuperClass :: MethodResolution
-resolveInSuperClass = undefined
+resolveInSuperClass rt classId partRef classInfo = undefined
 
 resolveMethodInSuperInterfaces :: MethodResolution
 resolveMethodInSuperInterfaces = undefined
