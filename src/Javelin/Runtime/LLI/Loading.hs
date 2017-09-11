@@ -402,12 +402,11 @@ resolveMethodSignPolymorphic rt classId partRef classInfo = lift $ return Nothin
 
 resolveMethodNameDescriptor :: MethodResolution
 resolveMethodNameDescriptor rt classId partRef@(PartReference name descr) classInfo =
-  let methods = methodsList classInfo
-      matchingMethods = filter methodMatch methods
+  let matchingMethods = classInfo |> methodsList |> filter methodMatch
       methodMatch m = methodName m == name && methodDescriptor m == descr
   in case matchingMethods of
-    [] -> lift $ return Nothing
     (m:_) -> Just <$> addResolvedClassMethod classId partRef rt
+    [] -> lift $ return Nothing
 
 resolveInSuperClass :: MethodResolution
 resolveInSuperClass rt classId@(ClassId initCl name) partRef classInfo =
@@ -417,6 +416,12 @@ resolveInSuperClass rt classId@(ClassId initCl name) partRef classInfo =
 
 resolveMethodInSuperInterfaces :: MethodResolution
 resolveMethodInSuperInterfaces = undefined
+
+resolveMaxSpecificSuperinterfaceMethod :: MethodResolution
+resolveMaxSpecificSuperinterfaceMethod rt classId partRef classInfo = undefined
+
+resolveNonPrivateNonStaticSuperinterfaceMethod :: MethodResolution
+resolveNonPrivateNonStaticSuperinterfaceMethod rt classId partRef classInfo = undefined
 
 requireNotInterface :: Runtime -> ClassId -> ExceptT VMError IO Runtime
 requireNotInterface rt classId = case isInterface rt classId of
