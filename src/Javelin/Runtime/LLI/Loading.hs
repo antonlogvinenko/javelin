@@ -365,12 +365,20 @@ type MethodResolution = Runtime -> ClassId -> PartReference -> Class -> ExceptT 
 
 resolveMethod :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
 resolveMethod rt classId partRef = do
+  mrt <- resolveMethodSearch rt classId partRef
+  case mrt of
+    Nothing -> throwE $ Linkage rt NoSuchMethodError
+    Just rt -> lift $ return rt
+  
+
+resolveMethodSearch :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Maybe Runtime)
+resolveMethodSearch rt classId partRef = do
   rt <- resolveClass classId rt
   requireNotInterface rt classId
   classInfo <- ExceptT $ return $ getClass rt classId
   inClass <- resolveMethodInClassOrSuperclass rt classId partRef classInfo
   case inClass of
-    Just rt -> return rt
+    Just rt -> return $ Just rt
     Nothing -> do
       inInterfaces <- resolveMethodInSuperInterfaces rt classId partRef classInfo
       case inInterfaces of
@@ -400,10 +408,12 @@ resolveMethodNameDescriptor rt classId partRef@(PartReference name descr) classI
   in case matchingMethods of
     [] -> lift $ return Nothing
     (m:_) -> Just <$> addResolvedClassMethod classId partRef rt
-  
 
 resolveInSuperClass :: MethodResolution
-resolveInSuperClass rt classId partRef classInfo = undefined
+resolveInSuperClass rt classId@(ClassId initCl name) partRef classInfo =
+  case superName classInfo of
+    Nothing -> lift $ return Nothing
+    Just parentClassName -> resolveMethodSearch rt (ClassId initCl parentClassName) partRef
 
 resolveMethodInSuperInterfaces :: MethodResolution
 resolveMethodInSuperInterfaces = undefined
