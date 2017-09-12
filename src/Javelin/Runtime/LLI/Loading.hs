@@ -84,7 +84,7 @@ deriveFromClass classIdx nameAndTypeIdx p =
       className = stringValue $ p # (nameIndex classInfo)
       memberName = stringValue $ p # (nameIndex nameAndTypeInfo)
       memberDescriptor = stringValue $ p # (nameAndTypeDescriptorIndex nameAndTypeInfo)
-  in ClassPartReference className memberName memberDescriptor
+  in ClassPartReference (PartReference className memberName) memberDescriptor
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 
 
@@ -191,10 +191,8 @@ deriveClass bc =
 
 checkAndRecordLoadedClassFields :: SymTable -> ClassBody -> FieldInfo -> Field
 checkAndRecordLoadedClassFields sym body fieldInfo =
-  let nameIdx = fieldNameIndex fieldInfo
-      descriptorIndex = fieldDescriptorIndex fieldInfo
-      fieldName = string $ sym # nameIdx
-      fieldDescriptor = string $ sym # descriptorIndex
+  let fieldName = fieldInfo |> fieldNameIndex |> (sym #) |> string
+      fieldDescriptor = fieldInfo |> fieldDescriptorIndex |> (sym #) |> string
       fieldAttrs = attrs body
   in Field fieldName fieldDescriptor (deriveDefaultFieldValue sym fieldAttrs) (FieldAccess False False False False False False False False False)
 
@@ -204,7 +202,10 @@ deriveDefaultFieldValue sym (a@((ConstantValue idx):as)) = Just $ ConstantString
 deriveDefaultFieldValue sym (a@(_:as)) = deriveDefaultFieldValue sym as
 
 checkAndRecordLoadedClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
-checkAndRecordLoadedClassMethods sym body fieldInfo = Method "name" "descriptor" (MethodAccess False False False False False False False False False False False False) []
+checkAndRecordLoadedClassMethods sym body methodInfo =
+  let methodName = methodInfo |> methodNameIndex |> (sym #) |> string
+      methodDescriptor = methodInfo |> methodInfoDescriptorIndex |> (sym #) |> string
+  in Method methodName methodDescriptor (MethodAccess False False False False False False False False False False False False) []
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =
@@ -360,58 +361,57 @@ findSuccessfulResolution ((ExceptT io):xs) = do
     Right (Just rt) -> return $ Right $ Just rt
     Right Nothing -> findSuccessfulResolution xs
 
-
-type MethodResolution = Runtime -> ClassId -> PartReference -> Class -> ExceptT VMError IO (Maybe Runtime)
+type MethodResolution = Runtime -> ClassId -> PartReference -> Class -> ExceptT VMError IO (Runtime, Maybe String)
 
 resolveMethod :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
 resolveMethod rt classId partRef = do
-  mrt <- resolveMethodSearch rt classId partRef
-  case mrt of
+  (rt, mclass) <- resolveMethodSearch rt classId partRef
+  case mclass of
     Nothing -> throwE $ Linkage rt NoSuchMethodError
-    Just rt -> lift $ return rt
+    Just owner -> addResolvedClassMethod classId (ClassPartReference partRef owner) rt
   
 
-resolveMethodSearch :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Maybe Runtime)
+resolveMethodSearch :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Runtime, Maybe String)
 resolveMethodSearch rt classId partRef = do
   rt <- resolveClass classId rt
   requireNotInterface rt classId
   classInfo <- ExceptT $ return $ getClass rt classId
-  inClass <- resolveMethodInClassOrSuperclass rt classId partRef classInfo
-  case inClass of
-    Just rt -> return $ Just rt
+  (rt, mclass) <- resolveMethodInClassOrSuperclass rt classId partRef classInfo
+  case mclass of
+    Just classInfo -> lift $ return (rt, Just classInfo)
     Nothing -> do
-      inInterfaces <- resolveMethodInSuperInterfaces rt classId partRef classInfo
-      case inInterfaces of
+      (rt, mInterfaces) <- resolveMethodInSuperInterfaces rt classId partRef classInfo
+      case mInterfaces of
         Just rt -> undefined
         Nothing -> undefined
 
 resolveMethodInClassOrSuperclass :: MethodResolution
 resolveMethodInClassOrSuperclass rt classId partRef classInfo = do
-  mrt <- resolveMethodSignPolymorphic rt classId partRef classInfo
-  case mrt of
-    Just rt -> lift $ return $ Just rt
+  (rt, mclass) <- resolveMethodSignPolymorphic rt classId partRef classInfo
+  case mclass of
+    Just classInfo -> lift $ return $ (rt, Just classInfo)
     Nothing -> do
-      mrt <- resolveMethodNameDescriptor rt classId partRef classInfo
-      case mrt of
-        Just rt -> lift $ return $ Just rt
+      (rt, mclass) <- resolveMethodNameDescriptor rt classId partRef classInfo
+      case mclass of
+        Just classInfo -> lift $ return $ (rt, Just classInfo)
         Nothing -> resolveInSuperClass rt classId partRef classInfo
 
 -- not important for phase I, skipping
 resolveMethodSignPolymorphic ::MethodResolution
-resolveMethodSignPolymorphic rt classId partRef classInfo = lift $ return Nothing
+resolveMethodSignPolymorphic rt classId partRef classInfo = lift $ return (rt, Nothing)
 
 resolveMethodNameDescriptor :: MethodResolution
 resolveMethodNameDescriptor rt classId partRef@(PartReference name descr) classInfo =
-  let matchingMethods = classInfo |> methodsList |> filter methodMatch
-      methodMatch m = methodName m == name && methodDescriptor m == descr
-  in case matchingMethods of
-    (m:_) -> Just <$> addResolvedClassMethod classId partRef rt
-    [] -> lift $ return Nothing
+  let methodMatch m = methodName m == name && methodDescriptor m == descr
+      matchedMethods = classInfo |> methodsList |> filter methodMatch
+  in case matchedMethods of
+    (m:_) -> lift $ return (rt, Just $ getName classId)
+    [] -> lift $ return (rt, Nothing)
 
 resolveInSuperClass :: MethodResolution
 resolveInSuperClass rt classId@(ClassId initCl name) partRef classInfo =
   case superName classInfo of
-    Nothing -> lift $ return Nothing
+    Nothing -> lift $ return (rt, Nothing)
     Just parentClassName -> resolveMethodSearch rt (ClassId initCl parentClassName) partRef
 
 resolveMethodInSuperInterfaces :: MethodResolution

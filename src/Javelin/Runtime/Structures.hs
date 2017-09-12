@@ -33,17 +33,16 @@ data ClassPartRes = ClassPartResOk
                   | ClassPartResFail VMError
                   deriving (Show, Eq)
 
-data ClassPartReference = ClassPartReference { _partName :: String,
-                                               _partDescriptor :: String,
+data ClassPartReference = ClassPartReference { _part :: PartReference,
                                                _ownerName :: String }
                         deriving (Show, Eq, Ord)
 
-data PartReference = PartReference { _part :: String,
+data PartReference = PartReference { _name :: String,
                                      _descriptor :: String }
                    deriving (Show, Eq, Ord)
 
 data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPartRes,
-                             _resolvedMethods :: Map.Map PartReference ClassPartRes }
+                             _resolvedMethods :: Map.Map ClassPartReference ClassPartRes }
               | ClassResFail { resolvingFailure :: VMError }
               deriving (Show, Eq)
 
@@ -278,10 +277,10 @@ addResolvedClassField classId partRef rt =
   lift $ return $
   rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
 
-addResolvedClassMethod :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-addResolvedClassMethod classId partRef rt =
+addResolvedClassMethod :: ClassId -> ClassPartReference -> Runtime -> ExceptT VMError IO Runtime
+addResolvedClassMethod classId classPartRef rt =
   lift $ return $
-  rt & classResolving . ix classId . resolvedMethods %~ insert partRef ClassPartResOk
+  rt & classResolving . ix classId . resolvedMethods %~ insert classPartRef ClassPartResOk
 
 classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
