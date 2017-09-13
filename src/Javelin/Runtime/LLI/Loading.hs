@@ -8,6 +8,7 @@ import Javelin.Runtime.Structures
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.ClassFile (parseRaw)
 
+import Data.Maybe (mapMaybe)
 import Data.Word (Word16)
 import Data.Map as Map (insert, lookup, member, Map(..), empty, (!))
 import Data.ByteString (ByteString, unpack)
@@ -361,67 +362,84 @@ findSuccessfulResolution ((ExceptT io):xs) = do
     Right (Just rt) -> return $ Right $ Just rt
     Right Nothing -> findSuccessfulResolution xs
 
-type MethodResolution = Runtime -> ClassId -> PartReference -> Class -> ExceptT VMError IO (Runtime, Maybe String)
+
+
+type MethodResolution = Runtime -> ClassId -> PartReference -> Class -> ExceptT VMError IO (Maybe String)
 
 resolveMethod :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO Runtime
 resolveMethod rt classId partRef = do
-  (rt, mclass) <- resolveMethodSearch rt classId partRef
+  rt <- resolveClass classId rt
+  classInfo <- ExceptT $ return $ getClass rt classId
+  mclass <- resolveMethodSearch rt classId partRef classInfo
   case mclass of
     Nothing -> throwE $ Linkage rt NoSuchMethodError
     Just owner -> addResolvedClassMethod classId (ClassPartReference partRef owner) rt
   
 
-resolveMethodSearch :: Runtime -> ClassId -> PartReference -> ExceptT VMError IO (Runtime, Maybe String)
-resolveMethodSearch rt classId partRef = do
-  rt <- resolveClass classId rt
+resolveMethodSearch :: MethodResolution
+resolveMethodSearch rt classId partRef classInfo = do
   requireNotInterface rt classId
-  classInfo <- ExceptT $ return $ getClass rt classId
-  (rt, mclass) <- resolveMethodInClassOrSuperclass rt classId partRef classInfo
+  mclass <- resolveMethodInClassOrSuperclass rt classId partRef classInfo
   case mclass of
-    Just classInfo -> lift $ return (rt, Just classInfo)
+    Just _ -> mclass |> return |> lift
     Nothing -> do
-      (rt, mInterfaces) <- resolveMethodInSuperInterfaces rt classId partRef classInfo
+      mInterfaces <- resolveMethodInSuperInterfaces rt classId partRef classInfo
       case mInterfaces of
         Just rt -> undefined
         Nothing -> undefined
 
 resolveMethodInClassOrSuperclass :: MethodResolution
 resolveMethodInClassOrSuperclass rt classId partRef classInfo = do
-  (rt, mclass) <- resolveMethodSignPolymorphic rt classId partRef classInfo
+  mclass <- resolveMethodSignPolymorphic rt classId partRef classInfo
   case mclass of
-    Just classInfo -> lift $ return $ (rt, Just classInfo)
+    Just _ -> mclass |> return |> lift  
     Nothing -> do
-      (rt, mclass) <- resolveMethodNameDescriptor rt classId partRef classInfo
+      mclass <- resolveMethodNameDescriptor rt classId partRef classInfo
       case mclass of
-        Just classInfo -> lift $ return $ (rt, Just classInfo)
+        Just _ -> mclass |> return |> lift
         Nothing -> resolveInSuperClass rt classId partRef classInfo
 
 -- not important for phase I, skipping
 resolveMethodSignPolymorphic ::MethodResolution
-resolveMethodSignPolymorphic rt classId partRef classInfo = lift $ return (rt, Nothing)
+resolveMethodSignPolymorphic rt classId partRef classInfo = lift $ return Nothing
 
 resolveMethodNameDescriptor :: MethodResolution
-resolveMethodNameDescriptor rt classId partRef@(PartReference name descr) classInfo =
-  let methodMatch m = methodName m == name && methodDescriptor m == descr
-      matchedMethods = classInfo |> methodsList |> filter methodMatch
-  in case matchedMethods of
-    (m:_) -> lift $ return (rt, Just $ getName classId)
-    [] -> lift $ return (rt, Nothing)
+resolveMethodNameDescriptor rt classId partRef classInfo =
+  let matchedMethods = classInfo |> methodsList |> filter (methodMatches partRef)
+  in lift . return $ case matchedMethods of
+    (m:_) -> Just $ getName classId
+    [] -> Nothing
+
+methodMatches :: PartReference -> Method -> Bool
+methodMatches partRef@(PartReference name descr) m =
+  methodName m == name && methodDescriptor m == descr
+
+singlListToMaybe :: [a] -> Maybe a
+singlListToMaybe [x] = Just x
+singlListToMaybe _ = Nothing
 
 resolveInSuperClass :: MethodResolution
 resolveInSuperClass rt classId@(ClassId initCl name) partRef classInfo =
   case superName classInfo of
-    Nothing -> lift $ return (rt, Nothing)
-    Just parentClassName -> resolveMethodSearch rt (ClassId initCl parentClassName) partRef
+    Nothing -> lift $ return Nothing
+    Just parentClassName -> resolveMethodSearch rt (ClassId initCl parentClassName) partRef classInfo
 
 resolveMethodInSuperInterfaces :: MethodResolution
-resolveMethodInSuperInterfaces = undefined
+resolveMethodInSuperInterfaces rt classId partRef classInfo = do
+  mclass <- resolveMaxSpecificSuperinterfaceMethod rt classId partRef classInfo
+  case mclass of
+    Nothing -> resolveNonPrivateNonStaticSuperinterfaceMethod rt classId partRef classInfo
+    Just _ -> mclass |> return |> lift
 
 resolveMaxSpecificSuperinterfaceMethod :: MethodResolution
-resolveMaxSpecificSuperinterfaceMethod rt classId partRef classInfo = undefined
+resolveMaxSpecificSuperinterfaceMethod rt classId@(ClassId init name) partRef classInfo =
+  classInfo |> classInterfaces |> mapMaybe (\i -> maxSpecific rt (ClassId init i) partRef) |> singlListToMaybe |> return |> lift
+
+maxSpecific :: Runtime -> ClassId -> PartReference -> Maybe String
+maxSpecific rt classId interface = undefined
 
 resolveNonPrivateNonStaticSuperinterfaceMethod :: MethodResolution
-resolveNonPrivateNonStaticSuperinterfaceMethod rt classId partRef classInfo = undefined
+resolveNonPrivateNonStaticSuperinterfaceMethod rt classId partRef = undefined
 
 requireNotInterface :: Runtime -> ClassId -> ExceptT VMError IO Runtime
 requireNotInterface rt classId = case isInterface rt classId of
