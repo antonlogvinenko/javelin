@@ -8,7 +8,7 @@ import Javelin.Runtime.Structures
 import Javelin.ByteCode.Data
 import Javelin.ByteCode.ClassFile (parseRaw)
 
-import Data.Maybe (mapMaybe)
+import Data.Maybe (mapMaybe, isJust, catMaybes, isNothing)
 import Data.Word (Word16)
 import Data.Map as Map (insert, lookup, member, Map(..), empty, (!))
 import Data.ByteString (ByteString, unpack)
@@ -433,10 +433,33 @@ resolveMethodInSuperInterfaces rt classId partRef classInfo = do
 
 resolveMaxSpecificSuperinterfaceMethod :: MethodResolution
 resolveMaxSpecificSuperinterfaceMethod rt classId@(ClassId init name) partRef classInfo =
-  classInfo |> classInterfaces |> mapMaybe (\i -> maxSpecific rt (ClassId init i) partRef) |> singlListToMaybe |> return |> lift
+  lift . return $ case maxSpecific rt partRef classId of 
+    Just (Just owner) -> Just owner
+    _ -> Nothing
 
-maxSpecific :: Runtime -> ClassId -> PartReference -> Maybe String
-maxSpecific rt classId interface = undefined
+maxSpecific :: Runtime -> PartReference -> ClassId -> Maybe (Maybe String)
+maxSpecific rt partRef classId@(ClassId initCL _) =
+  case getClass rt classId of
+    Left error -> Nothing
+    Right classInfo -> case classInfo |> methodsList |> filter (methodMatches partRef) of
+                         [method] -> classInfo |> className |> Just |> Just
+                         [] -> let found = classInfo
+                                           |> classInterfaces
+                                           |> map (ClassId initCL)
+                                           |> map (maxSpecific rt partRef)
+                                   failures = found
+                                              |> filter isNothing |> length
+                                   successes = found
+                                               |> filter isJust |> catMaybes
+                                               |> filter isJust
+                                   successesLength = length successes
+                               in if failures > 0
+                                  then Nothing
+                                  else case successesLength of
+                                         0 -> Just Nothing
+                                         1 -> successes |> head |> Just
+                                         _ -> Nothing
+                         _ -> Nothing
 
 resolveNonPrivateNonStaticSuperinterfaceMethod :: MethodResolution
 resolveNonPrivateNonStaticSuperinterfaceMethod rt classId partRef = undefined
