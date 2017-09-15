@@ -382,11 +382,7 @@ resolveMethodSearch rt classId partRef classInfo = do
   mclass <- resolveMethodInClassOrSuperclass rt classId partRef classInfo
   case mclass of
     Just _ -> mclass |> return |> lift
-    Nothing -> do
-      mInterfaces <- resolveMethodInSuperInterfaces rt classId partRef classInfo
-      case mInterfaces of
-        Just rt -> undefined
-        Nothing -> undefined
+    Nothing -> resolveMethodInSuperInterfaces rt classId partRef classInfo
 
 resolveMethodInClassOrSuperclass :: MethodResolution
 resolveMethodInClassOrSuperclass rt classId partRef classInfo = do
@@ -433,12 +429,12 @@ resolveMethodInSuperInterfaces rt classId partRef classInfo = do
 
 resolveMaxSpecificSuperinterfaceMethod :: MethodResolution
 resolveMaxSpecificSuperinterfaceMethod rt classId@(ClassId init name) partRef classInfo =
-  lift . return $ case maxSpecific rt partRef classId of 
+  lift . return $ case maxSpecific rt classId partRef of
     Just (Just owner) -> Just owner
     _ -> Nothing
 
-maxSpecific :: Runtime -> PartReference -> ClassId -> Maybe (Maybe String)
-maxSpecific rt partRef classId@(ClassId initCL _) =
+maxSpecific :: Runtime -> ClassId -> PartReference -> Maybe (Maybe String)
+maxSpecific rt classId@(ClassId initCL _) partRef =
   case getClass rt classId of
     Left error -> Nothing
     Right classInfo -> case classInfo |> methodsList |> filter (methodMatches partRef) of
@@ -446,7 +442,7 @@ maxSpecific rt partRef classId@(ClassId initCL _) =
                          [] -> let found = classInfo
                                            |> classInterfaces
                                            |> map (ClassId initCL)
-                                           |> map (maxSpecific rt partRef)
+                                           |> map (\classId -> maxSpecific rt classId partRef)
                                    failures = found |> filter isNothing |> length
                                    successes = found |> catMaybes |> filter isJust
                                    successesLength = length successes
@@ -459,7 +455,23 @@ maxSpecific rt partRef classId@(ClassId initCL _) =
                          _ -> Nothing
 
 resolveNonPrivateNonStaticSuperinterfaceMethod :: MethodResolution
-resolveNonPrivateNonStaticSuperinterfaceMethod rt classId partRef = undefined
+resolveNonPrivateNonStaticSuperinterfaceMethod rt classId partRef classInfo =
+  lift . return $ findNonPrivateNonStatic rt classId partRef
+
+findNonPrivateNonStatic :: Runtime -> ClassId -> PartReference -> Maybe String
+findNonPrivateNonStatic rt classId@(ClassId initCL _) partRef =
+  case getClass rt classId of
+    Left error -> Nothing
+    Right classInfo -> case classInfo |> methodsList |> filter (methodMatches partRef) of
+                         (m:_) -> classInfo |> className |> Just
+                         _ -> let found = classInfo
+                                    |> classInterfaces
+                                    |> map (ClassId initCL)
+                                    |> map (\classId -> findNonPrivateNonStatic rt classId partRef)
+                              in case found of
+                                   (m:_) -> m
+                                   _ -> Nothing
+
 
 requireNotInterface :: Runtime -> ClassId -> ExceptT VMError IO Runtime
 requireNotInterface rt classId = case isInterface rt classId of
