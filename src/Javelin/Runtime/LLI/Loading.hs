@@ -447,11 +447,8 @@ maxSpecific rt partRef classId@(ClassId initCL _) =
                                            |> classInterfaces
                                            |> map (ClassId initCL)
                                            |> map (maxSpecific rt partRef)
-                                   failures = found
-                                              |> filter isNothing |> length
-                                   successes = found
-                                               |> filter isJust |> catMaybes
-                                               |> filter isJust
+                                   failures = found |> filter isNothing |> length
+                                   successes = found |> catMaybes |> filter isJust
                                    successesLength = length successes
                                in if failures > 0
                                   then Nothing
