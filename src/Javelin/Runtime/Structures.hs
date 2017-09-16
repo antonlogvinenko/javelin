@@ -41,7 +41,7 @@ data PartReference = PartReference { _name :: String,
                                      _descriptor :: String }
                    deriving (Show, Eq, Ord)
 
-data ClassRes = ClassResOk { _resolvedFields  :: Map.Map PartReference ClassPartRes,
+data ClassRes = ClassResOk { _resolvedFields  :: Map.Map ClassPartReference ClassPartRes,
                              _resolvedMethods :: Map.Map ClassPartReference ClassPartRes }
               | ClassResFail { resolvingFailure :: VMError }
               deriving (Show, Eq)
@@ -272,17 +272,17 @@ newRuntime layout = let emptyThreads = []
 addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
 addLoadedClass classId loadedClass rt = lift $ return $
                                         rt & loadedClasses %~ insert classId (Right loadedClass)
-addResolvedClassField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
-addResolvedClassField classId partRef rt =
+addResolvedClassField :: ClassId -> ClassPartReference -> Runtime -> ExceptT VMError IO Runtime
+addResolvedClassField classId classPartRef rt =
   lift $ return $
-  rt & classResolving . ix classId . resolvedFields %~ insert partRef ClassPartResOk
+  rt & classResolving . ix classId . resolvedFields %~ insert classPartRef ClassPartResOk
 
 addResolvedClassMethod :: ClassId -> ClassPartReference -> Runtime -> ExceptT VMError IO Runtime
 addResolvedClassMethod classId classPartRef rt =
   lift $ return $
   rt & classResolving . ix classId . resolvedMethods %~ insert classPartRef ClassPartResOk
 
-classDefinesField :: ClassId -> PartReference -> Runtime -> Bool
+classDefinesField :: ClassId -> ClassPartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
   let fieldResStatus = rt ^? classResolving . ix classId . resolvedFields . ix partRef
   in Nothing /= fieldResStatus
