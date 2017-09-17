@@ -1,9 +1,9 @@
-* Current *
+*Current*
 * fix isInterface and alike annotations
   parse accesses for class/field/method
 * checks that it was already resolved?
 
-* Fixes *
+*Fixes*
 * User classpath suport
 * Improve class path handling
   * simpler zip condition - check file signature?
