@@ -195,18 +195,45 @@ checkAndRecordLoadedClassFields sym body fieldInfo =
   let fieldName = fieldInfo |> fieldNameIndex |> (sym #) |> string
       fieldDescriptor = fieldInfo |> fieldDescriptorIndex |> (sym #) |> string
       fieldAttrs = attrs body
-  in Field fieldName fieldDescriptor (deriveDefaultFieldValue sym fieldAttrs) (FieldAccess False False False False False False False False False)
+  in Field fieldName fieldDescriptor (deriveDefaultFieldValue sym fieldAttrs) (deriveFieldAccess $ fieldAccessFlags fieldInfo )
 
 deriveDefaultFieldValue :: SymTable -> [AttrInfo] -> Maybe ConstantValue
 deriveDefaultFieldValue sym [] = Nothing
 deriveDefaultFieldValue sym (a@((ConstantValue idx):as)) = Just $ ConstantString ""
 deriveDefaultFieldValue sym (a@(_:as)) = deriveDefaultFieldValue sym as
 
+deriveFieldAccess :: [FieldInfoAccessFlag] -> FieldAccess
+deriveFieldAccess flags = FieldAccess
+                          (elem FieldPublic flags)
+                          (elem FieldPrivate flags)
+                          (elem FieldProtected flags)
+                          (elem FieldStatic flags)
+                          (elem FieldFinal flags)
+                          (elem FieldVolatile flags)
+                          (elem FieldTransient flags)
+                          (elem FieldSynthetic flags)
+                          (elem FieldEnum flags)
+                          
 checkAndRecordLoadedClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
 checkAndRecordLoadedClassMethods sym body methodInfo =
   let methodName = methodInfo |> methodNameIndex |> (sym #) |> string
       methodDescriptor = methodInfo |> methodInfoDescriptorIndex |> (sym #) |> string
-  in Method methodName methodDescriptor (MethodAccess False False False False False False False False False False False False) []
+  in Method methodName methodDescriptor (deriveMethodAccess $ methodAccessFlags methodInfo) []
+
+deriveMethodAccess :: [MethodInfoAccessFlag] -> MethodAccess
+deriveMethodAccess flags = MethodAccess
+                           (elem MethodPublic flags)
+                           (elem MethodPrivate flags)
+                           (elem MethodProtected flags)
+                           (elem MethodStatic flags)
+                           (elem MethodFinal flags)
+                           (elem MethodSynchronized flags)
+                           (elem MethodBridge flags)
+                           (elem MethodVarargs flags)
+                           (elem MethodNative flags)
+                           (elem MethodAbstract flags)
+                           (elem MethodStrict flags)
+                           (elem MethodSynthetic flags)
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
 getFields bc sym =
