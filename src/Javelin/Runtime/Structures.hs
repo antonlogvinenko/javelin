@@ -277,10 +277,9 @@ addResolvedClassField classId classPartRef rt =
   lift $ return $
   rt & classResolving . ix classId . resolvedFields %~ insert classPartRef ClassPartResOk
 
-addResolvedClassMethod :: ClassId -> ClassPartReference -> Runtime -> ExceptT VMError IO Runtime
+addResolvedClassMethod :: ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
 addResolvedClassMethod classId classPartRef rt =
-  lift $ return $
-  rt & classResolving . ix classId . resolvedMethods %~ insert classPartRef ClassPartResOk
+  return $ rt & classResolving . ix classId . resolvedMethods %~ insert classPartRef ClassPartResOk
 
 classDefinesField :: ClassId -> ClassPartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
