@@ -272,10 +272,10 @@ newRuntime layout = let emptyThreads = []
 addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
 addLoadedClass classId loadedClass rt = lift $ return $
                                         rt & loadedClasses %~ insert classId (Right loadedClass)
-addResolvedClassField :: ClassId -> ClassPartReference -> Runtime -> ExceptT VMError IO Runtime
+
+addResolvedClassField :: ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
 addResolvedClassField classId classPartRef rt =
-  lift $ return $
-  rt & classResolving . ix classId . resolvedFields %~ insert classPartRef ClassPartResOk
+  return $ rt & classResolving . ix classId . resolvedFields %~ insert classPartRef ClassPartResOk
 
 addResolvedClassMethod :: ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
 addResolvedClassMethod classId classPartRef rt =

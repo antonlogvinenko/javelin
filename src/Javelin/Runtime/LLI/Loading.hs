@@ -314,15 +314,16 @@ resolveClass request@(ClassId initCL name) rt =
 -- API fn for resolving a field
 resolveField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveField classId partRef rt = do
-  mowner <- resolveFieldSearch classId partRef rt
-  case mowner of
-    Nothing -> throwE $ Linkage rt NoSuchFieldError
-    Just owner -> addResolvedClassField classId (ClassPartReference partRef owner) rt
+  rt <- resolveClass classId rt
+  ExceptT $ return $ do
+    mowner <- resolveFieldSearch classId partRef rt
+    case mowner of
+      Nothing -> Left $ Linkage rt NoSuchFieldError
+      Just owner -> addResolvedClassField classId (ClassPartReference partRef owner) rt
 
 -- Recursive fn for looking for a field
-resolveFieldSearch :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe String)
+resolveFieldSearch :: ClassId -> PartReference -> Runtime -> Either VMError (Maybe String)
 resolveFieldSearch classId partRef rt = do
-  rt <- resolveClass classId rt
   mowner <- resolveFieldInClass classId partRef rt
   case mowner of
     Nothing -> resolveClassFieldInParents classId partRef rt
@@ -332,35 +333,33 @@ resolveFieldSearch classId partRef rt = do
 
 -- todo terminate on Object parent; for interfaces?
 -- todo what error to record?
-resolveFieldInClass :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe String)
+resolveFieldInClass :: ClassId -> PartReference -> Runtime -> Either VMError (Maybe String)
 resolveFieldInClass classId@(ClassId _ owner) partRef rt = 
   if classDefinesField classId (ClassPartReference partRef owner) rt
   then return $ Just owner
   else return Nothing
 
-resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO (Maybe String)
+resolveClassFieldInParents :: ClassId -> PartReference -> Runtime -> Either VMError (Maybe String)
 resolveClassFieldInParents classId partRef rt = do
-  superInterfaces <- ExceptT $ return $ getSuperInterfaces rt classId
+  superInterfaces <- getSuperInterfaces rt classId
   interfaceResolution <- superInterfaces
                          |> map (\superInterface -> ClassId (getInitCL classId) superInterface)
                          |> map (\classId -> resolveFieldSearch classId partRef rt)
                          |> findSuccessfulResolution
-                         |> ExceptT
   case interfaceResolution of
     Just r -> return $ Just r
     Nothing -> case getSuperClass rt classId of
-                 Left err -> throwE err
+                 Left err -> Left err
                  Right Nothing -> return Nothing
                  Right (Just superClass) -> resolveFieldSearch (ClassId (getInitCL classId) superClass) partRef rt
 
-findSuccessfulResolution :: [ExceptT VMError IO (Maybe String)] -> IO (Either VMError (Maybe String))
-findSuccessfulResolution [] = return $ Right Nothing
-findSuccessfulResolution ((ExceptT io):xs) = do
-  eitherResult <- io
-  case eitherResult of
-    Left err -> return $ Left err
+findSuccessfulResolution :: [Either VMError (Maybe String)] -> Either VMError (Maybe String)
+findSuccessfulResolution [] = Right Nothing
+findSuccessfulResolution (either:xs) =
+  case either of
+    Left err -> Left err
     Right Nothing -> findSuccessfulResolution xs
-    Right owner -> return $ Right owner
+    Right owner -> Right owner
 
 
 
