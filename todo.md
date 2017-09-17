@@ -14,7 +14,7 @@
   * common code with statistics?
   * use vector for bytecodes
 
-* Notes *
+*Notes*
 was processed (loaded/resolved)errors - repeat?
 add access check
 add restrictions check
@@ -26,7 +26,6 @@ VMError: use interfaces, less data types? not sure
 - why check not already asked by initCL, but then fail?
 - how can be loaded multiple times? different init CLs?
 - why runtime package? different initCL !=> different defining CL?
-
 
 * Possible offspring projects *
 * Continue with implenenting garbage collection
