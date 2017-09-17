@@ -309,7 +309,6 @@ resolveClass request@(ClassId initCL name) rt =
         Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
 
-
   
 -- API fn for resolving a field
 resolveField :: ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime

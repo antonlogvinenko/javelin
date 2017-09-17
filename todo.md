@@ -1,12 +1,9 @@
-Phase II
-- all instructions
-- exceptions, monitor locks
-- resolution: interface methods, etc
-- constraints in loading
-- access rights in linking
-- custom class loaders
+* Current *
+* fix isInterface and alike annotations
+  parse accesses for class/field/method
+* checks that it was already resolved?
 
-*Long term*
+* Fixes *
 * User classpath suport
 * Improve class path handling
   * simpler zip condition - check file signature?
@@ -17,10 +14,11 @@ Phase II
   * common code with statistics?
   * use vector for bytecodes
 
-*notes*
-in load function - maybe return tuple with runtime
-runtime constant pool must be map
-	- not all indices are referenced, see definition of deriveRef - empty results there
+* Notes *
+was processed (loaded/resolved)errors - repeat?
+add access check
+add restrictions check
+
 SpecifyMeError - replace with detailed, maybe use LinkageError; add messages
 VMError and contents: add messages
 VMError: use interfaces, less data types? not sure
@@ -30,7 +28,7 @@ VMError: use interfaces, less data types? not sure
 - why runtime package? different initCL !=> different defining CL?
 
 
-*Possible offspring projects*
+* Possible offspring projects *
 * Continue with implenenting garbage collection
 * Continue with JIT
 * Viewing step by step bytecode execution interactively
