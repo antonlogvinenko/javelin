@@ -185,10 +185,22 @@ deriveClass bc =
                   then Nothing
                   else Just $ classOrInterfaceName $ sym # superIdx
       classAttrs = attrs classBody
+      accessFlags = classAccessFlags classBody
       classInterfaces = classBody |> interfaces |> map (classOrInterfaceName .  (sym #))
       classFields = classBody |> fields |> map (checkAndRecordLoadedClassFields sym classBody)
       classMethods = classBody |> methods |> map (checkAndRecordLoadedClassMethods sym classBody)
-  in Class className superName [] "sourceFile" (ClassAccess False False False False False False False False) classFields classMethods
+  in Class className superName [] "sourceFile" (deriveClassAccess accessFlags) classFields classMethods
+
+deriveClassAccess :: [ClassAccessFlags] -> ClassAccess
+deriveClassAccess flags = ClassAccess
+                          (elem AccPublic flags)
+                          (elem AccFinal flags)
+                          (elem AccSuper flags)
+                          (elem AccInterface flags)
+                          (elem AccAbstract flags)
+                          (elem AccSynthetic flags)
+                          (elem AccAnn flags)
+                          (elem AccEnum flags)
 
 checkAndRecordLoadedClassFields :: SymTable -> ClassBody -> FieldInfo -> Field
 checkAndRecordLoadedClassFields sym body fieldInfo =

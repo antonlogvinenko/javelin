@@ -1,5 +1,4 @@
 *Current*
-* parse accesses for class
 * init, prepare
 * commands execution
 
