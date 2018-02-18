@@ -5,6 +5,7 @@ import           Data.Word                                (Word16)
 import           Control.Applicative                      ((*>), (<$), (<$>),
                                                            (<*), (<*>))
   -- Signatures
+
 import           Text.ParserCombinators.Parsec.Char
 import           Text.ParserCombinators.Parsec.Combinator
 import           Text.ParserCombinators.Parsec.Prim

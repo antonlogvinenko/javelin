@@ -9,6 +9,7 @@ import           Test.Tasty                 (TestTree, testGroup)
 import           Test.Tasty.HUnit
 
 import           Data.Map.Strict            (member)
+
 --import Main
 import           Javelin.ByteCode.Stats     (getStats)
 import           Test.Tasty.Providers
