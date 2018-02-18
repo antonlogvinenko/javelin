@@ -1,3 +1,4 @@
+
 {-# LANGUAGE TemplateHaskell #-}
 
 module Javelin.Runtime.LLI.Loading
@@ -171,7 +172,7 @@ checkSuperInterface request defCL classInfo eitherRt parentInterface = do
 
 recordClassLoading :: ClassName -> Class -> ClassLoader -> ClassLoader -> Runtime -> ExceptT VMError IO Runtime
 recordClassLoading name classInfo defCL initCL rt =
-    let c = LoadedClass defCL initCL (name, defCL) classInfo
+    let c = LoadedClass defCL initCL (name, defCL) classInfo Nothing
     in addLoadedClass (ClassId initCL name) c rt
 
 deriveClass :: ByteCode -> Class

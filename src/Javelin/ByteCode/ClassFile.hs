@@ -69,5 +69,5 @@ formatParseError (_, _, msg) = Left msg
 validateParseResult :: (LBS.ByteString, ByteOffset, ByteCode) -> Either String ByteCode
 validateParseResult (bs, off, bc) =
   if LBS.null bs
-  then Right bc
-  else Left $ "Bytes left after parsing. Offset: " ++ (show off)
+    then Right bc
+    else Left $ "Bytes left after parsing. Offset: " ++ (show off)

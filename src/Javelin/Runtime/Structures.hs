@@ -29,9 +29,10 @@ data ClassId = ClassId { getInitCL :: ClassLoader,
                          getName :: ClassName }
              deriving (Show, Eq, Ord)
 
-data ClassPartRes = ClassPartResOk
-                  | ClassPartResFail VMError
-                  deriving (Show, Eq)
+data ClassRes = ClassResOk { _resolvedFields  :: Map.Map ClassPartReference ClassPartRes,
+                             _resolvedMethods :: Map.Map ClassPartReference ClassPartRes }
+              | ClassResFail { resolvingFailure :: VMError }
+              deriving (Show, Eq)
 
 data ClassPartReference = ClassPartReference { _part :: PartReference,
                                                _ownerName :: String }
@@ -41,10 +42,9 @@ data PartReference = PartReference { _name :: String,
                                      _descriptor :: String }
                    deriving (Show, Eq, Ord)
 
-data ClassRes = ClassResOk { _resolvedFields  :: Map.Map ClassPartReference ClassPartRes,
-                             _resolvedMethods :: Map.Map ClassPartReference ClassPartRes }
-              | ClassResFail { resolvingFailure :: VMError }
-              deriving (Show, Eq)
+data ClassPartRes = ClassPartResOk
+                  | ClassPartResFail VMError
+                  deriving (Show, Eq)
 
 data Class = Class {
   className :: String,
@@ -109,7 +109,8 @@ data FieldAccess = FieldAccess {
 data LoadedClass = LoadedClass { defining :: ClassLoader,
                                  initiating :: ClassLoader,
                                  runtimePackage :: (String, ClassLoader),
-                                 classInfo :: Class
+                                 classInfo :: Class,
+                                 staticValues :: Maybe (Map String String)
                                }
                    | LoadedArrayClass { defining :: ClassLoader,
                                         initiating :: ClassLoader,
@@ -313,7 +314,14 @@ writeField rt@(Runtime {_heap = (s, h)}) ref (name, value) = do
 nullReference = JReference (-1)
 
 baseDefaultValues :: Map.Map BaseType JValue
-baseDefaultValues = Map.fromList [
-  (ByteT, JByte 0), (CharT, JChar 0), (DoubleT, JDouble 0), (FloatT, JFloat 0),
-  (IntT, JInt 0), (LongT, JLong 0), (ShortT, JShort 0), (BooleanT, JBoolean 0)
-  ]
+baseDefaultValues =
+  Map.fromList
+    [ (ByteT, JByte 0)
+    , (CharT, JChar 0)
+    , (DoubleT, JDouble 0)
+    , (FloatT, JFloat 0)
+    , (IntT, JInt 0)
+    , (LongT, JLong 0)
+    , (ShortT, JShort 0)
+    , (BooleanT, JBoolean 0)
+    ]
