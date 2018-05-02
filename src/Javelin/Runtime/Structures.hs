@@ -4,8 +4,7 @@ module Javelin.Runtime.Structures where
 
 import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (ExceptT (..))
-import           Data.Array.IArray          (Array)
-import           Data.Array.IArray          (array, bounds, (!), (//))
+import           Data.Array.IArray          (Array, array, bounds, (!), (//))
 import           Data.Int                   (Int16, Int32, Int64, Int8)
 import           Data.Map.Lazy              as Map (Map, fromList, insert,
                                                     lookup, size)
