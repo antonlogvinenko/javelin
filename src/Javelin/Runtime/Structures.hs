@@ -11,7 +11,7 @@ import           Data.Map.Lazy              as Map (Map, fromList, insert,
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 
 import           Control.Lens               (ix, makeLenses, (%~), (&), (^.),
-                                             (^?), _1, _2)
+                                             (^?), _1, _2, _Right)
 import           Data.Either.Utils          (maybeToEither)
 import           Javelin.ByteCode.Data
 import           Javelin.Runtime.DescSign
@@ -20,6 +20,7 @@ data Runtime = Runtime
   { _classPathLayout :: ClassPathLayout
   , _loadedClasses   :: Map.Map ClassId (Either VMError LoadedClass)
   , _classResolving  :: Map.Map ClassId ClassRes
+  , _classPrepared   :: Map.Map ClassId Bool
   , _heap            :: (Int, Array Int JObject)
   , _threads         :: [Thread]
   } deriving (Show, Eq)
@@ -56,7 +57,7 @@ data Class = Class
   , classInterfaces :: [String]
   , sourceFile      :: String
   , classVisibility :: ClassAccess
-  , fieldsList      :: [Field]
+  , _fieldsList      :: [Field]
   , methodsList     :: [Method]
   } deriving (Show, Eq)
 
@@ -107,6 +108,7 @@ data Field = Field
   , fieldDescriptor :: String
   , constantValue   :: Maybe ConstantValue
   , fieldAccess     :: FieldAccess
+  , staticValue     :: Maybe JValue
   } deriving (Show, Eq)
 
 data ConstantValue
@@ -129,15 +131,14 @@ data FieldAccess = FieldAccess
   } deriving (Show, Eq)
 
 data LoadedClass
-  = LoadedClass { defining       :: ClassLoader
-                , initiating     :: ClassLoader
-                , runtimePackage :: (String, ClassLoader)
-                , classInfo      :: Class
-                , staticValues   :: Maybe (Map String String) }
-  | LoadedArrayClass { defining       :: ClassLoader
-                     , initiating     :: ClassLoader
-                     , runtimePackage :: (String, ClassLoader)
-                     , dimensions     :: Int }
+  = LoadedClass { _defining       :: ClassLoader
+                , _initiating     :: ClassLoader
+                , _runtimePackage :: (String, ClassLoader)
+                , _classInfo      :: Class }
+  | LoadedArrayClass { _defining       :: ClassLoader
+                     , _initiating     :: ClassLoader
+                     , _runtimePackage :: (String, ClassLoader)
+                     , _dimensions     :: Int }
   deriving (Show, Eq)
 
 data ClassPathLayout = ClassPathLayout
@@ -265,6 +266,8 @@ makeLenses ''ClassPartReference
 
 makeLenses ''LoadedClass
 
+makeLenses ''Class
+
 makeLenses ''ClassPathLayout
 
 -- Querying class info
@@ -285,7 +288,7 @@ findMethodBySignature rt classId partRef = do
   undefined
 
 getClass :: Runtime -> ClassId -> Either VMError Class
-getClass rt classId = classInfo <$> getLoadedClass rt classId
+getClass rt classId = _classInfo <$> getLoadedClass rt classId
 
 getLoadedClass :: Runtime -> ClassId -> Either VMError LoadedClass
 getLoadedClass rt classId =
@@ -295,7 +298,7 @@ findLoadedClass :: Runtime -> ClassId -> Maybe (Either VMError LoadedClass)
 findLoadedClass rt classId = rt ^? loadedClasses . ix classId
 
 getDefiningClassLoader :: Runtime -> ClassId -> Either VMError ClassLoader
-getDefiningClassLoader rt classId = defining <$> getLoadedClass rt classId
+getDefiningClassLoader rt classId = _defining <$> getLoadedClass rt classId
 
 getStringLiteral :: SymTable -> Word16 -> Either VMError String
 getStringLiteral t i =
@@ -314,13 +317,21 @@ newRuntime layout =
        layout
        loadedClassesInfo
        (fromList [])
+       (fromList [])
        (0, (array (0, 0) [(0, (fromList [("", JReference 0)]))]))
        emptyThreads
 
-addLoadedClass ::
-     ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
+addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
 addLoadedClass classId loadedClass rt =
   lift $ return $ rt & loadedClasses %~ insert classId (Right loadedClass)
+
+markClassPrepared :: ClassId -> Runtime -> Runtime
+markClassPrepared classId rt =
+  rt & classPrepared %~ insert classId True
+
+updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Either VMError Runtime
+updateClassFields classId rt update =
+  return $ rt & loadedClasses . ix classId . _Right . classInfo . fieldsList %~ update
 
 addResolvedClassField ::
      ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime

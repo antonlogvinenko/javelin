@@ -204,7 +204,7 @@ recordClassLoading ::
   -> Runtime
   -> ExceptT VMError IO Runtime
 recordClassLoading name classInfo defCL initCL rt =
-  let c = LoadedClass defCL initCL (name, defCL) classInfo Nothing
+  let c = LoadedClass defCL initCL (name, defCL) classInfo
   in addLoadedClass (ClassId initCL name) c rt
 
 deriveClass :: ByteCode -> Class
@@ -231,7 +231,7 @@ deriveClass bc =
   in Class
        className
        superName
-       []
+       classInterfaces
        "sourceFile"
        (deriveClassAccess accessFlags)
        classFields
@@ -260,6 +260,7 @@ checkAndRecordLoadedClassFields sym body fieldInfo =
        fieldDescriptor
        (deriveDefaultFieldValue sym fieldAttrs)
        (deriveFieldAccess $ fieldAccessFlags fieldInfo)
+       Nothing
 
 deriveDefaultFieldValue :: SymTable -> [AttrInfo] -> Maybe ConstantValue
 deriveDefaultFieldValue sym [] = Nothing

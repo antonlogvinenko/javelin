@@ -1,70 +1,29 @@
 module Javelin.Runtime.LLI.LinkingInitializing where
 
 import           Control.Applicative        ((<$>))
-import           Data.Array.IArray          as Array ((!), (//))
 import qualified Data.Map.Lazy              as Map (Map, fromList, insert,
                                                     lookup, (!))
 import           Data.Word                  (Word16)
 import           Javelin.Util
 
-import           Data.Either.Utils          (maybeToEither)
 import           Flow
 import           Javelin.ByteCode.Data
 import           Javelin.Runtime.DescSign
 import           Javelin.Runtime.Structures
 
-linking :: ClassName -> Runtime -> Either VMError Runtime
-linking name rt = verify name rt >>= prepare name
+linking :: ClassId -> Runtime -> Either VMError Runtime
+linking classId rt = verify classId rt >>= prepare classId
 
 -- §5.4.1 Verify
-verify :: ClassName -> Runtime -> Either VMError Runtime
-verify name rt = Right rt
+verify :: ClassId -> Runtime -> Either VMError Runtime
+verify classId rt = Right rt
 
 -- §5.4.2 Preparation
-prepare :: ClassName -> Runtime -> Either VMError Runtime
-prepare name rt@(Runtime {_loadedClasses = classLoadingInfo}) =
-  let classLoaderInfo = classLoadingInfo Map.! (ClassId undefined undefined)
-      (rt1, ref) = malloc rt
-  in do rt2 <- writeStaticFields (ClassId undefined undefined) rt1 ref
-        return
-          rt2
-          { _loadedClasses =
-              Map.insert
-                (ClassId undefined undefined)
-                classLoaderInfo
-                classLoadingInfo
-          }
+prepare :: ClassId -> Runtime -> Either VMError Runtime
+prepare classId rt = do
+  c <- getClass rt classId
+  rt2 <- updateClassFields classId rt (map initStaticField)
+  return $ markClassPrepared classId rt2
 
-writeStaticFields :: ClassId -> Runtime -> Ref -> Either VMError Runtime
-writeStaticFields classId rt ref =
-  let (s, h) = _heap rt
-      jobject = h ! ref
-  in do sym <- undefined -- getSymTable rt classId -- use classInfo
-        bc <- undefined -- getByteCode rt classId -- use classInfo
-        let staticSearch fi = FieldStatic `elem` fieldAccessFlags fi
-        bc |> body |> fields |> filter staticSearch |>
-          foldl (prepareStaticField sym ref) (return rt)
-
-getDefaultValue :: Runtime -> String -> Either VMError JValue
-getDefaultValue rt name =
-  case parseFieldDescriptor name of
-    Left err -> Left $ InternalError rt SpecifyMeError
-    Right d ->
-      case fieldType d of
-        BaseType t ->
-          maybeToEither (InternalError rt SpecifyMeError) $
-          Map.lookup t baseDefaultValues
-        _ -> return nullReference
-
-prepareStaticField ::
-     SymTable
-  -> Ref
-  -> Either VMError Runtime
-  -> FieldInfo
-  -> Either VMError Runtime
-prepareStaticField sym ref ert fi = do
-  rt <- ert
-  fieldName <- getStringLiteral sym $ fieldNameIndex fi
-  descriptorName <- getStringLiteral sym $ fieldDescriptorIndex fi
-  defaultValue <- getDefaultValue rt descriptorName
-  writeField rt ref (fieldName, defaultValue)
+initStaticField :: Field -> Field
+initStaticField = undefined
