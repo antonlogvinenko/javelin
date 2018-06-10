@@ -33,7 +33,7 @@ data BaseType
 
 -- FieldDescriptor
 data FieldDescriptor = FieldDescriptor
-  { fieldType :: FieldType
+  { unFieldType :: FieldType
   } deriving (Show, Eq)
 
 -- MethodDescriptor

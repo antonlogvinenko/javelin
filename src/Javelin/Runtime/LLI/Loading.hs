@@ -258,6 +258,7 @@ checkAndRecordLoadedClassFields sym body fieldInfo =
   in Field
        fieldName
        fieldDescriptor
+       undefined
        (deriveDefaultFieldValue sym fieldAttrs)
        (deriveFieldAccess $ fieldAccessFlags fieldInfo)
        Nothing

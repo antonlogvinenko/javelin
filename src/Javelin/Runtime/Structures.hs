@@ -106,6 +106,7 @@ data MethodAccess = MethodAccess
 data Field = Field
   { fieldName       :: String
   , fieldDescriptor :: String
+  , fieldType       :: FieldType
   , constantValue   :: Maybe ConstantValue
   , fieldAccess     :: FieldAccess
   , staticValue     :: Maybe JValue

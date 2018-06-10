@@ -12,8 +12,6 @@ linking classId rt = verify classId rt >>= prepare classId
 
 --runtime: check preparation status
 --parse field descriptor to get value type: do it early
---field: write default static value
---refactor Fields: store fields as name -> type -> Field
 
 -- §5.4.1 Verify
 verify :: ClassId -> Runtime -> Either VMError Runtime
@@ -22,7 +20,11 @@ verify classId rt = Right rt
 -- §5.4.2 Preparation
 prepare :: ClassId -> Runtime -> Either VMError Runtime
 prepare classId rt =
-  updateClassFields classId rt (map initStaticField) >>= markClassPrepared classId
+  updateClassFields classId rt (map initStaticField . filter (isFieldStatic . fieldAccess))
+  >>= markClassPrepared classId
 
 initStaticField :: Field -> Field
-initStaticField = undefined
+initStaticField field = let value = case fieldType field of
+                                      BaseType bt -> baseDefaultValues Map.! bt
+                                      _ -> nullReference
+                        in field{staticValue = Just value}
