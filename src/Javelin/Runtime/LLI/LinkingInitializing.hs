@@ -20,8 +20,10 @@ verify classId rt = Right rt
 -- §5.4.2 Preparation
 prepare :: ClassId -> Runtime -> Either VMError Runtime
 prepare classId rt =
-  updateClassFields classId rt (map initStaticField . filter (isFieldStatic . fieldAccess))
-  >>= markClassPrepared classId
+  if isClassPrepared classId rt
+  then return rt
+  else updateClassFields classId rt (map initStaticField . filter (isFieldStatic . fieldAccess))
+       >>= markClassPrepared classId
 
 initStaticField :: Field -> Field
 initStaticField field = let value = case fieldType field of

@@ -6,8 +6,8 @@ import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (ExceptT (..))
 import           Data.Array.IArray          (Array, array, bounds, (!), (//))
 import           Data.Int                   (Int16, Int32, Int64, Int8)
-import           Data.Map.Lazy              as Map (Map, fromList, insert,
-                                                    lookup, size)
+import qualified Data.Map.Lazy              as Map (Map, fromList, insert,
+                                                    lookup, size, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 
 import           Control.Lens               (ix, makeLenses, (%~), (&), (^.),
@@ -143,13 +143,13 @@ data LoadedClass
   deriving (Show, Eq)
 
 data ClassPathLayout = ClassPathLayout
-  { _classes   :: Map ClassName ClassSource
+  { _classes   :: Map.Map ClassName ClassSource
   , _classPath :: [String]
   } deriving (Eq)
 
 instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
-    "ClassPathLayout: " ++ show (size classes) ++ " classes loaded from " ++
+    "ClassPathLayout: " ++ show (Map.size classes) ++ " classes loaded from " ++
     show classPath
 
 type ClassName = String
@@ -227,7 +227,7 @@ data Locals = Locals
 
 type Ref = Int
 
-type JObject = Map String JValue
+type JObject = Map.Map String JValue
 
 data JValue
   = JInt { getInt :: Int32 }
@@ -313,22 +313,25 @@ getStringLiteral t i =
 newRuntime :: ClassPathLayout -> Runtime
 newRuntime layout =
   let emptyThreads = []
-      loadedClassesInfo = fromList []
+      loadedClassesInfo = Map.fromList []
   in Runtime
        layout
        loadedClassesInfo
-       (fromList [])
-       (fromList [])
-       (0, (array (0, 0) [(0, (fromList [("", JReference 0)]))]))
+       (Map.fromList [])
+       (Map.fromList [])
+       (0, (array (0, 0) [(0, (Map.fromList [("", JReference 0)]))]))
        emptyThreads
 
 addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
 addLoadedClass classId loadedClass rt =
-  lift $ return $ rt & loadedClasses %~ insert classId (Right loadedClass)
+  lift $ return $ rt & loadedClasses %~ Map.insert classId (Right loadedClass)
 
 markClassPrepared :: ClassId -> Runtime -> Either VMError Runtime
 markClassPrepared classId rt =
-  return $ rt & classPrepared %~ insert classId True
+  return $ rt & classPrepared %~ Map.insert classId True
+
+isClassPrepared :: ClassId -> Runtime -> Bool
+isClassPrepared classId rt = (_classPrepared rt) Map.! classId
 
 updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Either VMError Runtime
 updateClassFields classId rt update =
@@ -338,13 +341,13 @@ addResolvedClassField ::
      ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
 addResolvedClassField classId classPartRef rt =
   return $ rt & classResolving . ix classId . resolvedFields %~
-  insert classPartRef ClassPartResOk
+  Map.insert classPartRef ClassPartResOk
 
 addResolvedClassMethod ::
      ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
 addResolvedClassMethod classId classPartRef rt =
   return $ rt & classResolving . ix classId . resolvedMethods %~
-  insert classPartRef ClassPartResOk
+  Map.insert classPartRef ClassPartResOk
 
 classDefinesField :: ClassId -> ClassPartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
