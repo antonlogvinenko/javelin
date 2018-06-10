@@ -325,9 +325,9 @@ addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtim
 addLoadedClass classId loadedClass rt =
   lift $ return $ rt & loadedClasses %~ insert classId (Right loadedClass)
 
-markClassPrepared :: ClassId -> Runtime -> Runtime
+markClassPrepared :: ClassId -> Runtime -> Either VMError Runtime
 markClassPrepared classId rt =
-  rt & classPrepared %~ insert classId True
+  return $ rt & classPrepared %~ insert classId True
 
 updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Either VMError Runtime
 updateClassFields classId rt update =
