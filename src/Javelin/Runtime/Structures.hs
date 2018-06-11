@@ -6,7 +6,7 @@ import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (ExceptT (..))
 import           Data.Array.IArray          (Array, array, bounds, (!), (//))
 import           Data.Int                   (Int16, Int32, Int64, Int8)
-import qualified Data.Map.Lazy              as Map (Map, fromList, insert,
+import qualified Data.Map.Strict            as Map (Map, fromList, insert,
                                                     lookup, size, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 

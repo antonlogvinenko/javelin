@@ -1,5 +1,9 @@
 module Javelin.Runtime.DescSign
   ( parseFieldDescriptor
+  , parseMethodDescriptor
+  , parseMethodSignature
+  , parseFieldSignature
+  , parseClassSignature
   , FieldType(..)
   , BaseType(..)
   , FieldDescriptor(..)
@@ -133,12 +137,16 @@ data FieldSignature = FieldSignature
 parseFieldDescriptor :: String -> Either ParseError FieldDescriptor
 parseFieldDescriptor = parse fieldDescriptorP ""
 
+parseMethodDescriptor :: String -> Either ParseError MethodDescriptor
 parseMethodDescriptor = parse methodDescriptorP ""
 
+parseMethodSignature :: String -> Either ParseError MethodSignature
 parseMethodSignature = parse methodSignatureP ""
 
+parseClassSignature :: String -> Either ParseError ClassSignature
 parseClassSignature = parse classSignatureP ""
 
+parseFieldSignature :: String -> Either ParseError ReferenceTypeSignature
 parseFieldSignature = parse fieldSignatureP ""
 
 -- Fundamentals
