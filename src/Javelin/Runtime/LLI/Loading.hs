@@ -4,6 +4,7 @@ module Javelin.Runtime.LLI.Loading where
 
 import           Javelin.ByteCode.ClassFile    (parseRaw)
 import           Javelin.ByteCode.Data
+import           Javelin.Runtime.DescSign
 import           Javelin.Runtime.LLI.ClassPath (getClassBytes)
 import           Javelin.Runtime.Structures
 

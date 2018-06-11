@@ -1,4 +1,4 @@
-module Javelin.Runtime.DescSign where
+module Javelin.Runtime.DescSign (parseFieldDescriptor, FieldType(..), BaseType(..)) where
 
 import           Data.Word                                (Word16)
 
@@ -9,15 +9,16 @@ import           Control.Applicative                      ((*>), (<$), (<$>),
 import           Text.ParserCombinators.Parsec.Char
 import           Text.ParserCombinators.Parsec.Combinator
 import           Text.ParserCombinators.Parsec.Prim
+import           Text.ParserCombinators.Parsec.Error      (ParseError)
 
 type QualifiedName = [String]
 
 type UnqualifiedName = String
 
 data FieldType
-  = BaseType { baseType :: BaseType }
-  | ObjectType { className :: QualifiedName }
-  | ArrayType { componentType :: FieldType }
+  = BaseType { unBaseType :: BaseType }
+  | ObjectType { unObjectType :: QualifiedName }
+  | ArrayType { unArrayType :: FieldType }
   deriving (Show, Eq)
 
 data BaseType
@@ -124,6 +125,7 @@ data FieldSignature = FieldSignature
   { referenceType :: ReferenceTypeSignature
   }
 
+parseFieldDescriptor :: String -> Either ParseError FieldDescriptor
 parseFieldDescriptor = parse fieldDescriptorP ""
 
 parseMethodDescriptor = parse methodDescriptorP ""
