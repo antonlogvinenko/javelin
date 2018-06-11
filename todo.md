@@ -1,5 +1,4 @@
 *Current*
-* init, prepare
 * commands execution
 
 *Fixes*
@@ -16,12 +15,29 @@
 * VMError and contents: add messages
 * VMError: use interfaces, less data types? not sure
 * preparation: keep prepared classes as set
+*  error states
+* io monad
 
-*Notes*
-* was processed (loaded/resolved)errors - repeat?
-* add access check
-* add restrictions check
+*Missing, planned:*
+* init
+* some LLI parts
 
+*Not planned:*
+ * loading constraints
+ * visibility
+ * verification
+
+* Whole JVM *
+ * Schema
+   * commands
+     * static commands require init/linking (linking = verif+prep)
+     * non-static commands require resolving
+   * resolving can be separate from init/linking
+   * loading class/interface require resolving its parents
+   * resolving part of a class/interface requires resolving the class/interfase itself
+ * loading constraints/visibility
+ * errors while loading, reusing already existing status
+ * referencing classes by name/loading/initing class loader
 
 *Open questions*
 * why check not already asked by initCL, but then fail?
