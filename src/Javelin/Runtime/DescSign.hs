@@ -1,4 +1,4 @@
-module Javelin.Runtime.DescSign (parseFieldDescriptor, FieldType(..), BaseType(..)) where
+module Javelin.Runtime.DescSign (parseFieldDescriptor, FieldType(..), BaseType(..), FieldDescriptor(..)) where
 
 import           Data.Word                                (Word16)
 

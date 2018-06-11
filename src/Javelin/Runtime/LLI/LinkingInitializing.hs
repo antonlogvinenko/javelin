@@ -10,7 +10,6 @@ import           Javelin.Runtime.Structures
 linking :: ClassId -> Runtime -> Either VMError Runtime
 linking classId rt = verify classId rt >>= prepare classId
 
---parse field descriptor to get value type: do it early
 --keep prepared classes as set
 --run hfmt
 

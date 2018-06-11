@@ -99,7 +99,7 @@ checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
   checkClassVersion bc rt
-  let classInfo = deriveClass bc
+  classInfo <- ExceptT . return $ deriveClass bc
   checkSuperClass request defCL rt classInfo >>=
     checkSuperInterfaces request defCL classInfo >>=
     recordClassLoading name classInfo initCL defCL
@@ -208,7 +208,7 @@ recordClassLoading name classInfo defCL initCL rt =
   let c = LoadedClass defCL initCL (name, defCL) classInfo
   in addLoadedClass (ClassId initCL name) c rt
 
-deriveClass :: ByteCode -> Class
+deriveClass :: ByteCode -> Either VMError Class
 deriveClass bc =
   let classBody = body bc
       cp = constPool classBody
@@ -223,20 +223,19 @@ deriveClass bc =
       accessFlags = classAccessFlags classBody
       classInterfaces =
         classBody |> interfaces |> map (classOrInterfaceName . (sym `at`))
-      classFields =
-        classBody |> fields |>
-        map (checkAndRecordLoadedClassFields sym classBody)
       classMethods =
         classBody |> methods |>
         map (checkAndRecordLoadedClassMethods sym classBody)
-  in Class
-       className
-       superName
-       classInterfaces
-       "sourceFile"
-       (deriveClassAccess accessFlags)
-       classFields
-       classMethods
+  in do
+    classFields <- mapM (checkAndRecordLoadedClassFields sym classBody) (fields classBody)
+    return $ Class
+      className
+      superName
+      classInterfaces
+      "sourceFile"
+      (deriveClassAccess accessFlags)
+      classFields
+      classMethods
 
 deriveClassAccess :: [ClassAccessFlags] -> ClassAccess
 deriveClassAccess flags =
@@ -250,19 +249,22 @@ deriveClassAccess flags =
     (elem AccAnn flags)
     (elem AccEnum flags)
 
-checkAndRecordLoadedClassFields :: SymTable -> ClassBody -> FieldInfo -> Field
+checkAndRecordLoadedClassFields :: SymTable -> ClassBody -> FieldInfo -> Either VMError Field
 checkAndRecordLoadedClassFields sym body fieldInfo =
   let fieldName = fieldInfo |> fieldNameIndex |> (sym `at`) |> string
       fieldDescriptor =
         fieldInfo |> fieldDescriptorIndex |> (sym `at`) |> string
       fieldAttrs = attrs body
-  in Field
-       fieldName
-       fieldDescriptor
-       undefined
-       (deriveDefaultFieldValue sym fieldAttrs)
-       (deriveFieldAccess $ fieldAccessFlags fieldInfo)
-       Nothing
+      parsedFieldDescriptor = parseFieldDescriptor fieldDescriptor
+  in case parsedFieldDescriptor of
+       Left err -> undefined
+       Right (FieldDescriptor descriptor) -> Right $ Field
+                                             fieldName
+                                             fieldDescriptor
+                                             descriptor
+                                             (deriveDefaultFieldValue sym fieldAttrs)
+                                             (deriveFieldAccess $ fieldAccessFlags fieldInfo)
+                                             Nothing
 
 deriveDefaultFieldValue :: SymTable -> [AttrInfo] -> Maybe ConstantValue
 deriveDefaultFieldValue sym [] = Nothing
