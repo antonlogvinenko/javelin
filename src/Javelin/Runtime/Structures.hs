@@ -57,7 +57,7 @@ data Class = Class
   , classInterfaces :: [String]
   , sourceFile      :: String
   , classVisibility :: ClassAccess
-  , _fieldsList      :: [Field]
+  , _fieldsList     :: [Field]
   , methodsList     :: [Method]
   } deriving (Show, Eq)
 
@@ -314,15 +314,16 @@ newRuntime :: ClassPathLayout -> Runtime
 newRuntime layout =
   let emptyThreads = []
       loadedClassesInfo = Map.fromList []
-  in Runtime
-       layout
-       loadedClassesInfo
-       (Map.fromList [])
-       (Map.fromList [])
-       (0, (array (0, 0) [(0, (Map.fromList [("", JReference 0)]))]))
-       emptyThreads
+   in Runtime
+        layout
+        loadedClassesInfo
+        (Map.fromList [])
+        (Map.fromList [])
+        (0, (array (0, 0) [(0, (Map.fromList [("", JReference 0)]))]))
+        emptyThreads
 
-addLoadedClass :: ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
+addLoadedClass ::
+     ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
 addLoadedClass classId loadedClass rt =
   lift $ return $ rt & loadedClasses %~ Map.insert classId (Right loadedClass)
 
@@ -333,9 +334,11 @@ markClassPrepared classId rt =
 isClassPrepared :: ClassId -> Runtime -> Bool
 isClassPrepared classId rt = (_classPrepared rt) Map.! classId
 
-updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Either VMError Runtime
+updateClassFields ::
+     ClassId -> Runtime -> ([Field] -> [Field]) -> Either VMError Runtime
 updateClassFields classId rt update =
-  return $ rt & loadedClasses . ix classId . _Right . classInfo . fieldsList %~ update
+  return $ rt & loadedClasses . ix classId . _Right . classInfo . fieldsList %~
+  update
 
 addResolvedClassField ::
      ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
@@ -353,7 +356,7 @@ classDefinesField :: ClassId -> ClassPartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
   let fieldResStatus =
         rt ^? classResolving . ix classId . resolvedFields . ix partRef
-  in Nothing /= fieldResStatus
+   in Nothing /= fieldResStatus
 
 -- Heap contents
 newThread frame = Thread 0 [frame] . newRuntime
@@ -361,15 +364,15 @@ newThread frame = Thread 0 [frame] . newRuntime
 malloc :: Runtime -> (Runtime, Ref)
 malloc rt =
   let old = rt ^. heap . _1
-  in (rt & heap . _1 %~ (+ 1), old)
+   in (rt & heap . _1 %~ (+ 1), old)
 
 getField :: Runtime -> Ref -> String -> Either VMError JValue
 getField rt ref name =
   let h = rt ^. heap . _2
-  in if ref < (snd . bounds) h
-       then maybeToEither (InternalError rt SpecifyMeError) $
-            Map.lookup name (h ! ref)
-       else Left $ InternalError rt SpecifyMeError
+   in if ref < (snd . bounds) h
+        then maybeToEither (InternalError rt SpecifyMeError) $
+             Map.lookup name (h ! ref)
+        else Left $ InternalError rt SpecifyMeError
 
 writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
 writeField rt@(Runtime {_heap = (s, h)}) ref (name, value) = do

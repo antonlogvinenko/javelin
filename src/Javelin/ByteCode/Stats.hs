@@ -52,8 +52,8 @@ stats path output = do
           normalize x = ((fromIntegral $ 100 * x) / amount) :: Double
           normalized = map (\(k, v) -> (k, normalize v)) list
           formatted = map (\(k, v) -> (k, printf "%.4f%%" v)) normalized
-      in do maybe mempty (textile formatted) output
-            printConsole formatted
+       in do maybe mempty (textile formatted) output
+             printConsole formatted
 
 printConsole :: [(OpCode, String)] -> IO ()
 printConsole freqs =
@@ -82,7 +82,7 @@ addFreq freq bc =
         guard (isCodeAttr attr)
         instruction <- code attr
         return $ oc instruction
-  in composeFreqs freq opCodes
+   in composeFreqs freq opCodes
 
 composeFreqs :: Map.Map OpCode Integer -> [OpCode] -> Map.Map OpCode Integer
 composeFreqs x [] = x

@@ -1,4 +1,9 @@
-module Javelin.Runtime.DescSign (parseFieldDescriptor, FieldType(..), BaseType(..), FieldDescriptor(..)) where
+module Javelin.Runtime.DescSign
+  ( parseFieldDescriptor
+  , FieldType(..)
+  , BaseType(..)
+  , FieldDescriptor(..)
+  ) where
 
 import           Data.Word                                (Word16)
 
@@ -8,8 +13,8 @@ import           Control.Applicative                      ((*>), (<$), (<$>),
 
 import           Text.ParserCombinators.Parsec.Char
 import           Text.ParserCombinators.Parsec.Combinator
-import           Text.ParserCombinators.Parsec.Prim
 import           Text.ParserCombinators.Parsec.Error      (ParseError)
+import           Text.ParserCombinators.Parsec.Prim
 
 type QualifiedName = [String]
 

@@ -1,6 +1,7 @@
 module Javelin.Runtime.LLI.LinkingInitializing where
 
-import qualified Data.Map.Lazy              as Map (Map, fromList, insert, lookup, (!))
+import qualified Data.Map.Lazy              as Map (Map, fromList, insert,
+                                                    lookup, (!))
 import           Javelin.Util
 
 import           Javelin.ByteCode.Data
@@ -18,12 +19,17 @@ verify classId rt = Right rt
 prepare :: ClassId -> Runtime -> Either VMError Runtime
 prepare classId rt =
   if isClassPrepared classId rt
-  then return rt
-  else updateClassFields classId rt (map initStaticField . filter (isFieldStatic . fieldAccess))
-       >>= markClassPrepared classId
+    then return rt
+    else updateClassFields
+           classId
+           rt
+           (map initStaticField . filter (isFieldStatic . fieldAccess)) >>=
+         markClassPrepared classId
 
 initStaticField :: Field -> Field
-initStaticField field = let value = case fieldType field of
-                                      BaseType bt -> baseDefaultValues Map.! bt
-                                      _ -> nullReference
-                        in field{staticValue = Just value}
+initStaticField field =
+  let value =
+        case fieldType field of
+          BaseType bt -> baseDefaultValues Map.! bt
+          _           -> nullReference
+   in field {staticValue = Just value}

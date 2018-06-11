@@ -85,7 +85,7 @@ deriveFromClass classIdx nameAndTypeIdx p =
       memberName = stringValue $ p `at` (nameIndex nameAndTypeInfo)
       memberDescriptor =
         stringValue $ p `at` (nameAndTypeDescriptorIndex nameAndTypeInfo)
-  in ClassPartReference (PartReference className memberName) memberDescriptor
+   in ClassPartReference (PartReference className memberName) memberDescriptor
 
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 -- 5.3.5 Deriving a Class from a class File Representation
@@ -114,9 +114,9 @@ checkInitiatingClassLoader initCL name rt = do
 checkClassFileFormat :: ByteString -> Runtime -> ExceptT VMError IO ByteCode
 checkClassFileFormat bs rt =
   let body = parseRaw $ unpack bs
-  in case body of
-       Left (_, _, msg)       -> throwE $ Linkage rt ClassFormatError
-       Right (_, _, byteCode) -> lift $ return byteCode
+   in case body of
+        Left (_, _, msg)       -> throwE $ Linkage rt ClassFormatError
+        Right (_, _, byteCode) -> lift $ return byteCode
 
 --todo also check class name is correct
 checkClassVersion :: ByteCode -> Runtime -> ExceptT VMError IO ()
@@ -131,13 +131,13 @@ checkRepresentedClass name rt bc =
   let pool = constPool $ body bc
       symTable = deriveSymTable pool
       thisIndex = this $ body bc
-  in case symTable `at` thisIndex of
-       (ClassOrInterface actualName) ->
-         if actualName == name
-           then lift $ return symTable
-           else throwE $ Linkage rt $
-                NoClassDefFoundError (name ++ actualName ++ (show thisIndex))
-       _ -> throwE $ Linkage rt ClassFormatError
+   in case symTable `at` thisIndex of
+        (ClassOrInterface actualName) ->
+          if actualName == name
+            then lift $ return symTable
+            else throwE $ Linkage rt $
+                 NoClassDefFoundError (name ++ actualName ++ (show thisIndex))
+        _ -> throwE $ Linkage rt ClassFormatError
 
 -- last case is due to invalid bytecode; throw an exception and terminate?
 checkSuperClass ::
@@ -145,37 +145,37 @@ checkSuperClass ::
 checkSuperClass request defCL rt classInfo =
   let classSuperName = superName classInfo
       name = getName request
-  in case (name, classSuperName) of
-       ("java/lang/Object", Nothing) -> lift $ return rt
-       ("java/lang/Object", _) -> throwE $ Linkage rt $ ClassFormatError
-       (_, Nothing) -> throwE $ Linkage rt $ ClassFormatError
-       (_, Just parent) -> do
-         let parentId = ClassId defCL parent
-         rt <- resolveClass parentId rt
-         case isInterface rt parentId of
-           Left error -> throwE error
-           Right True -> throwE $ Linkage rt IncompatibleClassChangeError
-           Right False ->
-             let thisIsInterface =
-                   classInfo |> classVisibility |> isClassInterface
-             in case (thisIsInterface, parent) of
-                  (True, "java/lang/Object") -> lift $ return rt
-                  (True, _) ->
-                    throwE $
-                    InternalError rt InterfaceMustHaveObjectAsSuperClass
-                  (False, parentName) ->
-                    if parentName == name
-                      then throwE $ Linkage rt ClassCircularityError
-                      else lift $ return rt
+   in case (name, classSuperName) of
+        ("java/lang/Object", Nothing) -> lift $ return rt
+        ("java/lang/Object", _) -> throwE $ Linkage rt $ ClassFormatError
+        (_, Nothing) -> throwE $ Linkage rt $ ClassFormatError
+        (_, Just parent) -> do
+          let parentId = ClassId defCL parent
+          rt <- resolveClass parentId rt
+          case isInterface rt parentId of
+            Left error -> throwE error
+            Right True -> throwE $ Linkage rt IncompatibleClassChangeError
+            Right False ->
+              let thisIsInterface =
+                    classInfo |> classVisibility |> isClassInterface
+               in case (thisIsInterface, parent) of
+                    (True, "java/lang/Object") -> lift $ return rt
+                    (True, _) ->
+                      throwE $
+                      InternalError rt InterfaceMustHaveObjectAsSuperClass
+                    (False, parentName) ->
+                      if parentName == name
+                        then throwE $ Linkage rt ClassCircularityError
+                        else lift $ return rt
 
 checkSuperInterfaces ::
      ClassId -> ClassLoader -> Class -> Runtime -> ExceptT VMError IO Runtime
 checkSuperInterfaces request defCL classInfo rt =
   let superInterfaces = classInterfaces classInfo
-  in foldl
-       (checkSuperInterface request defCL classInfo)
-       (lift $ return rt)
-       superInterfaces
+   in foldl
+        (checkSuperInterface request defCL classInfo)
+        (lift $ return rt)
+        superInterfaces
 
 checkSuperInterface ::
      ClassId
@@ -206,7 +206,7 @@ recordClassLoading ::
   -> ExceptT VMError IO Runtime
 recordClassLoading name classInfo defCL initCL rt =
   let c = LoadedClass defCL initCL (name, defCL) classInfo
-  in addLoadedClass (ClassId initCL name) c rt
+   in addLoadedClass (ClassId initCL name) c rt
 
 deriveClass :: ByteCode -> Either VMError Class
 deriveClass bc =
@@ -226,16 +226,19 @@ deriveClass bc =
       classMethods =
         classBody |> methods |>
         map (checkAndRecordLoadedClassMethods sym classBody)
-  in do
-    classFields <- mapM (checkAndRecordLoadedClassFields sym classBody) (fields classBody)
-    return $ Class
-      className
-      superName
-      classInterfaces
-      "sourceFile"
-      (deriveClassAccess accessFlags)
-      classFields
-      classMethods
+   in do classFields <-
+           mapM
+             (checkAndRecordLoadedClassFields sym classBody)
+             (fields classBody)
+         return $
+           Class
+             className
+             superName
+             classInterfaces
+             "sourceFile"
+             (deriveClassAccess accessFlags)
+             classFields
+             classMethods
 
 deriveClassAccess :: [ClassAccessFlags] -> ClassAccess
 deriveClassAccess flags =
@@ -249,22 +252,25 @@ deriveClassAccess flags =
     (elem AccAnn flags)
     (elem AccEnum flags)
 
-checkAndRecordLoadedClassFields :: SymTable -> ClassBody -> FieldInfo -> Either VMError Field
+checkAndRecordLoadedClassFields ::
+     SymTable -> ClassBody -> FieldInfo -> Either VMError Field
 checkAndRecordLoadedClassFields sym body fieldInfo =
   let fieldName = fieldInfo |> fieldNameIndex |> (sym `at`) |> string
       fieldDescriptor =
         fieldInfo |> fieldDescriptorIndex |> (sym `at`) |> string
       fieldAttrs = attrs body
       parsedFieldDescriptor = parseFieldDescriptor fieldDescriptor
-  in case parsedFieldDescriptor of
-       Left err -> undefined
-       Right (FieldDescriptor descriptor) -> Right $ Field
-                                             fieldName
-                                             fieldDescriptor
-                                             descriptor
-                                             (deriveDefaultFieldValue sym fieldAttrs)
-                                             (deriveFieldAccess $ fieldAccessFlags fieldInfo)
-                                             Nothing
+   in case parsedFieldDescriptor of
+        Left err -> undefined
+        Right (FieldDescriptor descriptor) ->
+          Right $
+          Field
+            fieldName
+            fieldDescriptor
+            descriptor
+            (deriveDefaultFieldValue sym fieldAttrs)
+            (deriveFieldAccess $ fieldAccessFlags fieldInfo)
+            Nothing
 
 deriveDefaultFieldValue :: SymTable -> [AttrInfo] -> Maybe ConstantValue
 deriveDefaultFieldValue sym [] = Nothing
@@ -291,11 +297,11 @@ checkAndRecordLoadedClassMethods sym body methodInfo =
   let methodName = methodInfo |> methodNameIndex |> (sym `at`) |> string
       methodDescriptor =
         methodInfo |> methodInfoDescriptorIndex |> (sym `at`) |> string
-  in Method
-       methodName
-       methodDescriptor
-       (deriveMethodAccess $ methodAccessFlags methodInfo)
-       []
+   in Method
+        methodName
+        methodDescriptor
+        (deriveMethodAccess $ methodAccessFlags methodInfo)
+        []
 
 deriveMethodAccess :: [MethodInfoAccessFlag] -> MethodAccess
 deriveMethodAccess flags =
@@ -334,9 +340,9 @@ load request@(ClassId initCL name) rt =
         if isArray name
           then loadArray
           else loadClass
-  in case rt ^. loadedClasses . to (Map.lookup request) of
-       Just _  -> lift $ return rt
-       Nothing -> loaderFn request rt
+   in case rt ^. loadedClasses . to (Map.lookup request) of
+        Just _  -> lift $ return rt
+        Nothing -> loaderFn request rt
 
 loadClass :: ClassLoadMethod
 loadClass request@(ClassId BootstrapClassLoader _) rt =
@@ -523,10 +529,10 @@ resolveMethodNameDescriptor :: MethodResolution
 resolveMethodNameDescriptor rt partRef classId classInfo =
   let matchedMethods =
         classInfo |> methodsList |> filter (methodMatches partRef)
-  in return $
-     case matchedMethods of
-       (m:_) -> Just $ getName classId
-       []    -> Nothing
+   in return $
+      case matchedMethods of
+        (m:_) -> Just $ getName classId
+        []    -> Nothing
 
 methodMatches :: PartReference -> Method -> Bool
 methodMatches partRef@(PartReference name descr) m =
@@ -572,12 +578,12 @@ maxSpecific rt partRef classId@(ClassId initCL _) =
               failures = found |> filter isNothing |> length
               successes = found |> catMaybes |> filter isJust
               successesLength = length successes
-          in if failures > 0
-               then Nothing
-               else case successesLength of
-                      0 -> Just Nothing
-                      1 -> successes |> head |> Just
-                      _ -> Nothing
+           in if failures > 0
+                then Nothing
+                else case successesLength of
+                       0 -> Just Nothing
+                       1 -> successes |> head |> Just
+                       _ -> Nothing
         _ -> Nothing
 
 resolveNonPrivateNonStaticSuperinterfaceMethod :: MethodResolution

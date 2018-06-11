@@ -32,7 +32,7 @@ execute execution tracing trace =
   let execution2 = undefined -- execute single step
       trace1 = undefined -- find trace
       trace2 = undefined -- combing t and t1
-  in execute execution2 tracing trace2 -- recursively
+   in execute execution2 tracing trace2 -- recursively
 
 step :: Thread -> Thread
 step e = e
@@ -58,14 +58,14 @@ instance BytesContainer Arguments where
 argumentToWord64 :: [Word8] -> Word64
 argumentToWord64 bs =
   let normalized = (take (8 - length bs) bs) ++ bs
-  in runGet getWord64be $ pack normalized
+   in runGet getWord64be $ pack normalized
 
 instance BytesContainer Locals where
   getBytes c idx len =
     let arr = vars c
-    in if len <= 4
-         then localToWord64 [0, arr ! 0]
-         else localToWord64 [arr ! idx, arr ! (idx + 1)]
+     in if len <= 4
+          then localToWord64 [0, arr ! 0]
+          else localToWord64 [arr ! idx, arr ! (idx + 1)]
 
 localToWord64 :: [Word32] -> Word64
 localToWord64 bs =
@@ -196,7 +196,7 @@ push :: (JType j) => j -> ThreadOperation ()
 push j =
   state $ \t ->
     let elem = jToStackElement j
-    in ((), updStack t (elem :))
+     in ((), updStack t (elem :))
 
 jToStackElement :: (JType j) => j -> StackElement
 jToStackElement j =
@@ -212,19 +212,19 @@ pushn :: (JType j) => [j] -> ThreadOperation ()
 pushn js =
   state $ \t ->
     let vals = map jToStackElement js
-    in ((), updStack t (vals ++))
+     in ((), updStack t (vals ++))
 
 pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 pop f =
   state $ \t ->
     let nElems = getStack t !! 0
-    in (f 0 nElems, updStack t $ drop 1)
+     in (f 0 nElems, updStack t $ drop 1)
 
 popn :: (JType j) => (Int -> StackElement -> j) -> Int -> ThreadOperation [j]
 popn f n =
   state $ \t ->
     let nElems = take n $ getStack t
-    in (map (f 0) nElems, updStack t $ drop n)
+     in (map (f 0) nElems, updStack t $ drop n)
 
 store :: (JType j) => j -> JByte -> ThreadOperation ()
 store j idx =
@@ -236,14 +236,14 @@ store j idx =
             Narrow x -> arr // [(idx, x)]
             Wide x ->
               let (a, b) = split x
-              in arr // [(idx, a), (idx + 1, b)]
-    in ((), updLocals t $ \_ -> arr)
+               in arr // [(idx, a), (idx + 1, b)]
+     in ((), updLocals t $ \_ -> arr)
 
 split :: Word64 -> (Word32, Word32)
 split x =
   let a = fromIntegral x
       b = fromIntegral $ rotate x 32
-  in (a, b)
+   in (a, b)
 
 load :: (JType j) => (Int -> Locals -> j) -> JByte -> ThreadOperation j
 load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)

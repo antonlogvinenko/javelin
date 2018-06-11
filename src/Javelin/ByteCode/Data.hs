@@ -29,21 +29,18 @@ alignLines opt P {heading = h, text = t} =
 showByteCode :: Bool -> ByteCode -> String
 showByteCode opt (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool p)})) =
   concat . alignLines opt $
-  P
-    "Bytecode"
+  P "Bytecode"
     [ L (nameAndValue "Minor version: " min)
     , L (nameAndValue "Major version: " maj)
-    , L
-        (nameAndValue "Flags: " $
+    , L (nameAndValue "Flags: " $
          intercalate ", " (map show (classAccessFlags body)))
     , P "This" [showConst p (this body)]
     , let superIdx = super body
-      in P
-           "Superclass"
-           [ if superIdx > 1
-               then showConst p superIdx
-               else P "" []
-           ]
+       in P "Superclass"
+            [ if superIdx > 1
+                then showConst p superIdx
+                else P "" []
+            ]
     , P "Interfaces" $ map (showConst p) (interfaces body)
     , P "Constant pool " [showPool cp]
     , P "Fields" (map (printField p) (fields body))
@@ -67,8 +64,7 @@ printField p f@(FieldInfo { fieldAccessFlags = accessFlags
                           , fieldDescriptorIndex = descriptor
                           , fieldAttrs = attributes
                           }) =
-  P
-    "FieldInfo"
+  P "FieldInfo"
     [ POpt (nameAndId "Name" name) [showConst p name]
     , POpt (nameAndId "Descriptor" descriptor) [showConst p descriptor]
     , L $ nameAndValue "AccessFlags" accessFlags
@@ -81,8 +77,7 @@ printMethod p m@(MethodInfo { methodAccessFlags = accessFlags
                             , methodInfoDescriptorIndex = descriptor
                             , methodAttrs = attributes
                             }) =
-  P
-    "MethodInfo"
+  P "MethodInfo"
     [ POpt (nameAndId "Name" name) [showConst p name]
     , POpt (nameAndId "Descriptor" descriptor) [showConst p descriptor]
     , L $ nameAndValue "AccessFlags" (show accessFlags)
@@ -91,8 +86,7 @@ printMethod p m@(MethodInfo { methodAccessFlags = accessFlags
 
 printAttribute :: [Constant] -> AttrInfo -> Paragraph
 printAttribute p ca@(CodeAttr {}) =
-  P
-    "Code attribute"
+  P "Code attribute"
     [ L $ nameAndValue "Max stack:" $ maxStack ca
     , L $ nameAndValue "Max locals:" $ maxLocals ca
     , P "Code" (map (printCode p) (code ca))
