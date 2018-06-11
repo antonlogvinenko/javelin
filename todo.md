@@ -15,11 +15,13 @@
 * SpecifyMeError - replace with detailed, maybe use LinkageError; add messages
 * VMError and contents: add messages
 * VMError: use interfaces, less data types? not sure
+* preparation: keep prepared classes as set
 
 *Notes*
 * was processed (loaded/resolved)errors - repeat?
 * add access check
 * add restrictions check
+
 
 *Open questions*
 * why check not already asked by initCL, but then fail?

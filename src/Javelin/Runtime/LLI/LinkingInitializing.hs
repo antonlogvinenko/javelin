@@ -10,9 +10,6 @@ import           Javelin.Runtime.Structures
 linking :: ClassId -> Runtime -> Either VMError Runtime
 linking classId rt = verify classId rt >>= prepare classId
 
---keep prepared classes as set
---run hfmt
-
 -- §5.4.1 Verify
 verify :: ClassId -> Runtime -> Either VMError Runtime
 verify classId rt = Right rt
