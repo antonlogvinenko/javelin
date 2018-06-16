@@ -9,10 +9,10 @@ import           Data.Semigroup                ((<>))
 import           Javelin.ByteCode.ClassFile    (parseRaw)
 import           Javelin.ByteCode.Data         (showByteCode)
 import           Javelin.ByteCode.Stats        (stats)
+import           Javelin.Runtime.Instructions  (runJVM)
 import           Javelin.Runtime.LLI.ClassPath
 import           Javelin.Runtime.LLI.Loading   (deriveClass, load)
 import           Javelin.Runtime.Structures
-import           Javelin.Runtime.Thread        (runJVM)
 import           Options.Applicative
 import           System.Directory
 import           System.Environment
@@ -64,7 +64,7 @@ data JVMOpts
 main :: IO ()
 main = execParser opts >>= runWithOptions
   where
-    opts = info topParser (progDesc "JVM implementation")
+    opts = info topParser $ progDesc "JVM implementation"
     topParser =
       subparser $
       command "disasm" (info disasmParser $ progDesc "Disassemble a class") <>

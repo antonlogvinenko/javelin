@@ -14,35 +14,11 @@ import           Data.Word                     (Word16, Word32, Word64, Word8)
 import           Javelin.Runtime.LLI.ClassPath
 import           Javelin.Runtime.Structures
 
--- Running
-runJVM :: String -> String -> [String] -> IO Trace
-runJVM classPath mainClass args = do
-  thread <- bootstrap classPath mainClass args
-  return $ execute thread True Trace
-
-bootstrap :: String -> String -> [String] -> IO Thread
-bootstrap classPath mainClass mainArgs = do
-  layout <- undefined --getClassSourcesLayout classPath
-  let frame = undefined
-  -- args, create frame for invokation, lli main class
-  return $ newThread frame layout
-
-execute :: Thread -> Bool -> Trace -> Trace
-execute execution tracing trace =
-  let execution2 = undefined -- execute single step
-      trace1 = undefined -- find trace
-      trace2 = undefined -- combing t and t1
-   in execute execution2 tracing trace2 -- recursively
-
 step :: Thread -> Thread
 step e = e
 
 nativeJVM :: Map.Map (ClassName, String) (Thread -> Thread)
 nativeJVM = Map.fromList [(("java.lang.Class", "getClass"), id)]
-
-data Trace =
-  Trace
-  deriving (Show, Eq)
 
 -- Bytes storage order
 class BytesContainer c where

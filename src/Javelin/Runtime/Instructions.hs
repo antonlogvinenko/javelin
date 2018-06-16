@@ -1,15 +1,29 @@
 module Javelin.Runtime.Instructions where
 
-import           Data.Bits              (xor, (.&.), (.|.))
-import qualified Data.Map.Lazy          as Map (Map, fromList)
-import           Data.Word              (Word16, Word32, Word64, Word8)
-import           Javelin.Runtime.Thread (Instruction (..), JBoolean, JByte,
-                                         JChar, JDouble, JFloat, JInt, JLong,
-                                         JRaw, JShort, arg, empty, jboolean,
-                                         jbyte, jchar, jdouble, jfloat, jint,
-                                         jlong, jraw, jshort, load, peek, pop,
-                                         popn, push, pushn, remove, signExtend,
-                                         store)
+import           Control.Monad.State.Lazy   (State, runState, state)
+import           Data.Bits                  (xor, (.&.), (.|.))
+import qualified Data.Map.Lazy              as Map (Map, fromList)
+import           Data.Word                  (Word16, Word32, Word64, Word8)
+import           Javelin.Runtime.Structures
+import           Javelin.Runtime.Thread
+
+runJVM :: String -> String -> [String] -> IO ()
+runJVM classPath mainClass args =
+  let initThread = initializeThread classPath mainClass args
+      (_, thread) = runState invokestatic initThread
+   in execute thread
+
+execute :: Thread -> IO ()
+execute threadBefore =
+  let instruction = nextInstruction threadBefore
+      (_, threadAfter) = runState instruction threadBefore
+   in execute threadAfter
+
+initializeThread :: String -> String -> [String] -> Thread
+initializeThread classPath mainClass args = undefined
+
+nextInstruction :: Thread -> Instruction
+nextInstruction = undefined
 
 type ArgumentsParser = [Word8] -> [Word8]
 
@@ -342,6 +356,7 @@ ixor = math jint xor
 
 lxor = math jlong xor
 
+iinc :: Instruction
 iinc = do
   index <- arg jbyte 0
   const <- arg jbyte 0
@@ -456,6 +471,7 @@ invokevirtual = undefined
 
 invokespecial = undefined
 
+invokestatic :: Instruction
 invokestatic = undefined
 
 invokeinterface = undefined

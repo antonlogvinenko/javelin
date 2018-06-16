@@ -1,7 +1,5 @@
 *Current*
 * commands execution
- * main class cli syntax
- * method for entering main class execution
  * loop for executing commands
  * execute addition
 

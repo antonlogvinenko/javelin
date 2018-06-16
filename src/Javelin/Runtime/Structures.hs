@@ -359,6 +359,7 @@ classDefinesField classId partRef rt =
    in Nothing /= fieldResStatus
 
 -- Heap contents
+newThread :: Frame -> ClassPathLayout -> Thread
 newThread frame = Thread 0 [frame] . newRuntime
 
 malloc :: Runtime -> (Runtime, Ref)
