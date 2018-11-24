@@ -6,7 +6,6 @@ import           Control.Monad              (guard)
 import           Control.Monad.IO.Class     (liftIO)
 import           Control.Monad.Trans        (lift)
 import           Control.Monad.Trans.Except (ExceptT (..), runExceptT)
-import           Control.Monad.Trans.List   (ListT (..))
 import           Data.Binary.Get            (ByteOffset)
 import qualified Data.ByteString            as BS (readFile, unpack)
 import qualified Data.ByteString.Lazy       as LBS (ByteString)
@@ -23,20 +22,20 @@ import           Text.Printf                (printf)
 import           Javelin.ByteCode.ClassFile (parse)
 import           Javelin.ByteCode.Data
 
-listDir :: FilePath -> ListT IO FilePath
+listDir :: FilePath -> IO [FilePath]
 listDir path = do
-  isDirectory <- lift $ doesDirectoryExist path
+  isDirectory <- doesDirectoryExist path
   if not isDirectory
-    then ListT $ return [path]
+    then return [path]
     else do
-      contents <- lift $ getDirectoryContents path
+      contents <- getDirectoryContents path
       let files =
             map ((path ++ "/") ++) . filter (`notElem` [".", ".."]) $ contents
-      (ListT $ return files) >>= listDir
+      concat <$> mapM listDir files
 
 getStats :: FilePath -> IO (Either String (Map.Map String Integer))
 getStats path = do
-  filePaths <- runListT $ listDir path
+  filePaths <- listDir path
   runExceptT $ calcFreqs mempty filePaths
 
 stats :: FilePath -> Maybe FilePath -> IO ()

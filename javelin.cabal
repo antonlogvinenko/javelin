@@ -68,7 +68,7 @@ executable javelin
                        mtl ==2.2.*,
                        transformers ==0.5.5.0,
                        split ==0.2.*,
-                       MissingH ==1.4.0.1,
+                       MissingH ==1.4.1.0,
                        flow ==1.0.*,
                        lens ==4.16.*,
                        pretty-show ==1.7.*,
