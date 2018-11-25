@@ -9,6 +9,10 @@ import           Javelin.Runtime.Thread
 import           Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
 
+-- runJVM -classpath /usr/lib/jvm/java-8-oracle/jre/lib/rt.jar:./main test.App
+
+-- find mainClass in layout, put its reference to invokmain arguments
+-- put args objects on heap, put their refs to local variables
 runJVM :: String -> String -> [String] -> IO ()
 runJVM classPath mainClass args = do
   maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
@@ -18,7 +22,8 @@ runJVM classPath mainClass args = do
                                  invokeMainClassCommand = invokestatic []
                                  (_, thread) = runState invokeMainClassCommand initThread
                              in runThread thread
-
+-- find next instruction and its argument bytes
+-- handle 'no more commands' and exit
 runThread :: Thread -> IO ()
 runThread thread =
   let (arguments, instruction) = nextInstructionLine thread

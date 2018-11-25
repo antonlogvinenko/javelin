@@ -149,8 +149,7 @@ data ClassPathLayout = ClassPathLayout
 
 instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
-    "ClassPathLayout: " ++ show (Map.size classes) ++ " classes loaded from " ++
-    show classPath
+    "ClassPathLayout: " ++ show (Map.size classes) ++ " classes loaded from " ++ show classPath
 
 type ClassName = String
 

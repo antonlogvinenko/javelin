@@ -27,7 +27,7 @@ import           Flow
 
 getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
 getClassSourcesLayout paths =
-  let pathsList = strip <$> splitOn ";" paths
+  let pathsList = strip <$> splitOn ":" paths
    in lift $ do
         layout <- getClassPathLayout pathsList
         return $ ClassPathLayout layout pathsList
