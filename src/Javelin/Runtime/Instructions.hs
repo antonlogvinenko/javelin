@@ -6,21 +6,24 @@ import qualified Data.Map.Lazy              as Map (Map, fromList)
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           Javelin.Runtime.Structures
 import           Javelin.Runtime.Thread
+import           Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout)
+import           Control.Monad.Trans.Except (runExceptT)
 
 runJVM :: String -> String -> [String] -> IO ()
-runJVM classPath mainClass args =
-  let initThread = initializeThread classPath mainClass args
-      (_, thread) = runState invokestatic initThread
-   in execute thread
+runJVM classPath mainClass args = do
+  maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
+  case maybeCPLayout of
+    Left error -> print error
+    Right classPathLayout -> let initThread = Thread 0 [] $ newRuntime classPathLayout
+                                 invokeMainClassCommand = invokestatic mainClass args
+                                 (_, thread) = runState invokeMainClassCommand initThread
+                             in runThread thread
 
-execute :: Thread -> IO ()
-execute threadBefore =
-  let instruction = nextInstruction threadBefore
-      (_, threadAfter) = runState instruction threadBefore
-   in execute threadAfter
-
-initializeThread :: String -> String -> [String] -> Thread
-initializeThread classPath mainClass args = undefined
+runThread :: Thread -> IO ()
+runThread thread =
+  let instruction = nextInstruction thread
+      (_, newThread) = runState instruction thread
+   in runThread newThread
 
 nextInstruction :: Thread -> Instruction
 nextInstruction = undefined
@@ -471,8 +474,13 @@ invokevirtual = undefined
 
 invokespecial = undefined
 
-invokestatic :: Instruction
-invokestatic = undefined
+invokestatic :: String -> [String] -> Instruction
+invokestatic clazz args =
+  state $ \t@(Thread c fs rt) ->
+            let thread = Thread c (newFrame:fs) newRT
+                newRT = undefined
+                newFrame = undefined :: Frame
+            in ((), thread)
 
 invokeinterface = undefined
 
@@ -725,7 +733,7 @@ instructions =
     , (0xb5, (fixed 2, putfield))
     , (0xb6, (fixed 2, invokevirtual))
     , (0xb7, (fixed 2, invokespecial))
-    , (0xb8, (fixed 2, invokestatic))
+    , (0xb8, (fixed 2, invokestatic "" []))
     , (0xb9, (fixed 4, invokeinterface))
     , (0xba, (fixed 4, invokedynamic))
     , (0xbb, (fixed 2, new))

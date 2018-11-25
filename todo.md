@@ -1,7 +1,12 @@
 *Current*
 * commands execution
- * loop for executing commands
- * execute addition
+ * invokestatic
+ * nextCommand
+ * VM exit
+
+*Next*
+ * addition
+ * println
 
 *Fixes*
 * User classpath suport
