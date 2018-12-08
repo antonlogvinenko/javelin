@@ -2,17 +2,22 @@ module Javelin.Runtime.Instructions where
 
 import           Control.Monad.State.Lazy   (State, runState, state)
 import           Data.Bits                  (xor, (.&.), (.|.))
-import qualified Data.Map.Lazy              as Map (Map, fromList)
+import qualified Data.Map.Lazy              as Map (Map, fromList, lookup, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           Javelin.Runtime.Structures
 import           Javelin.Runtime.Thread
 import           Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
 
--- runJVM -classpath /usr/lib/jvm/java-8-oracle/jre/lib/rt.jar:./main test.App
+import           Debug.Trace
 
--- find mainClass in layout, put its reference to invokmain arguments
--- put args objects on heap, put their refs to local variables
+-- stack exec javelin jvm test.App /usr/lib/jvm/java-8-oracle/jre/lib/rt.jar:./main 1
+
+-- 1 find mainClass in layout, put its reference to instokestatic arguments
+-- 2 implement invokestatic
+-- 3 [later] put args objects on heap, put their refs to local variables
+-- reading next instruction
+-- handling 'no more commands' and exiting
 runJVM :: String -> String -> [String] -> IO ()
 runJVM classPath mainClass args = do
   maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
@@ -21,14 +26,18 @@ runJVM classPath mainClass args = do
     Right classPathLayout -> let initThread = Thread 0 [] $ newRuntime classPathLayout
                                  invokeMainClassCommand = invokestatic []
                                  (_, thread) = runState invokeMainClassCommand initThread
-                             in runThread thread
+                             in runThread 0 thread
+
 -- find next instruction and its argument bytes
 -- handle 'no more commands' and exit
-runThread :: Thread -> IO ()
-runThread thread =
-  let (arguments, instruction) = nextInstructionLine thread
-      (_, newThread) = runState (instruction arguments) thread
-   in runThread newThread
+-- add auto logging of in/out of commands
+runThread :: Int -> Thread -> IO ()
+runThread c thread =
+  if c > 1000
+  then print "Exiting"
+  else let (arguments, instruction) = nextInstructionLine thread
+           (_, newThread) = runState (instruction arguments) thread
+       in runThread (c + 1) newThread
 
 nextInstructionLine :: Thread -> ([Word8], Instruction)
 nextInstructionLine = undefined

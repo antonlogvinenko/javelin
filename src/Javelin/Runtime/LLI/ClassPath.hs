@@ -73,11 +73,10 @@ extractZipClasses path = do
   return $ Map.fromList $ (\c -> (c, s)) <$> pathToClass <$> paths
 
 extractFileClass :: FilePath -> IO (Map ClassName ClassSource)
-extractFileClass path =
-  return $ Map.fromList [(pathToClass path, ClassFile path)]
+extractFileClass path = return (Map.fromList [(pathToClass path, ClassFile path)])
 
 pathToClass :: FilePath -> ClassName
-pathToClass path = head $ splitOn "." path
+pathToClass path = path |> splitOn "/" |> last |> splitOn "." |> head
 
 isZip :: FilePath -> Bool
 isZip path = any (\s -> isSuffixOf s path) [".jar", ".zip", ".war", ".ear"]

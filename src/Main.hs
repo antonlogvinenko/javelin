@@ -100,9 +100,9 @@ main = execParser opts >>= runWithOptions
       LoadClassWithDeps <$> strArgument (metavar "JVM class path") <*>
       strArgument (metavar "Class file to load")
     jvmParser =
-      JVM <$> strArgument (metavar "Main class") <*>
-      strArgument (metavar "Class path") <*>
-      (some $ strArgument (metavar "JVM arguments"))
+      JVM <$> strArgument (metavar "mainClass") <*>
+      strArgument (metavar "classPath") <*>
+      (some $ strArgument (metavar "mainArguments"))
 
 runWithOptions :: JVMOpts -> IO ()
 runWithOptions jvmOpts =
@@ -121,4 +121,4 @@ runWithOptions jvmOpts =
     LoadClassWithDeps classPath classFilePath ->
       (runExceptT $ loadClassWithDeps classPath classFilePath) >>= print
     JVM mainClass classPath mainArgs ->
-      runJVM classPath mainClass mainArgs >>= print
+      runJVM classPath mainClass mainArgs
