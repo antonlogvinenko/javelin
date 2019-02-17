@@ -10,12 +10,13 @@ import           Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.Array.IArray          (array)
 import           Debug.Trace
+import           System.Exit                (die)
 
--- stack exec javelin jvm test.App /usr/lib/jvm/java-8-oracle/jre/lib/rt.jar:./main 1
+-- stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:./main 1
 
--- 1. find mainClass in layout, initialize it, put its id in frame
+-- 1. initialize mainClass, put its id in frame
 -- 2. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
--- 3. invokestatis implementation: resolves method, inits class etc etc,
+-- 3. invokestatic implementation: resolves method, inits class etc etc,
 -- 4 [later] put args objects on heap, put their refs to local variables
 -- 5. go to runState implementation
 -- reading next instruction
@@ -25,11 +26,14 @@ runJVM classPath mainClass args = do
   maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
   case maybeCPLayout of
     Left error -> print error
-    Right classPathLayout -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
-                                 initThread = Thread 0 [frame] $ newRuntime classPathLayout
-                                 invokeMainClassCommand = invokestatic []
-                                 (_, thread) = runState invokeMainClassCommand initThread
-                             in runThread 0 thread
+    Right classPathLayout -> case (Map.!) (_classes classPathLayout) mainClass of
+      JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
+      ClassFile path -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
+                            initThread = Thread 0 [frame] $ newRuntime classPathLayout
+                            invokeMainClassCommand = invokestatic []
+                            (_, thread) = runState invokeMainClassCommand initThread
+                        in runThread 0 thread
+
 
 -- find next instruction and its argument bytes
 -- handle 'no more commands' and exit
