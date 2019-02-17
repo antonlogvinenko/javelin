@@ -8,14 +8,16 @@ import           Javelin.Runtime.Structures
 import           Javelin.Runtime.Thread
 import           Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
-
+import           Data.Array.IArray          (array)
 import           Debug.Trace
 
 -- stack exec javelin jvm test.App /usr/lib/jvm/java-8-oracle/jre/lib/rt.jar:./main 1
 
--- 1 find mainClass in layout, put its reference to instokestatic arguments
--- 2 implement invokestatic
--- 3 [later] put args objects on heap, put their refs to local variables
+-- 1. find mainClass in layout, initialize it, put its id in frame
+-- 2. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
+-- 3. invokestatis implementation: resolves method, inits class etc etc,
+-- 4 [later] put args objects on heap, put their refs to local variables
+-- 5. go to runState implementation
 -- reading next instruction
 -- handling 'no more commands' and exiting
 runJVM :: String -> String -> [String] -> IO ()
@@ -23,7 +25,8 @@ runJVM classPath mainClass args = do
   maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
   case maybeCPLayout of
     Left error -> print error
-    Right classPathLayout -> let initThread = Thread 0 [] $ newRuntime classPathLayout
+    Right classPathLayout -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
+                                 initThread = Thread 0 [frame] $ newRuntime classPathLayout
                                  invokeMainClassCommand = invokestatic []
                                  (_, thread) = runState invokeMainClassCommand initThread
                              in runThread 0 thread
