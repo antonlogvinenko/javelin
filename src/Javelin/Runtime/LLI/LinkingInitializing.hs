@@ -4,21 +4,24 @@ import           Data.Map.Strict            ((!))
 
 import           Javelin.Runtime.DescSign   (FieldType (..))
 import           Javelin.Runtime.Structures
+import           Javelin.Runtime.LLI.Loading    (load)
+import           Control.Monad.Trans.Except    (ExceptT (..), throwE, withExceptT, except)
+import           Control.Monad.Trans.Class     (lift)
 
-init :: ClassId -> Runtime -> Either VMError Runtime
+init :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 init classId rt = linking classId rt
 
-linking :: ClassId -> Runtime -> Either VMError Runtime
+linking :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 linking classId rt = verify classId rt >>= prepare classId
 
-verify :: ClassId -> Runtime -> Either VMError Runtime
-verify classId rt = Right rt
+verify :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+verify classId rt = load classId rt --todo not doing actual verification yet
 
-prepare :: ClassId -> Runtime -> Either VMError Runtime
+prepare :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 prepare classId rt =
   if isClassPrepared classId rt
     then return rt
-    else updateClassFields
+    else ExceptT . return $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
            classId
            rt
            (map initStaticField . filter (isFieldStatic . fieldAccess)) >>=

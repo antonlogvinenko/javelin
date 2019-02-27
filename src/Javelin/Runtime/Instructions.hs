@@ -11,14 +11,16 @@ import           Control.Monad.Trans.Except (runExceptT)
 import           Data.Array.IArray          (array)
 import           Debug.Trace
 import           System.Exit                (die)
+import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 
 -- stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:./main 1
 
--- 1. initialize mainClass, put its id in frame
--- 2. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
--- 3. invokestatic implementation: resolves method, inits class etc etc,
--- 4 [later] put args objects on heap, put their refs to local variables
--- 5. go to runState implementation
+-- 1. initialize mainClass (currently class not found exception)
+-- 2. put mainClass id in frame
+-- 3. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
+-- 4. invokestatic implementation: resolves method, inits class etc etc,
+-- 5 [later] put args objects on heap, put their refs to local variables
+-- 6. go to runState implementation
 -- reading next instruction
 -- handling 'no more commands' and exiting
 runJVM :: String -> String -> [String] -> IO ()
@@ -28,12 +30,15 @@ runJVM classPath mainClass args = do
     Left error -> print error
     Right classPathLayout -> case (Map.!) (_classes classPathLayout) mainClass of
       JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
-      ClassFile path -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
-                            initThread = Thread 0 [frame] $ newRuntime classPathLayout
-                            invokeMainClassCommand = invokestatic []
-                            (_, thread) = runState invokeMainClassCommand initThread
-                        in runThread 0 thread
-
+      ClassFile path -> do
+        mainClassInit <- runExceptT $ LI.init (ClassId BootstrapClassLoader mainClass) (newRuntime classPathLayout)
+        case mainClassInit of
+          Left err -> die $ show err
+          Right rt -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
+                          initThread = Thread 0 [frame] rt
+                          invokeMainClassCommand = invokestatic []
+                          (_, thread) = runState invokeMainClassCommand initThread
+                      in runThread 0 thread
 
 -- find next instruction and its argument bytes
 -- handle 'no more commands' and exit
