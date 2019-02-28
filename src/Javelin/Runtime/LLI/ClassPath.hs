@@ -99,9 +99,10 @@ getClassBytes name (ClassPathLayout classes _) = do
 getClassFromSource ::
      ClassName -> ClassSource -> ExceptT VMError IO BSS.ByteString
 getClassFromSource name (ClassFile path) =
-  if classToPath name == path
-    then lift $ BSL.toStrict <$> BSL.readFile path
-    else throwE $ ClassNotFoundException name
+  --todo should we check that class x.y.z.class is loaded from x/y/z.class file?
+--  if classToPath name == path
+    lift $ BSL.toStrict <$> BSL.readFile path
+--    else throwE $ ClassNotFoundException "cake"
 getClassFromSource name (JarFile path) =
   ExceptT $ do
     raw <- BSL.readFile path

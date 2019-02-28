@@ -13,7 +13,7 @@ import           Debug.Trace
 import           System.Exit                (die)
 import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 
--- stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:./main 1
+-- stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 
 -- 1. initialize mainClass (currently class not found exception)
 -- 2. put mainClass id in frame
