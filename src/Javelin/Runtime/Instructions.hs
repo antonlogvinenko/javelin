@@ -13,9 +13,11 @@ import           Debug.Trace
 import           System.Exit                (die)
 import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 
--- stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
+--stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
+--runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
 
 -- 1. initialize mainClass (currently class not found exception)
+-- 1. enable some sort of logging
 -- 2. put mainClass id in frame
 -- 3. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
 -- 4. invokestatic implementation: resolves method, inits class etc etc,
@@ -24,21 +26,26 @@ import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 -- reading next instruction
 -- handling 'no more commands' and exiting
 runJVM :: String -> String -> [String] -> IO ()
-runJVM classPath mainClass args = do
-  maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
-  case maybeCPLayout of
-    Left error -> print error
-    Right classPathLayout -> case (Map.!) (_classes classPathLayout) mainClass of
-      JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
-      ClassFile path -> do
-        mainClassInit <- runExceptT $ LI.init (ClassId BootstrapClassLoader mainClass) (newRuntime classPathLayout)
-        case mainClassInit of
-          Left err -> die $ show err
-          Right rt -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
-                          initThread = Thread 0 [frame] rt
-                          invokeMainClassCommand = invokestatic []
-                          (_, thread) = runState invokeMainClassCommand initThread
-                      in runThread 0 thread
+runJVM classPath mainClass args =
+  let main = map (\c -> if c == '.' then '/' else c) mainClass
+  in putStrLn "Main class" >>
+     print mainClass >>
+     do
+       maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
+       case maybeCPLayout of
+         Left error -> print error
+         Right classPathLayout -> putStrLn "Layout" >> print classPathLayout >>
+           case (Map.!) (_classes classPathLayout) main of
+             JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
+             ClassFile path -> do
+               mainClassInit <- runExceptT $ LI.init (ClassId BootstrapClassLoader main) (newRuntime classPathLayout)
+               case mainClassInit of
+                 Left err -> die $ show err
+                 Right rt -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
+                                 initThread = Thread 0 [frame] rt
+                                 invokeMainClassCommand = invokestatic []
+                                 (_, thread) = runState invokeMainClassCommand initThread
+                             in runThread 0 thread
 
 -- find next instruction and its argument bytes
 -- handle 'no more commands' and exit

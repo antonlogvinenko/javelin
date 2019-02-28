@@ -79,10 +79,10 @@ extractFileClass path = return (Map.fromList [(pathToClass (filePathToClassPath 
 filePathToClassPath :: String -> String
 filePathToClassPath path = path |> splitOn "/" |> drop 1 |> intercalate "/"
 
---Convert "com/util/java/List.class" to "com.util.java.List"
+--Convert "com/util/java/List.class" to "com/util/java/List"
 --Can be used to transalte class file pathes (inside jar files or on filesystem) to expected class name
 pathToClass :: FilePath -> ClassName
-pathToClass path = path |> splitOn "/" |> intercalate "." |> splitOn ".class" |> head
+pathToClass path = path |> splitOn ".class" |> head
 
 isZip :: FilePath -> Bool
 isZip path = any (\s -> isSuffixOf s path) [".jar", ".zip", ".war", ".ear"]

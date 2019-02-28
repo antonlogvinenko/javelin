@@ -17,6 +17,9 @@
 #  location: "./custom-snapshot.yaml"
 resolver: lts-12.13
 
+build:
+  executable-profiling: true
+
 # User packages to be built.
 # Various formats can be used as shown in the example below.
 # 
