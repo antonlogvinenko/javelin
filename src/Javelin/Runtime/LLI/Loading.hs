@@ -345,8 +345,7 @@ load request@(ClassId initCL name) rt =
         Nothing -> loaderFn request rt
 
 loadClass :: ClassLoadMethod
-loadClass request@(ClassId BootstrapClassLoader _) rt =
-  loadClassWithBootstrap request rt
+loadClass request@(ClassId BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
 loadClass request rt = loadClassWithUserDefCL request rt
 
 isArray :: ClassName -> Bool

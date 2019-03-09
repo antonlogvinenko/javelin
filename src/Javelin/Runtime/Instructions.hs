@@ -17,7 +17,6 @@ import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
 
 -- 1. initialize mainClass (currently class not found exception)
--- 1. enable some sort of logging
 -- 2. put mainClass id in frame
 -- 3. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
 -- 4. invokestatic implementation: resolves method, inits class etc etc,
@@ -25,6 +24,8 @@ import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 -- 6. go to runState implementation
 -- reading next instruction
 -- handling 'no more commands' and exiting
+
+---- 1. enable some sort of logging
 runJVM :: String -> String -> [String] -> IO ()
 runJVM classPath mainClass args =
   let main = map (\c -> if c == '.' then '/' else c) mainClass
