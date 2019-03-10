@@ -2,12 +2,13 @@
 
 module Javelin.Runtime.Structures where
 
+import           Flow
 import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (ExceptT (..))
 import           Data.Array.IArray          (Array, array, bounds, (!), (//))
 import           Data.Int                   (Int16, Int32, Int64, Int8)
-import qualified Data.Map.Strict            as Map (Map, fromList, insert,
-                                                    lookup, size, (!))
+import           Data.List                  (intersperse)
+import qualified Data.Map.Strict            as Map (Map, fromList, toList, insert, lookup, size, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 
 import           Control.Lens               (ix, makeLenses, (%~), (&), (^.),
@@ -149,7 +150,9 @@ data ClassPathLayout = ClassPathLayout
 
 instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
-    "ClassPathLayout: " ++ show (Map.size classes) ++ " classes loaded from " ++ show classPath
+    "== Classpath ==\n" ++ show classPath ++ "\n\n" ++
+    "== Loaded classes ==\n" ++
+    (classes |> Map.toList |> map (\(c, p) -> c ++ "\n" ++ (show p)) |> intersperse "\n\n" |> concat)
 
 type ClassName = String
 

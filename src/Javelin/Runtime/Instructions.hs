@@ -12,9 +12,25 @@ import           Data.Array.IArray          (array)
 import           Debug.Trace
 import           System.Exit                (die)
 import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
+import System.IO (writeFile)
+import Flow
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
+
+-- ghcid --command="stack ghci"
+
+  -- auto open all windows
+  -- do not open f8
+  -- auto reload in stack ghci in buffer
+  -- coloring for ghcid
+  -- arrows in shell in buffer
+
+
+-- We need to start eexuting commands in main method of main class so we have to make it look like
+-- someone called 'invokestatic' on main method of main class: the class is loaded, there is a frame with main class id in it etc
+
+-- 0. Logging of classpath: make it human readable
 
 -- 1. initialize mainClass (currently class not found exception)
 -- 2. put mainClass id in frame
@@ -26,27 +42,36 @@ import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 -- handling 'no more commands' and exiting
 
 ---- 1. enable some sort of logging
+
+console :: Show a => String -> a -> IO ()
+console x a = putStrLn $ x ++ ": " ++ (show a)
+
+dump :: Show a => String -> a -> IO ()
+dump file a = writeFile ("./logs/" ++ file) (show a)
+
 runJVM :: String -> String -> [String] -> IO ()
 runJVM classPath mainClass args =
   let main = map (\c -> if c == '.' then '/' else c) mainClass
-  in putStrLn "Main class" >>
-     print mainClass >>
-     do
-       maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
-       case maybeCPLayout of
-         Left error -> print error
-         Right classPathLayout -> putStrLn "Layout" >> print classPathLayout >>
-           case (Map.!) (_classes classPathLayout) main of
-             JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
-             ClassFile path -> do
-               mainClassInit <- runExceptT $ LI.init (ClassId BootstrapClassLoader main) (newRuntime classPathLayout)
-               case mainClassInit of
-                 Left err -> die $ show err
-                 Right rt -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
-                                 initThread = Thread 0 [frame] rt
-                                 invokeMainClassCommand = invokestatic []
-                                 (_, thread) = runState invokeMainClassCommand initThread
-                             in runThread 0 thread
+  in do
+    putStrLn "_______ Starting JVM ________"
+    console "Main class arg" mainClass
+    console "Main class" main
+    maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
+    case maybeCPLayout of
+      Left error -> console "Failed while loading class path" error
+      Right cpLayout -> console "Classpath" (_classPath cpLayout) >> dump "classpath.log" cpLayout >>
+        case (Map.!) (_classes cpLayout) main of
+          JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
+          ClassFile path -> do
+            console "Main class found in class file" path
+            mainClassInit <- runExceptT $ LI.init (ClassId BootstrapClassLoader main) (newRuntime cpLayout)
+            case mainClassInit of
+              Left err -> die $ show err
+              Right rt -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
+                              initThread = Thread 0 [frame] rt
+                              invokeMainClassCommand = invokestatic []
+                              (_, thread) = runState invokeMainClassCommand initThread
+                          in runThread 0 thread
 
 -- find next instruction and its argument bytes
 -- handle 'no more commands' and exit
@@ -287,29 +312,29 @@ dup = do
   op <- peek jraw
   push op
 
-dup_x1 = do
-  [op1, op2] <- popn jraw 2
-  pushn [op1, op2, op1]
+-- dup_x1 = do
+--   [op1, op2] <- popn jraw 2
+--   pushn [op1, op2, op1]
 
-dup_x2 = do
-  [op1, op2, op3] <- popn jraw 3
-  pushn [op1, op3, op2, op1]
+-- dup_x2 = do
+--   [op1, op2, op3] <- popn jraw 3
+--   pushn [op1, op3, op2, op1]
 
-dup2 = do
-  [op1, op2] <- popn jraw 2
-  pushn [op2, op1, op2, op1]
+-- dup2 = do
+--   [op1, op2] <- popn jraw 2
+--   pushn [op2, op1, op2, op1]
 
-dup2_x1 = do
-  [op1, op2, op3] <- popn jraw 3
-  pushn [op2, op1, op3, op2, op1]
+-- dup2_x1 = do
+--   [op1, op2, op3] <- popn jraw 3
+--   pushn [op2, op1, op3, op2, op1]
 
-dup2_x2 = do
-  [op1, op2, op3, op4] <- popn jraw 4
-  pushn [op2, op1, op4, op3, op2, op1]
+-- dup2_x2 = do
+--   [op1, op2, op3, op4] <- popn jraw 4
+--   pushn [op2, op1, op4, op3, op2, op1]
 
-swap = do
-  [op1, op2] <- popn jraw 2
-  pushn [op2, op1]
+-- swap = do
+--   [op1, op2] <- popn jraw 2
+--   pushn [op2, op1]
 
 -- Math
 math operandType operation = do
@@ -675,12 +700,12 @@ instructions =
     , (0x57, (noarg, const pop1))
     , (0x58, (noarg, const pop2))
     , (0x59, (noarg, const dup))
-    , (0x5a, (noarg, const dup_x1))
-    , (0x5b, (noarg, const dup_x2))
-    , (0x5c, (noarg, const dup2))
-    , (0x5d, (noarg, const dup2_x1))
-    , (0x5e, (noarg, const dup2_x2))
-    , (0x5f, (noarg, const swap))
+    -- , (0x5a, (noarg, const dup_x1))
+    -- , (0x5b, (noarg, const dup_x2))
+    -- , (0x5c, (noarg, const dup2))
+    -- , (0x5d, (noarg, const dup2_x1))
+    -- , (0x5e, (noarg, const dup2_x2))
+    -- , (0x5f, (noarg, const swap))
   -- Math
     , (0x60, (noarg, const iadd))
     , (0x61, (noarg, const ladd))
