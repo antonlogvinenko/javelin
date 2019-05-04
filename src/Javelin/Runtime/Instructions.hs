@@ -26,7 +26,6 @@ import Flow
   -- coloring for ghcid
   -- arrows in shell in buffer
 
-
 -- We need to start eexuting commands in main method of main class so we have to make it look like
 -- someone called 'invokestatic' on main method of main class: the class is loaded, there is a frame with main class id in it etc
 
@@ -53,6 +52,7 @@ runJVM :: String -> String -> [String] -> IO ()
 runJVM classPath mainClass args =
   let main = map (\c -> if c == '.' then '/' else c) mainClass
   in do
+    putStrLn ""
     putStrLn "_______ Starting JVM ________"
     console "Main class arg" mainClass
     console "Main class" main

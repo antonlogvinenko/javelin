@@ -8,7 +8,7 @@ import           Control.Monad.Trans.Except (ExceptT (..))
 import           Data.Array.IArray          (Array, array, bounds, (!), (//))
 import           Data.Int                   (Int16, Int32, Int64, Int8)
 import           Data.List                  (intersperse)
-import qualified Data.Map.Strict            as Map (Map, fromList, toList, insert, lookup, size, (!))
+import qualified Data.Map.Strict            as Map (Map, fromList, toList, insert, lookup, size, (!), (!?))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 
 import           Control.Lens               (ix, makeLenses, (%~), (&), (^.),
@@ -334,7 +334,10 @@ markClassPrepared classId rt =
   return $ rt & classPrepared %~ Map.insert classId True
 
 isClassPrepared :: ClassId -> Runtime -> Bool
-isClassPrepared classId rt = (_classPrepared rt) Map.! classId
+isClassPrepared classId rt =
+  case (_classPrepared rt) Map.!? classId of
+    Nothing -> False
+    Just x -> x
 
 updateClassFields ::
      ClassId -> Runtime -> ([Field] -> [Field]) -> Either VMError Runtime

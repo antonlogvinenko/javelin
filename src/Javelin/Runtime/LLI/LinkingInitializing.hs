@@ -20,12 +20,13 @@ verify classId rt = load classId rt --todo not doing actual verification yet
 prepare :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 prepare classId rt =
   if isClassPrepared classId rt
-    then return rt
-    else ExceptT . return $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
-           classId
-           rt
-           (map initStaticField . filter (isFieldStatic . fieldAccess)) >>=
-         markClassPrepared classId
+  then return rt
+  else do
+    ExceptT . return $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
+      classId
+      rt
+      (map initStaticField . filter (isFieldStatic . fieldAccess)) >>=
+      markClassPrepared classId
 
 initStaticField :: Field -> Field
 initStaticField field =
