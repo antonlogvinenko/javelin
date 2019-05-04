@@ -21,7 +21,7 @@ data Runtime = Runtime
   { _classPathLayout :: ClassPathLayout
   , _loadedClasses   :: Map.Map ClassId (Either VMError LoadedClass)
   , _classResolving  :: Map.Map ClassId ClassRes
-  , _classPrepared   :: Map.Map ClassId Bool
+  , _classPrepared   :: Map.Map ClassId Bool --todo change Bool to error as in ClassRes
   , _heap            :: (Int, Array Int JObject)
   , _threads         :: [Thread]
   } deriving (Show, Eq)

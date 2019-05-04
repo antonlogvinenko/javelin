@@ -18,23 +18,17 @@ import Flow
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
 
--- ghcid --command="stack ghci"
-
-  -- auto open all windows
-  -- do not open f8
-  -- auto reload in stack ghci in buffer
-  -- coloring for ghcid
-  -- arrows in shell in buffer
-
 -- We need to start eexuting commands in main method of main class so we have to make it look like
 -- someone called 'invokestatic' on main method of main class: the class is loaded, there is a frame with main class id in it etc
 
 -- 0. Logging of classpath: make it human readable
 
--- 1. initialize mainClass (currently class not found exception)
+-- 1. initialize mainClass
 -- 2. put mainClass id in frame
 -- 3. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
+
 -- 4. invokestatic implementation: resolves method, inits class etc etc,
+
 -- 5 [later] put args objects on heap, put their refs to local variables
 -- 6. go to runState implementation
 -- reading next instruction
