@@ -212,7 +212,7 @@ type ProgramCounter = Integer
 type FrameStack = [Frame]
 
 data Frame = Frame
-  { currentClass  :: Integer
+  { currentClass  :: ClassId
   , currentMethod :: Integer
   , locals        :: Locals
   , operands      :: [StackElement]

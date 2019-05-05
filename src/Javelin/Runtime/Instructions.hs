@@ -21,13 +21,12 @@ import Flow
 -- We need to start eexuting commands in main method of main class so we have to make it look like
 -- someone called 'invokestatic' on main method of main class: the class is loaded, there is a frame with main class id in it etc
 
--- 0. Logging of classpath: make it human readable
+-- 1.
+--   put mainClass id in frame
+--   find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
 
--- 1. initialize mainClass
--- 2. put mainClass id in frame
--- 3. find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
-
--- 4. invokestatic implementation: resolves method, inits class etc etc,
+-- 2.
+--   invokestatic implementation: resolves method, inits class etc etc,
 
 -- 5 [later] put args objects on heap, put their refs to local variables
 -- 6. go to runState implementation
@@ -58,10 +57,11 @@ runJVM classPath mainClass args =
           JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
           ClassFile path -> do
             console "Main class found in class file" path
-            mainClassInit <- runExceptT $ LI.init (ClassId BootstrapClassLoader main) (newRuntime cpLayout)
+            let classId = ClassId BootstrapClassLoader main
+            mainClassInit <- runExceptT $ LI.init classId (newRuntime cpLayout)
             case mainClassInit of
               Left err -> die $ show err
-              Right rt -> let frame = Frame 0 0 (Locals $ array (0, 100) []) [] 0
+              Right rt -> let frame = Frame classId 0 (Locals $ array (0, 100) []) [] 0
                               initThread = Thread 0 [frame] rt
                               invokeMainClassCommand = invokestatic []
                               (_, thread) = runState invokeMainClassCommand initThread
