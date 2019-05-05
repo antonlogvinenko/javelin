@@ -215,23 +215,18 @@ deriveClass bc =
       sym = deriveSymTable cp
       ClassOrInterface className = sym `at` (this classBody)
       superIdx = super classBody
-      superName =
-        if superIdx == 0
-          then Nothing
-          else Just $ classOrInterfaceName $ sym `at` superIdx
+      superName = if superIdx == 0 then Nothing else Just $ classOrInterfaceName $ sym `at` superIdx
       classAttrs = attrs classBody
       accessFlags = classAccessFlags classBody
-      classInterfaces =
-        classBody |> interfaces |> map (classOrInterfaceName . (sym `at`))
-      classMethods =
-        classBody |> methods |>
-        map (checkAndRecordLoadedClassMethods sym classBody)
+      classInterfaces = classBody |> interfaces |> map (classOrInterfaceName . (sym `at`))
+      classMethods = classBody |> methods |> map (checkAndRecordLoadedClassMethods sym classBody)
    in do classFields <-
            mapM
              (checkAndRecordLoadedClassFields sym classBody)
              (fields classBody)
          return $
            Class
+             sym
              className
              superName
              classInterfaces

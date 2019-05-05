@@ -53,7 +53,8 @@ data ClassPartRes
   deriving (Show, Eq)
 
 data Class = Class
-  { className       :: String
+  { symTable        :: SymTable
+  , className       :: String
   , superName       :: Maybe String
   , classInterfaces :: [String]
   , sourceFile      :: String

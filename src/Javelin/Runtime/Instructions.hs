@@ -22,7 +22,6 @@ import Flow
 -- someone called 'invokestatic' on main method of main class: the class is loaded, there is a frame with main class id in it etc
 
 -- 1.
---   put mainClass id in frame
 --   find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
 
 -- 2.
