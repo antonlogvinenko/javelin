@@ -286,7 +286,7 @@ getSuperClass :: Runtime -> ClassId -> Either VMError (Maybe String)
 getSuperClass rt classId = superName <$> getClass rt classId
 
 findMethodBySignature ::
-     Runtime -> ClassId -> PartReference -> Either VMError String
+     Runtime -> ClassId -> PartReference -> Either VMError Integer
 findMethodBySignature rt classId partRef = do
   classMethods <- methodsList <$> getClass rt classId
   undefined

@@ -21,17 +21,6 @@ import Flow
 -- We need to start eexuting commands in main method of main class so we have to make it look like
 -- someone called 'invokestatic' on main method of main class: the class is loaded, there is a frame with main class id in it etc
 
--- 1.
---   find mainMethod in mainClass, put reference to it to invokestatic arguments (byte1, byte2)
-
--- 2.
---   invokestatic implementation: resolves method, inits class etc etc,
-
--- 5 [later] put args objects on heap, put their refs to local variables
--- 6. go to runState implementation
--- reading next instruction
--- handling 'no more commands' and exiting
-
 ---- 1. enable some sort of logging
 
 console :: Show a => String -> a -> IO ()
@@ -60,11 +49,28 @@ runJVM classPath mainClass args =
             mainClassInit <- runExceptT $ LI.init classId (newRuntime cpLayout)
             case mainClassInit of
               Left err -> die $ show err
-              Right rt -> let frame = Frame classId 0 (Locals $ array (0, 100) []) [] 0
-                              initThread = Thread 0 [frame] rt
-                              invokeMainClassCommand = invokestatic []
-                              (_, thread) = runState invokeMainClassCommand initThread
-                          in runThread 0 thread
+              Right rt -> case createMainFrame rt classId of
+                Right frame -> runThread 0 $ Thread 0 [frame] rt
+                err -> die $ show err
+
+-- todo: implement findMethodBySignature
+-- todo: resolve method type descriptors with parsing
+-- todo replace "" with part reference and typed type descriptor
+-- todo fix findMethodBySignature
+-- todo: create frame according to description in method: locals etc
+
+-- implement 2+2
+-- print state between executions 
+-- implement printing
+createMainFrame :: Runtime -> ClassId -> Either VMError Frame
+createMainFrame rt classId = createFrame rt classId (PartReference "main" "(Ljava/lang/String[];)V")
+
+createFrame :: Runtime -> ClassId -> PartReference -> Either VMError Frame
+createFrame rt classId methodReference =
+  case findMethodBySignature rt classId methodReference of
+    Right index -> Right $ Frame classId index (Locals $ array (0, 100) []) [] 0
+    Left err -> Left err
+
 
 -- find next instruction and its argument bytes
 -- handle 'no more commands' and exit
