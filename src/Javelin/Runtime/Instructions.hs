@@ -53,7 +53,6 @@ runJVM classPath mainClass args =
                 Right frame -> runThread 0 $ Thread 0 [frame] rt
                 err -> die $ show err
 
--- todo: implement findMethodBySignature
 -- todo: resolve method type descriptors with parsing
 -- todo replace "" with part reference and typed type descriptor
 -- todo fix findMethodBySignature
@@ -67,7 +66,7 @@ createMainFrame rt classId = createFrame rt classId (PartReference "main" "(Ljav
 
 createFrame :: Runtime -> ClassId -> PartReference -> Either VMError Frame
 createFrame rt classId methodReference =
-  case findMethodBySignature rt classId methodReference of
+  case getMethodBySignature rt classId methodReference of
     Right index -> Right $ Frame classId index (Locals $ array (0, 100) []) [] 0
     Left err -> Left err
 
