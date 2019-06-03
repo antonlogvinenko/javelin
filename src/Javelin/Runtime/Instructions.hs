@@ -53,14 +53,18 @@ runJVM classPath mainClass args =
                 Right frame -> runThread 0 $ Thread 0 [frame] rt
                 err -> die $ show err
 
--- todo: create frame according to description in method: locals etc
--- implement 2+2
+-- implement:
+-- int a = 2;
+-- int b = 3;
+-- int c = a + b;
+-- System.out.println(c);
 -- print state between executions 
 
--- implement printing to console
+-- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
 createMainFrame rt classId = createFrame rt classId (PartReference "main" "(Ljava/lang/String[];)V")
 
+-- todo finish: stack depth, local args size, arguments size
 createFrame :: Runtime -> ClassId -> PartReference -> Either VMError Frame
 createFrame rt classId methodReference =
   case getMethodBySignature rt classId methodReference of
