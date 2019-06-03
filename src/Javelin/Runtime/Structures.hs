@@ -218,7 +218,6 @@ data Frame = Frame
   , currentMethod :: Integer
   , locals        :: Locals
   , operands      :: [StackElement]
-  , pool          :: Integer
   } deriving (Show, Eq)
 
 data StackElement = StackElement
