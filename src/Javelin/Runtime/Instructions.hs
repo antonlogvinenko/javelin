@@ -58,7 +58,17 @@ runJVM classPath mainClass args =
 -- int b = 3;
 -- int c = a + b;
 -- System.out.println(c);
--- print state between executions 
+
+-- todo:
+-- create class and java file describing above snippet
+-- pass code info to Method from MethodInfo
+-- init local variables of proper size
+
+-- pass code from Method to MethodInfo
+
+-- implement instructions to load const into local variables
+-- see what other instructions are required
+-- print state between executions
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
