@@ -53,7 +53,14 @@ runJVM classPath mainClass args =
                 Right frame -> runThread 0 $ Thread 0 [frame] rt
                 err -> die $ show err
 
--- implement:
+-- global plan:
+-- do everything for a single snippet
+-- do all similar functionality (similar commands)
+-- unit tests/acceptance tests for everything
+-- testing infrastructure
+-- goto 1: next snippet
+
+-- current snippet:
 -- int a = 2;
 -- int b = 3;
 -- int c = a + b;
