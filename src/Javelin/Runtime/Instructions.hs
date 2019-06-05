@@ -60,13 +60,13 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- create class and java file describing above snippet
 -- pass code info to Method from MethodInfo
 -- init local variables of proper size
 
 -- pass code from Method to MethodInfo
 
 -- implement instructions to load const into local variables
+-- iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
 -- see what other instructions are required
 -- print state between executions
 
