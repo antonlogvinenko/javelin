@@ -54,10 +54,13 @@ runJVM classPath mainClass args =
                 err -> die $ show err
 
 -- global plan:
--- do everything for a single snippet
--- do all similar functionality (similar commands)
--- unit tests/acceptance tests for everything
--- testing infrastructure
+-- 1. create a small snippit
+-- 2. do everything for a single snippet: make it work
+-- 3. write an acceptance test for the working snippet
+-- 4. write unit test for new code
+-- 6. do all similar functionality (similar commands)
+-- 7. new acceptance & unit tests for 6
+-- 8. required updates of testing infrastructure
 -- goto 1: next snippet
 
 -- current snippet:
@@ -67,9 +70,7 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- pass code info to Method from MethodInfo
 -- init local variables of proper size
-
 -- implement instructions to load const into local variables
 -- iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
 -- see what other instructions are required
