@@ -286,16 +286,17 @@ deriveFieldAccess flags =
     (elem FieldSynthetic flags)
     (elem FieldEnum flags)
 
-checkAndRecordLoadedClassMethods ::
-     SymTable -> ClassBody -> MethodInfo -> Method
+checkAndRecordLoadedClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
 checkAndRecordLoadedClassMethods sym body methodInfo =
   let methodName = methodInfo |> methodNameIndex |> (sym `at`) |> string
-      methodDescriptor =
-        methodInfo |> methodInfoDescriptorIndex |> (sym `at`) |> string
+      methodDescriptor = methodInfo |> methodInfoDescriptorIndex |> (sym `at`) |> string
+      attrs = methodAttrs methodInfo
+      codeAttr = head $ filter isCodeAttrInfo attrs
    in Method
         methodName
         methodDescriptor
         (deriveMethodAccess $ methodAccessFlags methodInfo)
+        (maxStack codeAttr) (maxLocals codeAttr) (code codeAttr) (exceptionTable codeAttr)
         []
 
 deriveMethodAccess :: [MethodInfoAccessFlag] -> MethodAccess

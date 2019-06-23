@@ -574,6 +574,10 @@ data Instruction
   | ImDep2
   deriving (Show, Eq)
 
+isCodeAttrInfo :: AttrInfo -> Bool
+isCodeAttrInfo (CodeAttr _ _ _ _ _) = True
+isCodeAttrInfo _ = False
+
 data AttrInfo
   = UnknownAttr { unknownBytes :: ByteString }
   | ConstantValue { constantValueIndex :: Word16 }

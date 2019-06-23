@@ -78,6 +78,10 @@ data Method = Method
   { methodName       :: String
   , methodDescriptor :: String
   , methodAccess     :: MethodAccess
+  , stackSize        :: Word16
+  , localsSize       :: Word16
+  , instructions     :: [Instruction]
+  , exceptions       :: [Exception]
   , methodParameters :: [MethodParameter2]
   } deriving (Show, Eq)
 
