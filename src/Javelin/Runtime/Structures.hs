@@ -7,7 +7,7 @@ import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except (ExceptT (..))
 import           Data.Array.IArray          (Array, array, bounds, (!), (//))
 import           Data.Int                   (Int16, Int32, Int64, Int8)
-import           Data.List                  (intersperse, findIndex)
+import           Data.List                  (intersperse, findIndex, (!!))
 import qualified Data.Map.Strict            as Map (Map, fromList, toList, insert, lookup, size, (!), (!?))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 
@@ -289,11 +289,11 @@ isInterface rt classId =
 getSuperClass :: Runtime -> ClassId -> Either VMError (Maybe String)
 getSuperClass rt classId = superName <$> getClass rt classId
 
-getMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError Integer
+getMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError (Integer, Method)
 getMethodBySignature rt classId partRef = do
    classMethods <- methodsList <$> getClass rt classId
    case findIndex (\m -> (methodName m) == (_name partRef)) classMethods of
-     Just idx -> Right $ fromIntegral idx
+     Just idx -> Right $ (fromIntegral idx, classMethods !! idx)
      Nothing -> Left $ InternalError rt $ CustomError $ "Cant find method" ++ (show partRef)
 
 getClass :: Runtime -> ClassId -> Either VMError Class

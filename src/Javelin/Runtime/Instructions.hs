@@ -84,7 +84,8 @@ createMainFrame rt classId = createFrame rt classId (PartReference "main" "(Ljav
 createFrame :: Runtime -> ClassId -> PartReference -> Either VMError Frame
 createFrame rt classId methodReference =
   case getMethodBySignature rt classId methodReference of
-    Right index -> Right $ Frame classId index (Locals $ array (0, 100) []) []
+    Right (index, method) -> let locals = Locals $ array (0, (fromIntegral $ localsSize method) - 1) []
+                             in Right $ Frame classId index locals  []
     Left err -> Left err
 
 
