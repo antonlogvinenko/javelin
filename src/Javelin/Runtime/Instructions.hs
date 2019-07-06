@@ -70,10 +70,9 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- init local variables of proper size
--- implement instructions to load const into local variables
--- iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
+-- nextInstruction method: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
 -- see what other instructions are required
+-- handle 'no more commands' and exit
 -- print state between executions
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
@@ -89,12 +88,9 @@ createFrame rt classId methodReference =
     Left err -> Left err
 
 
--- find next instruction and its argument bytes
--- handle 'no more commands' and exit
--- add auto logging of in/out of commands
 runThread :: Int -> Thread -> IO ()
 runThread c thread =
-  if c > 1000
+  if c > 100
   then print "Exiting"
   else let (arguments, instruction) = nextInstructionLine thread
            (_, newThread) = runState (instruction arguments) thread
