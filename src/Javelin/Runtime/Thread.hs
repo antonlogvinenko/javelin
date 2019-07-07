@@ -139,7 +139,7 @@ jdouble = fetchBytes 8
 -- Instructions DSL
 type ThreadOperation a = State Thread a
 
-type Instruction = [Word8] -> ThreadOperation ()
+type InstructionExecution = [Word8] -> ThreadOperation ()
 
 getFrame :: Thread -> Frame
 getFrame = (!! 0) . frames

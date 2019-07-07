@@ -73,8 +73,9 @@ runJVM classPath mainClass args =
 
 
 
-
--- actuall fetch instructions with arguments
+-- 1. turn instructionSet to Map.Map Instruction InstructionExecution
+-- 2. turn InstructionExecution from function to State
+-- use instructionSet to turn Instruction into InstructionExecution in nextInstrutionLine
 -- nextInstruction method: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
 -- see what other instructions are required
 -- handle 'no more commands' and exit
@@ -103,7 +104,7 @@ runThread c thread =
                                         in runThread (c + 1) newThread
       Left error -> print error
 
-nextInstructionLine :: Thread -> Either VMError ([Word8], Instruction)
+nextInstructionLine :: Thread -> Either VMError ([Word8], InstructionExecution)
 nextInstructionLine Thread{pc=pc,
                            frames=(Frame{currentClass=classId,
                                          currentMethod=methodIndex,
@@ -446,7 +447,7 @@ ixor = math jint xor
 lxor = math jlong xor
 
 -- wrong implementation: bytes are read from instruction not local arguments
-iinc :: Instruction
+iinc :: InstructionExecution
 iinc bytes = do
   index <- arg jbyte 0
   const <- arg jbyte 0
@@ -559,13 +560,13 @@ putfield = undefined
 
 invokevirtual = undefined
 
-invokespecial :: Instruction
+invokespecial :: InstructionExecution
 invokespecial bytes = undefined
 
 -- Set pc to 0
 -- Create new stack frame
 -- resolve the method, initialize the class
-invokestatic :: Instruction
+invokestatic :: InstructionExecution
 invokestatic bytes =
   state $ \t@(Thread c fs rt) ->
             let thread = Thread 0 (newFrame:fs) newRT
@@ -596,7 +597,7 @@ monitorenter = undefined
 monitorexit = undefined
 
 -- Extended
-wide :: Instruction
+wide :: InstructionExecution
 wide bytes = undefined
 
 multianewarray = undefined
@@ -630,7 +631,7 @@ multianewarrayArgs :: ArgumentsParser
 multianewarrayArgs = undefined
 
  
-instructionSet :: Map.Map Word8 (ArgumentsParser, Instruction)
+instructionSet :: Map.Map Word8 (ArgumentsParser, InstructionExecution)
 instructionSet =
   Map.fromList
   -- Constants
