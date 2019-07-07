@@ -75,11 +75,16 @@ runJVM classPath mainClass args =
 
 -- 1. turn instructionSet to Map.Map Instruction InstructionExecution
 -- 2. turn InstructionExecution from function to State
--- use instructionSet to turn Instruction into InstructionExecution in nextInstrutionLine
--- nextInstruction method: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
--- see what other instructions are required
--- handle 'no more commands' and exit
--- print state between executions
+
+-- or
+-- use Instruction in show instance of Method
+-- replace Instruction with [Word8]
+-- parse here with "InstructionExecution" -- take first bite of [Word8] instrcution line, map, apply to rest args
+
+-- 3. implement: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
+-- 4. see what other instructions are required
+-- 5. handle 'no more commands' and exit
+-- 6. print state between executions
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
