@@ -70,6 +70,11 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
+
+
+
+
+-- actuall fetch instructions with arguments
 -- nextInstruction method: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
 -- see what other instructions are required
 -- handle 'no more commands' and exit
@@ -92,12 +97,22 @@ runThread :: Int -> Thread -> IO ()
 runThread c thread =
   if c > 100
   then print "Exiting"
-  else let (arguments, instruction) = nextInstructionLine thread
-           (_, newThread) = runState (instruction arguments) thread
-       in runThread (c + 1) newThread
+  else do
+    case nextInstructionLine thread of
+      Right (arguments, instruction) -> let (_, newThread) = runState (instruction arguments) thread
+                                        in runThread (c + 1) newThread
+      Left error -> print error
 
-nextInstructionLine :: Thread -> ([Word8], Instruction)
-nextInstructionLine = undefined
+nextInstructionLine :: Thread -> Either VMError ([Word8], Instruction)
+nextInstructionLine Thread{pc=pc,
+                           frames=(Frame{currentClass=classId,
+                                         currentMethod=methodIndex,
+                                         locals=locals,
+                                         operands=stack}):_,
+                           runtime=rt} = do
+  method <- getMethodByIndex rt classId methodIndex
+  let instruction = (instructions method) !! pc
+  return $ ([], undefined)
 
 type ArgumentsParser = [Word8] -> [Word8]
 
@@ -615,8 +630,8 @@ multianewarrayArgs :: ArgumentsParser
 multianewarrayArgs = undefined
 
  
-instructions :: Map.Map Word8 (ArgumentsParser, Instruction)
-instructions =
+instructionSet :: Map.Map Word8 (ArgumentsParser, Instruction)
+instructionSet =
   Map.fromList
   -- Constants
     [ (0x00, (noarg, const nop))

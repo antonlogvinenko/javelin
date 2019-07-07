@@ -213,13 +213,13 @@ data Thread = Thread
   , runtime :: Runtime
   } deriving (Show, Eq)
 
-type ProgramCounter = Integer
+type ProgramCounter = Int
 
 type FrameStack = [Frame]
 
 data Frame = Frame
   { currentClass  :: ClassId
-  , currentMethod :: Integer
+  , currentMethod :: Int
   , locals        :: Locals
   , operands      :: [StackElement]
   } deriving (Show, Eq)
@@ -289,7 +289,12 @@ isInterface rt classId =
 getSuperClass :: Runtime -> ClassId -> Either VMError (Maybe String)
 getSuperClass rt classId = superName <$> getClass rt classId
 
-getMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError (Integer, Method)
+getMethodByIndex :: Runtime -> ClassId -> Int -> Either VMError Method
+getMethodByIndex rt classId index = do
+  classMethods <- methodsList <$> getClass rt classId
+  return $ classMethods !! index
+
+getMethodBySignature :: Runtime -> ClassId -> PartReference -> Either VMError (Int, Method)
 getMethodBySignature rt classId partRef = do
    classMethods <- methodsList <$> getClass rt classId
    case findIndex (\m -> (methodName m) == (_name partRef)) classMethods of
