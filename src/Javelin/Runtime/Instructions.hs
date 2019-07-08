@@ -12,8 +12,9 @@ import           Data.Array.IArray          (array)
 import           Debug.Trace
 import           System.Exit                (die)
 import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
-import System.IO (writeFile)
-import Flow
+import           Javelin.ByteCode.Data      (Instruction(..))
+import           System.IO                  (writeFile)
+import           Flow
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
@@ -73,18 +74,11 @@ runJVM classPath mainClass args =
 
 
 
--- 1. turn instructionSet to Map.Map Instruction InstructionExecution
--- 2. turn InstructionExecution from function to State
-
--- or
--- use Instruction in show instance of Method
--- replace Instruction with [Word8]
--- parse here with "InstructionExecution" -- take first bite of [Word8] instrcution line, map, apply to rest args
-
--- 3. implement: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
--- 4. see what other instructions are required
--- 5. handle 'no more commands' and exit
--- 6. print state between executions
+-- 1. Clean up: probably remove argument parser as args are parsed already
+-- 2. implement: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
+-- 3. see what other instructions are required
+-- 4. handle 'no more commands' and exit
+-- 5. print state between executions
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
@@ -103,13 +97,14 @@ runThread :: Int -> Thread -> IO ()
 runThread c thread =
   if c > 100
   then print "Exiting"
-  else do
+  else
     case nextInstructionLine thread of
-      Right (arguments, instruction) -> let (_, newThread) = runState (instruction arguments) thread
-                                        in runThread (c + 1) newThread
+      Right instruction -> let execution = executeInstruction instruction
+                               (_, newThread) = runState execution thread
+                           in runThread (c + 1) newThread
       Left error -> print error
 
-nextInstructionLine :: Thread -> Either VMError ([Word8], InstructionExecution)
+nextInstructionLine :: Thread -> Either VMError Instruction
 nextInstructionLine Thread{pc=pc,
                            frames=(Frame{currentClass=classId,
                                          currentMethod=methodIndex,
@@ -117,10 +112,14 @@ nextInstructionLine Thread{pc=pc,
                                          operands=stack}):_,
                            runtime=rt} = do
   method <- getMethodByIndex rt classId methodIndex
-  let instruction = (instructions method) !! pc
-  return $ ([], undefined)
+  return $ (instructions method) !! pc
+
 
 type ArgumentsParser = [Word8] -> [Word8]
+
+executeInstruction :: Instruction -> InstructionExecution
+executeInstruction Nop = undefined
+
 
 fixed :: Int -> ArgumentsParser
 fixed = take
@@ -453,7 +452,7 @@ lxor = math jlong xor
 
 -- wrong implementation: bytes are read from instruction not local arguments
 iinc :: InstructionExecution
-iinc bytes = do
+iinc = do
   index <- arg jbyte 0
   const <- arg jbyte 0
   var <- load jint index
@@ -566,13 +565,13 @@ putfield = undefined
 invokevirtual = undefined
 
 invokespecial :: InstructionExecution
-invokespecial bytes = undefined
+invokespecial = undefined
 
 -- Set pc to 0
 -- Create new stack frame
 -- resolve the method, initialize the class
 invokestatic :: InstructionExecution
-invokestatic bytes =
+invokestatic =
   state $ \t@(Thread c fs rt) ->
             let thread = Thread 0 (newFrame:fs) newRT
                 newRT = undefined
@@ -603,7 +602,7 @@ monitorexit = undefined
 
 -- Extended
 wide :: InstructionExecution
-wide bytes = undefined
+wide = undefined
 
 multianewarray = undefined
 
@@ -640,37 +639,37 @@ instructionSet :: Map.Map Word8 (ArgumentsParser, InstructionExecution)
 instructionSet =
   Map.fromList
   -- Constants
-    [ (0x00, (noarg, const nop))
-    , (0x01, (noarg, const aconst_null))
-    , (0x02, (noarg, const iconst_m1))
-    , (0x03, (noarg, const iconst_0))
-    , (0x04, (noarg, const iconst_1))
-    , (0x05, (noarg, const iconst_2))
-    , (0x06, (noarg, const iconst_3))
-    , (0x07, (noarg, const iconst_4))
-    , (0x08, (noarg, const iconst_5))
-    , (0x09, (noarg, const lconst_0))
-    , (0x0a, (noarg, const lconst_1))
-    , (0x0b, (noarg, const fconst_0))
-    , (0x0c, (noarg, const fconst_1))
-    , (0x0d, (noarg, const fconst_2))
-    , (0x0e, (noarg, const dconst_0))
-    , (0x0f, (noarg, const dconst_1))
-    , (0x10, (fixed 1, const bipush))
-    , (0x11, (fixed 2, const sipush))
+    [ (0x00, (noarg, nop))
+     , (0x01, (noarg, aconst_null))
+    , (0x02, (noarg, iconst_m1))
+    , (0x03, (noarg, iconst_0))
+    , (0x04, (noarg, iconst_1))
+    , (0x05, (noarg, iconst_2))
+    , (0x06, (noarg, iconst_3))
+    , (0x07, (noarg, iconst_4))
+    , (0x08, (noarg, iconst_5))
+    , (0x09, (noarg, lconst_0))
+    , (0x0a, (noarg, lconst_1))
+    , (0x0b, (noarg, fconst_0))
+    , (0x0c, (noarg, fconst_1))
+    , (0x0d, (noarg, fconst_2))
+    , (0x0e, (noarg, dconst_0))
+    , (0x0f, (noarg, dconst_1))
+    , (0x10, (fixed 1, bipush))
+    , (0x11, (fixed 2, sipush))
     , (0x12, (fixed 1, ldc))
     , (0x13, (fixed 2, ldc_w))
     , (0x14, (fixed 2, ldc2_w))
-  -- Loads
-    , (0x15, (fixed 1, const iload))
+  -- -- Loads
+    , (0x15, (fixed 1, iload))
     , (0x16, (fixed 1, lload))
     , (0x17, (fixed 1, fload))
     , (0x18, (fixed 1, dload))
     , (0x19, (fixed 1, aload))
-    , (0x1a, (noarg, const iload_0))
-    , (0x1b, (noarg, const iload_1))
-    , (0x1c, (noarg, const iload_2))
-    , (0x1d, (noarg, const iload_3))
+    , (0x1a, (noarg,  iload_0))
+    , (0x1b, (noarg, iload_1))
+    , (0x1c, (noarg, iload_2))
+    , (0x1d, (noarg, iload_3))
     , (0x1e, (noarg, lload_0))
     , (0x1f, (noarg, lload_1))
     , (0x20, (noarg, lload_2))
@@ -695,8 +694,8 @@ instructionSet =
     , (0x33, (noarg, baload))
     , (0x34, (noarg, caload))
     , (0x35, (noarg, saload))
-  -- Stores
-    , (0x36, (fixed 1, const istore))
+  -- -- Stores
+    , (0x36, (fixed 1, istore))
     , (0x37, (fixed 1, lstore))
     , (0x38, (fixed 1, fstore))
     , (0x39, (fixed 1, dstore))
@@ -730,54 +729,54 @@ instructionSet =
     , (0x55, (noarg, castore))
     , (0x56, (noarg, sastore))
   -- Stack
-    , (0x57, (noarg, const pop1))
-    , (0x58, (noarg, const pop2))
-    , (0x59, (noarg, const dup))
-    -- , (0x5a, (noarg, const dup_x1))
-    -- , (0x5b, (noarg, const dup_x2))
-    -- , (0x5c, (noarg, const dup2))
-    -- , (0x5d, (noarg, const dup2_x1))
-    -- , (0x5e, (noarg, const dup2_x2))
-    -- , (0x5f, (noarg, const swap))
+    , (0x57, (noarg, pop1))
+    , (0x58, (noarg, pop2))
+    , (0x59, (noarg, dup))
+    -- , (0x5a, (noarg, dup_x1))
+    -- , (0x5b, (noarg, dup_x2))
+    -- , (0x5c, (noarg, dup2))
+    -- , (0x5d, (noarg, dup2_x1))
+    -- , (0x5e, (noarg, dup2_x2))
+    -- , (0x5f, (noarg, swap))
   -- Math
-    , (0x60, (noarg, const iadd))
-    , (0x61, (noarg, const ladd))
-    , (0x62, (noarg, const fadd))
-    , (0x63, (noarg, const dadd))
-    , (0x64, (noarg, const isub))
-    , (0x65, (noarg, const lsub))
-    , (0x66, (noarg, const fsub))
-    , (0x67, (noarg, const dsub))
-    , (0x68, (noarg, const imul))
-    , (0x69, (noarg, const lmul))
-    , (0x6a, (noarg, const fmul))
-    , (0x6b, (noarg, const dmul))
-    , (0x6c, (noarg, const idiv))
-    , (0x6d, (noarg, const ldiv))
-    , (0x6e, (noarg, const fdiv))
-    , (0x6f, (noarg, const ddiv))
-    , (0x70, (noarg, const irem))
-    , (0x71, (noarg, const lrem))
+    , (0x60, (noarg, iadd))
+    , (0x61, (noarg, ladd))
+    , (0x62, (noarg, fadd))
+    , (0x63, (noarg, dadd))
+    , (0x64, (noarg, isub))
+    , (0x65, (noarg, lsub))
+    , (0x66, (noarg, fsub))
+    , (0x67, (noarg, dsub))
+    , (0x68, (noarg, imul))
+    , (0x69, (noarg, lmul))
+    , (0x6a, (noarg, fmul))
+    , (0x6b, (noarg, dmul))
+    , (0x6c, (noarg, idiv))
+    , (0x6d, (noarg, ldiv))
+    , (0x6e, (noarg, fdiv))
+    , (0x6f, (noarg, ddiv))
+    , (0x70, (noarg, irem))
+    , (0x71, (noarg, lrem))
     , (0x72, (noarg, frem))
     , (0x73, (noarg, drem))
-    , (0x74, (noarg, const ineg))
-    , (0x75, (noarg, const lneg))
-    , (0x76, (noarg, const fneg))
-    , (0x77, (noarg, const dneg))
+    , (0x74, (noarg, ineg))
+    , (0x75, (noarg, lneg))
+    , (0x76, (noarg, fneg))
+    , (0x77, (noarg, dneg))
     , (0x78, (noarg, ishl))
     , (0x79, (noarg, lshl))
     , (0x7a, (noarg, ishr))
     , (0x7b, (noarg, lshr))
     , (0x7c, (noarg, iushr))
     , (0x7d, (noarg, lushr))
-    , (0x7e, (noarg, const iand))
-    , (0x7f, (noarg, const land))
-    , (0x80, (noarg, const ior))
-    , (0x81, (noarg, const lor))
-    , (0x82, (noarg, const ixor))
-    , (0x83, (noarg, const lxor))
+    , (0x7e, (noarg, iand))
+    , (0x7f, (noarg, land))
+    , (0x80, (noarg, ior))
+    , (0x81, (noarg, lor))
+    , (0x82, (noarg, ixor))
+    , (0x83, (noarg, lxor))
     , (0x84, (fixed 2, iinc))
-  -- Conversions
+  -- -- Conversions
     , (0x85, (noarg, i2l))
     , (0x86, (noarg, i2f))
     , (0x87, (noarg, i2d))
@@ -793,7 +792,7 @@ instructionSet =
     , (0x91, (noarg, i2b))
     , (0x92, (noarg, i2c))
     , (0x93, (noarg, i2s))
-  -- Comparisons
+  -- -- Comparisons
     , (0x94, (noarg, lcmp))
     , (0x95, (noarg, fcmpl))
     , (0x96, (noarg, fcmpg))
@@ -813,7 +812,7 @@ instructionSet =
     , (0xa4, (fixed 2, if_icmple))
     , (0xa5, (fixed 2, if_acmpeq))
     , (0xa6, (fixed 2, if_acmpne))
-  -- Control
+  -- -- Control
     , (0xa7, (fixed 2, goto))
     , (0xa8, (fixed 2, jsr))
     , (0xa9, (fixed 1, ret))
@@ -825,7 +824,7 @@ instructionSet =
     , (0xaf, (noarg, dreturn))
     , (0xb0, (noarg, areturn))
     , (0xb1, (noarg, _return))
-  -- References
+  -- -- References
     , (0xb2, (fixed 2, getstatic))
     , (0xb3, (fixed 2, putstatic))
     , (0xb4, (fixed 2, getfield))
