@@ -71,14 +71,11 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
-
-
-
--- 1. Clean up: probably remove argument parser as args are parsed already
--- 2. implement: iconst1, iconst2, istore1, istore2, iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
--- 3. see what other instructions are required
--- 4. handle 'no more commands' and exit
--- 5. print state between executions
+-- 1. implement: iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
+-- 2. see what other instructions are required
+-- 3. handle 'no more commands' and exit
+-- 4. print state between executions
+-- 5. testing: unit + acceptance
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
@@ -99,7 +96,7 @@ runThread c thread =
   then print "Exiting"
   else
     case nextInstructionLine thread of
-      Right instruction -> let execution = executeInstruction instruction
+      Right instruction -> let execution = execute instruction
                                (_, newThread) = runState execution thread
                            in runThread (c + 1) newThread
       Left error -> print error
@@ -116,9 +113,23 @@ nextInstructionLine Thread{pc=pc,
 
 
 
-executeInstruction :: Instruction -> InstructionExecution
-executeInstruction Nop = undefined
+execute :: Instruction -> InstructionExecution
+execute Nop = empty
+-- push const <i> to stack
+execute IConstM1 = iconst 0
+execute IConst0 = iconst 0
+execute IConst1 = iconst 1
+execute IConst2 = iconst 2
+execute IConst3 = iconst 3
+execute IConst4 = iconst 4
+execute IConst5 = iconst 5
+-- pop int from stack, put to <i> local variable
+execute IStore0 = iStoreAt 0
+execute IStore1 = iStoreAt 1
+execute IStore2 = iStoreAt 2
+execute IStore3 = iStoreAt 3
 
+-- 1. implement: iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
 
 
 -- Instructions implementation
@@ -251,13 +262,10 @@ caload = undefined
 saload = undefined
 
 -- Stores
-istoreAt idx = do
-  op <- pop jint
-  store op idx
 
 istore = do
   idx <- arg jbyte 0
-  istoreAt idx
+  iStoreAt idx
 
 lstore = undefined
 
@@ -613,12 +621,14 @@ impdep1 = undefined
 impdep2 = undefined
 
 -- Instruction listing
+-- This mapping is not and will not ever be used directly
+-- Remove once mapping between commands and their execution is finished in 'executeCommand' function
 instructionSet :: Map.Map Word8 InstructionExecution
 instructionSet =
   Map.fromList
   -- Constants
     [ (0x00, nop)
-     , (0x01, aconst_null)
+    , (0x01, aconst_null)
     , (0x02, iconst_m1)
     , (0x03, iconst_0)
     , (0x04, iconst_1)

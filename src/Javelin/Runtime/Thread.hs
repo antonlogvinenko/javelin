@@ -169,10 +169,13 @@ peek :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 peek f = state $ \t -> (f 0 . (!! 0) . getStack $ t, t)
 
 push :: (JType j) => j -> ThreadOperation ()
-push j =
-  state $ \t ->
-    let elem = jToStackElement j
-     in ((), updStack t (elem :))
+push j = state $ \t ->
+                   let elem = jToStackElement j
+                   in ((), updStack t (elem :))
+
+iStoreAt idx = do
+  op <- pop jint
+  store op idx
 
 jToStackElement :: (JType j) => j -> StackElement
 jToStackElement j =
