@@ -71,9 +71,9 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- 1. implement: iload1, iload2, iadd, getstatic, iload3, invokevirtual, return
+-- 1. implement: iadd, getstatic, invokevirtual, return
 -- 2. see what other instructions are required
--- 3. handle 'no more commands' and exit
+-- 3. handle 'no more commands' in general and exit from main method in particular
 -- 4. print state between executions
 -- 5. testing: unit + acceptance
 
@@ -129,10 +129,13 @@ execute IStore1 = iPopAndStoreAt 1
 execute IStore2 = iPopAndStoreAt 2
 execute IStore3 = iPopAndStoreAt 3
 execute (IStore localId) = iPopAndStoreAt localId
+-- read int from local var <i>, push it to stack
+execute (ILoad local)  = iLoadAndPushAt local
+execute ILoad0 = iLoadAndPushAt 0
+execute ILoad1 = iLoadAndPushAt 1
+execute ILoad2 = iLoadAndPushAt 2
+execute ILoad3 = iLoadAndPushAt 3
   
-
-
--- 1. implement: iload1, iload2, iadd, getstatic, iload3, invokevirtual, return
 
 
 -- Instructions implementation

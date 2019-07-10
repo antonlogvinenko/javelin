@@ -181,9 +181,16 @@ push j = state $ \t ->
                    let elem = jToStackElement j
                    in ((), updStack t (elem :))
 
+
+iPopAndStoreAt :: JLocalRef -> ThreadOperation ()
 iPopAndStoreAt idx = do
   op <- pop jint
   store op idx
+
+iLoadAndPushAt :: JLocalRef -> ThreadOperation ()
+iLoadAndPushAt idx = do
+  op <- load jint idx
+  push op
 
 jToStackElement :: (JType j) => j -> StackElement
 jToStackElement j =
