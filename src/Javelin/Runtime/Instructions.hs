@@ -71,7 +71,7 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- 1. implement: iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
+-- 1. implement: iload1, iload2, iadd, getstatic, iload3, invokevirtual, return
 -- 2. see what other instructions are required
 -- 3. handle 'no more commands' and exit
 -- 4. print state between executions
@@ -124,12 +124,15 @@ execute IConst3 = iconst 3
 execute IConst4 = iconst 4
 execute IConst5 = iconst 5
 -- pop int from stack, put to <i> local variable
-execute IStore0 = iStoreAt 0
-execute IStore1 = iStoreAt 1
-execute IStore2 = iStoreAt 2
-execute IStore3 = iStoreAt 3
+execute IStore0 = iPopAndStoreAt 0
+execute IStore1 = iPopAndStoreAt 1
+execute IStore2 = iPopAndStoreAt 2
+execute IStore3 = iPopAndStoreAt 3
+execute (IStore localId) = iPopAndStoreAt localId
+  
 
--- 1. implement: iload1, iload2, iadd, istore3, getstatic, iload3, invokevirtual, return
+
+-- 1. implement: iload1, iload2, iadd, getstatic, iload3, invokevirtual, return
 
 
 -- Instructions implementation
@@ -194,7 +197,7 @@ iloadFrom idx = do
   push var
 
 iload = do
-  idx <- arg jbyte 0
+  idx <- arg jLocalRef 0
   iloadFrom idx
 
 lload = undefined
@@ -263,9 +266,7 @@ saload = undefined
 
 -- Stores
 
-istore = do
-  idx <- arg jbyte 0
-  iStoreAt idx
+istore = undefined
 
 lstore = undefined
 
@@ -452,7 +453,7 @@ lxor = math jlong xor
 -- wrong implementation: bytes are read from instruction not local arguments
 iinc :: InstructionExecution
 iinc = do
-  index <- arg jbyte 0
+  index <- arg jLocalRef 0
   const <- arg jbyte 0
   var <- load jint index
   let constExt = signExtend const

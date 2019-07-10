@@ -55,6 +55,8 @@ data Representation
   = Narrow { half :: Word32 }
   | Wide { full :: Word64 }
 
+type JLocalRef = Word8
+
 type JByte = Int8
 
 type JShort = Int16
@@ -81,6 +83,9 @@ wideInt = Wide . fromIntegral
 
 class JType a where
   represent :: a -> Representation
+
+instance JType Word8 where
+  represent = narrowInt
 
 instance JType Int8 where
   represent = narrowInt
@@ -114,6 +119,9 @@ jraw = fetchBytes 8
 
 jbyte :: (BytesContainer c) => Int -> c -> JByte
 jbyte = fetchBytes 1
+
+jLocalRef :: (BytesContainer c) => Int -> c -> JLocalRef
+jLocalRef = fetchBytes 1
 
 jshort :: (BytesContainer c) => Int -> c -> JShort
 jshort = fetchBytes 2
@@ -173,7 +181,7 @@ push j = state $ \t ->
                    let elem = jToStackElement j
                    in ((), updStack t (elem :))
 
-iStoreAt idx = do
+iPopAndStoreAt idx = do
   op <- pop jint
   store op idx
 
@@ -205,7 +213,7 @@ popn f n =
     let nElems = take n $ getStack t
      in (map (f 0) nElems, updStack t $ drop n)
 
-store :: (JType j) => j -> JByte -> ThreadOperation ()
+store :: (JType j) => j -> JLocalRef -> ThreadOperation ()
 store j idx =
   state $ \t ->
     let idx = fromIntegral idx
@@ -224,7 +232,7 @@ split x =
       b = fromIntegral $ rotate x 32
    in (a, b)
 
-load :: (JType j) => (Int -> Locals -> j) -> JByte -> ThreadOperation j
+load :: (JType j) => (Int -> Locals -> j) -> JLocalRef -> ThreadOperation j
 load f idx = state $ \t -> (f (fromIntegral idx) $ getLocals t, t)
 
 signExtend :: (Integral a) => a -> JInt
