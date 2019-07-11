@@ -73,7 +73,7 @@ runJVM classPath mainClass args =
 -- todo:
 -- 1. implement: getstatic, invokevirtual
 -- 2. see what other instructions are required
--- 3. handle 'no more commands' in general and exit from main method in particular
+-- 3. make it work!
 -- 4. print state between executions
 -- 5. testing: unit + acceptance
 
@@ -107,9 +107,7 @@ incrementInstructionCounter t@Thread{frames=(f@Frame{pc=pc}:fs)} = t{frames=f{pc
 nextInstructionLine :: Thread -> Either VMError Instruction
 nextInstructionLine Thread{frames=(Frame{pc=pc,
                                          currentClass=classId,
-                                         currentMethod=methodIndex,
-                                         locals=locals,
-                                         operands=stack}):_,
+                                         currentMethod=methodIndex}):_,
                            runtime=rt} = do
   method <- getMethodByIndex rt classId methodIndex
   return $ instructions method !! pc
@@ -117,7 +115,7 @@ nextInstructionLine Thread{frames=(Frame{pc=pc,
 execute :: Instruction -> InstructionExecution
 execute Nop = empty
 -- push const <i> to stack
-execute IConstM1 = iconst 0
+execute IConstM1 = iconst (-1)
 execute IConst0 = iconst 0
 execute IConst1 = iconst 1
 execute IConst2 = iconst 2
