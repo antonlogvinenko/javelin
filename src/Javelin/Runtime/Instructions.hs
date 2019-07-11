@@ -91,9 +91,9 @@ createFrame rt classId methodReference =
 
 
 runThread :: Int -> Thread -> IO ()
-runThread c thread@Thread{frames=frames}
+runThread c thread
   | c > 100 = print "Exiting abnormally"
-  | null frames = print "Exiting"
+  | null $ frames thread = print "Exiting"
   | otherwise =
       case nextInstructionLine thread of
         Right instruction -> let execution = execute instruction
