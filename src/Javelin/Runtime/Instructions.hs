@@ -71,7 +71,7 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- 1. implement: getstatic, invokevirtual, return
+-- 1. implement: getstatic, invokevirtual
 -- 2. see what other instructions are required
 -- 3. handle 'no more commands' in general and exit from main method in particular
 -- 4. print state between executions
@@ -91,15 +91,15 @@ createFrame rt classId methodReference =
 
 
 runThread :: Int -> Thread -> IO ()
-runThread c thread =
-  if c > 100
-  then print "Exiting"
-  else
-    case nextInstructionLine thread of
-      Right instruction -> let execution = execute instruction
-                               (_, newThread) = runState execution thread
-                           in runThread (c + 1) (incrementInstructionCounter newThread)
-      Left error -> print error
+runThread c thread@Thread{frames=frames}
+  | c > 100 = print "Exiting abnormally"
+  | null frames = print "Exiting"
+  | otherwise =
+      case nextInstructionLine thread of
+        Right instruction -> let execution = execute instruction
+                                 (_, newThread) = runState execution thread
+                             in runThread (c + 1) (incrementInstructionCounter newThread)
+        Left error -> print error
 
 incrementInstructionCounter :: Thread -> Thread
 incrementInstructionCounter t@Thread{frames=(f@Frame{pc=pc}:fs)} = t{frames=f{pc=pc+1}:fs}
@@ -112,11 +112,7 @@ nextInstructionLine Thread{frames=(Frame{pc=pc,
                                          operands=stack}):_,
                            runtime=rt} = do
   method <- getMethodByIndex rt classId methodIndex
-  return $ (instructions method) !! pc
-
--- return: throw away frame
--- refactor: extract method in runThread?
-
+  return $ instructions method !! pc
 
 execute :: Instruction -> InstructionExecution
 execute Nop = empty
@@ -144,7 +140,7 @@ execute IAdd = do
   arg1 <- pop jint
   arg2 <- pop jint
   push $ arg1 + arg2
-execute Return = undefined
+execute Return = dropTopFrame
 
 -- Instructions implementation
 -- Constants

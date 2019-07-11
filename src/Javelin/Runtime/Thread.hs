@@ -220,6 +220,9 @@ popn f n =
     let nElems = take n $ getStack t
      in (map (f 0) nElems, updStack t $ drop n)
 
+dropTopFrame :: ThreadOperation ()
+dropTopFrame = state $ \t@Thread{frames=(f:fs)} -> ((), t{frames=fs})
+
 store :: (JType j) => j -> JLocalRef -> ThreadOperation ()
 store j idx =
   state $ \t ->
