@@ -51,7 +51,7 @@ runJVM classPath mainClass args =
             case mainClassInit of
               Left err -> die $ show err
               Right rt -> case createMainFrame rt classId of
-                Right frame -> runThread 0 $ Thread 0 [frame] rt
+                Right frame -> runThread 0 $ Thread [frame] rt
                 err -> die $ show err
 
 -- global plan:
@@ -71,7 +71,7 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- 1. implement: iadd, getstatic, invokevirtual, return
+-- 1. implement: getstatic, invokevirtual, return
 -- 2. see what other instructions are required
 -- 3. handle 'no more commands' in general and exit from main method in particular
 -- 4. print state between executions
@@ -86,7 +86,7 @@ createFrame :: Runtime -> ClassId -> PartReference -> Either VMError Frame
 createFrame rt classId methodReference =
   case getMethodBySignature rt classId methodReference of
     Right (index, method) -> let locals = Locals $ array (0, (fromIntegral $ localsSize method) - 1) []
-                             in Right $ Frame classId index locals  []
+                             in Right $ Frame 0 classId index locals  []
     Left err -> Left err
 
 
@@ -98,12 +98,15 @@ runThread c thread =
     case nextInstructionLine thread of
       Right instruction -> let execution = execute instruction
                                (_, newThread) = runState execution thread
-                           in runThread (c + 1) newThread
+                           in runThread (c + 1) (incrementInstructionCounter newThread)
       Left error -> print error
 
+incrementInstructionCounter :: Thread -> Thread
+incrementInstructionCounter t@Thread{frames=(f@Frame{pc=pc}:fs)} = t{frames=f{pc=pc+1}:fs}
+
 nextInstructionLine :: Thread -> Either VMError Instruction
-nextInstructionLine Thread{pc=pc,
-                           frames=(Frame{currentClass=classId,
+nextInstructionLine Thread{frames=(Frame{pc=pc,
+                                         currentClass=classId,
                                          currentMethod=methodIndex,
                                          locals=locals,
                                          operands=stack}):_,
@@ -111,6 +114,8 @@ nextInstructionLine Thread{pc=pc,
   method <- getMethodByIndex rt classId methodIndex
   return $ (instructions method) !! pc
 
+-- return: throw away frame
+-- refactor: extract method in runThread?
 
 
 execute :: Instruction -> InstructionExecution
@@ -135,8 +140,11 @@ execute ILoad0 = iLoadAndPushAt 0
 execute ILoad1 = iLoadAndPushAt 1
 execute ILoad2 = iLoadAndPushAt 2
 execute ILoad3 = iLoadAndPushAt 3
-  
-
+execute IAdd = do
+  arg1 <- pop jint
+  arg2 <- pop jint
+  push $ arg1 + arg2
+execute Return = undefined
 
 -- Instructions implementation
 -- Constants
@@ -575,8 +583,8 @@ invokespecial = undefined
 -- resolve the method, initialize the class
 invokestatic :: InstructionExecution
 invokestatic =
-  state $ \t@(Thread c fs rt) ->
-            let thread = Thread 0 (newFrame:fs) newRT
+  state $ \t@(Thread fs rt) ->
+            let thread = Thread (newFrame:fs) newRT
                 newRT = undefined
                 newFrame = undefined :: Frame
             in ((), thread)

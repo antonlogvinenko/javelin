@@ -208,8 +208,7 @@ data VMError
   deriving (Show, Eq)
 
 data Thread = Thread
-  { pc      :: ProgramCounter
-  , frames  :: FrameStack
+  { frames  :: FrameStack
   , runtime :: Runtime
   } deriving (Show, Eq)
 
@@ -218,7 +217,8 @@ type ProgramCounter = Int
 type FrameStack = [Frame]
 
 data Frame = Frame
-  { currentClass  :: ClassId
+  { pc            :: ProgramCounter
+  , currentClass  :: ClassId
   , currentMethod :: Int
   , locals        :: Locals
   , operands      :: [StackElement]
@@ -376,7 +376,7 @@ classDefinesField classId partRef rt =
 
 -- Heap contents
 newThread :: Frame -> ClassPathLayout -> Thread
-newThread frame = Thread 0 [frame] . newRuntime
+newThread frame = Thread [frame] . newRuntime
 
 malloc :: Runtime -> (Runtime, Ref)
 malloc rt =
