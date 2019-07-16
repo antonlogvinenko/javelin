@@ -182,14 +182,14 @@ push j = state $ \t ->
                    in ((), updStack t (elem :))
 
 
-iPopAndStoreAt :: JLocalRef -> ThreadOperation ()
-iPopAndStoreAt idx = do
-  op <- pop jint
+popAndStoreAt :: (JType j) => (Int -> StackElement -> j) -> JLocalRef -> ThreadOperation ()
+popAndStoreAt jaccess idx = do
+  op <- pop jaccess
   store op idx
 
-iLoadAndPushAt :: JLocalRef -> ThreadOperation ()
-iLoadAndPushAt idx = do
-  op <- load jint idx
+loadAndPushAt :: (JType j) => (Int -> Locals -> j) -> JLocalRef -> ThreadOperation ()
+loadAndPushAt jaccess idx = do
+  op <- load jaccess idx
   push op
 
 jToStackElement :: (JType j) => j -> StackElement

@@ -114,6 +114,7 @@ nextInstructionLine Thread{frames=(Frame{pc=pc,
 
 execute :: Instruction -> InstructionExecution
 execute Nop = empty
+
 -- push const <i> to stack
 execute IConstM1 = iconst (-1)
 execute IConst0 = iconst 0
@@ -122,33 +123,54 @@ execute IConst2 = iconst 2
 execute IConst3 = iconst 3
 execute IConst4 = iconst 4
 execute IConst5 = iconst 5
+
 -- pop int from stack, put to <i> local variable
-execute IStore0 = iPopAndStoreAt 0
-execute IStore1 = iPopAndStoreAt 1
-execute IStore2 = iPopAndStoreAt 2
-execute IStore3 = iPopAndStoreAt 3
-execute (IStore localId) = iPopAndStoreAt localId
+execute IStore0 = popAndStoreAt jint 0
+execute IStore1 = popAndStoreAt jint 1
+execute IStore2 = popAndStoreAt jint 2
+execute IStore3 = popAndStoreAt jint 3
+execute (IStore localId) = popAndStoreAt jint localId
+
+execute LStore0 = popAndStoreAt jlong 0
+execute LStore1 = popAndStoreAt jlong 1
+execute LStore2 = popAndStoreAt jlong 2
+execute LStore3 = popAndStoreAt jlong 3
+execute (LStore localId) = popAndStoreAt jint localId
+
 -- read int from local var <i>, push it to stack
-execute (ILoad local)  = iLoadAndPushAt local
-execute ILoad0 = iLoadAndPushAt 0
-execute ILoad1 = iLoadAndPushAt 1
-execute ILoad2 = iLoadAndPushAt 2
-execute ILoad3 = iLoadAndPushAt 3
+execute (ILoad local)  = loadAndPushAt jint local
+execute ILoad0 = loadAndPushAt jint 0
+execute ILoad1 = loadAndPushAt jint 1
+execute ILoad2 = loadAndPushAt jint 2
+execute ILoad3 = loadAndPushAt jint 3
+
+execute (LLoad local) = loadAndPushAt jlong local
+execute LLoad0 = loadAndPushAt jlong 0
+execute LLoad1 = loadAndPushAt jlong 1
+execute LLoad2 = loadAndPushAt jlong 2
+execute LLoad3 = loadAndPushAt jlong 3
+
 execute IAdd = do
   arg1 <- pop jint
   arg2 <- pop jint
   push $ arg1 + arg2
+execute LAdd = do
+  arg1 <- pop jlong
+  arg2 <- pop jlong
+  push $ arg1 + arg2
+
 execute Return = dropTopFrame
 -- get constant from pool
 -- resolve field -> resolve class -> load class
 -- init class
+-- add VMError and IO to ThreadIntruction
 execute (GetStatic index) = state $ \t@Thread{runtime=rt} ->
   let pool = undefined
       fieldReference = undefined
   in do
     rt <- undefined --resolve field
     rt <- undefined --init class
-    return undefined --add VMError and IO to ThreadIntruction
+    return undefined 
 execute (InvokeStatic index) = undefined
 
 -- Instructions implementation
