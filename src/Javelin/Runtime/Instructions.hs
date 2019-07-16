@@ -74,7 +74,7 @@ runJVM classPath mainClass args =
 -- 1. implement: getstatic, invokevirtual
 -- 2. see what other instructions are required
 -- 3. make it work!
--- 4. print state between executions
+-- 4. print state between executions: command + stack/variables content
 -- 5. testing: unit + acceptance
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
@@ -139,6 +139,17 @@ execute IAdd = do
   arg2 <- pop jint
   push $ arg1 + arg2
 execute Return = dropTopFrame
+-- get constant from pool
+-- resolve field -> resolve class -> load class
+-- init class
+execute (GetStatic index) = state $ \t@Thread{runtime=rt} ->
+  let pool = undefined
+      fieldReference = undefined
+  in do
+    rt <- undefined --resolve field
+    rt <- undefined --init class
+    return undefined --add VMError and IO to ThreadIntruction
+execute (InvokeStatic index) = undefined
 
 -- Instructions implementation
 -- Constants
