@@ -12,7 +12,7 @@ import           Data.Array.IArray          (array)
 import           Debug.Trace
 import           System.Exit                (die)
 import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
-import           Javelin.ByteCode.Data      (Instruction(..))
+import           Javelin.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           System.IO                  (writeFile)
 import           Flow
 
@@ -124,6 +124,16 @@ execute IConst3 = iconst 3
 execute IConst4 = iconst 4
 execute IConst5 = iconst 5
 
+execute LConst0 = lconst 0
+execute LConst1 = lconst 1
+
+execute FConst0 = fconst 0
+execute FConst1 = fconst 1
+execute FConst2 = fconst 2
+
+execute DConst0 = dconst 0
+execute DConst1 = dconst 1
+
 -- pop int from stack, put to <i> local variable
 execute IStore0 = popAndStoreAt jint 0
 execute IStore1 = popAndStoreAt jint 1
@@ -136,6 +146,18 @@ execute LStore1 = popAndStoreAt jlong 1
 execute LStore2 = popAndStoreAt jlong 2
 execute LStore3 = popAndStoreAt jlong 3
 execute (LStore localId) = popAndStoreAt jint localId
+
+execute FStore0 = popAndStoreAt jfloat 0
+execute FStore1 = popAndStoreAt jfloat 1
+execute FStore2 = popAndStoreAt jfloat 2
+execute FStore3 = popAndStoreAt jfloat 3
+execute (FStore localId) = popAndStoreAt jfloat localId
+
+execute DStore0 = popAndStoreAt jdouble 0
+execute DStore1 = popAndStoreAt jdouble 1
+execute DStore2 = popAndStoreAt jdouble 2
+execute DStore3 = popAndStoreAt jdouble 3
+execute (DStore localId) = popAndStoreAt jdouble localId
 
 -- read int from local var <i>, push it to stack
 execute (ILoad local)  = loadAndPushAt jint local
@@ -150,28 +172,38 @@ execute LLoad1 = loadAndPushAt jlong 1
 execute LLoad2 = loadAndPushAt jlong 2
 execute LLoad3 = loadAndPushAt jlong 3
 
-execute IAdd = do
-  arg1 <- pop jint
-  arg2 <- pop jint
-  push $ arg1 + arg2
-execute LAdd = do
-  arg1 <- pop jlong
-  arg2 <- pop jlong
-  push $ arg1 + arg2
+execute (FLoad local) = loadAndPushAt jfloat local
+execute FLoad0 = loadAndPushAt jfloat 0
+execute FLoad1 = loadAndPushAt jfloat 1
+execute FLoad2 = loadAndPushAt jfloat 2
+execute FLoad3 = loadAndPushAt jfloat 3
+
+execute (DLoad local) = loadAndPushAt jdouble local
+execute DLoad0 = loadAndPushAt jdouble 0
+execute DLoad1 = loadAndPushAt jdouble 1
+execute DLoad2 = loadAndPushAt jdouble 2
+execute DLoad3 = loadAndPushAt jdouble 3
+
+execute IAdd = add jint
+execute LAdd = add jlong
+execute FAdd = add jfloat
+execute DAdd = add jdouble
 
 execute Return = dropTopFrame
--- get constant from pool
 -- resolve field -> resolve class -> load class
 -- init class
 -- add VMError and IO to ThreadIntruction
-execute (GetStatic index) = state $ \t@Thread{runtime=rt} ->
-  let pool = undefined
-      fieldReference = undefined
+execute (GetStatic (CPIndex index)) = state $ \t@Thread{runtime=rt,
+                                              frames=frames@(Frame{currentClass=classId}:_)} ->
+  let fieldReference = do
+        loadedClass <- getClass rt classId
+        let pool = symTable loadedClass
+        getStringLiteral pool index
   in do
     rt <- undefined --resolve field
     rt <- undefined --init class
-    return undefined 
-execute (InvokeStatic index) = undefined
+    return undefined
+execute (InvokeStatic (CPIndex index)) = undefined
 
 -- Instructions implementation
 -- Constants
