@@ -219,34 +219,6 @@ dconst x = push (x :: JDouble)
 
 aconst_null = iconst 0
 
-iconst_m1 = iconst (-1)
-
-iconst_0 = iconst 0
-
-iconst_1 = iconst 1
-
-iconst_2 = iconst 2
-
-iconst_3 = iconst 3
-
-iconst_4 = iconst 4
-
-iconst_5 = iconst 5
-
-lconst_0 = lconst 0
-
-lconst_1 = lconst 1
-
-fconst_0 = fconst 0
-
-fconst_1 = fconst 1
-
-fconst_2 = fconst 2
-
-dconst_0 = dconst 0
-
-dconst_1 = dconst 1
-
 bipush = do
   byte <- arg jbyte 0
   push $ signExtend byte
@@ -254,153 +226,6 @@ bipush = do
 sipush = do
   short <- arg jshort 0
   push $ signExtend short
-
-ldc = undefined
-
-ldc_w = undefined
-
-ldc2_w = undefined
-
--- Loads
-iloadFrom idx = do
-  var <- load jint idx
-  push var
-
-iload = do
-  idx <- arg jLocalRef 0
-  iloadFrom idx
-
-lload = undefined
-
-fload = undefined
-
-dload = undefined
-
-aload = undefined
-
-iload_0 = iloadFrom 0
-
-iload_1 = iloadFrom 1
-
-iload_2 = iloadFrom 2
-
-iload_3 = iloadFrom 3
-
-lload_0 = undefined
-
-lload_1 = undefined
-
-lload_2 = undefined
-
-lload_3 = undefined
-
-fload_0 = undefined
-
-fload_1 = undefined
-
-fload_2 = undefined
-
-fload_3 = undefined
-
-dload_0 = undefined
-
-dload_1 = undefined
-
-dload_2 = undefined
-
-dload_3 = undefined
-
-aload_0 = undefined
-
-aload_1 = undefined
-
-aload_2 = undefined
-
-aload_3 = undefined
-
-iaload = undefined
-
-laload = undefined
-
-faload = undefined
-
-daload = undefined
-
-aaload = undefined
-
-baload = undefined
-
-caload = undefined
-
-saload = undefined
-
--- Stores
-
-istore = undefined
-
-lstore = undefined
-
-fstore = undefined
-
-dstore = undefined
-
-astore = undefined
-
-istore_0 = undefined
-
-istore_1 = undefined
-
-istore_2 = undefined
-
-istore_3 = undefined
-
-lstore_0 = undefined
-
-lstore_1 = undefined
-
-lstore_2 = undefined
-
-lstore_3 = undefined
-
-fstore_0 = undefined
-
-fstore_1 = undefined
-
-fstore_2 = undefined
-
-fstore_3 = undefined
-
-dstore_0 = undefined
-
-dstore_1 = undefined
-
-dstore_2 = undefined
-
-dstore_3 = undefined
-
-astore_0 = undefined
-
-astore_1 = undefined
-
-astore_2 = undefined
-
-astore_3 = undefined
-
-iastore = undefined
-
-lastore = undefined
-
-fastore = undefined
-
-dastore = undefined
-
-aastore = undefined
-
-bastore = undefined
-
-castore = undefined
-
-sastore = undefined
 
 -- Stack
 pop1 = do
@@ -480,10 +305,6 @@ irem = math jint rem
 
 lrem = math jlong rem
 
-frem = undefined
-
-drem = undefined
-
 neg operandType = do
   x <- pop operandType
   push $ -x
@@ -495,18 +316,6 @@ lneg = neg jlong
 fneg = neg jfloat
 
 dneg = neg jdouble
-
-ishl = undefined
-
-lshl = undefined
-
-ishr = undefined
-
-lshr = undefined
-
-iushr = undefined
-
-lushr = undefined
 
 iand = math jint (.&.)
 
