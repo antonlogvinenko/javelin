@@ -47,7 +47,8 @@ executable javelin
                    Javelin.Runtime.LLI.Loading,
                    Javelin.Runtime.LLI.LinkingInitializing,
                    Javelin.Runtime.Structures,
-                   Javelin.Util
+                   Javelin.Util,
+                   Javelin.JVMApp
   ghc-options:
     ---                     -Wall
     ---                     -Wincomplete-uni-patterns

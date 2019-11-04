@@ -15,6 +15,7 @@ import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 import           Javelin.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           System.IO                  (writeFile)
 import           Flow
+import           Javelin.JVMApp             (Logging, ClassLoading)
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
@@ -29,6 +30,20 @@ console x a = putStrLn $ x ++ ": " ++ (show a)
 
 dump :: Show a => String -> a -> IO ()
 dump file a = writeFile ("./logs/" ++ file) (show a)
+
+
+
+
+
+
+-- runJVMX :: Logging m => String -> String -> [String] -> m ()
+-- runJVMX classPath mainClass args =
+--   let main = map (\c -> if c == '.' then '/' else c) mainClass
+--   in do
+--     logX ""
+--     logX "_______ Starting JVM ________"
+--     consoleX $ "Main class arg" ++ mainClass
+--     consoleX $ "Main class" ++ main
 
 runJVM :: String -> String -> [String] -> IO ()
 runJVM classPath mainClass args =
@@ -162,6 +177,7 @@ execute (DStore localId) = popAndStoreAt jdouble localId
 -- read int from local var <i>, push it to stack
 execute (ILoad local)  = loadAndPushAt jint local
 execute ILoad0 = loadAndPushAt jint 0
+
 execute ILoad1 = loadAndPushAt jint 1
 execute ILoad2 = loadAndPushAt jint 2
 execute ILoad3 = loadAndPushAt jint 3
