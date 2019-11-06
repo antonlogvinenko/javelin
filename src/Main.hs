@@ -12,6 +12,7 @@ import           Javelin.ByteCode.Stats        (stats)
 import           Javelin.Runtime.Instructions  (runJVM)
 import           Javelin.Runtime.LLI.ClassPath
 import           Javelin.Runtime.LLI.Loading   (deriveClass, load)
+import           Javelin.JVMApp                (runJVMApp, JVMConfig(..))
 import           Javelin.Runtime.Structures
 import           Options.Applicative
 import           System.Directory
@@ -121,4 +122,4 @@ runWithOptions jvmOpts =
     LoadClassWithDeps classPath classFilePath ->
       (runExceptT $ loadClassWithDeps classPath classFilePath) >>= print
     JVM mainClass classPath mainArgs ->
-      runJVM classPath mainClass mainArgs
+      runJVMApp (runJVM classPath mainClass mainArgs) JVMConfig

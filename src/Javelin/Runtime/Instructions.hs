@@ -15,7 +15,7 @@ import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 import           Javelin.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           System.IO                  (writeFile)
 import           Flow
-import           Javelin.JVMApp             (Logging, ClassLoading)
+import           Javelin.JVMApp
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
@@ -25,49 +25,31 @@ import           Javelin.JVMApp             (Logging, ClassLoading)
 
 ---- 1. enable some sort of logging
 
-console :: Show a => String -> a -> IO ()
-console x a = putStrLn $ x ++ ": " ++ (show a)
+-- implement class path layout in terms of tagless final
+-- move implementation to modules
 
-dump :: Show a => String -> a -> IO ()
-dump file a = writeFile ("./logs/" ++ file) (show a)
-
-
-
-
-
-
--- runJVMX :: Logging m => String -> String -> [String] -> m ()
--- runJVMX classPath mainClass args =
---   let main = map (\c -> if c == '.' then '/' else c) mainClass
---   in do
---     logX ""
---     logX "_______ Starting JVM ________"
---     consoleX $ "Main class arg" ++ mainClass
---     consoleX $ "Main class" ++ main
-
-runJVM :: String -> String -> [String] -> IO ()
+runJVM :: Global m => String -> String -> [String] -> m ()
 runJVM classPath mainClass args =
   let main = map (\c -> if c == '.' then '/' else c) mainClass
   in do
-    putStrLn ""
-    putStrLn "_______ Starting JVM ________"
+    dump "\n" "_______ Starting JVM ________"
     console "Main class arg" mainClass
     console "Main class" main
-    maybeCPLayout <- runExceptT $ getClassSourcesLayout classPath
+    maybeCPLayout <- getClassSourcesLayout2 classPath
     case maybeCPLayout of
-      Left error -> console "Failed while loading class path" error
+      Left error -> console "Failed while loading class path" error 
       Right cpLayout -> console "Classpath" (_classPath cpLayout) >> dump "classpath.log" cpLayout >>
         case (Map.!) (_classes cpLayout) main of
-          JarFile path -> die "Not implemented yet: running JVM from a main class inside jar file"
+          JarFile path -> terminate "Not implemented yet: running JVM from a main class inside jar file"
           ClassFile path -> do
             console "Main class found in class file" path
             let classId = ClassId BootstrapClassLoader main
-            mainClassInit <- runExceptT $ LI.init classId (newRuntime cpLayout)
+            mainClassInit <- initClass classId (newRuntime cpLayout)
             case mainClassInit of
-              Left err -> die $ show err
+              Left err -> terminate err
               Right rt -> case createMainFrame rt classId of
-                Right frame -> runThread 0 $ Thread [frame] rt
-                err -> die $ show err
+                Right frame -> runThreadX 0 $ Thread [frame] rt
+                Left err -> terminate err
 
 -- global plan:
 -- 1. create a small snippit
@@ -104,6 +86,8 @@ createFrame rt classId methodReference =
                              in Right $ Frame 0 classId index locals  []
     Left err -> Left err
 
+runThreadX :: (Global m) => Int -> Thread -> m ()
+runThreadX = undefined
 
 runThread :: Int -> Thread -> IO ()
 runThread c thread
