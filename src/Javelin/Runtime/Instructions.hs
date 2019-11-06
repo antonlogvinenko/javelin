@@ -48,7 +48,7 @@ runJVM classPath mainClass args =
             case mainClassInit of
               Left err -> terminate err
               Right rt -> case createMainFrame rt classId of
-                Right frame -> runThreadX 0 $ Thread [frame] rt
+                Right frame -> runThread 0 $ Thread [frame] rt
                 Left err -> terminate err
 
 -- global plan:
@@ -86,19 +86,16 @@ createFrame rt classId methodReference =
                              in Right $ Frame 0 classId index locals  []
     Left err -> Left err
 
-runThreadX :: (Global m) => Int -> Thread -> m ()
-runThreadX = undefined
-
-runThread :: Int -> Thread -> IO ()
+runThread :: Global m => Int -> Thread -> m ()
 runThread c thread
-  | c > 100 = print "Exiting abnormally"
-  | null $ frames thread = print "Exiting"
+  | c > 100 = console "Exiting" "abnormally"
+  | null $ frames thread = console "Exiting" "normally"
   | otherwise =
       case nextInstructionLine thread of
         Right instruction -> let execution = execute instruction
                                  (_, newThread) = runState execution thread
-                             in runThread (c + 1) (incrementInstructionCounter newThread)
-        Left error -> print error
+                              in runThread (c + 1) (incrementInstructionCounter newThread)
+        Left error -> terminate error
 
 incrementInstructionCounter :: Thread -> Thread
 incrementInstructionCounter t@Thread{frames=(f@Frame{pc=pc}:fs)} = t{frames=f{pc=pc+1}:fs}
