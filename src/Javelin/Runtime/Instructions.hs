@@ -92,9 +92,10 @@ runThread c thread
   | null $ frames thread = console "Exiting" "normally"
   | otherwise =
       case nextInstructionLine thread of
-        Right instruction -> let execution = execute instruction
-                                 (_, newThread) = runState execution thread
-                              in runThread (c + 1) (incrementInstructionCounter newThread)
+        Right instruction -> do
+          (thread2, execution) <- execute instruction thread
+          let (_, thread3) = runState execution thread2
+          runThread (c + 1) (incrementInstructionCounter thread3)
         Left error -> terminate error
 
 incrementInstructionCounter :: Thread -> Thread
@@ -108,98 +109,102 @@ nextInstructionLine Thread{frames=(Frame{pc=pc,
   method <- getMethodByIndex rt classId methodIndex
   return $ instructions method !! pc
 
-execute :: Instruction -> InstructionExecution
-execute Nop = empty
+pureInstruction :: Global m => (ThreadOperation ()) -> Thread -> m (Thread, ThreadOperation ())
+pureInstruction threadOperation thread = return (thread, threadOperation)
+
+
+execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
+execute Nop = pureInstruction empty
 
 -- push const <i> to stack
-execute IConstM1 = iconst (-1)
-execute IConst0 = iconst 0
-execute IConst1 = iconst 1
-execute IConst2 = iconst 2
-execute IConst3 = iconst 3
-execute IConst4 = iconst 4
-execute IConst5 = iconst 5
+execute IConstM1 = pureInstruction $ iconst (-1)
+execute IConst0 = pureInstruction $ iconst 0
+execute IConst1 = pureInstruction $ iconst 1
+execute IConst2 = pureInstruction $ iconst 2
+execute IConst3 = pureInstruction $ iconst 3
+execute IConst4 = pureInstruction $ iconst 4
+execute IConst5 = pureInstruction $ iconst 5
 
-execute LConst0 = lconst 0
-execute LConst1 = lconst 1
+execute LConst0 = pureInstruction $ lconst 0
+execute LConst1 = pureInstruction $ lconst 1
 
-execute FConst0 = fconst 0
-execute FConst1 = fconst 1
-execute FConst2 = fconst 2
+execute FConst0 = pureInstruction $ fconst 0
+execute FConst1 = pureInstruction $ fconst 1
+execute FConst2 = pureInstruction $ fconst 2
 
-execute DConst0 = dconst 0
-execute DConst1 = dconst 1
+execute DConst0 = pureInstruction $ dconst 0
+execute DConst1 = pureInstruction $ dconst 1
 
 -- pop int from stack, put to <i> local variable
-execute IStore0 = popAndStoreAt jint 0
-execute IStore1 = popAndStoreAt jint 1
-execute IStore2 = popAndStoreAt jint 2
-execute IStore3 = popAndStoreAt jint 3
-execute (IStore localId) = popAndStoreAt jint localId
+execute IStore0 = pureInstruction $ popAndStoreAt jint 0
+execute IStore1 = pureInstruction $ popAndStoreAt jint 1
+execute IStore2 = pureInstruction $ popAndStoreAt jint 2
+execute IStore3 = pureInstruction $ popAndStoreAt jint 3
+execute (IStore localId) = pureInstruction $ popAndStoreAt jint localId
 
-execute LStore0 = popAndStoreAt jlong 0
-execute LStore1 = popAndStoreAt jlong 1
-execute LStore2 = popAndStoreAt jlong 2
-execute LStore3 = popAndStoreAt jlong 3
-execute (LStore localId) = popAndStoreAt jint localId
+execute LStore0 = pureInstruction $ popAndStoreAt jlong 0
+execute LStore1 = pureInstruction $ popAndStoreAt jlong 1
+execute LStore2 = pureInstruction $ popAndStoreAt jlong 2
+execute LStore3 = pureInstruction $ popAndStoreAt jlong 3
+execute (LStore localId) = pureInstruction $ popAndStoreAt jint localId
 
-execute FStore0 = popAndStoreAt jfloat 0
-execute FStore1 = popAndStoreAt jfloat 1
-execute FStore2 = popAndStoreAt jfloat 2
-execute FStore3 = popAndStoreAt jfloat 3
-execute (FStore localId) = popAndStoreAt jfloat localId
+execute FStore0 = pureInstruction $ popAndStoreAt jfloat 0
+execute FStore1 = pureInstruction $ popAndStoreAt jfloat 1
+execute FStore2 = pureInstruction $ popAndStoreAt jfloat 2
+execute FStore3 = pureInstruction $ popAndStoreAt jfloat 3
+execute (FStore localId) = pureInstruction $ popAndStoreAt jfloat localId
 
-execute DStore0 = popAndStoreAt jdouble 0
-execute DStore1 = popAndStoreAt jdouble 1
-execute DStore2 = popAndStoreAt jdouble 2
-execute DStore3 = popAndStoreAt jdouble 3
-execute (DStore localId) = popAndStoreAt jdouble localId
+execute DStore0 = pureInstruction $ popAndStoreAt jdouble 0
+execute DStore1 = pureInstruction $ popAndStoreAt jdouble 1
+execute DStore2 = pureInstruction $ popAndStoreAt jdouble 2
+execute DStore3 = pureInstruction $ popAndStoreAt jdouble 3
+execute (DStore localId) = pureInstruction $ popAndStoreAt jdouble localId
 
 -- read int from local var <i>, push it to stack
-execute (ILoad local)  = loadAndPushAt jint local
-execute ILoad0 = loadAndPushAt jint 0
+execute (ILoad local)  = pureInstruction $ loadAndPushAt jint local
+execute ILoad0 = pureInstruction $ loadAndPushAt jint 0
 
-execute ILoad1 = loadAndPushAt jint 1
-execute ILoad2 = loadAndPushAt jint 2
-execute ILoad3 = loadAndPushAt jint 3
+execute ILoad1 = pureInstruction $ loadAndPushAt jint 1
+execute ILoad2 = pureInstruction $ loadAndPushAt jint 2
+execute ILoad3 = pureInstruction $ loadAndPushAt jint 3
 
-execute (LLoad local) = loadAndPushAt jlong local
-execute LLoad0 = loadAndPushAt jlong 0
-execute LLoad1 = loadAndPushAt jlong 1
-execute LLoad2 = loadAndPushAt jlong 2
-execute LLoad3 = loadAndPushAt jlong 3
+execute (LLoad local) = pureInstruction $ loadAndPushAt jlong local
+execute LLoad0 = pureInstruction $ loadAndPushAt jlong 0
+execute LLoad1 = pureInstruction $ loadAndPushAt jlong 1
+execute LLoad2 = pureInstruction $ loadAndPushAt jlong 2
+execute LLoad3 = pureInstruction $ loadAndPushAt jlong 3
 
-execute (FLoad local) = loadAndPushAt jfloat local
-execute FLoad0 = loadAndPushAt jfloat 0
-execute FLoad1 = loadAndPushAt jfloat 1
-execute FLoad2 = loadAndPushAt jfloat 2
-execute FLoad3 = loadAndPushAt jfloat 3
+execute (FLoad local) = pureInstruction $ loadAndPushAt jfloat local
+execute FLoad0 = pureInstruction $ loadAndPushAt jfloat 0
+execute FLoad1 = pureInstruction $ loadAndPushAt jfloat 1
+execute FLoad2 = pureInstruction $ loadAndPushAt jfloat 2
+execute FLoad3 = pureInstruction $ loadAndPushAt jfloat 3
 
-execute (DLoad local) = loadAndPushAt jdouble local
-execute DLoad0 = loadAndPushAt jdouble 0
-execute DLoad1 = loadAndPushAt jdouble 1
-execute DLoad2 = loadAndPushAt jdouble 2
-execute DLoad3 = loadAndPushAt jdouble 3
+execute (DLoad local) = pureInstruction $ loadAndPushAt jdouble local
+execute DLoad0 = pureInstruction $ loadAndPushAt jdouble 0
+execute DLoad1 = pureInstruction $ loadAndPushAt jdouble 1
+execute DLoad2 = pureInstruction $ loadAndPushAt jdouble 2
+execute DLoad3 = pureInstruction $ loadAndPushAt jdouble 3
 
-execute IAdd = add jint
-execute LAdd = add jlong
-execute FAdd = add jfloat
-execute DAdd = add jdouble
+execute IAdd = pureInstruction $ add jint
+execute LAdd = pureInstruction $ add jlong
+execute FAdd = pureInstruction $ add jfloat
+execute DAdd = pureInstruction $ add jdouble
 
-execute Return = dropTopFrame
+execute Return = pureInstruction $ dropTopFrame
 -- resolve field -> resolve class -> load class
 -- init class
 -- add VMError and IO to ThreadIntruction
-execute (GetStatic (CPIndex index)) = state $ \t@Thread{runtime=rt,
-                                              frames=frames@(Frame{currentClass=classId}:_)} ->
-  let fieldReference = do
-        loadedClass <- getClass rt classId
-        let pool = symTable loadedClass
-        getStringLiteral pool index
-  in do
-    rt <- undefined --resolve field
-    rt <- undefined --init class
-    return undefined
+-- execute (GetStatic (CPIndex index)) = state $ \t@Thread{runtime=rt,
+--                                               frames=frames@(Frame{currentClass=classId}:_)} ->
+--   let fieldReference = do
+--         loadedClass <- getClass rt classId
+--         let pool = symTable loadedClass
+--         getStringLiteral pool index
+--   in do
+--     rt <- undefined --resolve field
+--     rt <- undefined --init class
+--     return undefined
 execute (InvokeStatic (CPIndex index)) = undefined
 
 -- Instructions implementation
@@ -327,7 +332,6 @@ ixor = math jint xor
 lxor = math jlong xor
 
 -- wrong implementation: bytes are read from instruction not local arguments
-iinc :: InstructionExecution
 iinc = do
   index <- arg jLocalRef 0
   const <- arg jbyte 0

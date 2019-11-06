@@ -11,7 +11,7 @@ import           System.Exit                (die)
 
 
 -- class (MonadClassPathLayout m, Logging m, Termination m, ClassLoading m)=> Global m
-type Global m = (MonadClassPathLayout m, Logging m, Termination m, ClassLoading m )
+type Global m = (MonadClassPathLayout m, Logging m, Termination m, ClassLoading m)
 
 class Monad m => MonadClassPathLayout m where
   getClassSourcesLayout2 :: String -> m (Either VMError ClassPathLayout)
@@ -33,7 +33,7 @@ data JVMConfig = JVMConfig
 
 newtype JVM a = JVMX { unJVM :: ReaderT JVMConfig IO a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader JVMConfig)
-  
+
 instance ClassLoading JVM where
   loadClass = undefined
   initClass = undefined

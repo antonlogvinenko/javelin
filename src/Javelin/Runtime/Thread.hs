@@ -13,6 +13,7 @@ import           Data.Word                     (Word16, Word32, Word64, Word8)
 
 import           Javelin.Runtime.LLI.ClassPath
 import           Javelin.Runtime.Structures
+import           Javelin.JVMApp
 
 step :: Thread -> Thread
 step e = e
@@ -146,8 +147,6 @@ jdouble = fetchBytes 8
 
 -- Instructions DSL
 type ThreadOperation a = State Thread a
-
-type InstructionExecution = ThreadOperation ()
 
 getFrame :: Thread -> Frame
 getFrame = (!! 0) . frames
