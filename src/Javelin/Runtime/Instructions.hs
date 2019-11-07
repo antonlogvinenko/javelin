@@ -1,3 +1,4 @@
+{-# language ConstraintKinds #-}
 module Javelin.Runtime.Instructions where
 
 import           Control.Monad.State.Lazy   (State, runState, state)
@@ -6,16 +7,17 @@ import qualified Data.Map.Lazy              as Map (Map, fromList, lookup, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           Javelin.Runtime.Structures
 import           Javelin.Runtime.Thread
-import           Javelin.Runtime.LLI.ClassPath (getClassSourcesLayout)
+import           Javelin.Runtime.LLI.ClassPath (MonadClassPathLayout, getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.Array.IArray          (array)
 import           Debug.Trace
-import           System.Exit                (die)
 import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 import           Javelin.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           System.IO                  (writeFile)
 import           Flow
 import           Javelin.JVMApp
+import           Javelin.Logging
+import           Javelin.Termination
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
@@ -28,30 +30,31 @@ import           Javelin.JVMApp
 -- implement class path layout in terms of tagless final
 -- move implementation to modules
 
-runJVM :: Global m => String -> String -> [String] -> m ()
+type InstructionsMonad m = (MonadClassPathLayout m, Logging m, Termination m, ClassLoading m, Logging m)
+
+runJVM :: InstructionsMonad m => String -> String -> [String] -> m ()
 runJVM classPath mainClass args =
   let main = map (\c -> if c == '.' then '/' else c) mainClass
   in do
     dump "\n" "_______ Starting JVM ________"
     console "Main class arg" mainClass
     console "Main class" main
-    maybeCPLayout <- getClassSourcesLayout2 classPath
-    case maybeCPLayout of
-      Left error -> console "Failed while loading class path" error 
-      Right cpLayout -> console "Classpath" (_classPath cpLayout) >> dump "classpath.log" cpLayout >>
-        case (Map.!) (_classes cpLayout) main of
-          JarFile path -> terminate "Not implemented yet: running JVM from a main class inside jar file"
-          ClassFile path -> do
-            console "Main class found in class file" path
-            let classId = ClassId BootstrapClassLoader main
-            mainClassInit <- initClass classId (newRuntime cpLayout)
-            case mainClassInit of
-              Left err -> terminate err
-              Right rt -> case createMainFrame rt classId of
-                Right frame -> runThread 0 $ Thread [frame] rt
-                Left err -> terminate err
+    cpLayout <- getClassSourcesLayout classPath
+    console "Classpath" (_classPath cpLayout)
+    dump "classpath.log" cpLayout
+    case (Map.!) (_classes cpLayout) main of
+      JarFile path -> terminate "Not implemented yet: running JVM from a main class inside jar file"
+      ClassFile path -> do
+        console "Main class found in class file" path
+        let classId = ClassId BootstrapClassLoader main
+        mainClassInit <- initClass classId (newRuntime cpLayout)
+        case mainClassInit of
+          Left err -> terminate err
+          Right rt -> case createMainFrame rt classId of
+            Right frame -> runThread 0 $ Thread [frame] rt
+            Left err -> terminate err
 
--- global plan:
+-- InstructionsMonad plan:
 -- 1. create a small snippit
 -- 2. do everything for a single snippet: make it work
 -- 3. write an acceptance test for the working snippet
@@ -86,7 +89,7 @@ createFrame rt classId methodReference =
                              in Right $ Frame 0 classId index locals  []
     Left err -> Left err
 
-runThread :: Global m => Int -> Thread -> m ()
+runThread :: InstructionsMonad m => Int -> Thread -> m ()
 runThread c thread
   | c > 100 = console "Exiting" "abnormally"
   | null $ frames thread = console "Exiting" "normally"
@@ -109,12 +112,27 @@ nextInstructionLine Thread{frames=(Frame{pc=pc,
   method <- getMethodByIndex rt classId methodIndex
   return $ instructions method !! pc
 
-pureInstruction :: Global m => (ThreadOperation ()) -> Thread -> m (Thread, ThreadOperation ())
+pureInstruction :: InstructionsMonad m => (ThreadOperation ()) -> Thread -> m (Thread, ThreadOperation ())
 pureInstruction threadOperation thread = return (thread, threadOperation)
 
+impureInstruction :: InstructionsMonad m => (ThreadOperation ()) -> (Thread -> m Thread) -> Thread -> m (Thread, ThreadOperation ())
+impureInstruction threadOperation threadModification thread = do
+  thread2 <- threadModification thread
+  return (thread2, threadOperation)
 
-execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
+execute :: InstructionsMonad m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 execute Nop = pureInstruction empty
+
+-- resolve field -> resolve class -> load class
+-- init class
+-- add VMError and IO to ThreadIntruction
+execute (GetStatic (CPIndex index)) = \t ->
+  do
+    --loadedClass <- getClass rt classId
+    --let pool = symTable loadedClass
+    --fieldReference = getStringLiteral pool index
+    console "doing" "getstatic"
+    return (t, empty)
 
 -- push const <i> to stack
 execute IConstM1 = pureInstruction $ iconst (-1)
@@ -192,20 +210,8 @@ execute FAdd = pureInstruction $ add jfloat
 execute DAdd = pureInstruction $ add jdouble
 
 execute Return = pureInstruction $ dropTopFrame
--- resolve field -> resolve class -> load class
--- init class
--- add VMError and IO to ThreadIntruction
--- execute (GetStatic (CPIndex index)) = state $ \t@Thread{runtime=rt,
---                                               frames=frames@(Frame{currentClass=classId}:_)} ->
---   let fieldReference = do
---         loadedClass <- getClass rt classId
---         let pool = symTable loadedClass
---         getStringLiteral pool index
---   in do
---     rt <- undefined --resolve field
---     rt <- undefined --init class
---     return undefined
-execute (InvokeStatic (CPIndex index)) = undefined
+  
+-- execute (InvokeStatic (CPIndex index)) = undefined
 
 -- Instructions implementation
 -- Constants

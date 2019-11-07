@@ -41,12 +41,12 @@ loadClassPath opt bs =
         Right (_, _, v)  -> putStrLn $ showByteCode opt v
         Left (_, off, v) -> putStrLn $ "Failed to parse file"
 
-loadClassWithDeps :: FilePath -> String -> ExceptT VMError IO Runtime
-loadClassWithDeps classPath className = do
-  layout <- getClassSourcesLayout classPath
-  let rt = newRuntime layout
-  classBytes <- getClassBytes className layout
-  load (ClassId BootstrapClassLoader className) rt
+-- loadClassWithDeps :: FilePath -> String -> ExceptT VMError IO Runtime
+-- loadClassWithDeps classPath className = do
+--   layout <- getClassSourcesLayout classPath
+--   let rt = newRuntime layout
+--   classBytes <- getClassBytes className layout
+--   load (ClassId BootstrapClassLoader className) rt
 
 data JVMOpts
   = Disasm { classFilePath :: String }
@@ -82,10 +82,10 @@ main = execParser opts >>= runWithOptions
         "classpath"
         (info loadClassPathParser $
          progDesc "Parsing classpath, traversing it and loading class bytes") <>
-      command
-        "loadClass"
-        (info loadClassWithDepsParser $
-         progDesc "Loading class with all dependencies") <>
+      -- command
+      --   "loadClass"
+      --   (info loadClassWithDepsParser $
+      --    progDesc "Loading class with all dependencies") <>
       command "jvm" (info jvmParser $ progDesc "Run JVM")
     disasmParser = Disasm <$> strArgument (metavar "Path to class file")
     disasmFullParser = DisasmFull <$> strArgument (metavar "Path to class file")
@@ -97,9 +97,9 @@ main = execParser opts >>= runWithOptions
     loadClassPathParser =
       LoadClassPath <$> strArgument (metavar "JVM class path") <*>
       strArgument (metavar "Class file to load")
-    loadClassWithDepsParser =
-      LoadClassWithDeps <$> strArgument (metavar "JVM class path") <*>
-      strArgument (metavar "Class file to load")
+    -- loadClassWithDepsParser =
+    --   LoadClassWithDeps <$> strArgument (metavar "JVM class path") <*>
+    --   strArgument (metavar "Class file to load")
     jvmParser =
       JVM <$> strArgument (metavar "mainClass") <*>
       strArgument (metavar "classPath") <*>
@@ -112,14 +112,14 @@ runWithOptions jvmOpts =
     DisasmFull path -> disasmClass True path
     DisasmSemantics path -> disasmSemantics path
     DisasmByteCodeStats path mbOutput -> stats path mbOutput
-    LoadClassPath classPath classFilePath ->
-      let bb =
-            runExceptT $ do
-              layout <- getClassSourcesLayout classPath
-              classBytes <- getClassBytes classFilePath layout
-              lift $ loadClassPath False classBytes
-       in bb >>= print
-    LoadClassWithDeps classPath classFilePath ->
-      (runExceptT $ loadClassWithDeps classPath classFilePath) >>= print
+    -- LoadClassPath classPath classFilePath ->
+    --   let bb =
+    --         runExceptT $ do
+    --           layout <- getClassSourcesLayout classPath
+    --           classBytes <- getClassBytes classFilePath layout
+    --           lift $ loadClassPath False classBytes
+    --    in bb >>= print
+    -- `LoadClassWithDeps classPath classFilePath ->
+    --   (runExceptT $ loadClassWithDeps classPath classFilePath) >>= print
     JVM mainClass classPath mainArgs ->
       runJVMApp (runJVM classPath mainClass mainArgs) JVMConfig

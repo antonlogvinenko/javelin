@@ -48,6 +48,8 @@ executable javelin
                    Javelin.Runtime.LLI.LinkingInitializing,
                    Javelin.Runtime.Structures,
                    Javelin.Util,
+                   Javelin.Logging,
+                   Javelin.Termination,
                    Javelin.JVMApp
   ghc-options:
     ---                     -Wall

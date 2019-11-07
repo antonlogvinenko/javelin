@@ -1,5 +1,6 @@
 module Javelin.Runtime.LLI.ClassPath
-  ( getClassSourcesLayout
+  ( MonadClassPathLayout
+  , getClassSourcesLayout
   , getClassBytes
   ) where
 
@@ -24,13 +25,17 @@ import           Control.Applicative        ((<$>))
 import           Control.Monad.Trans
 import           Control.Monad.Trans.Except
 import           Flow
+import           Javelin.JVMApp
 
-getClassSourcesLayout :: String -> ExceptT VMError IO ClassPathLayout
-getClassSourcesLayout paths =
-  let pathsList = strip <$> splitOn ":" paths
-   in lift $ do
-        layout <- getClassPathLayout pathsList
-        return $ ClassPathLayout layout pathsList
+class Monad m => MonadClassPathLayout m where
+  getClassSourcesLayout :: String -> m ClassPathLayout
+
+instance MonadClassPathLayout JVM where
+  getClassSourcesLayout paths = 
+    let pathsList = strip <$> splitOn ":" paths
+    in liftIO $ do
+      layout <- getClassPathLayout pathsList
+      return $ ClassPathLayout layout pathsList
 
 getClassPathLayout :: [FilePath] -> IO (Map ClassName ClassSource)
 getClassPathLayout paths = unions <$> mapM getClassPathElementLayout paths
