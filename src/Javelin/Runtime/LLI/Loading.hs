@@ -5,7 +5,7 @@ module Javelin.Runtime.LLI.Loading where
 import           Javelin.ByteCode.ClassFile    (parseRaw)
 import           Javelin.ByteCode.Data
 import           Javelin.Runtime.DescSign
-import           Javelin.Capability.ClassPathLayout (getClassBytes)
+import           Javelin.Capability.ClassPathLoading (getClassBytes)
 import           Javelin.Runtime.Structures
 
 import           Data.ByteString               (ByteString, unpack)
@@ -370,8 +370,10 @@ loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {_classPathLayout = layout}) = do
   bytes <-
     withExceptT
-      (wrapClassNotFound rt)
-      (getClassBytes name $ rt ^. classPathLayout)
+    (wrapClassNotFound rt)
+      -- todo tagless final
+      --(getClassBytes name $ rt ^. classPathLayout)
+      undefined
   checkAndRecordLoadedClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader

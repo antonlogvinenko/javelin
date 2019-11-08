@@ -46,7 +46,7 @@ executable javelin
                    Javelin.Runtime.LLI.Loading,
                    Javelin.Runtime.LLI.LinkingInitializing,
                    Javelin.Runtime.Structures,
-                   Javelin.Capability.ClassPathLayout,
+                   Javelin.Capability.ClassPathLoading,
                    Javelin.Capability.Logging,
                    Javelin.Capability.Termination,
                    Javelin.JVMApp,

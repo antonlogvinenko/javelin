@@ -10,7 +10,7 @@ import           Javelin.ByteCode.ClassFile    (parseRaw)
 import           Javelin.ByteCode.Data         (showByteCode)
 import           Javelin.ByteCode.Stats        (stats)
 import           Javelin.Runtime.Instructions  (runJVM)
-import           Javelin.Capability.ClassPathLayout
+import           Javelin.Capability.ClassPathLoading
 import           Javelin.Runtime.LLI.Loading   (deriveClass, loadClassOrArray)
 import           Javelin.JVMApp         (runJVMApp, JVMConfig(..))
 import           Javelin.Runtime.Structures
@@ -41,6 +41,7 @@ loadClassPath opt bs =
         Right (_, _, v)  -> putStrLn $ showByteCode opt v
         Left (_, off, v) -> putStrLn $ "Failed to parse file"
 
+-- todo tagless final
 -- loadClassWithDeps :: FilePath -> String -> ExceptT VMError IO Runtime
 -- loadClassWithDeps classPath className = do
 --   layout <- getClassSourcesLayout classPath
@@ -105,6 +106,7 @@ javelinMain = execParser opts >>= runWithOptions
         strArgument (metavar "classPath") <*>
         (some $ strArgument (metavar "mainArguments"))
 
+-- todo tagless final
 runWithOptions :: JVMOpts -> IO ()
 runWithOptions jvmOpts =
     case jvmOpts of

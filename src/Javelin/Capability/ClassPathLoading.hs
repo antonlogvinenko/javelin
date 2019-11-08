@@ -1,5 +1,5 @@
-module Javelin.Capability.ClassPathLayout
-  ( MonadClassPathLayout
+module Javelin.Capability.ClassPathLoading
+  ( ClassPathLoading
   , getClassSourcesLayout
   , getClassBytes
   ) where
@@ -27,15 +27,21 @@ import           Control.Monad.Trans.Except
 import           Flow
 import           Javelin.JVMApp
 
-class Monad m => MonadClassPathLayout m where
+class Monad m => ClassPathLoading m where
   getClassSourcesLayout :: String -> m ClassPathLayout
+  getClassBytes :: ClassName -> ClassPathLayout -> m (Either VMError BSS.ByteString)
 
-instance MonadClassPathLayout JVM where
+instance ClassPathLoading JVM where
   getClassSourcesLayout paths = 
     let pathsList = strip <$> splitOn ":" paths
     in liftIO $ do
       layout <- getClassPathLayout pathsList
       return $ ClassPathLayout layout pathsList
+  getClassBytes name (ClassPathLayout classes _) =
+     liftIO $ do
+      case classes |> Map.lookup name |> maybeToEither (ClassNotFoundException name) of
+        Left err -> return $ Left err
+        Right v -> getClassFromSource name v
 
 getClassPathLayout :: [FilePath] -> IO (Map ClassName ClassSource)
 getClassPathLayout paths = unions <$> mapM getClassPathElementLayout paths
@@ -92,31 +98,22 @@ pathToClass path = path |> splitOn ".class" |> head
 isZip :: FilePath -> Bool
 isZip path = any (\s -> isSuffixOf s path) [".jar", ".zip", ".war", ".ear"]
 
-getClassBytes ::
-     ClassName -> ClassPathLayout -> ExceptT VMError IO BSS.ByteString
-getClassBytes name (ClassPathLayout classes _) = do
-  source <-
-    classes |> Map.lookup name |> maybeToEither (ClassNotFoundException name) |>
-    return |>
-    ExceptT
-  getClassFromSource name source
 
+-- ExceptT (Either VMError (IO ByteString))
 getClassFromSource ::
-     ClassName -> ClassSource -> ExceptT VMError IO BSS.ByteString
+     ClassName -> ClassSource -> IO (Either VMError BSS.ByteString)
 getClassFromSource name (ClassFile path) =
   --todo should we check that class x.y.z.class is loaded from x/y/z.class file?
 --  if classToPath name == path
-    lift $ BSL.toStrict <$> BSL.readFile path
+    Right <$> BSL.toStrict <$> BSL.readFile path
 --    else throwE $ ClassNotFoundException "cake"
-getClassFromSource name (JarFile path) =
-  ExceptT $ do
-    raw <- BSL.readFile path
-    return $
-      maybeToEither (ClassNotFoundException name) $ do
-        let arc = toArchive raw
-            classPath = classToPath name
-        entry <- findEntryByPath classPath arc
-        return $ BSL.toStrict $ fromEntry entry
+getClassFromSource name (JarFile path) = do
+  raw <- BSL.readFile path
+  return $ maybeToEither (ClassNotFoundException name) $ do
+    let arc = toArchive raw
+        classPath = classToPath name
+    entry <- findEntryByPath classPath arc
+    return $ BSL.toStrict $ fromEntry entry
 
 classToPath :: ClassName -> FilePath
 classToPath name = name ++ ".class"

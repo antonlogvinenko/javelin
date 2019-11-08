@@ -7,7 +7,7 @@ import qualified Data.Map.Lazy              as Map (Map, fromList, lookup, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           Javelin.Runtime.Structures
 import           Javelin.Runtime.Thread
-import           Javelin.Capability.ClassPathLayout (MonadClassPathLayout, getClassSourcesLayout)
+import           Javelin.Capability.ClassPathLoading (ClassPathLoading, getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.Array.IArray          (array)
 import           Debug.Trace
@@ -30,7 +30,7 @@ import           Javelin.Runtime.LLI.Loading
 -- implement class path layout in terms of tagless final
 -- move implementation to modules
 
-type InstructionsMonad m = (MonadClassPathLayout m, Logging m, Termination m, ClassLoading m, Logging m)
+type InstructionsMonad m = (ClassPathLoading m, Logging m, Termination m, ClassLoading m, Logging m)
 
 runJVM :: InstructionsMonad m => String -> String -> [String] -> m ()
 runJVM classPath mainClass args =
