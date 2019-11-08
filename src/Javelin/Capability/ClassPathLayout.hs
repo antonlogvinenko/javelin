@@ -1,4 +1,4 @@
-module Javelin.Runtime.LLI.ClassPath
+module Javelin.Capability.ClassPathLayout
   ( MonadClassPathLayout
   , getClassSourcesLayout
   , getClassBytes

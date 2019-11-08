@@ -8,7 +8,6 @@ import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Javelin.Runtime.Structures (ClassPathLayout, VMError, LoadedClass, ClassId, Runtime)
 import           System.Exit                (die)
 
-
 data JVMConfig = JVMConfig
 
 newtype JVM a = JVMX { unJVM :: ReaderT JVMConfig IO a }

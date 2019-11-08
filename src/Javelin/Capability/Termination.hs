@@ -1,4 +1,4 @@
-module Javelin.Termination where
+module Javelin.Capability.Termination where
 
 import           Javelin.JVMApp
 import           Control.Monad.IO.Class     (MonadIO, liftIO)

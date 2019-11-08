@@ -42,15 +42,15 @@ executable javelin
                    Javelin.ByteCode.Stats,
                    Javelin.Runtime.Instructions,
                    Javelin.Runtime.Thread,
-                   Javelin.Runtime.LLI.ClassPath,
                    Javelin.Runtime.DescSign,
                    Javelin.Runtime.LLI.Loading,
                    Javelin.Runtime.LLI.LinkingInitializing,
                    Javelin.Runtime.Structures,
-                   Javelin.Util,
-                   Javelin.Logging,
-                   Javelin.Termination,
+                   Javelin.Capability.ClassPathLayout,
+                   Javelin.Capability.Logging,
+                   Javelin.Capability.Termination,
                    Javelin.JVMApp,
+                   Javelin.Util,
                    Javelin.Main
   ghc-options:
     ---                     -Wall

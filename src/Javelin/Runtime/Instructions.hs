@@ -7,7 +7,7 @@ import qualified Data.Map.Lazy              as Map (Map, fromList, lookup, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           Javelin.Runtime.Structures
 import           Javelin.Runtime.Thread
-import           Javelin.Runtime.LLI.ClassPath (MonadClassPathLayout, getClassSourcesLayout)
+import           Javelin.Capability.ClassPathLayout (MonadClassPathLayout, getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.Array.IArray          (array)
 import           Debug.Trace
@@ -15,9 +15,8 @@ import qualified Javelin.Runtime.LLI.LinkingInitializing as LI (init)
 import           Javelin.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           System.IO                  (writeFile)
 import           Flow
-import           Javelin.JVMApp
-import           Javelin.Logging
-import           Javelin.Termination
+import           Javelin.Capability.Logging
+import           Javelin.Capability.Termination
 import           Javelin.Runtime.LLI.Loading
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1

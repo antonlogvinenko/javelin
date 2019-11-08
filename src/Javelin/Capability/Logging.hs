@@ -1,4 +1,4 @@
-module Javelin.Logging where
+module Javelin.Capability.Logging where
 
 import           Javelin.JVMApp
 import           Control.Monad.IO.Class     (MonadIO, liftIO)

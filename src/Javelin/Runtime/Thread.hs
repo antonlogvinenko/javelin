@@ -11,7 +11,7 @@ import           Data.Int                      (Int16, Int32, Int64, Int8)
 import           Data.Map.Lazy                 as Map (Map, fromList)
 import           Data.Word                     (Word16, Word32, Word64, Word8)
 
-import           Javelin.Runtime.LLI.ClassPath
+import           Javelin.Capability.ClassPathLayout
 import           Javelin.Runtime.Structures
 import           Javelin.JVMApp
 

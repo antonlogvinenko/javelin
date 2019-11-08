@@ -5,7 +5,7 @@ module Javelin.Runtime.LLI.Loading where
 import           Javelin.ByteCode.ClassFile    (parseRaw)
 import           Javelin.ByteCode.Data
 import           Javelin.Runtime.DescSign
-import           Javelin.Runtime.LLI.ClassPath (getClassBytes)
+import           Javelin.Capability.ClassPathLayout (getClassBytes)
 import           Javelin.Runtime.Structures
 
 import           Data.ByteString               (ByteString, unpack)
@@ -29,6 +29,7 @@ import           Javelin.JVMApp
 class Monad m => ClassLoading m where
   loadClassX :: String -> m (Either VMError LoadedClass)
   initClassX :: ClassId -> Runtime -> m (Either VMError Runtime)
+
 instance ClassLoading JVM where
   loadClassX = undefined
   initClassX = undefined
