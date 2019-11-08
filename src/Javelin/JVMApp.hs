@@ -9,15 +9,6 @@ import           Javelin.Runtime.Structures (ClassPathLayout, VMError, LoadedCla
 import           System.Exit                (die)
 
 
--- todo move to appropriate module
-class Monad m => ClassLoading m where
-  loadClass :: String -> m (Either VMError LoadedClass)
-  initClass :: ClassId -> Runtime -> m (Either VMError Runtime)
-instance ClassLoading JVM where
-  loadClass = undefined
-  initClass = undefined
-  
-
 data JVMConfig = JVMConfig
 
 newtype JVM a = JVMX { unJVM :: ReaderT JVMConfig IO a }

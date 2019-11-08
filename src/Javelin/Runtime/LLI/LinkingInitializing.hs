@@ -4,7 +4,7 @@ import           Data.Map.Strict            ((!))
 
 import           Javelin.Runtime.DescSign   (FieldType (..))
 import           Javelin.Runtime.Structures
-import           Javelin.Runtime.LLI.Loading    (load)
+import           Javelin.Runtime.LLI.Loading    (loadClassOrArray)
 import           Control.Monad.Trans.Except    (ExceptT (..), throwE, withExceptT, except)
 import           Control.Monad.Trans.Class     (lift)
 
@@ -15,7 +15,7 @@ linking :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 linking classId rt = verify classId rt >>= prepare classId
 
 verify :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-verify classId rt = load classId rt --todo not doing actual verification yet
+verify classId rt = loadClassOrArray classId rt --todo not doing actual verification yet
 
 prepare :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 prepare classId rt =

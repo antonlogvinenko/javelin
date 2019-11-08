@@ -18,6 +18,7 @@ import           Flow
 import           Javelin.JVMApp
 import           Javelin.Logging
 import           Javelin.Termination
+import           Javelin.Runtime.LLI.Loading
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
@@ -47,7 +48,7 @@ runJVM classPath mainClass args =
       ClassFile path -> do
         console "Main class found in class file" path
         let classId = ClassId BootstrapClassLoader main
-        mainClassInit <- initClass classId (newRuntime cpLayout)
+        mainClassInit <- initClassX classId (newRuntime cpLayout)
         case mainClassInit of
           Left err -> terminate err
           Right rt -> case createMainFrame rt classId of

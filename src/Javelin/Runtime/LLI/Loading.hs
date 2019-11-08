@@ -22,6 +22,16 @@ import           Control.Monad.Trans.Except    (ExceptT (..), throwE,
 import           Data.Either.Utils             (maybeToEither)
 import           Flow                          ((|>))
 import           Javelin.Util                  (at)
+import           Javelin.JVMApp
+
+
+-- todo move to appropriate module
+class Monad m => ClassLoading m where
+  loadClassX :: String -> m (Either VMError LoadedClass)
+  initClassX :: ClassId -> Runtime -> m (Either VMError Runtime)
+instance ClassLoading JVM where
+  loadClassX = undefined
+  initClassX = undefined
 
 -- 5.1 Deriving the Run-Time Constant Pool
 --- The constant_pool table (§4.4) in the binary representation
@@ -330,8 +340,8 @@ getMethods bc sym = bc |> body |> methods |> foldl fieldsFold Map.empty
       PartReference (string $ sym `at` nameIdx) (string $ sym `at` descrIdx)
 
 -- 5.3 Creation and Loading top level code
-load :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-load request@(ClassId initCL name) rt =
+loadClassOrArray :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+loadClassOrArray request@(ClassId initCL name) rt =
   let loaderFn =
         if isArray name
           then loadArray
@@ -416,7 +426,7 @@ resolveClass request@(ClassId initCL name) rt =
     Just (ClassResOk _ _) -> return rt
     Just (ClassResFail err) -> throwE err
     Nothing -> do
-      rt <- load request rt
+      rt <- loadClassOrArray request rt
       let (ArrayRepr d mt) = parseSignature name
       if d > 0
         then case mt of

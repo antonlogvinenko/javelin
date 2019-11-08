@@ -50,7 +50,8 @@ executable javelin
                    Javelin.Util,
                    Javelin.Logging,
                    Javelin.Termination,
-                   Javelin.JVMApp
+                   Javelin.JVMApp,
+                   Javelin.Main
   ghc-options:
     ---                     -Wall
     ---                     -Wincomplete-uni-patterns
