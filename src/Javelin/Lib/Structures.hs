@@ -336,9 +336,9 @@ newRuntime layout =
         emptyThreads
 
 addLoadedClass ::
-     ClassId -> LoadedClass -> Runtime -> ExceptT VMError IO Runtime
+     ClassId -> LoadedClass -> Runtime -> Runtime
 addLoadedClass classId loadedClass rt =
-  lift $ return $ rt & loadedClasses %~ Map.insert classId (Right loadedClass)
+  rt & loadedClasses %~ Map.insert classId (Right loadedClass)
 
 markClassPrepared :: ClassId -> Runtime -> Either VMError Runtime
 markClassPrepared classId rt =

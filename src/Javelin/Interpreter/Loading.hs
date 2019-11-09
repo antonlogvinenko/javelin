@@ -32,16 +32,16 @@ instance ClassLoading JVM where
   initClassX = undefined
 
 
-init :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+init :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 init classId rt = linking classId rt
 
-linking :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+linking :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 linking classId rt = verify classId rt >>= prepare classId
 
-verify :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+verify :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 verify classId rt = loadClassOrArray classId rt --todo not doing actual verification yet
 
-prepare :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+prepare :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 prepare classId rt =
   if isClassPrepared classId rt
   then return rt
@@ -131,12 +131,12 @@ deriveFromClass classIdx nameAndTypeIdx p =
 
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 -- 5.3.5 Deriving a Class from a class File Representation
-checkAndRecordLoadedClass ::
+checkAndRecordLoadedClass :: Global m =>
      ClassId
   -> Runtime
   -> ClassLoader
   -> ByteString
-  -> ExceptT VMError IO Runtime
+  -> ExceptT VMError m Runtime
 checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
   bc <- checkClassFileFormat bs rt
@@ -146,14 +146,13 @@ checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
     checkSuperInterfaces request defCL classInfo >>=
     recordClassLoading name classInfo initCL defCL
 
-checkInitiatingClassLoader ::
-     ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
+checkInitiatingClassLoader :: Global m => ClassLoader -> ClassName -> Runtime -> ExceptT VMError m Runtime
 checkInitiatingClassLoader initCL name rt = do
   if rt ^. loadedClasses . (to $ Map.member (ClassId initCL name))
     then throwE $ Linkage rt LinkageError
     else lift $ return rt
 
-checkClassFileFormat :: ByteString -> Runtime -> ExceptT VMError IO ByteCode
+checkClassFileFormat :: Global m => ByteString -> Runtime -> ExceptT VMError m ByteCode
 checkClassFileFormat bs rt =
   let body = parseRaw $ unpack bs
    in case body of
@@ -161,14 +160,13 @@ checkClassFileFormat bs rt =
         Right (_, _, byteCode) -> lift $ return byteCode
 
 --todo also check class name is correct
-checkClassVersion :: ByteCode -> Runtime -> ExceptT VMError IO ()
+checkClassVersion :: Global m => ByteCode -> Runtime -> ExceptT VMError m ()
 checkClassVersion bc rt =
   if minVer bc < 0 || majVer bc > 1050
     then throwE $ Linkage rt UnsupportedClassVersionError
     else lift $ return ()
 
-checkRepresentedClass ::
-     ClassName -> Runtime -> ByteCode -> ExceptT VMError IO SymTable
+checkRepresentedClass :: Global m => ClassName -> Runtime -> ByteCode -> ExceptT VMError m SymTable
 checkRepresentedClass name rt bc =
   let pool = constPool $ body bc
       symTable = deriveSymTable pool
@@ -182,8 +180,7 @@ checkRepresentedClass name rt bc =
         _ -> throwE $ Linkage rt ClassFormatError
 
 -- last case is due to invalid bytecode; throw an exception and terminate?
-checkSuperClass ::
-     ClassId -> ClassLoader -> Runtime -> Class -> ExceptT VMError IO Runtime
+checkSuperClass :: Global m => ClassId -> ClassLoader -> Runtime -> Class -> ExceptT VMError m Runtime
 checkSuperClass request defCL rt classInfo =
   let classSuperName = superName classInfo
       name = getName request
@@ -210,8 +207,7 @@ checkSuperClass request defCL rt classInfo =
                         then throwE $ Linkage rt ClassCircularityError
                         else lift $ return rt
 
-checkSuperInterfaces ::
-     ClassId -> ClassLoader -> Class -> Runtime -> ExceptT VMError IO Runtime
+checkSuperInterfaces :: Global m => ClassId -> ClassLoader -> Class -> Runtime -> ExceptT VMError m Runtime
 checkSuperInterfaces request defCL classInfo rt =
   let superInterfaces = classInterfaces classInfo
    in foldl
@@ -219,13 +215,13 @@ checkSuperInterfaces request defCL classInfo rt =
         (lift $ return rt)
         superInterfaces
 
-checkSuperInterface ::
+checkSuperInterface :: Global m =>
      ClassId
   -> ClassLoader
   -> Class
-  -> ExceptT VMError IO Runtime
+  -> ExceptT VMError m Runtime
   -> String
-  -> ExceptT VMError IO Runtime
+  -> ExceptT VMError m Runtime
 checkSuperInterface request defCL classInfo eitherRt parentInterface = do
   rt <- eitherRt
   let name = getName request
@@ -239,16 +235,16 @@ checkSuperInterface request defCL classInfo eitherRt parentInterface = do
         then throwE $ Linkage rt ClassCircularityError
         else lift $ return rt
 
-recordClassLoading ::
+recordClassLoading :: Global m =>
      ClassName
   -> Class
   -> ClassLoader
   -> ClassLoader
   -> Runtime
-  -> ExceptT VMError IO Runtime
+  -> ExceptT VMError m Runtime
 recordClassLoading name classInfo defCL initCL rt =
   let c = LoadedClass defCL initCL (name, defCL) classInfo
-   in addLoadedClass (ClassId initCL name) c rt
+  in ExceptT $ return $ Right $ addLoadedClass (ClassId initCL name) c rt
 
 deriveClass :: ByteCode -> Either VMError Class
 deriveClass bc =
@@ -372,7 +368,7 @@ getMethods bc sym = bc |> body |> methods |> foldl fieldsFold Map.empty
       PartReference (string $ sym `at` nameIdx) (string $ sym `at` descrIdx)
 
 -- 5.3 Creation and Loading top level code
-loadClassOrArray :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+loadClassOrArray :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 loadClassOrArray request@(ClassId initCL name) rt =
   let loaderFn =
         if isArray name
@@ -382,14 +378,12 @@ loadClassOrArray request@(ClassId initCL name) rt =
         Just _  -> lift $ return rt
         Nothing -> loaderFn request rt
 
-loadClass :: ClassLoadMethod
+loadClass :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 loadClass request@(ClassId BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
 loadClass request rt = loadClassWithUserDefCL request rt
 
 isArray :: ClassName -> Bool
 isArray name = head name == '['
-
-type ClassLoadMethod = ClassId -> Runtime -> ExceptT VMError IO Runtime
 
 wrapClassNotFound :: Runtime -> VMError -> VMError
 wrapClassNotFound rt x@(ClassNotFoundException _) =
@@ -397,7 +391,7 @@ wrapClassNotFound rt x@(ClassNotFoundException _) =
 wrapClassNotFound _ x = x
 
 -- 5.3.1 Loading Using the Bootstrap Class Loader
-loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+loadClassWithBootstrap :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {_classPathLayout = layout}) = do
   bytes <-
     withExceptT
@@ -408,22 +402,22 @@ loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {_classPathLayout = 
   checkAndRecordLoadedClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader
-loadClassWithUserDefCL :: ClassLoadMethod
+loadClassWithUserDefCL :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 loadClassWithUserDefCL request rt = undefined
 
 -- 5.3.3 Creating Array Classes
-loadArray :: ClassLoadMethod
+loadArray :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 loadArray request@(ClassId initCL name) rt = do
   let arrayRepr@(ArrayRepr {depth = d}) = parseSignature name
   (rt, defCL) <- loadAndGetDefCLOfComponentType request rt arrayRepr
   let c = LoadedArrayClass defCL initCL (name, defCL) d
-  addLoadedClass (ClassId initCL name) c rt
+  ExceptT $ return $ Right $ addLoadedClass (ClassId initCL name) c rt
 
-loadAndGetDefCLOfComponentType ::
+loadAndGetDefCLOfComponentType ::Global m => 
      ClassId
   -> Runtime
   -> ArrayRepr
-  -> ExceptT VMError IO (Runtime, ClassLoader)
+  -> ExceptT VMError m (Runtime, ClassLoader)
 loadAndGetDefCLOfComponentType classId@(ClassId initCL name) rt repr@(ArrayRepr { depth = d
                                                                                 , componentType = refType
                                                                                 }) = do
@@ -454,7 +448,7 @@ bla (_:xs) r  = bla xs r
 -- 5.3.4 Loading Constraints
 -- not implemented yet
 -- first need to check whether resolution already happened, 3 possible outcomes:
-resolveClass :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+resolveClass :: Global m => ClassId -> Runtime -> ExceptT VMError m Runtime
 resolveClass request@(ClassId initCL name) rt =
   case rt ^? classResolving . ix request of
     Just (ClassResOk _ _) -> return rt
@@ -469,8 +463,8 @@ resolveClass request@(ClassId initCL name) rt =
         else lift $ return rt
 
 -- API fn for resolving a field
-resolveField ::
-     ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
+resolveField :: Global m =>
+     ClassId -> PartReference -> Runtime -> ExceptT VMError m Runtime
 resolveField classId partRef rt = do
   rt <- resolveClass classId rt
   ExceptT $ return $ do
@@ -529,9 +523,7 @@ findSuccessfulResolution (either:xs) =
 type MethodResolution
    = Runtime -> PartReference -> ClassId -> Class -> Either VMError (Maybe String)
 
--- IO (Either VMError Runtime) -> m (Either VMError Runtime)
-resolveMethod ::
-     Runtime -> PartReference -> ClassId -> ExceptT VMError IO Runtime
+resolveMethod :: Global m => Runtime -> PartReference -> ClassId -> ExceptT VMError m Runtime
 resolveMethod rt partRef classId = do
   rt <- resolveClass classId rt
   ExceptT $ return $ do
