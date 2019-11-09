@@ -1,12 +1,12 @@
-module Javelin.ByteCode.FieldMethod where
+module Javelin.Lib.ByteCode.FieldMethod where
 
 import           Data.Binary.Get
 import           Data.Map.Lazy              (Map, fromList)
 import           Data.Word                  (Word16)
 
-import           Javelin.ByteCode.Attribute
-import           Javelin.ByteCode.Data
-import           Javelin.ByteCode.Utils
+import           Javelin.Lib.ByteCode.Attribute
+import           Javelin.Lib.ByteCode.Data
+import           Javelin.Lib.ByteCode.Utils
 
 fieldInfoAF =
   fromList

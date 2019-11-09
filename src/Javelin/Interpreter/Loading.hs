@@ -1,12 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Javelin.Capability.Loading where
+module Javelin.Interpreter.Loading where
 
-import           Javelin.ByteCode.ClassFile    (parseRaw)
-import           Javelin.ByteCode.Data
-import           Javelin.ByteCode.DescSign
-import           Javelin.Capability.ClassPathLoading (getClassBytes)
-import           Javelin.Runtime.Structures
+import           Javelin.Lib.ByteCode.ClassFile    (parseRaw)
+import           Javelin.Lib.ByteCode.Data
+import           Javelin.Lib.ByteCode.DescSign
+import           Javelin.Interpreter.ClassPathLoading (getClassBytes)
+import           Javelin.Lib.Structures
 
 import           Data.ByteString               (ByteString, unpack)
 import           Data.Map                      as Map (Map (..), empty, insert,
@@ -22,13 +22,10 @@ import           Control.Monad.Trans.Except    (ExceptT (..), throwE,
 import           Data.Either.Utils             (maybeToEither)
 import           Flow                          ((|>))
 import           Javelin.Util                  (at)
-import           Javelin.JVMApp
+import           Javelin.Interpreter.JVMApp
+import           Javelin.Capability.Classes
 
 
--- todo move to appropriate module
-class Monad m => ClassLoading m where
-  loadClassX :: String -> m (Either VMError LoadedClass)
-  initClassX :: ClassId -> Runtime -> m (Either VMError Runtime)
 
 instance ClassLoading JVM where
   loadClassX = undefined

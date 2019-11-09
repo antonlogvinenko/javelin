@@ -5,19 +5,20 @@ import           Control.Monad.State.Lazy   (State, runState, state)
 import           Data.Bits                  (xor, (.&.), (.|.))
 import qualified Data.Map.Lazy              as Map (Map, fromList, lookup, (!))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
-import           Javelin.Runtime.Structures
+import           Javelin.Lib.Structures
 import           Javelin.Runtime.Thread
-import           Javelin.Capability.ClassPathLoading (ClassPathLoading, getClassSourcesLayout)
+import           Javelin.Interpreter.ClassPathLoading (ClassPathLoading, getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.Array.IArray          (array)
 import           Debug.Trace
-import qualified Javelin.Capability.Loading as LI (init)
-import           Javelin.ByteCode.Data      (Instruction(..), CPIndex(..))
+import qualified Javelin.Interpreter.Loading as LI (init)
+import           Javelin.Lib.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           System.IO                  (writeFile)
 import           Flow
-import           Javelin.Capability.Logging
-import           Javelin.Capability.Termination
-import           Javelin.Capability.Loading
+import           Javelin.Interpreter.Logging
+import           Javelin.Interpreter.Termination
+import           Javelin.Interpreter.Loading
+import           Javelin.Capability.Classes
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []

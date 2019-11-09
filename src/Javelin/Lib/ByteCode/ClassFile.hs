@@ -1,4 +1,4 @@
-module Javelin.ByteCode.ClassFile
+module Javelin.Lib.ByteCode.ClassFile
   ( parse
   , parseRaw
   , magicNumber
@@ -12,11 +12,11 @@ import qualified Data.ByteString.Lazy          as LBS (ByteString, null, pack)
 import           Data.Map                      (Map, fromList)
 import           Data.Word
 
-import           Javelin.ByteCode.Attribute
-import           Javelin.ByteCode.ConstantPool
-import           Javelin.ByteCode.Data
-import           Javelin.ByteCode.FieldMethod
-import           Javelin.ByteCode.Utils
+import           Javelin.Lib.ByteCode.Attribute
+import           Javelin.Lib.ByteCode.ConstantPool
+import           Javelin.Lib.ByteCode.Data
+import           Javelin.Lib.ByteCode.FieldMethod
+import           Javelin.Lib.ByteCode.Utils
 
 getInterface :: Get Word16
 getInterface = getWord16

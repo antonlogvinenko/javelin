@@ -1,4 +1,4 @@
-module Javelin.ByteCode.ConstantPool
+module Javelin.Lib.ByteCode.ConstantPool
   ( getConstants
   ) where
 
@@ -8,8 +8,8 @@ import           Data.Map.Lazy          (Map, findWithDefault, fromList)
 import           Data.Word              (Word16, Word32, Word8)
 import           Unsafe.Coerce
 
-import           Javelin.ByteCode.Data
-import           Javelin.ByteCode.Utils
+import           Javelin.Lib.ByteCode.Data
+import           Javelin.Lib.ByteCode.Utils
 
 getConstants 1 = return []
 getConstants len = do

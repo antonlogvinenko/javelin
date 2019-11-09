@@ -6,18 +6,19 @@ import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Maybe     (runMaybeT)
 import qualified Data.ByteString               as BS (readFile, unpack)
 import           Data.Semigroup                ((<>))
-import           Javelin.ByteCode.ClassFile    (parseRaw)
-import           Javelin.ByteCode.Data         (showByteCode)
-import           Javelin.ByteCode.Stats        (stats)
+import           Javelin.Lib.ByteCode.ClassFile    (parseRaw)
+import           Javelin.Lib.ByteCode.Data         (showByteCode)
+import           Javelin.Lib.ByteCode.Stats        (stats)
 import           Javelin.Runtime.Instructions  (runJVM)
-import           Javelin.Capability.ClassPathLoading
-import           Javelin.Capability.Loading   (deriveClass, loadClassOrArray)
-import           Javelin.JVMApp         (runJVMApp, JVMConfig(..))
-import           Javelin.Runtime.Structures
+import           Javelin.Interpreter.ClassPathLoading
+import           Javelin.Interpreter.Loading   (deriveClass, loadClassOrArray)
+import           Javelin.Interpreter.JVMApp         (runJVMApp, JVMConfig(..))
+import           Javelin.Lib.Structures
 import           Options.Applicative
 import           System.Directory
 import           System.Environment
 import           Text.Show.Pretty
+import           Javelin.Capability.Classes
 
 disasmClass opt path = do
     bytestring <- BS.readFile path

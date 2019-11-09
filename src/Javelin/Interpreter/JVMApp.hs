@@ -1,11 +1,11 @@
 {-# language GeneralizedNewtypeDeriving #-}
 {-# language ConstraintKinds #-}
 
-module Javelin.JVMApp where
+module Javelin.Interpreter.JVMApp where
 
 import           Control.Monad.Reader       (ReaderT(..), MonadReader, ask, asks)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Javelin.Runtime.Structures (ClassPathLayout, VMError, LoadedClass, ClassId, Runtime)
+import           Javelin.Lib.Structures (ClassPathLayout, VMError, LoadedClass, ClassId, Runtime)
 import           System.Exit                (die)
 
 data JVMConfig = JVMConfig

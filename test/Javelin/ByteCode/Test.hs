@@ -1,17 +1,17 @@
-module Javelin.ByteCode.Test
+module Javelin.Lib.ByteCode.Test
   ( byteCodeTest
   ) where
 
 import           Data.Word                  (Word16)
-import           Javelin.ByteCode.ClassFile
-import           Javelin.ByteCode.DescSign
+import           Javelin.Lib.ByteCode.ClassFile
+import           Javelin.Lib.ByteCode.DescSign
 import           Test.Tasty                 (TestTree, testGroup)
 import           Test.Tasty.HUnit
 
 import           Data.Map.Strict            (member)
 
 --import Main
-import           Javelin.ByteCode.Stats     (getStats)
+import           Javelin.Lib.ByteCode.Stats     (getStats)
 import           Test.Tasty.Providers
 
 byteCodeTest = testGroup "ByteCode parser test" [statsAndParserTest]

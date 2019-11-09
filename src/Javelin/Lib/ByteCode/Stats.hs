@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
-module Javelin.ByteCode.Stats where
+module Javelin.Lib.ByteCode.Stats where
 
 import           Control.Monad              (guard)
 import           Control.Monad.IO.Class     (liftIO)
@@ -19,8 +19,8 @@ import           System.Directory           (doesDirectoryExist,
 import           System.IO                  (appendFile, writeFile)
 import           Text.Printf                (printf)
 
-import           Javelin.ByteCode.ClassFile (parse)
-import           Javelin.ByteCode.Data
+import           Javelin.Lib.ByteCode.ClassFile (parse)
+import           Javelin.Lib.ByteCode.Data
 
 listDir :: FilePath -> IO [FilePath]
 listDir path = do

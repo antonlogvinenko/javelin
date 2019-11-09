@@ -1,4 +1,4 @@
-module Javelin.ByteCode.Utils where
+module Javelin.Lib.ByteCode.Utils where
 
 import           Data.Binary.Get      (Get, getWord16be, getWord32be,
                                        getWord64be, getWord8)

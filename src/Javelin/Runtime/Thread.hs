@@ -11,9 +11,9 @@ import           Data.Int                      (Int16, Int32, Int64, Int8)
 import           Data.Map.Lazy                 as Map (Map, fromList)
 import           Data.Word                     (Word16, Word32, Word64, Word8)
 
-import           Javelin.Capability.ClassPathLoading
-import           Javelin.Runtime.Structures
-import           Javelin.JVMApp
+import           Javelin.Interpreter.ClassPathLoading
+import           Javelin.Lib.Structures
+import           Javelin.Interpreter.JVMApp
 
 step :: Thread -> Thread
 step e = e

@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Javelin.Runtime.Structures where
+module Javelin.Lib.Structures where
 
 import           Flow
 import           Control.Monad.Trans.Class  (lift)
@@ -14,8 +14,8 @@ import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           Control.Lens               (ix, makeLenses, (%~), (&), (^.),
                                              (^?), _1, _2, _Right)
 import           Data.Either.Utils          (maybeToEither)
-import           Javelin.ByteCode.Data
-import           Javelin.ByteCode.DescSign
+import           Javelin.Lib.ByteCode.Data
+import           Javelin.Lib.ByteCode.DescSign
 
 data Runtime = Runtime
   { _classPathLayout :: ClassPathLayout

@@ -1,4 +1,4 @@
-module Javelin.Capability.ClassPathLoading
+module Javelin.Interpreter.ClassPathLoading
   ( ClassPathLoading
   , getClassSourcesLayout
   , getClassBytes
@@ -19,17 +19,15 @@ import           Data.Either.Utils          (maybeToEither)
 import           Data.List.Split            (splitOn)
 import           Data.String.Utils          (strip)
 
-import           Javelin.Runtime.Structures
+import           Javelin.Lib.Structures
 
 import           Control.Applicative        ((<$>))
 import           Control.Monad.Trans
 import           Control.Monad.Trans.Except
 import           Flow
-import           Javelin.JVMApp
+import           Javelin.Interpreter.JVMApp
+import           Javelin.Capability.Classes
 
-class Monad m => ClassPathLoading m where
-  getClassSourcesLayout :: String -> m ClassPathLayout
-  getClassBytes :: ClassName -> ClassPathLayout -> m (Either VMError BSS.ByteString)
 
 instance ClassPathLoading JVM where
   getClassSourcesLayout paths = 

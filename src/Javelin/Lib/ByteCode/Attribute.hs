@@ -1,4 +1,4 @@
-module Javelin.ByteCode.Attribute where
+module Javelin.Lib.ByteCode.Attribute where
 
 import           Control.Applicative
 import           Data.Binary.Get
@@ -7,8 +7,8 @@ import qualified Data.Map.Lazy          as Map (Map, findWithDefault, fromList,
                                                 lookup, (!))
 import           Data.Word              (Word32, Word8)
 
-import           Javelin.ByteCode.Data
-import           Javelin.ByteCode.Utils
+import           Javelin.Lib.ByteCode.Data
+import           Javelin.Lib.ByteCode.Utils
 
 innerClassAccessFlagsMap =
   Map.fromList
