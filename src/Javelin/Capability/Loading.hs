@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Javelin.Runtime.LLI.Loading where
+module Javelin.Capability.Loading where
 
 import           Javelin.ByteCode.ClassFile    (parseRaw)
 import           Javelin.ByteCode.Data
-import           Javelin.Runtime.DescSign
+import           Javelin.ByteCode.DescSign
 import           Javelin.Capability.ClassPathLoading (getClassBytes)
 import           Javelin.Runtime.Structures
 
@@ -18,7 +18,7 @@ import           Data.Word                     (Word16)
 import           Control.Lens                  (ix, to, (^.), (^?))
 import           Control.Monad.Trans.Class     (lift)
 import           Control.Monad.Trans.Except    (ExceptT (..), throwE,
-                                                withExceptT)
+                                                withExceptT, except)
 import           Data.Either.Utils             (maybeToEither)
 import           Flow                          ((|>))
 import           Javelin.Util                  (at)
@@ -33,6 +33,40 @@ class Monad m => ClassLoading m where
 instance ClassLoading JVM where
   loadClassX = undefined
   initClassX = undefined
+
+
+init :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+init classId rt = linking classId rt
+
+linking :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+linking classId rt = verify classId rt >>= prepare classId
+
+verify :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+verify classId rt = loadClassOrArray classId rt --todo not doing actual verification yet
+
+prepare :: ClassId -> Runtime -> ExceptT VMError IO Runtime
+prepare classId rt =
+  if isClassPrepared classId rt
+  then return rt
+  else do
+    ExceptT . return $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
+      classId
+      rt
+      (map initStaticField . filter (isFieldStatic . fieldAccess)) >>=
+      markClassPrepared classId
+  
+initStaticField :: Field -> Field
+initStaticField field =
+  let value =
+        case fieldType field of
+          BaseType bt -> baseDefaultValues ! bt
+          _           -> nullReference
+    in field {staticValue = Just value}
+  
+
+
+
+
 
 -- 5.1 Deriving the Run-Time Constant Pool
 --- The constant_pool table (§4.4) in the binary representation

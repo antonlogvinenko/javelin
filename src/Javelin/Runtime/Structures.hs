@@ -15,7 +15,7 @@ import           Control.Lens               (ix, makeLenses, (%~), (&), (^.),
                                              (^?), _1, _2, _Right)
 import           Data.Either.Utils          (maybeToEither)
 import           Javelin.ByteCode.Data
-import           Javelin.Runtime.DescSign
+import           Javelin.ByteCode.DescSign
 
 data Runtime = Runtime
   { _classPathLayout :: ClassPathLayout

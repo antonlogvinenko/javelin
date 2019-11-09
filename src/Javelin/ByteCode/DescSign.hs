@@ -1,4 +1,4 @@
-module Javelin.Runtime.DescSign
+module Javelin.ByteCode.DescSign
   ( parseFieldDescriptor
   , parseMethodDescriptor
   , parseMethodSignature

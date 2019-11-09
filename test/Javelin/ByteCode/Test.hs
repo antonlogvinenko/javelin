@@ -4,7 +4,7 @@ module Javelin.ByteCode.Test
 
 import           Data.Word                  (Word16)
 import           Javelin.ByteCode.ClassFile
-import           Javelin.Runtime.DescSign
+import           Javelin.ByteCode.DescSign
 import           Test.Tasty                 (TestTree, testGroup)
 import           Test.Tasty.HUnit
 

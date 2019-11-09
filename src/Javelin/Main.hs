@@ -11,7 +11,7 @@ import           Javelin.ByteCode.Data         (showByteCode)
 import           Javelin.ByteCode.Stats        (stats)
 import           Javelin.Runtime.Instructions  (runJVM)
 import           Javelin.Capability.ClassPathLoading
-import           Javelin.Runtime.LLI.Loading   (deriveClass, loadClassOrArray)
+import           Javelin.Capability.Loading   (deriveClass, loadClassOrArray)
 import           Javelin.JVMApp         (runJVMApp, JVMConfig(..))
 import           Javelin.Runtime.Structures
 import           Options.Applicative
