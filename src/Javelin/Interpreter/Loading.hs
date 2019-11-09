@@ -529,6 +529,7 @@ findSuccessfulResolution (either:xs) =
 type MethodResolution
    = Runtime -> PartReference -> ClassId -> Class -> Either VMError (Maybe String)
 
+-- IO (Either VMError Runtime) -> m (Either VMError Runtime)
 resolveMethod ::
      Runtime -> PartReference -> ClassId -> ExceptT VMError IO Runtime
 resolveMethod rt partRef classId = do

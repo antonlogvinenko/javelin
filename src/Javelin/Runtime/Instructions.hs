@@ -1,4 +1,3 @@
-{-# language ConstraintKinds #-}
 module Javelin.Runtime.Instructions where
 
 import           Control.Monad.State.Lazy   (State, runState, state)
@@ -31,9 +30,8 @@ import           Javelin.Capability.Classes
 -- implement class path layout in terms of tagless final
 -- move implementation to modules
 
-type InstructionsMonad m = (ClassPathLoading m, Logging m, Termination m, ClassLoading m, Logging m)
 
-runJVM :: InstructionsMonad m => String -> String -> [String] -> m ()
+runJVM :: Global m => String -> String -> [String] -> m ()
 runJVM classPath mainClass args =
   let main = map (\c -> if c == '.' then '/' else c) mainClass
   in do
@@ -55,7 +53,7 @@ runJVM classPath mainClass args =
             Right frame -> runThread 0 $ Thread [frame] rt
             Left err -> terminate err
 
--- InstructionsMonad plan:
+-- Global plan:
 -- 1. create a small snippit
 -- 2. do everything for a single snippet: make it work
 -- 3. write an acceptance test for the working snippet
@@ -90,7 +88,7 @@ createFrame rt classId methodReference =
                              in Right $ Frame 0 classId index locals  []
     Left err -> Left err
 
-runThread :: InstructionsMonad m => Int -> Thread -> m ()
+runThread :: Global m => Int -> Thread -> m ()
 runThread c thread
   | c > 100 = console "Exiting" "abnormally"
   | null $ frames thread = console "Exiting" "normally"
@@ -113,15 +111,15 @@ nextInstructionLine Thread{frames=(Frame{pc=pc,
   method <- getMethodByIndex rt classId methodIndex
   return $ instructions method !! pc
 
-pureInstruction :: InstructionsMonad m => (ThreadOperation ()) -> Thread -> m (Thread, ThreadOperation ())
+pureInstruction :: Global m => (ThreadOperation ()) -> Thread -> m (Thread, ThreadOperation ())
 pureInstruction threadOperation thread = return (thread, threadOperation)
 
-impureInstruction :: InstructionsMonad m => (ThreadOperation ()) -> (Thread -> m Thread) -> Thread -> m (Thread, ThreadOperation ())
+impureInstruction :: Global m => (ThreadOperation ()) -> (Thread -> m Thread) -> Thread -> m (Thread, ThreadOperation ())
 impureInstruction threadOperation threadModification thread = do
   thread2 <- threadModification thread
   return (thread2, threadOperation)
 
-execute :: InstructionsMonad m => Instruction -> Thread -> m (Thread, ThreadOperation ())
+execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 execute Nop = pureInstruction empty
 
 -- resolve field -> resolve class -> load class

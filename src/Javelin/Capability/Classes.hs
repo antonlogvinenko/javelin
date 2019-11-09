@@ -1,3 +1,5 @@
+{-# language ConstraintKinds #-}
+
 module Javelin.Capability.Classes where
 
 import           Data.ByteString            as BSS (ByteString)
@@ -17,3 +19,5 @@ class Monad m => Logging m where
 
 class Monad m => Termination m where
     terminate :: Show a => a -> m ()
+
+type Global m = (ClassPathLoading m, Logging m, Termination m, ClassLoading m, Logging m)
