@@ -8,9 +8,9 @@ import           Javelin.Lib.Structures
 
 class Monad m => ClassPathLoading m where
     getClassSourcesLayout :: String -> m ClassPathLayout
-    getClassBytes :: ClassName -> ClassPathLayout -> m (Either VMError BSS.ByteString)
 
 class Monad m => ClassLoading m where
+    getClassBytes :: ClassName -> ClassPathLayout -> m (Either VMError BSS.ByteString)
     initClass :: ClassId -> Runtime -> m (Either VMError Runtime)
     loadClass :: ClassId -> Runtime -> m (Either VMError Runtime)
 

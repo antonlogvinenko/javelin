@@ -8,7 +8,9 @@ import           Javelin.Lib.ByteCode.DescSign
 import           Javelin.Interpreter.ClassPathLoading (getClassBytes)
 import           Javelin.Lib.Structures
 
-import           Data.ByteString               (ByteString, unpack)
+import           Data.ByteString            as BSS  (ByteString, unpack)
+import           Data.ByteString.Lazy       as BSL (ByteString, readFile,
+                                                    toStrict)
 import           Data.Map                      as Map (Map (..), empty, insert,
                                                        lookup, member, (!))
 import           Data.Maybe                    (catMaybes, isJust, isNothing,
@@ -25,13 +27,41 @@ import           Javelin.Util                  (at)
 import           Javelin.Interpreter.JVMApp
 import           Javelin.Capability.Classes
 import           Control.Monad.IO.Class        (liftIO)
+import           Codec.Archive.Zip
 
 
 
 instance ClassLoading JVM where
   loadClass classId rt = liftIO $ runExceptT $ loadClassOrArray classId rt
   initClass classId rt = liftIO $ runExceptT $ initClassOrArray classId rt
+  getClassBytes name classPath = liftIO $ getClassBytesIO name classPath
+       
   -- 5.3 Creation and Loading top level code
+
+getClassBytesIO name (ClassPathLayout classes _) = do
+  case classes |> Map.lookup name |> maybeToEither (ClassNotFoundException name) of
+    Left err -> return $ Left err
+    Right v -> getClassFromSource name v
+
+-- ExceptT (Either VMError (IO ByteString))
+getClassFromSource ::
+     ClassName -> ClassSource -> IO (Either VMError BSS.ByteString)
+getClassFromSource name (ClassFile path) =
+  --todo should we check that class x.y.z.class is loaded from x/y/z.class file?
+--  if classToPath name == path
+    Right <$> BSL.toStrict <$> BSL.readFile path
+--    else throwE $ ClassNotFoundException "cake"
+getClassFromSource name (JarFile path) = do
+  raw <- BSL.readFile path
+  return $ maybeToEither (ClassNotFoundException name) $ do
+    let arc = toArchive raw
+        classPath = classToPath name
+    entry <- findEntryByPath classPath arc
+    return $ BSL.toStrict $ fromEntry entry
+
+classToPath :: ClassName -> FilePath
+classToPath name = name ++ ".class"
+
 
 initClassOrArray :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 initClassOrArray classId rt = linking classId rt
@@ -143,7 +173,7 @@ checkAndRecordLoadedClass ::
      ClassId
   -> Runtime
   -> ClassLoader
-  -> ByteString
+  -> BSS.ByteString
   -> ExceptT VMError IO Runtime
 checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
   checkInitiatingClassLoader initCL name rt
@@ -160,7 +190,7 @@ checkInitiatingClassLoader initCL name rt = do
     then throwE $ Linkage rt LinkageError
     else lift $ return rt
 
-checkClassFileFormat :: ByteString -> Runtime -> ExceptT VMError IO ByteCode
+checkClassFileFormat :: BSS.ByteString -> Runtime -> ExceptT VMError IO ByteCode
 checkClassFileFormat bs rt =
   let body = parseRaw $ unpack bs
    in case body of
@@ -391,12 +421,7 @@ wrapClassNotFound _ x = x
 -- 5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {_classPathLayout = layout}) = do
-  bytes <-
-    withExceptT
-    (wrapClassNotFound rt)
-      -- todo tagless final
-      --(getClassBytes name $ rt ^. classPathLayout)
-      undefined
+  bytes <- ExceptT $ getClassBytesIO name $ rt ^. classPathLayout
   checkAndRecordLoadedClass request rt BootstrapClassLoader bytes
 
 -- 5.3.2 Loading Using a User-defined Class Loader
