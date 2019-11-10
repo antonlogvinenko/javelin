@@ -70,9 +70,6 @@ initStaticField field =
           BaseType bt -> baseDefaultValues ! bt
           _           -> nullReference
     in field {staticValue = Just value}
-  
-
-
 
 
 

@@ -3,16 +3,16 @@ module Javelin.Main where
 import           Control.Monad
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Except
-import           Control.Monad.Trans.Maybe     (runMaybeT)
-import qualified Data.ByteString               as BS (readFile, unpack)
-import           Data.Semigroup                ((<>))
-import           Javelin.Lib.ByteCode.ClassFile    (parseRaw)
-import           Javelin.Lib.ByteCode.Data         (showByteCode)
-import           Javelin.Lib.ByteCode.Stats        (stats)
-import           Javelin.Runtime.Instructions  (runJVM)
+import           Control.Monad.Trans.Maybe            (runMaybeT)
+import qualified Data.ByteString                as BS (readFile, unpack)
+import           Data.Semigroup                       ((<>))
+import           Javelin.Lib.ByteCode.ClassFile       (parseRaw)
+import           Javelin.Lib.ByteCode.Data            (showByteCode)
+import           Javelin.Lib.ByteCode.Stats           (stats)
+import           Javelin.Runtime.Instructions         (runJVM)
 import           Javelin.Interpreter.ClassPathLoading
-import           Javelin.Interpreter.Loading   (deriveClass, loadClassOrArray)
-import           Javelin.Interpreter.JVMApp         (runJVMApp, JVMConfig(..))
+import           Javelin.Interpreter.Loading          (deriveClass, loadClassOrArray)
+import           Javelin.Interpreter.JVMApp           (runJVMApp, JVMConfig(..))
 import           Javelin.Lib.Structures
 import           Options.Applicative
 import           System.Directory
@@ -42,13 +42,15 @@ loadClassPath opt bs =
         Right (_, _, v)  -> putStrLn $ showByteCode opt v
         Left (_, off, v) -> putStrLn $ "Failed to parse file"
 
--- todo tagless final
--- loadClassWithDeps :: FilePath -> String -> ExceptT VMError IO Runtime
--- loadClassWithDeps classPath className = do
---   layout <- getClassSourcesLayout classPath
---   let rt = newRuntime layout
---   classBytes <- getClassBytes className layout
---   load (ClassId BootstrapClassLoader className) rt
+loadClassWithDepsPure :: Global m => FilePath -> String -> m (Either VMError Runtime)
+loadClassWithDepsPure classPath className = do
+  layout <- getClassSourcesLayout classPath
+  let rt = newRuntime layout
+  classBytes <- getClassBytes className layout
+  loadClass (ClassId BootstrapClassLoader className) rt
+
+loadClassWithDeps :: FilePath -> String -> IO (Either VMError Runtime)
+loadClassWithDeps classPath className = runJVMApp (loadClassWithDepsPure classPath className) JVMConfig
 
 data JVMOpts
     = Disasm { classFilePath :: String }
@@ -84,10 +86,10 @@ javelinMain = execParser opts >>= runWithOptions
         "classpath"
         (info loadClassPathParser $
             progDesc "Parsing classpath, traversing it and loading class bytes") <>
-        -- command
-        --   "loadClass"
-        --   (info loadClassWithDepsParser $
-        --    progDesc "Loading class with all dependencies") <>
+        command
+          "loadClass"
+          (info loadClassWithDepsParser $
+           progDesc "Loading class with all dependencies") <>
         command "jvm" (info jvmParser $ progDesc "Run JVM")
     disasmParser = Disasm <$> strArgument (metavar "Path to class file")
     disasmFullParser = DisasmFull <$> strArgument (metavar "Path to class file")
@@ -99,15 +101,14 @@ javelinMain = execParser opts >>= runWithOptions
     loadClassPathParser =
         LoadClassPath <$> strArgument (metavar "JVM class path") <*>
         strArgument (metavar "Class file to load")
-    -- loadClassWithDepsParser =
-    --   LoadClassWithDeps <$> strArgument (metavar "JVM class path") <*>
-    --   strArgument (metavar "Class file to load")
+    loadClassWithDepsParser =
+      LoadClassWithDeps <$> strArgument (metavar "JVM class path") <*>
+      strArgument (metavar "Class file to load")
     jvmParser =
         JVM <$> strArgument (metavar "mainClass") <*>
         strArgument (metavar "classPath") <*>
         (some $ strArgument (metavar "mainArguments"))
 
--- todo tagless final
 runWithOptions :: JVMOpts -> IO ()
 runWithOptions jvmOpts =
     case jvmOpts of
@@ -115,14 +116,12 @@ runWithOptions jvmOpts =
         DisasmFull path -> disasmClass True path
         DisasmSemantics path -> disasmSemantics path
         DisasmByteCodeStats path mbOutput -> stats path mbOutput
-        -- LoadClassPath classPath classFilePath ->
-        --   let bb =
-        --         runExceptT $ do
-        --           layout <- getClassSourcesLayout classPath
-        --           classBytes <- getClassBytes classFilePath layout
-        --           lift $ loadClassPath False classBytes
-        --    in bb >>= print
-        -- `LoadClassWithDeps classPath classFilePath ->
-        --   (runExceptT $ loadClassWithDeps classPath classFilePath) >>= print
+        LoadClassPath classPath classFilePath -> do
+          bb <- runJVMApp (getClassSourcesLayout classPath >>= getClassBytes classFilePath) JVMConfig
+          case bb of
+            Left error -> print error
+            Right bs -> loadClassPath False bs
+        LoadClassWithDeps classPath classFilePath ->
+          (loadClassWithDeps classPath classFilePath) >>= print
         JVM mainClass classPath mainArgs ->
             runJVMApp (runJVM classPath mainClass mainArgs) JVMConfig
