@@ -283,8 +283,7 @@ getSuperInterfaces :: Runtime -> ClassId -> Either VMError [String]
 getSuperInterfaces rt classId = classInterfaces <$> getClass rt classId
 
 isInterface :: Runtime -> ClassId -> Either VMError Bool
-isInterface rt classId =
-  isClassInterface <$> classVisibility <$> getClass rt classId
+isInterface rt classId = isClassInterface <$> classVisibility <$> getClass rt classId
 
 getSuperClass :: Runtime -> ClassId -> Either VMError (Maybe String)
 getSuperClass rt classId = superName <$> getClass rt classId
@@ -305,7 +304,7 @@ getClass :: Runtime -> ClassId -> Either VMError Class
 getClass rt classId = _classInfo <$> getLoadedClass rt classId
 
 getLoadedClass :: Runtime -> ClassId -> Either VMError LoadedClass
-getLoadedClass rt classId =
+getLoadedClass rt classId = 
   maybe (Left $ InternalError rt SpecifyMeError) id (findLoadedClass rt classId)
 
 findLoadedClass :: Runtime -> ClassId -> Maybe (Either VMError LoadedClass)
@@ -340,9 +339,8 @@ addLoadedClass ::
 addLoadedClass classId loadedClass rt =
   rt & loadedClasses %~ Map.insert classId (Right loadedClass)
 
-markClassPrepared :: ClassId -> Runtime -> Either VMError Runtime
-markClassPrepared classId rt =
-  return $ rt & classPrepared %~ Map.insert classId True
+markClassPrepared :: ClassId -> Runtime -> Runtime
+markClassPrepared classId rt = rt & classPrepared %~ Map.insert classId True
 
 isClassPrepared :: ClassId -> Runtime -> Bool
 isClassPrepared classId rt =
@@ -350,23 +348,17 @@ isClassPrepared classId rt =
     Nothing -> False
     Just x -> x
 
-updateClassFields ::
-     ClassId -> Runtime -> ([Field] -> [Field]) -> Either VMError Runtime
-updateClassFields classId rt update =
-  return $ rt & loadedClasses . ix classId . _Right . classInfo . fieldsList %~
-  update
+updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Runtime
+updateClassFields classId rt update = 
+  rt & loadedClasses . ix classId . _Right . classInfo . fieldsList %~ update
 
-addResolvedClassField ::
-     ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
+addResolvedClassField :: ClassId -> ClassPartReference -> Runtime -> Runtime
 addResolvedClassField classId classPartRef rt =
-  return $ rt & classResolving . ix classId . resolvedFields %~
-  Map.insert classPartRef ClassPartResOk
+  rt & classResolving . ix classId . resolvedFields %~ Map.insert classPartRef ClassPartResOk
 
-addResolvedClassMethod ::
-     ClassId -> ClassPartReference -> Runtime -> Either VMError Runtime
+addResolvedClassMethod :: ClassId -> ClassPartReference -> Runtime -> Runtime
 addResolvedClassMethod classId classPartRef rt =
-  return $ rt & classResolving . ix classId . resolvedMethods %~
-  Map.insert classPartRef ClassPartResOk
+  rt & classResolving . ix classId . resolvedMethods %~ Map.insert classPartRef ClassPartResOk
 
 classDefinesField :: ClassId -> ClassPartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =

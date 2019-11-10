@@ -46,11 +46,11 @@ prepare classId rt =
   if isClassPrepared classId rt
   then return rt
   else do
-    ExceptT . return $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
+    ExceptT . return $ Right $ markClassPrepared classId $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
       classId
       rt
-      (map initStaticField . filter (isFieldStatic . fieldAccess)) >>=
-      markClassPrepared classId
+      (map initStaticField . filter (isFieldStatic . fieldAccess))
+      
   
 initStaticField :: Field -> Field
 initStaticField field =
@@ -472,7 +472,7 @@ resolveField classId partRef rt = do
     case mowner of
       Nothing -> Left $ Linkage rt NoSuchFieldError
       Just owner ->
-        addResolvedClassField classId (ClassPartReference partRef owner) rt
+        Right $ addResolvedClassField classId (ClassPartReference partRef owner) rt
 
 -- Recursive fn for looking for a field
 resolveFieldSearch ::
@@ -532,7 +532,7 @@ resolveMethod rt partRef classId = do
     case mclass of
       Nothing -> Left $ Linkage rt NoSuchMethodError
       Just owner ->
-        addResolvedClassMethod classId (ClassPartReference partRef owner) rt
+        Right $ addResolvedClassMethod classId (ClassPartReference partRef owner) rt
 
 resolveMethodSearch :: MethodResolution
 resolveMethodSearch rt partRef classId classInfo = do

@@ -12,7 +12,6 @@ import           Data.Array.IArray          (array)
 import           Debug.Trace
 import qualified Javelin.Interpreter.Loading as LI (init)
 import           Javelin.Lib.ByteCode.Data      (Instruction(..), CPIndex(..))
-import           System.IO                  (writeFile)
 import           Flow
 import           Javelin.Interpreter.Logging
 import           Javelin.Interpreter.Termination
