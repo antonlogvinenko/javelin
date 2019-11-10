@@ -10,7 +10,6 @@ import           Javelin.Interpreter.ClassPathLoading (ClassPathLoading, getClas
 import           Control.Monad.Trans.Except (runExceptT)
 import           Data.Array.IArray          (array)
 import           Debug.Trace
-import qualified Javelin.Interpreter.Loading as LI (init)
 import           Javelin.Lib.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           Flow
 import           Javelin.Interpreter.Logging
@@ -45,7 +44,7 @@ runJVM classPath mainClass args =
       ClassFile path -> do
         console "Main class found in class file" path
         let classId = ClassId BootstrapClassLoader main
-        mainClassInit <- initClassX classId (newRuntime cpLayout)
+        mainClassInit <- initClass classId (newRuntime cpLayout)
         case mainClassInit of
           Left err -> terminate err
           Right rt -> case createMainFrame rt classId of
