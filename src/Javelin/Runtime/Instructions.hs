@@ -16,6 +16,7 @@ import           Javelin.Interpreter.Logging
 import           Javelin.Interpreter.Termination
 import           Javelin.Interpreter.Loading
 import           Javelin.Capability.Classes
+import           Javelin.Util
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
@@ -93,6 +94,7 @@ runThread c thread
   | otherwise =
       case nextInstructionLine thread of
         Right instruction -> do
+          console "Current instrcution:" instruction
           (thread2, execution) <- execute instruction thread
           let (_, thread3) = runState execution thread2
           runThread (c + 1) (incrementInstructionCounter thread3)
@@ -123,13 +125,23 @@ execute Nop = pureInstruction empty
 -- resolve field -> resolve class -> load class
 -- init class
 -- add VMError and IO to ThreadIntruction
-execute (GetStatic (CPIndex index)) = \t ->
-  do
-    --loadedClass <- getClass rt classId
-    --let pool = symTable loadedClass
-    --fieldReference = getStringLiteral pool index
-    console "doing" "getstatic"
-    return (t, empty)
+execute v@(GetStatic (CPIndex index)) =
+  \t@Thread{frames=(Frame{pc=pc,
+            currentClass=classId,
+            currentMethod=methodIndex}):_,
+            runtime=rt} ->
+    let eitherSymTable = symTable <$> getClass rt classId
+    in case eitherSymTable of
+      Left err -> undefined
+      Right symTable -> do
+        console "index" index
+        console "symTable" symTable
+        let classMethodReference = symTable `at` index
+        console "referenced" classMethodReference
+        -- todo instruction counter?
+        -- todo representation of System.out reference on stack?
+        -- loadClass undefined undefined
+        return (t, empty)
 
 -- push const <i> to stack
 execute IConstM1 = pureInstruction $ iconst (-1)
@@ -207,8 +219,9 @@ execute FAdd = pureInstruction $ add jfloat
 execute DAdd = pureInstruction $ add jdouble
 
 execute Return = pureInstruction $ dropTopFrame
-  
--- execute (InvokeStatic (CPIndex index)) = undefined
+
+-- mock
+execute (InvokeVirtual (CPIndex index)) = pureInstruction empty  
 
 -- Instructions implementation
 -- Constants
