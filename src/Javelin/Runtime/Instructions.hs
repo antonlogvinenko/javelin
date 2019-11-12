@@ -124,8 +124,6 @@ execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 execute Nop = pureInstruction empty
 
 -- resolve field -> resolve class -> load class
--- init class
--- add VMError and IO to ThreadIntruction
 execute v@(GetStatic (CPIndex index)) =
   \t@Thread{frames=(Frame{pc=pc,
             currentClass=classId,
@@ -137,11 +135,12 @@ execute v@(GetStatic (CPIndex index)) =
       Right symTable -> do
         -- console "index" index
         -- console "symTable" symTable
-        let classMethodReference = symTable `at` index
-        console "referenced" classMethodReference
-        -- todo instruction counter?
-        -- todo representation of System.out reference on stack?
-        -- loadClass undefined undefined
+        let classFieldReference = symTable `at` index
+        console "referenced" classFieldReference
+        -- todo if System.out.println then put representation of System.out reference on stack
+        -- todo then implement invoke virtual for println
+        -- todo then implement return
+        -- then do field resolving and class init
         return (t, empty)
 
 -- push const <i> to stack
