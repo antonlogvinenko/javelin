@@ -74,6 +74,11 @@ runJVM classPath mainClass args =
 -- 3. make it work!
 -- 4. print state between executions: command + stack/variables content
 -- 5. testing: unit + acceptance
+-- doc: project structure
+-- lazy/strict state
+-- replace Prelude with smth else
+-- remove Javelin.Util
+-- code formatting
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame

@@ -1,3 +1,6 @@
+stack.yaml.lock
+dist-newstyle/
+jvmDump.log
 */**/*_flymake.hs
 .stack-work
 javelin.iml
