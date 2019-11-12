@@ -95,9 +95,10 @@ runThread c thread
       case nextInstructionLine thread of
         Right instruction -> do
           console "Current instrcution:" instruction
-          (thread2, execution) <- execute instruction thread
+          let thread1 = incrementInstructionCounter thread
+          (thread2, execution) <- execute instruction thread1
           let (_, thread3) = runState execution thread2
-          runThread (c + 1) (incrementInstructionCounter thread3)
+          runThread (c + 1) thread3
         Left error -> terminate error
 
 incrementInstructionCounter :: Thread -> Thread
@@ -134,8 +135,8 @@ execute v@(GetStatic (CPIndex index)) =
     in case eitherSymTable of
       Left err -> undefined
       Right symTable -> do
-        console "index" index
-        console "symTable" symTable
+        -- console "index" index
+        -- console "symTable" symTable
         let classMethodReference = symTable `at` index
         console "referenced" classMethodReference
         -- todo instruction counter?
