@@ -125,6 +125,8 @@ impureInstruction threadOperation threadModification thread = do
   thread2 <- threadModification thread
   return (thread2, threadOperation)
 
+out = FieldReference $ ClassPartReference (PartReference "java/lang/System" "out") "Ljava/io/PrintStream;"
+
 execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 execute Nop = pureInstruction empty
 
@@ -141,12 +143,14 @@ execute v@(GetStatic (CPIndex index)) =
         -- console "index" index
         -- console "symTable" symTable
         let classFieldReference = symTable `at` index
-        console "referenced" classFieldReference
-        -- todo if System.out.println then put representation of System.out reference on stack
-        -- todo then implement invoke virtual for println
-        -- todo then implement return
-        -- then do field resolving and class init
-        return (t, empty)
+        case classFieldReference == out of
+          True -> do
+            return (t, empty)
+          False -> do
+            -- todo then implement invoke virtual for println
+            -- todo then implement return
+            -- then do field resolving and class init
+            return (t, empty)
 
 -- push const <i> to stack
 execute IConstM1 = pureInstruction $ iconst (-1)
