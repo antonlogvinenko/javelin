@@ -17,7 +17,7 @@ class Monad m => ClassLoading m where
 class Monad m => Logging m where
     dump :: Show a => String -> a -> m ()
     console :: Show a => String -> a -> m ()
-    say :: Show a => a -> m ()
+    say :: String -> m ()
 
 class Monad m => Termination m where
     terminate :: Show a => a -> m ()

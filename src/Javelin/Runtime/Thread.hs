@@ -41,7 +41,7 @@ instance BytesContainer Locals where
   getBytes c idx len =
     let arr = vars c
      in if len <= 4
-          then localToWord64 [0, arr ! 0]
+          then localToWord64 [0, arr ! idx]
           else localToWord64 [arr ! idx, arr ! (idx + 1)]
 
 localToWord64 :: [Word32] -> Word64
@@ -75,6 +75,8 @@ type JDouble = Double
 type JFloat = Float
 
 type JRaw = Word64
+
+type JReference = Word64
 
 narrowInt :: (Integral a) => a -> Representation
 narrowInt = Narrow . fromIntegral
@@ -144,6 +146,9 @@ jfloat = fetchBytes 8
 
 jdouble :: (BytesContainer c) => Int -> c -> JDouble
 jdouble = fetchBytes 8
+
+jreference :: (BytesContainer c) => Int -> c -> JReference
+jreference = fetchBytes 8
 
 -- Instructions DSL
 type ThreadOperation a = State Thread a
@@ -231,15 +236,15 @@ dropTopFrame = state $ \t@Thread{frames=(f:fs)} -> ((), t{frames=fs})
 store :: (JType j) => j -> JLocalRef -> ThreadOperation ()
 store j idx =
   state $ \t ->
-    let idx = fromIntegral idx
+    let idx2 = fromIntegral idx
         arr = vars $ getLocals t
         newLocals =
           case represent j of
-            Narrow x -> arr // [(idx, x)]
+            Narrow x -> arr // [(idx2, x)]
             Wide x ->
               let (a, b) = split x
-               in arr // [(idx, a), (idx + 1, b)]
-     in ((), updLocals t $ \_ -> arr)
+              in arr // [(idx2, a), (idx2 + 1, b)]
+     in ((), updLocals t $ \_ -> newLocals)
 
 split :: Word64 -> (Word32, Word32)
 split x =

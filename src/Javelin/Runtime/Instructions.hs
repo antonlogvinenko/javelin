@@ -8,7 +8,7 @@ import           Javelin.Lib.Structures
 import           Javelin.Runtime.Thread
 import           Javelin.Interpreter.ClassPathLoading (ClassPathLoading, getClassSourcesLayout)
 import           Control.Monad.Trans.Except (runExceptT)
-import           Data.Array.IArray          (array)
+import qualified Data.Array.IArray           as Array (array, bounds)
 import           Debug.Trace
 import           Javelin.Lib.ByteCode.Data      (Instruction(..), CPIndex(..))
 import           Flow
@@ -88,7 +88,9 @@ createMainFrame rt classId = createFrame rt classId (PartReference "main" "(Ljav
 createFrame :: Runtime -> ClassId -> PartReference -> Either VMError Frame
 createFrame rt classId methodReference =
   case getMethodBySignature rt classId methodReference of
-    Right (index, method) -> let locals = Locals $ array (0, (fromIntegral $ localsSize method) - 1) []
+    Right (index, method) -> let localsLength = fromIntegral $ localsSize method
+                                 initValue = [(i, 0) | i <- [0..localsLength - 1]]
+                                 locals = Locals $ Array.array (0, localsLength - 1) initValue
                              in Right $ Frame 0 classId index locals  []
     Left err -> Left err
 
@@ -99,10 +101,13 @@ runThread c thread
   | otherwise =
       case nextInstructionLine thread of
         Right instruction -> do
-          console "Current instrcution:" instruction
+          console "Instruction:" instruction
           let thread1 = incrementInstructionCounter thread
           (thread2, execution) <- execute instruction thread1
           let (_, thread3) = runState execution thread2
+          console " stack:" $ operands ((frames thread3) !! 0)
+          console " local:" $ locals ((frames thread3) !! 0)
+          say ""
           runThread (c + 1) thread3
         Left error -> terminate error
 
@@ -127,6 +132,9 @@ impureInstruction threadOperation threadModification thread = do
 
 out = FieldReference $ ClassPartReference (PartReference "java/lang/System" "out") "Ljava/io/PrintStream;"
 
+outReference :: JReference
+outReference = maxBound
+
 execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 execute Nop = pureInstruction empty
 
@@ -145,10 +153,8 @@ execute v@(GetStatic (CPIndex index)) =
         let classFieldReference = symTable `at` index
         case classFieldReference == out of
           True -> do
-            return (t, empty)
+            return (t, push outReference)
           False -> do
-            -- todo then implement invoke virtual for println
-            -- todo then implement return
             -- then do field resolving and class init
             return (t, empty)
 
@@ -230,7 +236,23 @@ execute DAdd = pureInstruction $ add jdouble
 execute Return = pureInstruction $ dropTopFrame
 
 -- mock
-execute (InvokeVirtual (CPIndex index)) = pureInstruction empty  
+execute (InvokeVirtual (CPIndex index)) = 
+  \t@Thread{frames=(frame@Frame{pc=pc,
+            currentClass=classId,
+            currentMethod=methodIndex}):_,
+            runtime=rt} -> do
+    console "operands frame" $ (operands frame !! 1)
+    return (t, do
+      object <- pop jreference
+      value <- pop jraw
+      empty)
+    -- let classFieldReference = symTable `at` index
+    -- case classFieldReference == out of
+      -- True -> do
+        -- return (t, push outReference)
+      -- False -> do
+        -- then do field resolving and class init
+        -- return (t, empty)
 
 -- Instructions implementation
 -- Constants
