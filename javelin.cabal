@@ -48,6 +48,7 @@ executable javelin
                    Javelin.Interpreter.ClassPathLoading,
                    Javelin.Interpreter.Logging,
                    Javelin.Interpreter.Termination,
+                   Javelin.Interpreter.StdIO,
                    Javelin.Capability.Classes,
                    Javelin.Interpreter.JVMApp,
                    Javelin.Util,

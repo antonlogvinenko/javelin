@@ -16,6 +16,7 @@ import           Javelin.Interpreter.Logging
 import           Javelin.Interpreter.Termination
 import           Javelin.Interpreter.Loading
 import           Javelin.Capability.Classes
+import           Javelin.Interpreter.StdIO
 import           Javelin.Util
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1

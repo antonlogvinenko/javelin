@@ -22,4 +22,7 @@ class Monad m => Logging m where
 class Monad m => Termination m where
     terminate :: Show a => a -> m ()
 
-type Global m = (ClassPathLoading m, Logging m, Termination m, ClassLoading m, Logging m)
+class Monad m => StdIO m where
+    runIO :: IO a -> m a
+
+type Global m = (ClassPathLoading m, Logging m, Termination m, ClassLoading m, Logging m, StdIO m)
