@@ -23,15 +23,6 @@ import           Javelin.Util
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
 
--- We need to start eexuting commands in main method of main class so we have to make it look like
--- someone called 'invokestatic' on main method of main class: the class is loaded, there is a frame with main class id in it etc
-
----- 1. enable some sort of logging
-
--- implement class path layout in terms of tagless final
--- move implementation to modules
-
-
 runJVM :: Global m => String -> String -> [String] -> m ()
 runJVM classPath mainClass args =
   let main = map (\c -> if c == '.' then '/' else c) mainClass
@@ -71,7 +62,6 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- 1. implement: getstatic, invokevirtual
 -- 2. see what other instructions are required
 -- 3. make it work!
 -- 4. print state between executions: command + stack/variables content
@@ -245,7 +235,6 @@ execute DAdd = pureInstruction $ add jdouble
 
 execute Return = pureInstruction $ dropTopFrame
 
--- mock
 execute (InvokeVirtual (CPIndex index)) = 
   \t@Thread{frames=(frame@Frame{pc=pc,
             currentClass=classId,
@@ -405,4 +394,3 @@ iinc = do
   let constExt = signExtend const
   let newVar = var + constExt
   store newVar index
-
