@@ -1,8 +1,9 @@
 module Javelin.Runtime.Instructions where
 
-import           Control.Monad.State.Lazy   (State, runState, state)
+import           Control.Monad.State.Lazy   (State, runStateT, state)
 import           Data.Bits                  (xor, (.&.), (.|.))
 import qualified Data.Map.Lazy              as Map (Map, fromList, lookup, (!))
+import           Control.Monad.IO.Class     (liftIO)
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           Javelin.Lib.Structures
 import           Javelin.Runtime.Thread
@@ -95,6 +96,13 @@ createFrame rt classId methodReference =
                              in Right $ Frame 0 classId index locals  []
     Left err -> Left err
 
+getTopFrame :: Thread -> Maybe Frame
+getTopFrame t =
+  let allFrames = frames t
+  in case allFrames of
+    [] -> Nothing
+    (f:fs) -> Just f
+
 runThread :: Global m => Int -> Thread -> m ()
 runThread c thread
   | c > 100 = console "Exiting" "abnormally"
@@ -105,9 +113,10 @@ runThread c thread
           console "Instruction:" instruction
           let thread1 = incrementInstructionCounter thread
           (thread2, execution) <- execute instruction thread1
-          let (_, thread3) = runState execution thread2
-          console " stack:" $ operands ((frames thread3) !! 0)
-          console " local:" $ locals ((frames thread3) !! 0)
+          (_, thread3) <- runIO $! runStateT execution thread2
+          let topFrame = getTopFrame thread3
+          console " stack:" $ operands <$> topFrame
+          console " local:" $ locals <$> topFrame
           say ""
           runThread (c + 1) thread3
         Left error -> terminate error
@@ -243,10 +252,19 @@ execute (InvokeVirtual (CPIndex index)) =
             currentMethod=methodIndex}):_,
             runtime=rt} -> do
     console "operands frame" $ (operands frame !! 1)
-    return (t, do
-      object <- pop jreference
-      value <- pop jraw
-      empty)
+    let eitherSymTable = symTable <$> getClass rt classId
+    case eitherSymTable of
+      Left err -> undefined
+      Right symTable -> do
+        let methodReference = symTable `at` index
+        console "method reference" methodReference
+        let classFieldReference = symTable `at` index
+        return (t, do
+          value <- pop jraw
+          object <- pop jreference
+          if outReference == object
+            then liftIO $ print value
+            else empty)
     -- let classFieldReference = symTable `at` index
     -- case classFieldReference == out of
       -- True -> do

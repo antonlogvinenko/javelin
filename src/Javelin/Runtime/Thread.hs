@@ -1,6 +1,6 @@
 module Javelin.Runtime.Thread where
 
-import           Control.Monad.State.Lazy      (State, state)
+import           Control.Monad.State.Lazy      (State, state, StateT)
 import           Data.Array.IArray             (Array, (!), (//))
 import           Data.Binary.Get               (getWord64be, runGet)
 import           Data.Binary.IEEE754           (doubleToWord, floatToWord)
@@ -151,7 +151,7 @@ jreference :: (BytesContainer c) => Int -> c -> JReference
 jreference = fetchBytes 8
 
 -- Instructions DSL
-type ThreadOperation a = State Thread a
+type ThreadOperation a = StateT Thread IO a
 
 getFrame :: Thread -> Frame
 getFrame = (!! 0) . frames
