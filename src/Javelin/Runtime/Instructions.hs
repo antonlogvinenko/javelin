@@ -62,15 +62,15 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- 2. see what other instructions are required
--- 3. make it work!
--- 4. print state between executions: command + stack/variables content
--- 5. testing: unit + acceptance
+-- remove Javelin.Util
+-- automatic code formatting
+-- replace Prelude with smth else
+-- establish acceptance testing
+-- establish unit testing
+-- make printing of state between executions optional and visible (colors? formatting?)
 -- doc: project structure
 -- lazy/strict state
--- replace Prelude with smth else
--- remove Javelin.Util
--- code formatting
+
 
 -- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
@@ -254,13 +254,6 @@ execute (InvokeVirtual (CPIndex index)) =
           if outReference == object
             then liftIO $ print value
             else empty)
-    -- let classFieldReference = symTable `at` index
-    -- case classFieldReference == out of
-      -- True -> do
-        -- return (t, push outReference)
-      -- False -> do
-        -- then do field resolving and class init
-        -- return (t, empty)
 
 -- Instructions implementation
 -- Constants
