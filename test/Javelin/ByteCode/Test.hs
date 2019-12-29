@@ -1,4 +1,4 @@
-module Javelin.Lib.ByteCode.Test
+module Javelin.ByteCode.Test
   ( byteCodeTest
   ) where
 

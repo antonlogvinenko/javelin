@@ -20,6 +20,7 @@ import           System.Environment
 import           Text.Show.Pretty
 import           Javelin.Capability.Classes
 
+disasmClass :: Bool -> FilePath -> IO ()
 disasmClass opt path = do
     bytestring <- BS.readFile path
     let words = BS.unpack bytestring
