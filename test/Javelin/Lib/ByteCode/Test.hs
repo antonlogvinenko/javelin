@@ -1,5 +1,5 @@
 module Javelin.Lib.ByteCode.Test
-  ( byteCodeTest
+  ( acceptanceTests
   ) where
 
 import           Data.Word                  (Word16)
@@ -13,7 +13,8 @@ import           Data.Map.Strict            (member)
 import           Javelin.Lib.ByteCode.Stats     (getStats)
 import           Test.Tasty.Providers
 
-byteCodeTest = testGroup "ByteCode parser test" [statsAndParserTest]
+acceptanceTests = testGroup "Acceptance tests" [byteCodeTest]
+byteCodeTest = testGroup "ByteCode parsing" [statsAndParserTest]
                 --,byteCodeParserTest, signatureTest, descriptorTest]
 
 statsAndParserTest =
@@ -22,11 +23,6 @@ statsAndParserTest =
     case stats of
       Left msg -> assertFailure $ "Couldn't parse it! " ++ msg
       Right st -> assertBool "" $ member "aload_0" st
--- byteCodeParserTest =
---   testCase "functional" $
---   do
---     (io, result) <- testClasses "./acceptance/"
---     result @=? True
 -- -- These tests need refactoring
 -- signatureTest = testGroup "signatures" [
 --   testCase "class signature" $
