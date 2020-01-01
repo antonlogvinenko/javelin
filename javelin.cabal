@@ -70,13 +70,11 @@ test-suite javelin-test
                      javelin,
                      Cabal >= 1.16.0,
                      containers ==0.6.0.1,
-                     tasty,
+                     tasty ==1.2.3,
                      HUnit,
-                     QuickCheck,
-                     smallcheck,
-                     tasty-hunit,
-                     tasty-smallcheck,
-                     tasty-quickcheck
+                     tasty-hunit
+  other-modules:
+      Javelin.Lib.ByteCode.Test
   default-language: Haskell2010
 
 executable javelin

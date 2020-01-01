@@ -1,4 +1,4 @@
-module Javelin.ByteCode.Test
+module Javelin.Lib.ByteCode.Test
   ( byteCodeTest
   ) where
 
@@ -10,7 +10,6 @@ import           Test.Tasty.HUnit
 
 import           Data.Map.Strict            (member)
 
---import Main
 import           Javelin.Lib.ByteCode.Stats     (getStats)
 import           Test.Tasty.Providers
 

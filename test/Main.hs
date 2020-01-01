@@ -1,4 +1,4 @@
-import           Javelin.ByteCode.Test
+import           Javelin.Lib.ByteCode.Test
 import           Test.Tasty            (defaultMain, testGroup)
 
-main = defaultMain $ testGroup "Some tests" [byteCodeTest]
+main = defaultMain $ testGroup "Test root" [byteCodeTest]

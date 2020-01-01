@@ -69,7 +69,6 @@ calcFreqs ::
   -> ExceptT String IO (Map.Map String Integer)
 calcFreqs accum [] = return $ accum
 calcFreqs !accum (f:fs) = do
-  liftIO $ print f
   bytecode <- parseFileContents f
   calcFreqs (addFreq accum bytecode) fs
 
