@@ -62,6 +62,9 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
+-- read about tasty, hunit
+-- add acceptance tetst for running JVM with output
+-- test current program
 -- remove Javelin.Util
 -- automatic code formatting
 -- replace Prelude with smth else
