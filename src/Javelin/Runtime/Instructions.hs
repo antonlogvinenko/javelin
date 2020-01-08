@@ -46,7 +46,7 @@ runJVM classPath mainClass args =
             Left err -> terminate err
 
 -- Global plan:
--- 1. create a small snippit
+-- 1. create a small snippet
 -- 2. do everything for a single snippet: make it work
 -- 3. write an acceptance test for the working snippet
 -- 4. write unit test for new code
@@ -63,14 +63,13 @@ runJVM classPath mainClass args =
 
 -- todo:
 -- read about tasty, hunit
+-- make printing of state between executions optional and visible (colors? formatting?)
 -- add acceptance tetst for running JVM with output
 -- test current program
 -- remove Javelin.Util
 -- automatic code formatting
 -- replace Prelude with smth else
--- establish acceptance testing
 -- establish unit testing
--- make printing of state between executions optional and visible (colors? formatting?)
 -- doc: project structure
 -- lazy/strict state
 
@@ -143,9 +142,9 @@ execute Nop = pureInstruction empty
 
 -- resolve field -> resolve class -> load class
 execute v@(GetStatic (CPIndex index)) =
-  \t@Thread{frames=(Frame{pc=pc,
+  \t@Thread{frames=Frame{pc=pc,
             currentClass=classId,
-            currentMethod=methodIndex}):_,
+            currentMethod=methodIndex}:_,
             runtime=rt} ->
     let eitherSymTable = symTable <$> getClass rt classId
     in case eitherSymTable of
@@ -154,10 +153,10 @@ execute v@(GetStatic (CPIndex index)) =
         -- console "index" index
         -- console "symTable" symTable
         let classFieldReference = symTable `at` index
-        case classFieldReference == out of
-          True -> do
+        if classFieldReference == out
+          then
             return (t, push outReference)
-          False -> do
+          else
             -- then do field resolving and class init
             return (t, empty)
 

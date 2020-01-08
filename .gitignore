@@ -1,3 +1,4 @@
+.vscode
 stack.yaml.lock
 dist-newstyle/
 jvmDump.log

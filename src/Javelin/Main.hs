@@ -41,7 +41,7 @@ loadClassPath opt bs =
     let words = BS.unpack bs
     in case parseRaw words of
         Right (_, _, v)  -> putStrLn $ showByteCode opt v
-        Left (_, off, v) -> putStrLn $ "Failed to parse file"
+        Left (_, off, v) -> putStrLn "Failed to parse file"
 
 loadClassWithDepsPure :: Global m => FilePath -> String -> m (Either VMError Runtime)
 loadClassWithDepsPure classPath className = do
@@ -98,7 +98,7 @@ javelinMain = execParser opts >>= runWithOptions
         DisasmSemantics <$> strArgument (metavar "Path to class file")
     disasmStatsParser =
         DisasmByteCodeStats <$> strArgument (metavar "Directory with classes") <*>
-        (optional $ strArgument (metavar "Output file path"))
+        optional (strArgument (metavar "Output file path"))
     loadClassPathParser =
         LoadClassPath <$> strArgument (metavar "JVM class path") <*>
         strArgument (metavar "Class file to load")
@@ -108,7 +108,7 @@ javelinMain = execParser opts >>= runWithOptions
     jvmParser =
         JVM <$> strArgument (metavar "mainClass") <*>
         strArgument (metavar "classPath") <*>
-        (some $ strArgument (metavar "mainArguments"))
+        some (strArgument (metavar "mainArguments"))
 
 runWithOptions :: JVMOpts -> IO ()
 runWithOptions jvmOpts =
