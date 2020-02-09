@@ -117,17 +117,17 @@ incrementInstructionCounter :: Thread -> Thread
 incrementInstructionCounter t@Thread{frames=(f@Frame{pc=pc}:fs)} = t{frames=f{pc=pc+1}:fs}
 
 nextInstructionLine :: Thread -> Either VMError Instruction
-nextInstructionLine Thread{frames=(Frame{pc=pc,
+nextInstructionLine Thread{frames=Frame{pc=pc,
                                          currentClass=classId,
-                                         currentMethod=methodIndex}):_,
+                                         currentMethod=methodIndex}:_,
                            runtime=rt} = do
   method <- getMethodByIndex rt classId methodIndex
   return $ instructions method !! pc
 
-pureInstruction :: Global m => (ThreadOperation ()) -> Thread -> m (Thread, ThreadOperation ())
+pureInstruction :: Global m => ThreadOperation () -> Thread -> m (Thread, ThreadOperation ())
 pureInstruction threadOperation thread = return (thread, threadOperation)
 
-impureInstruction :: Global m => (ThreadOperation ()) -> (Thread -> m Thread) -> Thread -> m (Thread, ThreadOperation ())
+impureInstruction :: Global m => ThreadOperation () -> (Thread -> m Thread) -> Thread -> m (Thread, ThreadOperation ())
 impureInstruction threadOperation threadModification thread = do
   thread2 <- threadModification thread
   return (thread2, threadOperation)
