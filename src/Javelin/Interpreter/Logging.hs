@@ -12,11 +12,11 @@ doIO False _ = liftIO $ return ()
 
 instance Logging JVM where
     dump x a = do
-        silent <- asks silentMode
-        doIO silent $ writeFile "jvmDump.log" (x ++ " " ++ show a)
+        logging <- asks loggingMode
+        doIO logging $ writeFile "jvmDump.log" (x ++ " " ++ show a)
     console x a = do
-        silent <- asks silentMode
-        doIO silent (putChunkLn $ fore blue (chunk (x ++ " " ++ show a)))
+        logging <- asks loggingMode
+        doIO logging (putChunkLn $ fore blue (chunk (x ++ " " ++ show a)))
     say x = do
-        silent <- asks silentMode
-        doIO silent (putChunkLn $ fore green (chunk x))
+        logging <- asks loggingMode
+        doIO logging (putChunkLn $ fore green (chunk x))

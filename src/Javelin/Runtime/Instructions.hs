@@ -62,14 +62,23 @@ runJVM classPath mainClass args =
 -- System.out.println(c);
 
 -- todo:
--- read about tasty, hunit
--- add acceptance tetst for running JVM with output
+-- add acceptance tests infrastructure for running JVM with output
 -- test current program
--- remove Javelin.Util
+
 -- automatic code formatting
--- replace Prelude with smth else
+
+-- remove Javelin.Util
+
+-- read about tasty, hunit
+
 -- establish unit testing
+
+-- replace Prelude with smth else
+
 -- doc: project structure
+
+-- reader tutorial
+
 -- lazy/strict state
 
 

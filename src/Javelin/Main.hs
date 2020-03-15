@@ -65,7 +65,7 @@ data JVMOpts
                         , classFilePath :: String }
     | JVM { mainClass :: String
         , classPath :: String
-        , silent    :: Bool
+        , loggingMode    :: Bool
         , args      :: [String] }
 
 javelinMain :: IO ()
@@ -109,7 +109,7 @@ javelinMain = execParser opts >>= runWithOptions
     jvmParser =
         JVM <$> strArgument (metavar "mainClass") <*>
         strArgument (metavar "classPath") <*>
-        flag True False (long "silentMode" <> short 's') <*>
+        flag False True (long "loggingMode" <> short 's') <*>
         some (strArgument (metavar "mainArguments"))
 
 runWithOptions :: JVMOpts -> IO ()
@@ -126,5 +126,5 @@ runWithOptions jvmOpts =
             Right bs -> loadClassPath False bs
         LoadClassWithDeps classPath classFilePath ->
           (loadClassWithDeps classPath classFilePath) >>= print
-        JVM mainClass classPath silentMode mainArgs ->
-            runJVMApp (runJVM classPath mainClass mainArgs) (JVMConfig silentMode)
+        JVM mainClass classPath loggingMode mainArgs ->
+            runJVMApp (runJVM classPath mainClass mainArgs) (JVMConfig loggingMode)
