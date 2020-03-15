@@ -1,5 +1,6 @@
 module Javelin.Lib.ByteCode.Test
-  ( acceptanceTests
+  ( acceptanceTests,
+    executeMainClass
   ) where
 
 import           Data.Word                  (Word16)
@@ -12,6 +13,14 @@ import           Data.Map.Strict            (member)
 
 import           Javelin.Lib.ByteCode.Stats     (getStats)
 import           Test.Tasty.Providers
+
+import            System.Process            (readProcess)
+
+rtPath = "/Library/Java/JavaVirtualMachines/openjdk8/Contents/Home/jre/lib/rt.jar:main"
+stackPath = "/usr/local/bin/stack"
+
+executeMainClass :: String -> IO String
+executeMainClass className = readProcess stackPath ["exec", "--", "javelin", "jvm", "--silentMode", className, rtPath, "1"] ""
 
 acceptanceTests = testGroup "Acceptance tests" [byteCodeTest]
 byteCodeTest = testGroup "ByteCode parsing" [statsAndParserTest]

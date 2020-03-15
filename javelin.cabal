@@ -71,6 +71,7 @@ test-suite javelin-test
                      Cabal >= 1.16.0,
                      containers ==0.6.0.1,
                      tasty ==1.2.3,
+                     process ==1.6.5.0,
                      HUnit,
                      tasty-hunit
   other-modules:
@@ -103,6 +104,6 @@ executable javelin
                        flow ==1.0.*,
                        lens ==4.17.1,
                        pretty-show ==1.9.5,
-                       optparse-applicative ==0.14.*,
+                       process ==1.6.5.0,
                        javelin
   default-language: Haskell2010

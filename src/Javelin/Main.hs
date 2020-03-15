@@ -13,7 +13,7 @@ import           Javelin.Runtime.Instructions         (runJVM)
 import           Javelin.Interpreter.ClassPathLoading
 import           Javelin.Interpreter.Loading          (deriveClass, loadClassOrArray)
 import           Javelin.Interpreter.JVMApp           (runJVMApp, JVMConfig(..))
-import           Javelin.Lib.Structures
+import           Javelin.Lib.Structures               hiding (long)
 import           Options.Applicative
 import           System.Directory
 import           System.Environment
@@ -51,7 +51,7 @@ loadClassWithDepsPure classPath className = do
   loadClass (ClassId BootstrapClassLoader className) rt
 
 loadClassWithDeps :: FilePath -> String -> IO (Either VMError Runtime)
-loadClassWithDeps classPath className = runJVMApp (loadClassWithDepsPure classPath className) JVMConfig
+loadClassWithDeps classPath className = runJVMApp (loadClassWithDepsPure classPath className) (JVMConfig False)
 
 data JVMOpts
     = Disasm { classFilePath :: String }
@@ -65,6 +65,7 @@ data JVMOpts
                         , classFilePath :: String }
     | JVM { mainClass :: String
         , classPath :: String
+        , silent    :: Bool
         , args      :: [String] }
 
 javelinMain :: IO ()
@@ -108,6 +109,7 @@ javelinMain = execParser opts >>= runWithOptions
     jvmParser =
         JVM <$> strArgument (metavar "mainClass") <*>
         strArgument (metavar "classPath") <*>
+        flag True False (long "silentMode" <> short 's') <*>
         some (strArgument (metavar "mainArguments"))
 
 runWithOptions :: JVMOpts -> IO ()
@@ -118,11 +120,11 @@ runWithOptions jvmOpts =
         DisasmSemantics path -> disasmSemantics path
         DisasmByteCodeStats path mbOutput -> stats path mbOutput
         LoadClassPath classPath classFilePath -> do
-          bb <- runJVMApp (getClassSourcesLayout classPath >>= getClassBytes classFilePath) JVMConfig
+          bb <- runJVMApp (getClassSourcesLayout classPath >>= getClassBytes classFilePath) (JVMConfig False)
           case bb of
             Left error -> print error
             Right bs -> loadClassPath False bs
         LoadClassWithDeps classPath classFilePath ->
           (loadClassWithDeps classPath classFilePath) >>= print
-        JVM mainClass classPath mainArgs ->
-            runJVMApp (runJVM classPath mainClass mainArgs) JVMConfig
+        JVM mainClass classPath silentMode mainArgs ->
+            runJVMApp (runJVM classPath mainClass mainArgs) (JVMConfig silentMode)

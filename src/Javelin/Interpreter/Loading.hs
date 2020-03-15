@@ -86,11 +86,10 @@ prepare :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 prepare classId rt =
   if isClassPrepared classId rt
   then return rt
-  else do
-    ExceptT . return $ Right $ markClassPrepared classId $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
-      classId
-      rt
-      (map initStaticField . filter (isFieldStatic . fieldAccess))
+  else ExceptT . return $ Right $ markClassPrepared classId $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
+        classId
+        rt
+        (map initStaticField . filter (isFieldStatic . fieldAccess))
       
   
 initStaticField :: Field -> Field
