@@ -1,20 +1,26 @@
 module Javelin.Lib.ByteCode.Data where
 
-import           Data.ByteString        (ByteString)
-import           Data.Int               (Int32, Int64)
-import           Data.List              (intercalate)
-import           Data.Word              (Word16, Word32, Word64, Word8)
-import           Javelin.Lib.ByteCode.Utils
-import           Javelin.Util
+import Data.ByteString (ByteString)
+import Data.Int (Int32, Int64)
+import Data.List (intercalate)
+import Data.Word (Word16, Word32, Word64, Word8)
+import Javelin.Lib.ByteCode.Utils
+import Javelin.Util
 
 tab = "    "
 
 data Paragraph
-  = P { heading :: String
-      , text    :: [Paragraph] }
-  | POpt { heading :: String
-         , text    :: [Paragraph] }
-  | L { heading :: String }
+  = P
+      { heading :: String
+      , text :: [Paragraph]
+      }
+  | POpt
+      { heading :: String
+      , text :: [Paragraph]
+      }
+  | L
+      { heading :: String
+      }
 
 alignLines :: Bool -> Paragraph -> [String]
 alignLines _ L {heading = h} = [h ++ "\n"]
@@ -105,38 +111,38 @@ br :: CPIndex -> Maybe Word16
 br (CPIndex idx) = Just idx
 
 cpIndex :: Instruction -> Maybe Word16
-cpIndex (Ldc x)               = br x
-cpIndex (LdcW x)              = br x
-cpIndex (Ldc2W x)             = br x
-cpIndex (GetStatic x)         = br x
-cpIndex (PutStatic x)         = br x
-cpIndex (GetField x)          = br x
-cpIndex (PutField x)          = br x
-cpIndex (InvokeVirtual x)     = br x
-cpIndex (InvokeSpecial x)     = br x
-cpIndex (InvokeStatic x)      = br x
+cpIndex (Ldc x) = br x
+cpIndex (LdcW x) = br x
+cpIndex (Ldc2W x) = br x
+cpIndex (GetStatic x) = br x
+cpIndex (PutStatic x) = br x
+cpIndex (GetField x) = br x
+cpIndex (PutField x) = br x
+cpIndex (InvokeVirtual x) = br x
+cpIndex (InvokeSpecial x) = br x
+cpIndex (InvokeStatic x) = br x
 cpIndex (InvokeInterface x _) = br x
-cpIndex (InvokeDynamic x _)   = br x
-cpIndex (New_ x)              = br x
-cpIndex (ANewArray x)         = br x
-cpIndex (CheckCast x)         = br x
-cpIndex (InstanceOf_ x)       = br x
-cpIndex (WideIInc x _)        = br x
-cpIndex (WideILoad x)         = br x
-cpIndex (WideFLoad x)         = br x
-cpIndex (WideALoad x)         = br x
-cpIndex (WideLLoad x)         = br x
-cpIndex (WideDLoad x)         = br x
-cpIndex (WideIStore x)        = br x
-cpIndex (WideFStore x)        = br x
-cpIndex (WideAStore x)        = br x
-cpIndex (WideLStore x)        = br x
-cpIndex (WideDStore x)        = br x
-cpIndex (WideRet x)           = br x
-cpIndex (MultiANewArray x _)  = br x
-cpIndex (IfNull x)            = br x
-cpIndex (IfNotNull x)         = br x
-cpIndex _                     = Nothing
+cpIndex (InvokeDynamic x _) = br x
+cpIndex (New_ x) = br x
+cpIndex (ANewArray x) = br x
+cpIndex (CheckCast x) = br x
+cpIndex (InstanceOf_ x) = br x
+cpIndex (WideIInc x _) = br x
+cpIndex (WideILoad x) = br x
+cpIndex (WideFLoad x) = br x
+cpIndex (WideALoad x) = br x
+cpIndex (WideLLoad x) = br x
+cpIndex (WideDLoad x) = br x
+cpIndex (WideIStore x) = br x
+cpIndex (WideFStore x) = br x
+cpIndex (WideAStore x) = br x
+cpIndex (WideLStore x) = br x
+cpIndex (WideDStore x) = br x
+cpIndex (WideRet x) = br x
+cpIndex (MultiANewArray x _) = br x
+cpIndex (IfNull x) = br x
+cpIndex (IfNotNull x) = br x
+cpIndex _ = Nothing
 
 -- Constant pool
 showPool :: ConstantPool -> Paragraph
@@ -228,22 +234,26 @@ showConstant p c@(InvokeDynamicInfo bi ti) =
     ]
 
 -- Definitions
-data ByteCode = ByteCode
-  { minVer :: Word16
-  , majVer :: Word16
-  , body   :: ClassBody
-  } deriving (Eq)
+data ByteCode =
+  ByteCode
+    { minVer :: Word16
+    , majVer :: Word16
+    , body :: ClassBody
+    }
+  deriving (Eq)
 
-data ClassBody = ClassBody
-  { constPool        :: ConstantPool
-  , classAccessFlags :: [ClassAccessFlags]
-  , this             :: Word16
-  , super            :: Word16 --0 for java.lang.Object
-  , interfaces       :: [Word16]
-  , fields           :: [FieldInfo]
-  , methods          :: [MethodInfo]
-  , attrs            :: [AttrInfo]
-  } deriving (Eq)
+data ClassBody =
+  ClassBody
+    { constPool :: ConstantPool
+    , classAccessFlags :: [ClassAccessFlags]
+    , this :: Word16
+    , super :: Word16 --0 for java.lang.Object
+    , interfaces :: [Word16]
+    , fields :: [FieldInfo]
+    , methods :: [MethodInfo]
+    , attrs :: [AttrInfo]
+    }
+  deriving (Eq)
 
 newtype ConstantPool =
   ConstantPool [Constant]
@@ -261,34 +271,64 @@ data ClassAccessFlags
   deriving (Show, Eq)
 
 data Constant
-  = Utf8Info { stringValue :: String }
-  | IntegerInfo { integer :: Int32 }
-  | FloatInfo { float :: Float }
-  | LongInfo { long :: Int64 }
-  | DoubleInfo { double :: Double }
-  | StringInfo { stringIndex :: Word16 }
-  | ClassInfo { nameIndex :: Word16 }
-  | NameAndTypeInfo { nameIndex                  :: Word16
-                    , nameAndTypeDescriptorIndex :: Word16 }
-  | Fieldref { classIndex       :: Word16
-             , nameAndTypeIndex :: Word16 }
-  | Methodref { classIndex       :: Word16
-              , nameAndTypeIndex :: Word16 }
-  | InterfaceMethodref { classIndex       :: Word16
-                       , nameAndTypeIndex :: Word16 }
-  | MethodHandleInfo { referenceKind  :: Word8
-                     , referenceIndex :: Word16 }
-  | MethodTypeInfo { methodTypeaDescriptorIndex :: Word16 }
-  | InvokeDynamicInfo { bootstrapMethodAttrIndex :: Word16
-                      , nameAndTypeIndex         :: Word16 }
+  = Utf8Info
+      { stringValue :: String
+      }
+  | IntegerInfo
+      { integer :: Int32
+      }
+  | FloatInfo
+      { float :: Float
+      }
+  | LongInfo
+      { long :: Int64
+      }
+  | DoubleInfo
+      { double :: Double
+      }
+  | StringInfo
+      { stringIndex :: Word16
+      }
+  | ClassInfo
+      { nameIndex :: Word16
+      }
+  | NameAndTypeInfo
+      { nameIndex :: Word16
+      , nameAndTypeDescriptorIndex :: Word16
+      }
+  | Fieldref
+      { classIndex :: Word16
+      , nameAndTypeIndex :: Word16
+      }
+  | Methodref
+      { classIndex :: Word16
+      , nameAndTypeIndex :: Word16
+      }
+  | InterfaceMethodref
+      { classIndex :: Word16
+      , nameAndTypeIndex :: Word16
+      }
+  | MethodHandleInfo
+      { referenceKind :: Word8
+      , referenceIndex :: Word16
+      }
+  | MethodTypeInfo
+      { methodTypeaDescriptorIndex :: Word16
+      }
+  | InvokeDynamicInfo
+      { bootstrapMethodAttrIndex :: Word16
+      , nameAndTypeIndex :: Word16
+      }
   deriving (Eq, Show)
 
-data FieldInfo = FieldInfo
-  { fieldAccessFlags     :: [FieldInfoAccessFlag]
-  , fieldNameIndex       :: Word16
-  , fieldDescriptorIndex :: Word16
-  , fieldAttrs           :: [AttrInfo]
-  } deriving (Show, Eq)
+data FieldInfo =
+  FieldInfo
+    { fieldAccessFlags :: [FieldInfoAccessFlag]
+    , fieldNameIndex :: Word16
+    , fieldDescriptorIndex :: Word16
+    , fieldAttrs :: [AttrInfo]
+    }
+  deriving (Show, Eq)
 
 data FieldInfoAccessFlag
   = FieldPublic
@@ -302,12 +342,14 @@ data FieldInfoAccessFlag
   | FieldEnum
   deriving (Show, Eq)
 
-data MethodInfo = MethodInfo
-  { methodAccessFlags         :: [MethodInfoAccessFlag]
-  , methodNameIndex           :: Word16
-  , methodInfoDescriptorIndex :: Word16
-  , methodAttrs               :: [AttrInfo]
-  } deriving (Show, Eq)
+data MethodInfo =
+  MethodInfo
+    { methodAccessFlags :: [MethodInfoAccessFlag]
+    , methodNameIndex :: Word16
+    , methodInfoDescriptorIndex :: Word16
+    , methodAttrs :: [AttrInfo]
+    }
+  deriving (Show, Eq)
 
 data MethodInfoAccessFlag
   = MethodPublic
@@ -473,8 +515,7 @@ data Instruction
   | LOr
   | IXor
   | LXor
-  | IInc Local
-         Word8
+  | IInc Local Word8
                    -- Conversions
   | I2L
   | I2F
@@ -515,12 +556,8 @@ data Instruction
   | Goto BranchOffset
   | Jsr BranchOffset
   | Ret Local
-  | TableSwitch Word32
-                Word32
-                Word32
-                [Word32]
-  | LookupSwitch Word32
-                 [(Word32, Word32)]
+  | TableSwitch Word32 Word32 Word32 [Word32]
+  | LookupSwitch Word32 [(Word32, Word32)]
   | IReturn
   | LReturn
   | FReturn
@@ -535,10 +572,8 @@ data Instruction
   | InvokeVirtual CPIndex
   | InvokeSpecial CPIndex
   | InvokeStatic CPIndex
-  | InvokeInterface CPIndex
-                    Word8
-  | InvokeDynamic CPIndex
-                  Word8
+  | InvokeInterface CPIndex Word8
+  | InvokeDynamic CPIndex Word8
   | New_ CPIndex
   | NewArray Word8
   | ANewArray CPIndex
@@ -549,8 +584,7 @@ data Instruction
   | MonitorEnter
   | MonitorExit
                    -- Extended
-  | WideIInc CPIndex
-             Word16
+  | WideIInc CPIndex Word16
   | WideILoad CPIndex
   | WideFLoad CPIndex
   | WideALoad CPIndex
@@ -562,8 +596,7 @@ data Instruction
   | WideLStore CPIndex
   | WideDStore CPIndex
   | WideRet CPIndex
-  | MultiANewArray CPIndex
-                   Word8
+  | MultiANewArray CPIndex Word8
   | IfNull CPIndex
   | IfNotNull CPIndex
   | GotoW Word32
@@ -579,41 +612,87 @@ isCodeAttrInfo (CodeAttr _ _ _ _ _) = True
 isCodeAttrInfo _ = False
 
 data AttrInfo
-  = UnknownAttr { unknownBytes :: ByteString }
-  | ConstantValue { constantValueIndex :: Word16 }
-  | CodeAttr { maxStack       :: Word16
-             , maxLocals      :: Word16
-             , code           :: [Instruction]
-             , exceptionTable :: [Exception]
-             , codeAttrs      :: [AttrInfo] }
-  | StackMapTable { entries :: [StackMapFrame] }
-  | Exceptions { exceptionIndexTable :: [Word16] }
-  | InnerClasses { classes :: [InnerClassInfo] }
-  | EnclosingMethod { enclosingClassIndex  :: Word16
-                    , enclosingMethodIndex :: Word16 }
+  = UnknownAttr
+      { unknownBytes :: ByteString
+      }
+  | ConstantValue
+      { constantValueIndex :: Word16
+      }
+  | CodeAttr
+      { maxStack :: Word16
+      , maxLocals :: Word16
+      , code :: [Instruction]
+      , exceptionTable :: [Exception]
+      , codeAttrs :: [AttrInfo]
+      }
+  | StackMapTable
+      { entries :: [StackMapFrame]
+      }
+  | Exceptions
+      { exceptionIndexTable :: [Word16]
+      }
+  | InnerClasses
+      { classes :: [InnerClassInfo]
+      }
+  | EnclosingMethod
+      { enclosingClassIndex :: Word16
+      , enclosingMethodIndex :: Word16
+      }
   | Synthetic
-  | Signature { signatureIndex :: Word16 }
-  | SourceFile { sourceFileIndex :: Word16 }
-  | SourceDebugExtension { debugExtension :: String }
-  | LineNumberTable { lineNumberTable :: [LineNumber] }
-  | LocalVariableTable { localVariableTable :: [LocalVariableInfo] }
-  | LocalVariableTypeTable { localVariableTypeTable :: [LocalVariableInfo] }
+  | Signature
+      { signatureIndex :: Word16
+      }
+  | SourceFile
+      { sourceFileIndex :: Word16
+      }
+  | SourceDebugExtension
+      { debugExtension :: String
+      }
+  | LineNumberTable
+      { lineNumberTable :: [LineNumber]
+      }
+  | LocalVariableTable
+      { localVariableTable :: [LocalVariableInfo]
+      }
+  | LocalVariableTypeTable
+      { localVariableTypeTable :: [LocalVariableInfo]
+      }
   | Deprecated
-  | RTVisibleAnns { annotations :: [Ann] }
-  | RTInvisibleAnns { annotations :: [Ann] }
-  | RTVisibleParamAnns { paramAnns :: [[Ann]] }
-  | RTInvisibleParamAnns { paramAnns :: [[Ann]] }
-  | RTVisibleTypeAnns { typeAnns :: [TypeAnn] }
-  | RTInvisibleTypeAnns { typeAnns :: [TypeAnn] }
-  | AnnDefault { defaultValue :: [Word8] }
-  | BootstrapMethods { bootstrapMethods :: [BootstrapMethod] }
-  | MethodParameters { parameters :: [MethodParameter] }
+  | RTVisibleAnns
+      { annotations :: [Ann]
+      }
+  | RTInvisibleAnns
+      { annotations :: [Ann]
+      }
+  | RTVisibleParamAnns
+      { paramAnns :: [[Ann]]
+      }
+  | RTInvisibleParamAnns
+      { paramAnns :: [[Ann]]
+      }
+  | RTVisibleTypeAnns
+      { typeAnns :: [TypeAnn]
+      }
+  | RTInvisibleTypeAnns
+      { typeAnns :: [TypeAnn]
+      }
+  | AnnDefault
+      { defaultValue :: [Word8]
+      }
+  | BootstrapMethods
+      { bootstrapMethods :: [BootstrapMethod]
+      }
+  | MethodParameters
+      { parameters :: [MethodParameter]
+      }
   deriving (Show, Eq)
 
-data MethodParameter = MethodParameter
-  { parameterNameIndex   :: Word16
-  , parameterAccessFlags :: [ParameterAccessFlag]
-  } deriving (Show, Eq)
+data MethodParameter =
+  MethodParameter
+    { parameterNameIndex :: Word16
+    , parameterAccessFlags :: [ParameterAccessFlag]
+    }
+  deriving (Show, Eq)
 
 data ParameterAccessFlag
   = ACC_FINAL
@@ -621,46 +700,66 @@ data ParameterAccessFlag
   | ACC_MANDATED
   deriving (Show, Eq)
 
-data BootstrapMethod = BootstrapMethod
-  { methodRef :: Word16
-  , arguments :: [Word16]
-  } deriving (Show, Eq)
-
-data ElementValue
-  = ElementConstValue { tag   :: Char
-                      , value :: Word16 }
-  | ElementEnumConstValue { tag            :: Char
-                          , typeNameIndex  :: Word16
-                          , constNameIndex :: Word16 }
-  | ElementClassInfoIndex { tag            :: Char
-                          , classInfoIndex :: Word16 }
-  | ElementAnnValue { tag        :: Char
-                    , annotation :: Ann }
-  | ElementArrayValue { tag           :: Char
-                      , elementValues :: [ElementValue] }
+data BootstrapMethod =
+  BootstrapMethod
+    { methodRef :: Word16
+    , arguments :: [Word16]
+    }
   deriving (Show, Eq)
 
-data ElementValuePair = ElementValuePair
-  { elementNameIndex :: Word16
-  , elementValue     :: ElementValue
-  } deriving (Show, Eq)
+data ElementValue
+  = ElementConstValue
+      { tag :: Char
+      , value :: Word16
+      }
+  | ElementEnumConstValue
+      { tag :: Char
+      , typeNameIndex :: Word16
+      , constNameIndex :: Word16
+      }
+  | ElementClassInfoIndex
+      { tag :: Char
+      , classInfoIndex :: Word16
+      }
+  | ElementAnnValue
+      { tag :: Char
+      , annotation :: Ann
+      }
+  | ElementArrayValue
+      { tag :: Char
+      , elementValues :: [ElementValue]
+      }
+  deriving (Show, Eq)
 
-data Ann = Ann
-  { typeIndex         :: Word16
-  , elementValuePairs :: [ElementValuePair]
-  } deriving (Show, Eq)
+data ElementValuePair =
+  ElementValuePair
+    { elementNameIndex :: Word16
+    , elementValue :: ElementValue
+    }
+  deriving (Show, Eq)
 
-data TypeAnn = TypeAnn
-  { targetType     :: TypeTargetType
-  , targetInfo     :: TypeTargetInfo
-  , targetPath     :: [TypePathElem]
-  , typeAnnotation :: Ann
-  } deriving (Show, Eq)
+data Ann =
+  Ann
+    { typeIndex :: Word16
+    , elementValuePairs :: [ElementValuePair]
+    }
+  deriving (Show, Eq)
 
-data TypePathElem = TypePathElem
-  { typePathKind      :: Word8
-  , typeArgumentIndex :: Word8
-  } deriving (Show, Eq)
+data TypeAnn =
+  TypeAnn
+    { targetType :: TypeTargetType
+    , targetInfo :: TypeTargetInfo
+    , targetPath :: [TypePathElem]
+    , typeAnnotation :: Ann
+    }
+  deriving (Show, Eq)
+
+data TypePathElem =
+  TypePathElem
+    { typePathKind :: Word8
+    , typeArgumentIndex :: Word8
+    }
+  deriving (Show, Eq)
 
 data TypeTargetType
   = GenericClassInterface
@@ -688,32 +787,56 @@ data TypeTargetType
   deriving (Show, Eq)
 
 data TypeTargetInfo
-  = TypeParameterTarget { typeParameterIndex :: Word8 }
-  | SupertypeTarget { superTypeIndex :: Word16 }
-  | TypeParameterBoundTarget { typeParameterIndex :: Word8
-                             , boundIndex         :: Word8 }
-  | EmptyTarget { }
-  | FormalParameterTarget { formalParameterIndex :: Word8 }
-  | ThrowsTarget { throwsTypeIndex :: Word16 }
-  | LocalvarTarget { localvarTargetTable :: [LocalVarTargetElem] }
-  | CatchTarget { exceptionTableIndex :: Word16 }
-  | OffsetTarget { offsetTarget :: Word16 }
-  | TypeArgumentTarget { offsetTarget            :: Word16
-                       , typeArgumentTargetIndex :: Word8 }
+  = TypeParameterTarget
+      { typeParameterIndex :: Word8
+      }
+  | SupertypeTarget
+      { superTypeIndex :: Word16
+      }
+  | TypeParameterBoundTarget
+      { typeParameterIndex :: Word8
+      , boundIndex :: Word8
+      }
+  | EmptyTarget
+      {
+      }
+  | FormalParameterTarget
+      { formalParameterIndex :: Word8
+      }
+  | ThrowsTarget
+      { throwsTypeIndex :: Word16
+      }
+  | LocalvarTarget
+      { localvarTargetTable :: [LocalVarTargetElem]
+      }
+  | CatchTarget
+      { exceptionTableIndex :: Word16
+      }
+  | OffsetTarget
+      { offsetTarget :: Word16
+      }
+  | TypeArgumentTarget
+      { offsetTarget :: Word16
+      , typeArgumentTargetIndex :: Word8
+      }
   deriving (Show, Eq)
 
-data LocalVarTargetElem = LocalVarTargetElem
-  { varStartPc :: Word16
-  , varLen     :: Word16
-  , varIndex   :: Word16
-  } deriving (Show, Eq)
+data LocalVarTargetElem =
+  LocalVarTargetElem
+    { varStartPc :: Word16
+    , varLen :: Word16
+    , varIndex :: Word16
+    }
+  deriving (Show, Eq)
 
-data Exception = Exception
-  { startPc   :: Word16
-  , endPc     :: Word16
-  , handlerPc :: Word16
-  , catchType :: Word16
-  } deriving (Show, Eq)
+data Exception =
+  Exception
+    { startPc :: Word16
+    , endPc :: Word16
+    , handlerPc :: Word16
+    , catchType :: Word16
+    }
+  deriving (Show, Eq)
 
 data VerifTypeInfo
   = TopVariableInfo
@@ -723,36 +846,56 @@ data VerifTypeInfo
   | DoubleVariableInfo
   | NullVariableInfo
   | UninitializedThisVariableInfo
-  | ObjectVariableInfo { cpoolIndex :: Word16 }
-  | UninitializedVariableInfo { offset :: Word16 }
+  | ObjectVariableInfo
+      { cpoolIndex :: Word16
+      }
+  | UninitializedVariableInfo
+      { offset :: Word16
+      }
   deriving (Show, Eq)
 
 data StackMapFrame
-  = SameFrame { frameType :: Word8 }
-  | SameLocals1StackItemFrame { frameType :: Word8
-                              , stackItem :: VerifTypeInfo }
-  | SameLocals1StackItemFrameExtended { frameType  :: Word8
-                                      , offsetData :: Word16
-                                      , stackItem  :: VerifTypeInfo }
-  | ChopFrame { frameType   :: Word8
-              , offsetDelta :: Word16 }
-  | SameFrameExtended { frameType   :: Word8
-                      , offsetDelta :: Word16 }
-  | AppendFrame { frameType   :: Word8
-                , offsetDelta :: Word16
-                , locals      :: [VerifTypeInfo] }
-  | FullFrame { frameType   :: Word8
-              , offsetDelta :: Word16
-              , locals      :: [VerifTypeInfo]
-              , stack       :: [VerifTypeInfo] }
+  = SameFrame
+      { frameType :: Word8
+      }
+  | SameLocals1StackItemFrame
+      { frameType :: Word8
+      , stackItem :: VerifTypeInfo
+      }
+  | SameLocals1StackItemFrameExtended
+      { frameType :: Word8
+      , offsetData :: Word16
+      , stackItem :: VerifTypeInfo
+      }
+  | ChopFrame
+      { frameType :: Word8
+      , offsetDelta :: Word16
+      }
+  | SameFrameExtended
+      { frameType :: Word8
+      , offsetDelta :: Word16
+      }
+  | AppendFrame
+      { frameType :: Word8
+      , offsetDelta :: Word16
+      , locals :: [VerifTypeInfo]
+      }
+  | FullFrame
+      { frameType :: Word8
+      , offsetDelta :: Word16
+      , locals :: [VerifTypeInfo]
+      , stack :: [VerifTypeInfo]
+      }
   deriving (Show, Eq)
 
-data InnerClassInfo = InnerClassInfo
-  { innerClassInfoIndex   :: Word16
-  , outerClassInfoIndex   :: Word16
-  , innerNameIndex        :: Word16
-  , innerClassAccessFlags :: [InnerClassAccessFlags]
-  } deriving (Show, Eq)
+data InnerClassInfo =
+  InnerClassInfo
+    { innerClassInfoIndex :: Word16
+    , outerClassInfoIndex :: Word16
+    , innerNameIndex :: Word16
+    , innerClassAccessFlags :: [InnerClassAccessFlags]
+    }
+  deriving (Show, Eq)
 
 data InnerClassAccessFlags
   = InnerClassPublic
@@ -767,15 +910,19 @@ data InnerClassAccessFlags
   | InnerClassEnum
   deriving (Show, Eq)
 
-data LineNumber = LineNumber
-  { lineStartPc :: Word16
-  , lineNumber  :: Word16
-  } deriving (Show, Eq)
+data LineNumber =
+  LineNumber
+    { lineStartPc :: Word16
+    , lineNumber :: Word16
+    }
+  deriving (Show, Eq)
 
-data LocalVariableInfo = LocalVariableInfo
-  { localVariableStartPc   :: Word16
-  , localVariableLength    :: Word16
-  , localVariableNameIndex :: Word16
-  , variableSignatureIndex :: Word16
-  , localVariableIndex     :: Word16
-  } deriving (Show, Eq)
+data LocalVariableInfo =
+  LocalVariableInfo
+    { localVariableStartPc :: Word16
+    , localVariableLength :: Word16
+    , localVariableNameIndex :: Word16
+    , variableSignatureIndex :: Word16
+    , localVariableIndex :: Word16
+    }
+  deriving (Show, Eq)

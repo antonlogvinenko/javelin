@@ -6,17 +6,17 @@ module Javelin.Lib.ByteCode.ClassFile
   , classBody
   ) where
 
-import           Control.Applicative
-import           Data.Binary.Get
-import qualified Data.ByteString.Lazy          as LBS (ByteString, null, pack)
-import           Data.Map                      (Map, fromList)
-import           Data.Word
+import Control.Applicative
+import Data.Binary.Get
+import qualified Data.ByteString.Lazy as LBS (ByteString, null, pack)
+import Data.Map (Map, fromList)
+import Data.Word
 
-import           Javelin.Lib.ByteCode.Attribute
-import           Javelin.Lib.ByteCode.ConstantPool
-import           Javelin.Lib.ByteCode.Data
-import           Javelin.Lib.ByteCode.FieldMethod
-import           Javelin.Lib.ByteCode.Utils
+import Javelin.Lib.ByteCode.Attribute
+import Javelin.Lib.ByteCode.ConstantPool
+import Javelin.Lib.ByteCode.Data
+import Javelin.Lib.ByteCode.FieldMethod
+import Javelin.Lib.ByteCode.Utils
 
 getInterface :: Get Word16
 getInterface = getWord16

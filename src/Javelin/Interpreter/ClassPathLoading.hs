@@ -4,38 +4,33 @@ module Javelin.Interpreter.ClassPathLoading
   , getClassBytes
   ) where
 
-import           Data.ByteString            as BSS (ByteString)
-import           Data.ByteString.Lazy       as BSL (ByteString, readFile,
-                                                    toStrict)
-import           Data.List
-import           Data.Map                   as Map (Map, empty, fromList,
-                                                    lookup, unions)
-import           System.Directory           (doesDirectoryExist,
-                                             getDirectoryContents)
-import           System.FilePath            ((</>))
+import Data.ByteString as BSS (ByteString)
+import Data.ByteString.Lazy as BSL (ByteString, readFile, toStrict)
+import Data.List
+import Data.Map as Map (Map, empty, fromList, lookup, unions)
+import System.Directory (doesDirectoryExist, getDirectoryContents)
+import System.FilePath ((</>))
 
-import           Codec.Archive.Zip
-import           Data.Either.Utils          (maybeToEither)
-import           Data.List.Split            (splitOn)
-import           Data.String.Utils          (strip)
+import Codec.Archive.Zip
+import Data.Either.Utils (maybeToEither)
+import Data.List.Split (splitOn)
+import Data.String.Utils (strip)
 
-import           Javelin.Lib.Structures
+import Javelin.Lib.Structures
 
-import           Control.Applicative        ((<$>))
-import           Control.Monad.Trans
-import           Control.Monad.Trans.Except
-import           Flow
-import           Javelin.Interpreter.JVMApp
-import           Javelin.Capability.Classes
-
+import Control.Applicative ((<$>))
+import Control.Monad.Trans
+import Control.Monad.Trans.Except
+import Flow
+import Javelin.Capability.Classes
+import Javelin.Interpreter.JVMApp
 
 instance ClassPathLoading JVM where
-  getClassSourcesLayout paths = 
+  getClassSourcesLayout paths =
     let pathsList = strip <$> splitOn ":" paths
-    in liftIO $ do
-      layout <- getClassPathLayout pathsList
-      return $ ClassPathLayout layout pathsList
-
+     in liftIO $ do
+          layout <- getClassPathLayout pathsList
+          return $ ClassPathLayout layout pathsList
 
 getClassPathLayout :: [FilePath] -> IO (Map ClassName ClassSource)
 getClassPathLayout paths = unions <$> mapM getClassPathElementLayout paths
@@ -78,7 +73,9 @@ extractZipClasses path = do
   return $ Map.fromList $ (\c -> (c, s)) <$> pathToClass <$> paths
 
 extractFileClass :: FilePath -> IO (Map ClassName ClassSource)
-extractFileClass path = return (Map.fromList [(pathToClass (filePathToClassPath path), ClassFile path)])
+extractFileClass path =
+  return
+    (Map.fromList [(pathToClass (filePathToClassPath path), ClassFile path)])
 
 --Convert "main/test/App.class" to expected class path "test/App.class"
 filePathToClassPath :: String -> String

@@ -2,40 +2,39 @@
 
 module Javelin.Interpreter.Loading where
 
-import           Javelin.Lib.ByteCode.ClassFile    (parseRaw)
-import           Javelin.Lib.ByteCode.Data
-import           Javelin.Lib.ByteCode.DescSign
-import           Javelin.Interpreter.ClassPathLoading (getClassBytes)
-import           Javelin.Lib.Structures
+import Javelin.Interpreter.ClassPathLoading (getClassBytes)
+import Javelin.Lib.ByteCode.ClassFile (parseRaw)
+import Javelin.Lib.ByteCode.Data
+import Javelin.Lib.ByteCode.DescSign
+import Javelin.Lib.Structures
 
-import           Data.ByteString            as BSS  (ByteString, unpack)
-import           Data.ByteString.Lazy       as BSL (ByteString, readFile,
-                                                    toStrict)
-import           Data.Map                      as Map (Map (..), empty, insert,
-                                                       lookup, member, (!))
-import           Data.Maybe                    (catMaybes, isJust, isNothing,
-                                                listToMaybe)
-import           Data.Word                     (Word16)
+import Data.ByteString as BSS (ByteString, unpack)
+import Data.ByteString.Lazy as BSL (ByteString, readFile, toStrict)
+import Data.Map as Map (Map(..), (!), empty, insert, lookup, member)
+import Data.Maybe (catMaybes, isJust, isNothing, listToMaybe)
+import Data.Word (Word16)
 
-import           Control.Lens                  (ix, to, (^.), (^?))
-import           Control.Monad.Trans.Class     (lift)
-import           Control.Monad.Trans.Except    (ExceptT (..), throwE,
-                                                withExceptT, except, runExceptT)
-import           Data.Either.Utils             (maybeToEither)
-import           Flow                          ((|>))
-import           Javelin.Util                  (at)
-import           Javelin.Interpreter.JVMApp
-import           Javelin.Capability.Classes
-import           Control.Monad.IO.Class        (liftIO)
-import           Codec.Archive.Zip
-
-
+import Codec.Archive.Zip
+import Control.Lens ((^.), (^?), ix, to)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Except
+  ( ExceptT(..)
+  , except
+  , runExceptT
+  , throwE
+  , withExceptT
+  )
+import Data.Either.Utils (maybeToEither)
+import Flow ((|>))
+import Javelin.Capability.Classes
+import Javelin.Interpreter.JVMApp
+import Javelin.Util (at)
 
 instance ClassLoading JVM where
   loadClass classId rt = liftIO $ runExceptT $ loadClassOrArray classId rt
   initClass classId rt = liftIO $ runExceptT $ initClassOrArray classId rt
   getClassBytes name classPath = liftIO $ getClassBytesIO name classPath
-       
   -- 5.3 Creation and Loading top level code
 
 getClassBytesIO name (ClassPathLayout classes _) = do
@@ -46,10 +45,10 @@ getClassBytesIO name (ClassPathLayout classes _) = do
 -- ExceptT (Either VMError (IO ByteString))
 getClassFromSource ::
      ClassName -> ClassSource -> IO (Either VMError BSS.ByteString)
-getClassFromSource name (ClassFile path) =
+getClassFromSource name (ClassFile path)
   --todo should we check that class x.y.z.class is loaded from x/y/z.class file?
+ = Right <$> BSL.toStrict <$> BSL.readFile path
 --  if classToPath name == path
-    Right <$> BSL.toStrict <$> BSL.readFile path
 --    else throwE $ ClassNotFoundException "cake"
 getClassFromSource name (JarFile path) = do
   raw <- BSL.readFile path
@@ -62,18 +61,17 @@ getClassFromSource name (JarFile path) = do
 classToPath :: ClassName -> FilePath
 classToPath name = name ++ ".class"
 
-
 initClassOrArray :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 initClassOrArray classId rt = linking classId rt
-        
+
 loadClassOrArray :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 loadClassOrArray request@(ClassId initCL name) rt =
   let loaderFn =
         if isArray name
           then loadArray
           else loadClazz
-  in case rt ^. loadedClasses . to (Map.lookup request) of
-        Just _  -> lift $ return rt
+   in case rt ^. loadedClasses . to (Map.lookup request) of
+        Just _ -> lift $ return rt
         Nothing -> loaderFn request rt
 
 linking :: ClassId -> Runtime -> ExceptT VMError IO Runtime
@@ -85,22 +83,20 @@ verify classId rt = loadClassOrArray classId rt --todo not doing actual verifica
 prepare :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 prepare classId rt =
   if isClassPrepared classId rt
-  then return rt
-  else ExceptT . return $ Right $ markClassPrepared classId $ updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
-        classId
-        rt
-        (map initStaticField . filter (isFieldStatic . fieldAccess))
-      
-  
+    then return rt
+    else ExceptT . return $ Right $ markClassPrepared classId $
+         updateClassFields --todo replace with 'except' when transformers = 0.5.6.2
+           classId
+           rt
+           (map initStaticField . filter (isFieldStatic . fieldAccess))
+
 initStaticField :: Field -> Field
 initStaticField field =
   let value =
         case fieldType field of
           BaseType bt -> baseDefaultValues ! bt
-          _           -> nullReference
-    in field {staticValue = Just value}
-
-
+          _ -> nullReference
+   in field {staticValue = Just value}
 
 -- 5.1 Deriving the Run-Time Constant Pool
 --- The constant_pool table (§4.4) in the binary representation
@@ -140,7 +136,7 @@ internString :: SymTable -> String -> (Word16, SymTable)
 internString st str =
   case findString 0 str st of
     Just idx -> (idx, st)
-    Nothing  -> appendString str st
+    Nothing -> appendString str st
 
 findString _ _ [] = Nothing
 findString i str (s:st) =
@@ -168,7 +164,7 @@ deriveFromClass classIdx nameAndTypeIdx p =
 
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
 -- 5.3.5 Deriving a Class from a class File Representation
-checkAndRecordLoadedClass :: 
+checkAndRecordLoadedClass ::
      ClassId
   -> Runtime
   -> ClassLoader
@@ -183,7 +179,8 @@ checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
     checkSuperInterfaces request defCL classInfo >>=
     recordClassLoading name classInfo initCL defCL
 
-checkInitiatingClassLoader :: ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
+checkInitiatingClassLoader ::
+     ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
 checkInitiatingClassLoader initCL name rt = do
   if rt ^. loadedClasses . (to $ Map.member (ClassId initCL name))
     then throwE $ Linkage rt LinkageError
@@ -193,7 +190,7 @@ checkClassFileFormat :: BSS.ByteString -> Runtime -> ExceptT VMError IO ByteCode
 checkClassFileFormat bs rt =
   let body = parseRaw $ unpack bs
    in case body of
-        Left (_, _, msg)       -> throwE $ Linkage rt ClassFormatError
+        Left (_, _, msg) -> throwE $ Linkage rt ClassFormatError
         Right (_, _, byteCode) -> lift $ return byteCode
 
 --todo also check class name is correct
@@ -203,7 +200,8 @@ checkClassVersion bc rt =
     then throwE $ Linkage rt UnsupportedClassVersionError
     else lift $ return ()
 
-checkRepresentedClass :: ClassName -> Runtime -> ByteCode -> ExceptT VMError IO SymTable
+checkRepresentedClass ::
+     ClassName -> Runtime -> ByteCode -> ExceptT VMError IO SymTable
 checkRepresentedClass name rt bc =
   let pool = constPool $ body bc
       symTable = deriveSymTable pool
@@ -217,7 +215,8 @@ checkRepresentedClass name rt bc =
         _ -> throwE $ Linkage rt ClassFormatError
 
 -- last case is due to invalid bytecode; throw an exception and terminate?
-checkSuperClass :: ClassId -> ClassLoader -> Runtime -> Class -> ExceptT VMError IO Runtime
+checkSuperClass ::
+     ClassId -> ClassLoader -> Runtime -> Class -> ExceptT VMError IO Runtime
 checkSuperClass request defCL rt classInfo =
   let classSuperName = superName classInfo
       name = getName request
@@ -244,7 +243,8 @@ checkSuperClass request defCL rt classInfo =
                         then throwE $ Linkage rt ClassCircularityError
                         else lift $ return rt
 
-checkSuperInterfaces :: ClassId -> ClassLoader -> Class -> Runtime -> ExceptT VMError IO Runtime
+checkSuperInterfaces ::
+     ClassId -> ClassLoader -> Class -> Runtime -> ExceptT VMError IO Runtime
 checkSuperInterfaces request defCL classInfo rt =
   let superInterfaces = classInterfaces classInfo
    in foldl
@@ -252,7 +252,7 @@ checkSuperInterfaces request defCL classInfo rt =
         (lift $ return rt)
         superInterfaces
 
-checkSuperInterface :: 
+checkSuperInterface ::
      ClassId
   -> ClassLoader
   -> Class
@@ -272,7 +272,7 @@ checkSuperInterface request defCL classInfo eitherRt parentInterface = do
         then throwE $ Linkage rt ClassCircularityError
         else lift $ return rt
 
-recordClassLoading :: 
+recordClassLoading ::
      ClassName
   -> Class
   -> ClassLoader
@@ -281,7 +281,7 @@ recordClassLoading ::
   -> ExceptT VMError IO Runtime
 recordClassLoading name classInfo defCL initCL rt =
   let c = LoadedClass defCL initCL (name, defCL) classInfo
-  in ExceptT $ return $ Right $ addLoadedClass (ClassId initCL name) c rt
+   in ExceptT $ return $ Right $ addLoadedClass (ClassId initCL name) c rt
 
 deriveClass :: ByteCode -> Either VMError Class
 deriveClass bc =
@@ -290,11 +290,17 @@ deriveClass bc =
       sym = deriveSymTable cp
       ClassOrInterface className = sym `at` (this classBody)
       superIdx = super classBody
-      superName = if superIdx == 0 then Nothing else Just $ classOrInterfaceName $ sym `at` superIdx
+      superName =
+        if superIdx == 0
+          then Nothing
+          else Just $ classOrInterfaceName $ sym `at` superIdx
       classAttrs = attrs classBody
       accessFlags = classAccessFlags classBody
-      classInterfaces = classBody |> interfaces |> map (classOrInterfaceName . (sym `at`))
-      classMethods = classBody |> methods |> map (checkAndRecordLoadedClassMethods sym classBody)
+      classInterfaces =
+        classBody |> interfaces |> map (classOrInterfaceName . (sym `at`))
+      classMethods =
+        classBody |> methods |>
+        map (checkAndRecordLoadedClassMethods sym classBody)
    in do classFields <-
            mapM
              (checkAndRecordLoadedClassFields sym classBody)
@@ -361,17 +367,22 @@ deriveFieldAccess flags =
     (elem FieldSynthetic flags)
     (elem FieldEnum flags)
 
-checkAndRecordLoadedClassMethods :: SymTable -> ClassBody -> MethodInfo -> Method
+checkAndRecordLoadedClassMethods ::
+     SymTable -> ClassBody -> MethodInfo -> Method
 checkAndRecordLoadedClassMethods sym body methodInfo =
   let methodName = methodInfo |> methodNameIndex |> (sym `at`) |> string
-      methodDescriptor = methodInfo |> methodInfoDescriptorIndex |> (sym `at`) |> string
+      methodDescriptor =
+        methodInfo |> methodInfoDescriptorIndex |> (sym `at`) |> string
       attrs = methodAttrs methodInfo
       codeAttr = head $ filter isCodeAttrInfo attrs
    in Method
         methodName
         methodDescriptor
         (deriveMethodAccess $ methodAccessFlags methodInfo)
-        (maxStack codeAttr) (maxLocals codeAttr) (code codeAttr) (exceptionTable codeAttr)
+        (maxStack codeAttr)
+        (maxLocals codeAttr)
+        (code codeAttr)
+        (exceptionTable codeAttr)
         []
 
 deriveMethodAccess :: [MethodInfoAccessFlag] -> MethodAccess
@@ -404,9 +415,9 @@ getMethods bc sym = bc |> body |> methods |> foldl fieldsFold Map.empty
     buildPartReference (MethodInfo _ nameIdx descrIdx _) =
       PartReference (string $ sym `at` nameIdx) (string $ sym `at` descrIdx)
 
-
 loadClazz :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-loadClazz request@(ClassId BootstrapClassLoader _) rt = loadClassWithBootstrap request rt
+loadClazz request@(ClassId BootstrapClassLoader _) rt =
+  loadClassWithBootstrap request rt
 loadClazz request rt = loadClassWithUserDefCL request rt
 
 isArray :: ClassName -> Bool
@@ -453,19 +464,20 @@ loadAndGetDefCLOfComponentType classId@(ClassId initCL name) rt repr@(ArrayRepr 
     Nothing -> return (rt, BootstrapClassLoader)
 
 -- to be rewritten with introduction of parsed types
-data ArrayRepr = ArrayRepr
-  { depth         :: Int
-  , componentType :: Maybe String
-  }
+data ArrayRepr =
+  ArrayRepr
+    { depth :: Int
+    , componentType :: Maybe String
+    }
 
 parseSignature :: String -> ArrayRepr
 parseSignature name = bla name (ArrayRepr 0 Nothing)
 
 bla :: String -> ArrayRepr -> ArrayRepr
-bla [] r      = r
+bla [] r = r
 bla ('[':s) r = bla s r {depth = (depth r) + 1}
 bla ('L':s) r = r {componentType = Just $ take ((length s) - 1) s}
-bla (_:xs) r  = bla xs r
+bla (_:xs) r = bla xs r
 
 -- 5.3.4 Loading Constraints
 -- not implemented yet
@@ -481,11 +493,11 @@ resolveClass request@(ClassId initCL name) rt =
       if d > 0
         then case mt of
                Nothing -> lift $ return rt
-               Just t  -> resolveClass (ClassId initCL t) rt
+               Just t -> resolveClass (ClassId initCL t) rt
         else lift $ return rt
 
 -- API fn for resolving a field
-resolveField :: 
+resolveField ::
      ClassId -> PartReference -> Runtime -> ExceptT VMError IO Runtime
 resolveField classId partRef rt = do
   rt <- resolveClass classId rt
@@ -494,7 +506,8 @@ resolveField classId partRef rt = do
     case mowner of
       Nothing -> Left $ Linkage rt NoSuchFieldError
       Just owner ->
-        Right $ addResolvedClassField classId (ClassPartReference partRef owner) rt
+        Right $
+        addResolvedClassField classId (ClassPartReference partRef owner) rt
 
 -- Recursive fn for looking for a field
 resolveFieldSearch ::
@@ -502,7 +515,7 @@ resolveFieldSearch ::
 resolveFieldSearch classId partRef rt = do
   mowner <- resolveFieldInClass classId partRef rt
   case mowner of
-    Nothing    -> resolveClassFieldInParents classId partRef rt
+    Nothing -> resolveClassFieldInParents classId partRef rt
     Just owner -> return $ Just owner
 
 -- Resolving field in a specific class
@@ -538,14 +551,15 @@ findSuccessfulResolution ::
 findSuccessfulResolution [] = Right Nothing
 findSuccessfulResolution (either:xs) =
   case either of
-    Left err      -> Left err
+    Left err -> Left err
     Right Nothing -> findSuccessfulResolution xs
-    Right owner   -> Right owner
+    Right owner -> Right owner
 
 type MethodResolution
    = Runtime -> PartReference -> ClassId -> Class -> Either VMError (Maybe String)
 
-resolveMethod :: Runtime -> PartReference -> ClassId -> ExceptT VMError IO Runtime
+resolveMethod ::
+     Runtime -> PartReference -> ClassId -> ExceptT VMError IO Runtime
 resolveMethod rt partRef classId = do
   rt <- resolveClass classId rt
   ExceptT $ return $ do
@@ -554,14 +568,15 @@ resolveMethod rt partRef classId = do
     case mclass of
       Nothing -> Left $ Linkage rt NoSuchMethodError
       Just owner ->
-        Right $ addResolvedClassMethod classId (ClassPartReference partRef owner) rt
+        Right $
+        addResolvedClassMethod classId (ClassPartReference partRef owner) rt
 
 resolveMethodSearch :: MethodResolution
 resolveMethodSearch rt partRef classId classInfo = do
   requireNotInterface rt classId
   mclass <- resolveMethodInClassOrSuperclass rt partRef classId classInfo
   case mclass of
-    Just _  -> return mclass
+    Just _ -> return mclass
     Nothing -> resolveMethodInSuperInterfaces rt partRef classId classInfo
 
 resolveMethodInClassOrSuperclass :: MethodResolution
@@ -573,7 +588,7 @@ resolveMethodInClassOrSuperclass rt partRef classId classInfo = do
       mclass <- resolveMethodNameDescriptor rt partRef classId classInfo
       case mclass of
         Nothing -> resolveInSuperClass rt partRef classId classInfo
-        Just _  -> return mclass
+        Just _ -> return mclass
 
 -- not important for phase I, skipping
 resolveMethodSignPolymorphic :: MethodResolution
@@ -586,7 +601,7 @@ resolveMethodNameDescriptor rt partRef classId classInfo =
    in return $
       case matchedMethods of
         (m:_) -> Just $ getName classId
-        []    -> Nothing
+        [] -> Nothing
 
 methodMatches :: PartReference -> Method -> Bool
 methodMatches partRef@(PartReference name descr) m =
@@ -616,7 +631,7 @@ resolveMaxSpecificSuperinterfaceMethod rt partRef classId@(ClassId init name) cl
   return $
   case maxSpecific rt partRef classId of
     Just (Just owner) -> Just owner
-    _                 -> Nothing
+    _ -> Nothing
 
 maxSpecific :: Runtime -> PartReference -> ClassId -> Maybe (Maybe String)
 maxSpecific rt partRef classId@(ClassId initCL _) =
@@ -660,6 +675,6 @@ findNonPrivateNonStatic rt classId@(ClassId initCL _) partRef =
 requireNotInterface :: Runtime -> ClassId -> Either VMError Runtime
 requireNotInterface rt classId =
   case isInterface rt classId of
-    Right True  -> return rt
+    Right True -> return rt
     Right False -> Left $ Linkage rt IncompatibleClassChangeError
-    Left err    -> Left err
+    Left err -> Left err

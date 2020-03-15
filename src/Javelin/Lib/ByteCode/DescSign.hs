@@ -9,25 +9,30 @@ module Javelin.Lib.ByteCode.DescSign
   , FieldDescriptor(..)
   ) where
 
-import           Data.Word                                (Word16)
+import Data.Word (Word16)
 
-import           Control.Applicative                      ((*>), (<$), (<$>),
-                                                           (<*), (<*>))
+import Control.Applicative ((*>), (<$), (<$>), (<*), (<*>))
   -- Signatures
 
-import           Text.ParserCombinators.Parsec.Char
-import           Text.ParserCombinators.Parsec.Combinator
-import           Text.ParserCombinators.Parsec.Error      (ParseError)
-import           Text.ParserCombinators.Parsec.Prim
+import Text.ParserCombinators.Parsec.Char
+import Text.ParserCombinators.Parsec.Combinator
+import Text.ParserCombinators.Parsec.Error (ParseError)
+import Text.ParserCombinators.Parsec.Prim
 
 type QualifiedName = [String]
 
 type UnqualifiedName = String
 
 data FieldType
-  = BaseType { unBaseType :: BaseType }
-  | ObjectType { unObjectType :: QualifiedName }
-  | ArrayType { unArrayType :: FieldType }
+  = BaseType
+      { unBaseType :: BaseType
+      }
+  | ObjectType
+      { unObjectType :: QualifiedName
+      }
+  | ArrayType
+      { unArrayType :: FieldType
+      }
   deriving (Show, Eq)
 
 data BaseType
@@ -42,50 +47,74 @@ data BaseType
   deriving (Show, Eq, Ord)
 
 -- FieldDescriptor
-data FieldDescriptor = FieldDescriptor
-  { unFieldType :: FieldType
-  } deriving (Show, Eq)
+data FieldDescriptor =
+  FieldDescriptor
+    { unFieldType :: FieldType
+    }
+  deriving (Show, Eq)
 
 -- MethodDescriptor
-data MethodDescriptor = MethodDescriptor
-  { parameterDescrs :: [FieldType]
-  , returnDescr     :: ReturnDescriptor
-  } deriving (Show, Eq)
+data MethodDescriptor =
+  MethodDescriptor
+    { parameterDescrs :: [FieldType]
+    , returnDescr :: ReturnDescriptor
+    }
+  deriving (Show, Eq)
 
 data ReturnDescriptor
-  = FieldTypeDescriptor { returnTypeDescriptor :: FieldType }
+  = FieldTypeDescriptor
+      { returnTypeDescriptor :: FieldType
+      }
   | VoidDescriptor
   deriving (Show, Eq)
 
 -- JavaTypeSignature
 data JavaTypeSignature
-  = FromReferenceTypeSignature { fieldTypeSignature :: ReferenceTypeSignature }
-  | FromBaseTypeSignature { baseTypeSignature :: BaseType }
+  = FromReferenceTypeSignature
+      { fieldTypeSignature :: ReferenceTypeSignature
+      }
+  | FromBaseTypeSignature
+      { baseTypeSignature :: BaseType
+      }
   deriving (Show, Eq)
 
 -- ReferenceTypeSignature
 data ReferenceTypeSignature
-  = FromClassTypeSignature { fieldClassType :: ClassTypeSignature }
-  | ArrayTypeSignature { signatures :: [JavaTypeSignature] }
-  | FromTypeVariableSignature { signature :: TypeVariableSignature }
+  = FromClassTypeSignature
+      { fieldClassType :: ClassTypeSignature
+      }
+  | ArrayTypeSignature
+      { signatures :: [JavaTypeSignature]
+      }
+  | FromTypeVariableSignature
+      { signature :: TypeVariableSignature
+      }
   deriving (Show, Eq)
 
 -- ClassTypeSignature
-data ClassTypeSignature = ClassTypeSignature
-  { packageSpecifier :: QualifiedName
-  , simpleSignature  :: SimpleClassTypeSignature
-  , suffix           :: [SimpleClassTypeSignature]
-  } deriving (Show, Eq)
+data ClassTypeSignature =
+  ClassTypeSignature
+    { packageSpecifier :: QualifiedName
+    , simpleSignature :: SimpleClassTypeSignature
+    , suffix :: [SimpleClassTypeSignature]
+    }
+  deriving (Show, Eq)
 
-data SimpleClassTypeSignature = SimpleClassTypeSignature
-  { sctId         :: String
-  , typeArguments :: [TypeArgument]
-  } deriving (Show, Eq)
+data SimpleClassTypeSignature =
+  SimpleClassTypeSignature
+    { sctId :: String
+    , typeArguments :: [TypeArgument]
+    }
+  deriving (Show, Eq)
 
 data TypeArgument
-  = TypeArgumentWithIndicator { indicator             :: WildcardIndicator
-                              , typeArgumentSignature :: ReferenceTypeSignature }
-  | TypeArgument { typeArgumentSignature :: ReferenceTypeSignature }
+  = TypeArgumentWithIndicator
+      { indicator :: WildcardIndicator
+      , typeArgumentSignature :: ReferenceTypeSignature
+      }
+  | TypeArgument
+      { typeArgumentSignature :: ReferenceTypeSignature
+      }
   | Asterisk
   deriving (Show, Eq)
 
@@ -94,45 +123,58 @@ data WildcardIndicator
   | Minus
   deriving (Show, Eq)
 
-data TypeVariableSignature = TypeVariableSignature
-  { tvId :: UnqualifiedName
-  } deriving (Show, Eq)
+data TypeVariableSignature =
+  TypeVariableSignature
+    { tvId :: UnqualifiedName
+    }
+  deriving (Show, Eq)
 
 -- ClassSignature
-data ClassSignature = ClassSignature
-  { classTypeParameters     :: [FormalTypeParameter]
-  , superclassSignature     :: ClassTypeSignature
-  , superinterfaceSignature :: [ClassTypeSignature]
-  } deriving (Show, Eq)
+data ClassSignature =
+  ClassSignature
+    { classTypeParameters :: [FormalTypeParameter]
+    , superclassSignature :: ClassTypeSignature
+    , superinterfaceSignature :: [ClassTypeSignature]
+    }
+  deriving (Show, Eq)
 
-data FormalTypeParameter = FormalTypeParameter
-  { ftId           :: UnqualifiedName
-  , classBound     :: ReferenceTypeSignature
-  , interfaceBound :: [ReferenceTypeSignature]
-  } deriving (Show, Eq)
+data FormalTypeParameter =
+  FormalTypeParameter
+    { ftId :: UnqualifiedName
+    , classBound :: ReferenceTypeSignature
+    , interfaceBound :: [ReferenceTypeSignature]
+    }
+  deriving (Show, Eq)
 
 --MethodSignature
-data MethodSignature = MethodSignature
-  { methodTypeParameters :: [FormalTypeParameter]
-  , typeSignatures       :: [JavaTypeSignature]
-  , methodReturnType     :: ReturnType
-  , throwsTypeSignature  :: [ThrowsSignature]
-  } deriving (Show, Eq)
+data MethodSignature =
+  MethodSignature
+    { methodTypeParameters :: [FormalTypeParameter]
+    , typeSignatures :: [JavaTypeSignature]
+    , methodReturnType :: ReturnType
+    , throwsTypeSignature :: [ThrowsSignature]
+    }
+  deriving (Show, Eq)
 
 data ReturnType
-  = ReturnTypeSignature { returnTypeSignature :: JavaTypeSignature }
+  = ReturnTypeSignature
+      { returnTypeSignature :: JavaTypeSignature
+      }
   | VoidTypeSignature
   deriving (Show, Eq)
 
-data ThrowsSignature = ThrowsSignature
-  { throwsClassType :: ClassTypeSignature
-  , typeVariable    :: TypeVariableSignature
-  } deriving (Show, Eq)
+data ThrowsSignature =
+  ThrowsSignature
+    { throwsClassType :: ClassTypeSignature
+    , typeVariable :: TypeVariableSignature
+    }
+  deriving (Show, Eq)
 
 -- FieldSignature
-data FieldSignature = FieldSignature
-  { referenceType :: ReferenceTypeSignature
-  }
+data FieldSignature =
+  FieldSignature
+    { referenceType :: ReferenceTypeSignature
+    }
 
 parseFieldDescriptor :: String -> Either ParseError FieldDescriptor
 parseFieldDescriptor = parse fieldDescriptorP ""

@@ -1,19 +1,19 @@
 module Javelin.Runtime.Thread where
 
-import           Control.Monad.State.Lazy      (State, state, StateT)
-import           Data.Array.IArray             (Array, (!), (//))
-import           Data.Binary.Get               (getWord64be, runGet)
-import           Data.Binary.IEEE754           (doubleToWord, floatToWord)
-import           Data.Binary.Put
-import           Data.Bits                     (rotate)
-import           Data.ByteString.Lazy          (pack)
-import           Data.Int                      (Int16, Int32, Int64, Int8)
-import           Data.Map.Lazy                 as Map (Map, fromList)
-import           Data.Word                     (Word16, Word32, Word64, Word8)
+import Control.Monad.State.Lazy (State, StateT, state)
+import Data.Array.IArray (Array, (!), (//))
+import Data.Binary.Get (getWord64be, runGet)
+import Data.Binary.IEEE754 (doubleToWord, floatToWord)
+import Data.Binary.Put
+import Data.Bits (rotate)
+import Data.ByteString.Lazy (pack)
+import Data.Int (Int16, Int32, Int64, Int8)
+import Data.Map.Lazy as Map (Map, fromList)
+import Data.Word (Word16, Word32, Word64, Word8)
 
-import           Javelin.Interpreter.ClassPathLoading
-import           Javelin.Lib.Structures
-import           Javelin.Interpreter.JVMApp
+import Javelin.Interpreter.ClassPathLoading
+import Javelin.Interpreter.JVMApp
+import Javelin.Lib.Structures
 
 step :: Thread -> Thread
 step e = e
@@ -25,9 +25,11 @@ nativeJVM = Map.fromList [(("java.lang.Class", "getClass"), id)]
 class BytesContainer c where
   getBytes :: c -> Int -> Int -> Word64
 
-data Arguments = Arguments
-  { argumentsArray :: [Word8]
-  } deriving (Show, Eq)
+data Arguments =
+  Arguments
+    { argumentsArray :: [Word8]
+    }
+  deriving (Show, Eq)
 
 instance BytesContainer Arguments where
   getBytes c idx len = argumentToWord64 $ take len $ drop idx $ argumentsArray c
@@ -53,8 +55,12 @@ instance BytesContainer StackElement where
 
 -- Primitive types
 data Representation
-  = Narrow { half :: Word32 }
-  | Wide { full :: Word64 }
+  = Narrow
+      { half :: Word32
+      }
+  | Wide
+      { full :: Word64
+      }
 
 type JLocalRef = Word8
 
@@ -181,12 +187,13 @@ peek :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 peek f = state $ \t -> (f 0 . (!! 0) . getStack $ t, t)
 
 push :: (JType j) => j -> ThreadOperation ()
-push j = state $ \t ->
-                   let elem = jToStackElement j
-                   in ((), updStack t (elem :))
+push j =
+  state $ \t ->
+    let elem = jToStackElement j
+     in ((), updStack t (elem :))
 
-
-popAndStoreAt :: (JType j) => (Int -> StackElement -> j) -> JLocalRef -> ThreadOperation ()
+popAndStoreAt ::
+     (JType j) => (Int -> StackElement -> j) -> JLocalRef -> ThreadOperation ()
 popAndStoreAt jaccess idx = do
   op <- pop jaccess
   store op idx
@@ -197,7 +204,8 @@ add jtype = do
   arg2 <- pop jtype
   push $ arg1 + arg2
 
-loadAndPushAt :: (JType j) => (Int -> Locals -> j) -> JLocalRef -> ThreadOperation ()
+loadAndPushAt ::
+     (JType j) => (Int -> Locals -> j) -> JLocalRef -> ThreadOperation ()
 loadAndPushAt jaccess idx = do
   op <- load jaccess idx
   push op
@@ -207,7 +215,7 @@ jToStackElement j =
   StackElement $
   case represent j of
     Narrow x -> fromIntegral x
-    Wide x   -> x
+    Wide x -> x
 
 arg :: (JType j) => (Int -> Locals -> j) -> Int -> ThreadOperation j
 arg f n = state $ \t -> (f n $ getLocals t, t)
@@ -231,7 +239,7 @@ popn f n =
      in (map (f 0) nElems, updStack t $ drop n)
 
 dropTopFrame :: ThreadOperation ()
-dropTopFrame = state $ \t@Thread{frames=(f:fs)} -> ((), t{frames=fs})
+dropTopFrame = state $ \t@Thread {frames = (f:fs)} -> ((), t {frames = fs})
 
 store :: (JType j) => j -> JLocalRef -> ThreadOperation ()
 store j idx =
@@ -243,7 +251,7 @@ store j idx =
             Narrow x -> arr // [(idx2, x)]
             Wide x ->
               let (a, b) = split x
-              in arr // [(idx2, a), (idx2 + 1, b)]
+               in arr // [(idx2, a), (idx2 + 1, b)]
      in ((), updLocals t $ \_ -> newLocals)
 
 split :: Word64 -> (Word32, Word32)

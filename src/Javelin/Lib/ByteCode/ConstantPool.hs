@@ -2,14 +2,14 @@ module Javelin.Lib.ByteCode.ConstantPool
   ( getConstants
   ) where
 
-import           Control.Applicative
-import           Data.Binary.Get
-import           Data.Map.Lazy          (Map, findWithDefault, fromList)
-import           Data.Word              (Word16, Word32, Word8)
-import           Unsafe.Coerce
+import Control.Applicative
+import Data.Binary.Get
+import Data.Map.Lazy (Map, findWithDefault, fromList)
+import Data.Word (Word16, Word32, Word8)
+import Unsafe.Coerce
 
-import           Javelin.Lib.ByteCode.Data
-import           Javelin.Lib.ByteCode.Utils
+import Javelin.Lib.ByteCode.Data
+import Javelin.Lib.ByteCode.Utils
 
 getConstants 1 = return []
 getConstants len = do
@@ -17,9 +17,9 @@ getConstants len = do
   let double = ([constant, constant] ++) <$> (getConstants $ len - 2)
       single = (constant :) <$> (getConstants $ len - 1)
   case constant of
-    LongInfo _   -> double
+    LongInfo _ -> double
     DoubleInfo _ -> double
-    otherwise    -> single
+    otherwise -> single
 
 getConstant :: Get Constant
 getConstant = do

@@ -1,14 +1,19 @@
 module Javelin.Lib.ByteCode.Attribute where
 
-import           Control.Applicative
-import           Data.Binary.Get
-import           Data.ByteString        (unpack)
-import qualified Data.Map.Lazy          as Map (Map, findWithDefault, fromList,
-                                                lookup, (!))
-import           Data.Word              (Word32, Word8)
+import Control.Applicative
+import Data.Binary.Get
+import Data.ByteString (unpack)
+import qualified Data.Map.Lazy as Map
+  ( Map
+  , (!)
+  , findWithDefault
+  , fromList
+  , lookup
+  )
+import Data.Word (Word32, Word8)
 
-import           Javelin.Lib.ByteCode.Data
-import           Javelin.Lib.ByteCode.Utils
+import Javelin.Lib.ByteCode.Data
+import Javelin.Lib.ByteCode.Utils
 
 innerClassAccessFlagsMap =
   Map.fromList
@@ -96,7 +101,7 @@ parseInstructions = do
 findInstructionParser :: Word8 -> Get Instruction
 findInstructionParser idx =
   case Map.lookup idx instructionParsers of
-    Just p  -> p
+    Just p -> p
     Nothing -> fail $ "No instruction parser for opcode " ++ show idx
 
 instructionParsers :: Map.Map Word8 (Get Instruction)
@@ -379,7 +384,7 @@ getStackMapFrame = do
 findWithDefault dft tag m =
   case take 1 . filter (elem tag . fst) $ m of
     [(_, f)] -> f
-    _        -> dft
+    _ -> dft
 
 stackMapFrameList =
   [ ([0 .. 63], sameFrameParser)
@@ -505,7 +510,7 @@ elementValueParser = do
   let tagChar = head $ bytesToString tag
   case take 1 . filter (elem tagChar . fst) $ elementValueParsersList of
     [(_, parser)] -> parser tagChar
-    _             -> fail "Aaaa"
+    _ -> fail "Aaaa"
 
 elementValueParsersList =
   [ ("BCDFIJSZs", parseConstValue)
@@ -567,7 +572,7 @@ getTargetType = do
   tag <- getWord8
   case Map.lookup tag typeTargetType of
     Nothing -> fail "Illegal tag for type target info"
-    Just x  -> return x
+    Just x -> return x
 
 getTypePath = do
   len <- getWord8

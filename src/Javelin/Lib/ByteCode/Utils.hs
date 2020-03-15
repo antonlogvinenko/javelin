@@ -1,13 +1,12 @@
 module Javelin.Lib.ByteCode.Utils where
 
-import           Data.Binary.Get      (Get, getWord16be, getWord32be,
-                                       getWord64be, getWord8)
-import           Data.Bits
-import           Data.ByteString      (ByteString)
-import           Data.ByteString.UTF8 (toString)
-import qualified Data.Map.Lazy        as Map (Map, keys, lookup)
-import           Data.Word            (Word16, Word32, Word64, Word8)
-import           Debug.Trace
+import Data.Binary.Get (Get, getWord16be, getWord32be, getWord64be, getWord8)
+import Data.Bits
+import Data.ByteString (ByteString)
+import Data.ByteString.UTF8 (toString)
+import qualified Data.Map.Lazy as Map (Map, keys, lookup)
+import Data.Word (Word16, Word32, Word64, Word8)
+import Debug.Trace
 
 -- getWord8 = getWord8
 getWord16 = getWord16be
@@ -33,7 +32,7 @@ addFlagIfMatches number flagsMap list mask =
   if (mask .&. number) == 0
     then list
     else case Map.lookup mask flagsMap of
-           Just x  -> x : list
+           Just x -> x : list
            Nothing -> list
 
 foldMask :: Map.Map Word16 a -> Word16 -> [a]
