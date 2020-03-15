@@ -72,7 +72,6 @@ runJVM classPath mainClass args =
 -- todo:
 -- add acceptance tests infrastructure for running JVM with output
 -- test current program
--- automatic code formatting
 -- remove Javelin.Util
 -- read about tasty, hunit
 -- establish unit testing
