@@ -63,7 +63,6 @@ runJVM classPath mainClass args =
 
 -- todo:
 -- read about tasty, hunit
--- make printing of state between executions visible (colors? formatting?)
 -- add acceptance tetst for running JVM with output
 -- test current program
 -- remove Javelin.Util

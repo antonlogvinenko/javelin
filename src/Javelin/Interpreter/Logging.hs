@@ -4,7 +4,8 @@ import           Javelin.Capability.Classes
 import           Javelin.Interpreter.JVMApp
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader
-    
+import Rainbow
+
 doIO :: Bool -> IO () -> JVM ()
 doIO True io = liftIO io
 doIO False _ = liftIO $ return ()
@@ -15,7 +16,7 @@ instance Logging JVM where
         doIO silent $ writeFile "jvmDump.log" (x ++ " " ++ show a)
     console x a = do
         silent <- asks silentMode
-        doIO silent $ putStrLn (x ++ " " ++ (show a))
+        doIO silent (putChunkLn $ fore blue (chunk (x ++ " " ++ show a)))
     say x = do
         silent <- asks silentMode
-        doIO silent $ putStrLn x
+        doIO silent (putChunkLn $ fore green (chunk x))
