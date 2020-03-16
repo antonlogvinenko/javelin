@@ -261,7 +261,7 @@ execute (InvokeVirtual (CPIndex index)) =
           , do value <- pop jraw
                object <- pop jreference
                if outReference == object
-                 then liftIO $ print value
+                 then liftIO $ putStr $ show value
                  else empty)
 
 -- Instructions implementation

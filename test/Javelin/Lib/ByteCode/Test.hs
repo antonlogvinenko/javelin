@@ -23,15 +23,19 @@ stackPath = "/usr/local/bin/stack"
 
 executeMainClass :: String -> IO String
 executeMainClass className =
-  readProcess
-    stackPath
-    ["exec", "--", "javelin", "jvm", "--silentMode", className, rtPath, "1"]
-    ""
+  readProcess stackPath ["exec", "--", "javelin", "jvm", className, rtPath, "1"] ""
 
-acceptanceTests = testGroup "Acceptance tests" [byteCodeTest]
+acceptanceTests = testGroup "Acceptance tests" [
+  testGroup "ByteCode parsing" [statsAndParserTest],
+  testGroup "Sample testing" [
+    executionTest "sum of integers" "test.App" "3"
+    ]
+  ]
 
-byteCodeTest = testGroup "ByteCode parsing" [statsAndParserTest]
-                --,byteCodeParserTest, signatureTest, descriptorTest]
+executionTest :: String -> String -> String -> TestTree
+executionTest testName className expectedResult = testCase testName $ do
+  output <- executeMainClass className
+  assertEqual testName expectedResult output
 
 statsAndParserTest =
   testCase "stats" $ do
