@@ -5,7 +5,6 @@ import Data.Int (Int32, Int64)
 import Data.List (intercalate)
 import Data.Word (Word16, Word32, Word64, Word8)
 import Javelin.Lib.ByteCode.Utils
-import Javelin.Util
 
 tab = "    "
 
@@ -143,6 +142,9 @@ cpIndex (MultiANewArray x _) = br x
 cpIndex (IfNull x) = br x
 cpIndex (IfNotNull x) = br x
 cpIndex _ = Nothing
+
+at :: Integral b => [a] -> b -> a
+at cc i = cc !! (fromIntegral i - 1)
 
 -- Constant pool
 showPool :: ConstantPool -> Paragraph

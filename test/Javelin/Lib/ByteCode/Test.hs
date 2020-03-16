@@ -1,6 +1,5 @@
 module Javelin.Lib.ByteCode.Test
-  ( acceptanceTests
-  , executeMainClass
+  ( javelinTests
   ) where
 
 import Data.Word (Word16)
@@ -25,7 +24,7 @@ executeMainClass :: String -> IO String
 executeMainClass className =
   readProcess stackPath ["exec", "--", "javelin", "jvm", className, rtPath, "1"] ""
 
-acceptanceTests = testGroup "Acceptance tests" [
+javelinTests = testGroup "Acceptance tests" [
   testGroup "ByteCode parsing" [statsAndParserTest],
   testGroup "Sample testing" [
     executionTest "sum of integers" "test.App" "3"

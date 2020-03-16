@@ -36,8 +36,7 @@ library
       Javelin.Interpreter.Termination,
       Javelin.Interpreter.StdIO,
       Javelin.Capability.Classes,
-      Javelin.Interpreter.JVMApp,
-      Javelin.Util
+      Javelin.Interpreter.JVMApp
   hs-source-dirs:
       src
   build-depends:

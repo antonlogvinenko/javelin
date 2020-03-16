@@ -29,7 +29,6 @@ import Data.Either.Utils (maybeToEither)
 import Flow ((|>))
 import Javelin.Capability.Classes
 import Javelin.Interpreter.JVMApp
-import Javelin.Util (at)
 
 instance ClassLoading JVM where
   loadClass classId rt = liftIO $ runExceptT $ loadClassOrArray classId rt

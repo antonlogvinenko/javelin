@@ -21,7 +21,6 @@ import Javelin.Interpreter.Termination
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
-import Javelin.Util
 
 --stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
 --runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
@@ -70,14 +69,12 @@ runJVM classPath mainClass args =
 -- int c = a + b;
 -- System.out.println(c);
 -- todo:
--- add acceptance tests infrastructure for running JVM with output
--- test current program
--- remove Javelin.Util
 -- read about tasty, hunit
 -- establish unit testing
 -- replace Prelude with smth else
 -- doc: project structure
 -- reader tutorial
+-- more general acceptance tests: build java main classes when executing
 -- lazy/strict state
 -- todo finish passing arguments -- but first finish 'currentFrame'
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
@@ -137,6 +134,9 @@ nextInstructionLine Thread { frames = Frame { pc = pc
 pureInstruction ::
      Global m => ThreadOperation () -> Thread -> m (Thread, ThreadOperation ())
 pureInstruction threadOperation thread = return (thread, threadOperation)
+
+at :: Integral b => [a] -> b -> a
+at cc i = cc !! (fromIntegral i - 1)
 
 impureInstruction ::
      Global m
