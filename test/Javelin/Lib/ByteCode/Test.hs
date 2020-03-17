@@ -25,7 +25,9 @@ executeMainClass className =
   readProcess stackPath ["exec", "--", "javelin", "jvm", className, rtPath, "1"] ""
 
 javelinTests = testGroup "Acceptance tests" [
-  testGroup "ByteCode parsing" [statsAndParserTest],
+  testGroup "Unit tests" [
+    testGroup "ByteCode parsing" [statsAndParserTest]
+  ],
   testGroup "Sample testing" [
     executionTest "sum of integers" "test.App" "3"
     ]

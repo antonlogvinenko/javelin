@@ -63,20 +63,13 @@ runJVM classPath mainClass args =
 -- 7. new acceptance & unit tests for 6
 -- 8. required updates of testing infrastructure
 -- goto 1: next snippet
--- current snippet:
--- int a = 2;
--- int b = 3;
--- int c = a + b;
--- System.out.println(c);
 -- todo:
--- read about tasty, hunit
--- establish unit testing
 -- replace Prelude with smth else
+-- lazy/strict state
 -- doc: project structure
 -- reader tutorial
--- more general acceptance tests: build java main classes when executing
--- lazy/strict state
 -- todo finish passing arguments -- but first finish 'currentFrame'
+-- more general acceptance tests: build java main classes when executing
 createMainFrame :: Runtime -> ClassId -> Either VMError Frame
 createMainFrame rt classId =
   createFrame rt classId (PartReference "main" "(Ljava/lang/String[];)V")
