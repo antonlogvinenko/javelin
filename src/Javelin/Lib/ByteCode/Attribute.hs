@@ -2,12 +2,7 @@ module Javelin.Lib.ByteCode.Attribute where
 
 import Data.Binary.Get
 import Data.ByteString (unpack)
-import qualified Data.Map.Lazy as Map
-  ( Map
-  , findWithDefault
-  , fromList
-  , lookup
-  )
+import qualified Data.Map.Lazy as Map (Map, findWithDefault, fromList, lookup)
 import Data.Word (Word32, Word8)
 
 import Javelin.Lib.ByteCode.Data

@@ -6,10 +6,7 @@ import qualified Data.Array.IArray as Array (array)
 import Data.Bits ((.&.), (.|.), xor)
 import qualified Data.Map.Lazy as Map ((!))
 import Javelin.Capability.Classes
-import Javelin.Interpreter.ClassPathLoading
-  ( 
-    getClassSourcesLayout
-  )
+import Javelin.Interpreter.ClassPathLoading (getClassSourcesLayout)
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread

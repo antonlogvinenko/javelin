@@ -1,14 +1,16 @@
-module Javelin.Main (javelinMain) where
+module Javelin.Main
+  ( javelinMain
+  ) where
 
 import qualified Data.ByteString as BS (readFile, unpack)
 import Data.Semigroup ((<>))
 import Javelin.Capability.Classes
-import Javelin.Interpreter.JVMApp (JVMConfig(..), runJVMApp)
-import Javelin.Interpreter.Logging ()
-import Javelin.Interpreter.Termination ()
-import Javelin.Interpreter.StdIO ()
 import Javelin.Interpreter.ClassPathLoading ()
+import Javelin.Interpreter.JVMApp (JVMConfig(..), runJVMApp)
 import Javelin.Interpreter.Loading (deriveClass)
+import Javelin.Interpreter.Logging ()
+import Javelin.Interpreter.StdIO ()
+import Javelin.Interpreter.Termination ()
 import Javelin.Lib.ByteCode.ClassFile (parseRaw)
 import Javelin.Lib.ByteCode.Data (showByteCode)
 import Javelin.Lib.ByteCode.Stats (stats)

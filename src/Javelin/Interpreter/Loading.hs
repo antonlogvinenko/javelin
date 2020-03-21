@@ -18,11 +18,7 @@ import Codec.Archive.Zip
 import Control.Lens ((^.), (^?), ix, to)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Except
-  ( ExceptT(..)
-  , runExceptT
-  , throwE
-  )
+import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE)
 import Data.Either.Utils (maybeToEither)
 import Flow ((|>))
 import Javelin.Capability.Classes
