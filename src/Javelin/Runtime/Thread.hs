@@ -1,6 +1,6 @@
 module Javelin.Runtime.Thread where
 
-import Control.Monad.State.Lazy (State, StateT, state)
+import Control.Monad.State.Lazy (StateT, state)
 import Data.Array.IArray (Array, (!), (//))
 import Data.Binary.Get (getWord64be, runGet)
 import Data.Binary.IEEE754 (doubleToWord, floatToWord)
@@ -11,8 +11,6 @@ import Data.Int (Int16, Int32, Int64, Int8)
 import Data.Map.Lazy as Map (Map, fromList)
 import Data.Word (Word16, Word32, Word64, Word8)
 
-import Javelin.Interpreter.ClassPathLoading
-import Javelin.Interpreter.JVMApp
 import Javelin.Lib.Structures
 
 step :: Thread -> Thread

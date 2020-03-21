@@ -9,7 +9,7 @@ module Javelin.Lib.ByteCode.DescSign
   , FieldDescriptor(..)
   ) where
 
-import Data.Word (Word16)
+import Data.Word ()
 
 import Control.Applicative ((*>), (<$), (<$>), (<*), (<*>))
   -- Signatures

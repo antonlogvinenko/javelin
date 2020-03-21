@@ -9,7 +9,7 @@ import Javelin.Lib.ByteCode.DescSign
 import Javelin.Lib.Structures
 
 import Data.ByteString as BSS (ByteString, unpack)
-import Data.ByteString.Lazy as BSL (ByteString, readFile, toStrict)
+import Data.ByteString.Lazy as BSL (readFile, toStrict)
 import Data.Map as Map (Map(..), (!), empty, insert, lookup, member)
 import Data.Maybe (catMaybes, isJust, isNothing, listToMaybe)
 import Data.Word (Word16)
@@ -20,10 +20,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except
   ( ExceptT(..)
-  , except
   , runExceptT
   , throwE
-  , withExceptT
   )
 import Data.Either.Utils (maybeToEither)
 import Flow ((|>))

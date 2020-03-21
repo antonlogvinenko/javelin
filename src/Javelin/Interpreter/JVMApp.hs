@@ -3,16 +3,8 @@
 
 module Javelin.Interpreter.JVMApp where
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (MonadReader, ReaderT(..), ask, asks)
-import Javelin.Lib.Structures
-  ( ClassId
-  , ClassPathLayout
-  , LoadedClass
-  , Runtime
-  , VMError
-  )
-import System.Exit (die)
+import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Reader (MonadReader, ReaderT(..))
 
 data JVMConfig =
   JVMConfig

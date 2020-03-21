@@ -1,6 +1,6 @@
 module Javelin.Interpreter.Termination where
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.IO.Class (liftIO)
 import Javelin.Capability.Classes
 import Javelin.Interpreter.JVMApp
 import System.Exit (die)

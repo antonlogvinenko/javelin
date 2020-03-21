@@ -1,23 +1,20 @@
-module Javelin.Main where
+module Javelin.Main (javelinMain) where
 
-import Control.Monad
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Maybe (runMaybeT)
 import qualified Data.ByteString as BS (readFile, unpack)
 import Data.Semigroup ((<>))
 import Javelin.Capability.Classes
-import Javelin.Interpreter.ClassPathLoading
 import Javelin.Interpreter.JVMApp (JVMConfig(..), runJVMApp)
-import Javelin.Interpreter.Loading (deriveClass, loadClassOrArray)
+import Javelin.Interpreter.Logging ()
+import Javelin.Interpreter.Termination ()
+import Javelin.Interpreter.StdIO ()
+import Javelin.Interpreter.ClassPathLoading ()
+import Javelin.Interpreter.Loading (deriveClass)
 import Javelin.Lib.ByteCode.ClassFile (parseRaw)
 import Javelin.Lib.ByteCode.Data (showByteCode)
 import Javelin.Lib.ByteCode.Stats (stats)
 import Javelin.Lib.Structures hiding (long)
 import Javelin.Runtime.Instructions (runJVM)
 import Options.Applicative
-import System.Directory
-import System.Environment
 import Text.Show.Pretty
 
 disasmClass :: Bool -> FilePath -> IO ()

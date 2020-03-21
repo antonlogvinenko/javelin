@@ -6,7 +6,6 @@ module Javelin.Lib.ByteCode.ClassFile
   , classBody
   ) where
 
-import Control.Applicative
 import Data.Binary.Get
 import qualified Data.ByteString.Lazy as LBS (ByteString, null, pack)
 import Data.Map (Map, fromList)

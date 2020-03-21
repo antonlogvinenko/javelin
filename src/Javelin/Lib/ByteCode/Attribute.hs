@@ -1,11 +1,9 @@
 module Javelin.Lib.ByteCode.Attribute where
 
-import Control.Applicative
 import Data.Binary.Get
 import Data.ByteString (unpack)
 import qualified Data.Map.Lazy as Map
   ( Map
-  , (!)
   , findWithDefault
   , fromList
   , lookup

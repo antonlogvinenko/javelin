@@ -1,23 +1,15 @@
 module Javelin.Runtime.Instructions where
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State.Lazy (State, runStateT, state)
-import Control.Monad.Trans.Except (runExceptT)
-import qualified Data.Array.IArray as Array (array, bounds)
+import Control.Monad.State.Lazy (runStateT)
+import qualified Data.Array.IArray as Array (array)
 import Data.Bits ((.&.), (.|.), xor)
-import qualified Data.Map.Lazy as Map (Map, (!), fromList, lookup)
-import Data.Word (Word16, Word32, Word64, Word8)
-import Debug.Trace
-import Flow
+import qualified Data.Map.Lazy as Map ((!))
 import Javelin.Capability.Classes
 import Javelin.Interpreter.ClassPathLoading
-  ( ClassPathLoading
-  , getClassSourcesLayout
+  ( 
+    getClassSourcesLayout
   )
-import Javelin.Interpreter.Loading
-import Javelin.Interpreter.Logging
-import Javelin.Interpreter.StdIO
-import Javelin.Interpreter.Termination
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
@@ -64,6 +56,8 @@ runJVM classPath mainClass args =
 -- 8. required updates of testing infrastructure
 -- goto 1: next snippet
 -- todo:
+-- replace string with text
+-- remove missingH
 -- replace Prelude with smth else
 -- lazy/strict state
 -- doc: project structure

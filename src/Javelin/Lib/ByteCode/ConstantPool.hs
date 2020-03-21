@@ -2,7 +2,6 @@ module Javelin.Lib.ByteCode.ConstantPool
   ( getConstants
   ) where
 
-import Control.Applicative
 import Data.Binary.Get
 import Data.Map.Lazy (Map, findWithDefault, fromList)
 import Data.Word (Word16, Word32, Word8)

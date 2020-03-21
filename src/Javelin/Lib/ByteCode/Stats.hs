@@ -3,16 +3,11 @@
 module Javelin.Lib.ByteCode.Stats where
 
 import Control.Monad (guard)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT)
-import Data.Binary.Get (ByteOffset)
 import qualified Data.ByteString as BS (readFile, unpack)
-import qualified Data.ByteString.Lazy as LBS (ByteString)
 import Data.List (sortOn)
 import qualified Data.Map.Strict as Map (Map(..), alter, foldrWithKey)
 import Data.Ord (Down(..))
-import Data.Word (Word8)
 import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.IO (appendFile, writeFile)
 import Text.Printf (printf)

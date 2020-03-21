@@ -2,7 +2,6 @@
 
 module Javelin.Capability.Classes where
 
-import Control.Monad.Trans.Except (ExceptT)
 import Data.ByteString as BSS (ByteString)
 import Javelin.Lib.Structures
 

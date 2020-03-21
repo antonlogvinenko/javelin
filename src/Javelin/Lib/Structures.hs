@@ -2,19 +2,15 @@
 
 module Javelin.Lib.Structures where
 
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Except (ExceptT(..))
 import Data.Array.IArray (Array, (!), (//), array, bounds)
 import Data.Int (Int16, Int32, Int64, Int8)
 import Data.List ((!!), findIndex, intersperse)
 import qualified Data.Map.Strict as Map
   ( Map
-  , (!)
   , (!?)
   , fromList
   , insert
   , lookup
-  , size
   , toList
   )
 import Data.Word (Word16, Word32, Word64, Word8)

@@ -4,15 +4,13 @@ module Javelin.Interpreter.ClassPathLoading
   , getClassBytes
   ) where
 
-import Data.ByteString as BSS (ByteString)
-import Data.ByteString.Lazy as BSL (ByteString, readFile, toStrict)
+import Data.ByteString.Lazy as BSL (readFile)
 import Data.List
-import Data.Map as Map (Map, empty, fromList, lookup, unions)
+import Data.Map as Map (Map, empty, fromList, unions)
 import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.FilePath ((</>))
 
 import Codec.Archive.Zip
-import Data.Either.Utils (maybeToEither)
 import Data.List.Split (splitOn)
 import Data.String.Utils (strip)
 
@@ -20,7 +18,6 @@ import Javelin.Lib.Structures
 
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
-import Control.Monad.Trans.Except
 import Flow
 import Javelin.Capability.Classes
 import Javelin.Interpreter.JVMApp

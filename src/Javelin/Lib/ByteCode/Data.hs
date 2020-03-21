@@ -3,8 +3,7 @@ module Javelin.Lib.ByteCode.Data where
 import Data.ByteString (ByteString)
 import Data.Int (Int32, Int64)
 import Data.List (intercalate)
-import Data.Word (Word16, Word32, Word64, Word8)
-import Javelin.Lib.ByteCode.Utils
+import Data.Word (Word16, Word32, Word8)
 
 tab = "    "
 

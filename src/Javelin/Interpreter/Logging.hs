@@ -1,6 +1,6 @@
 module Javelin.Interpreter.Logging where
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader
 import Javelin.Capability.Classes
 import Javelin.Interpreter.JVMApp
