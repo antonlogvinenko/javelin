@@ -1,0 +1,3873 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>Java bytecode instruction listings - Wikipedia</title>
+</head>
+
+<body>
+	<h1>Java bytecode instruction listings</h1>
+
+	<table class="wikitable sortable">
+
+		<tbody>
+			<tr>
+				<th scope="col">Status
+				</th>
+				<th scope="col">Mnemonic
+				</th>
+				<th scope="col">Opcode in hex
+				</th>
+				<th>Opcode (in binary)
+				</th>
+				<th scope="col">Other bytes<br />[count]: [operand labels]
+				</th>
+				<th scope="col">Stack<br />[before]→[after]
+				</th>
+				<th scope="col" class="unsortable">Description
+				</th>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>No implementation required</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">✔
+				</td>
+				<td><i>(no name)</i>
+				</td>
+				<td data-sort-value="203">cb-fd
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>these values are currently unassigned for opcodes and are reserved for future use
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">✔
+				</td>
+				<td>breakpoint
+				</td>
+				<td data-sort-value="202">ca
+				</td>
+				<td>1100 1010
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>reserved for breakpoints in Java debuggers; should not appear in any class file
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">✔
+				</td>
+				<td>impdep1
+				</td>
+				<td data-sort-value="254">fe
+				</td>
+				<td>1111 1110
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>reserved for implementation-dependent operations within debuggers; should not appear in any
+					class file
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">✔
+				</td>
+				<td>impdep2
+				</td>
+				<td data-sort-value="255">ff
+				</td>
+				<td>1111 1111
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>reserved for implementation-dependent operations within debuggers; should not appear in any
+					class file
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>nop
+				</td>
+				<td data-sort-value="0">00
+				</td>
+				<td>0000 0000
+				</td>
+				<td>
+				</td>
+				<td>[No change]
+				</td>
+				<td>perform no operation
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Arithmetic operations</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dadd
+				</td>
+				<td data-sort-value="99">63
+				</td>
+				<td>0110 0011
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>add two doubles
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">✔
+				</td>
+				<td>fadd
+				</td>
+				<td data-sort-value="98">62
+				</td>
+				<td>0110 0010
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>add two floats
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">✔
+				</td>
+				<td>iadd
+				</td>
+				<td data-sort-value="96">60
+				</td>
+				<td>0110 0000
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>add two ints
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ladd
+				</td>
+				<td data-sort-value="97">61
+				</td>
+				<td>0110 0001
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>add two longs
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>&nbsp;</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dsub
+				</td>
+				<td data-sort-value="103">67
+				</td>
+				<td>0110 0111
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>subtract a double from another
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fsub
+				</td>
+				<td data-sort-value="102">66
+				</td>
+				<td>0110 0110
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>subtract two floats
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>isub
+				</td>
+				<td data-sort-value="100">64
+				</td>
+				<td>0110 0100
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>int subtract
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lsub
+				</td>
+				<td data-sort-value="101">65
+				</td>
+				<td>0110 0101
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>subtract two longs
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>&nbsp;</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dmul
+				</td>
+				<td data-sort-value="107">6b
+				</td>
+				<td>0110 1011
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>multiply two doubles
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fmul
+				</td>
+				<td data-sort-value="106">6a
+				</td>
+				<td>0110 1010
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>multiply two floats
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>imul
+				</td>
+				<td data-sort-value="104">68
+				</td>
+				<td>0110 1000
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>multiply two integers
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lmul
+				</td>
+				<td data-sort-value="105">69
+				</td>
+				<td>0110 1001
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>multiply two longs
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>&nbsp;</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ddiv
+				</td>
+				<td data-sort-value="111">6f
+				</td>
+				<td>0110 1111
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>divide two doubles
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fdiv
+				</td>
+				<td data-sort-value="110">6e
+				</td>
+				<td>0110 1110
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>divide two floats
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>idiv
+				</td>
+				<td data-sort-value="108">6c
+				</td>
+				<td>0110 1100
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>divide two integers
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ldiv
+				</td>
+				<td data-sort-value="109">6d
+				</td>
+				<td>0110 1101
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>divide two longs
+				</td>
+			</tr>
+			<tr>
+				<td scope="col">
+				</td>
+				<td>&nbsp;</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>drem
+				</td>
+				<td data-sort-value="115">73
+				</td>
+				<td>0111 0011
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>get the remainder from a division between two doubles
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>frem
+				</td>
+				<td data-sort-value="114">72
+				</td>
+				<td>0111 0010
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>get the remainder from a division between two floats
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>irem
+				</td>
+				<td data-sort-value="112">70
+				</td>
+				<td>0111 0000
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>logical int remainder
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lrem
+				</td>
+				<td data-sort-value="113">71
+				</td>
+				<td>0111 0001
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>remainder of division of two longs
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>&nbsp;</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dneg
+				</td>
+				<td data-sort-value="119">77
+				</td>
+				<td>0111 0111
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>negate a double
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fneg
+				</td>
+				<td data-sort-value="118">76
+				</td>
+				<td>0111 0110
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>negate a float
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ineg
+				</td>
+				<td data-sort-value="116">74
+				</td>
+				<td>0111 0100
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>negate int
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lneg
+				</td>
+				<td data-sort-value="117">75
+				</td>
+				<td>0111 0101
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>negate a long
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>&nbsp;</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dcmpg
+				</td>
+				<td data-sort-value="152">98
+				</td>
+				<td>1001 1000
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>compare two doubles
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dcmpl
+				</td>
+				<td data-sort-value="151">97
+				</td>
+				<td>1001 0111
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>compare two doubles
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fcmpg
+				</td>
+				<td data-sort-value="150">96
+				</td>
+				<td>1001 0110
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>compare two floats
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fcmpl
+				</td>
+				<td data-sort-value="149">95
+				</td>
+				<td>1001 0101
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>compare two floats
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lcmp
+				</td>
+				<td data-sort-value="148">94
+				</td>
+				<td>1001 0100
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>push 0 if the two longs are the same, 1 if value1 is greater than value2, -1 otherwise
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>&nbsp;</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iinc
+				</td>
+				<td data-sort-value="132">84
+				</td>
+				<td>1000 0100
+				</td>
+				<td>2: index, const
+				</td>
+				<td>[No change]
+				</td>
+				<td>increment local variable <i>#index</i> by signed byte <i>const</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Push constants to stack</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dconst_0
+				</td>
+				<td data-sort-value="14">0e
+				</td>
+				<td>0000 1110
+				</td>
+				<td>
+				</td>
+				<td>→ 0.0
+				</td>
+				<td>push the constant <i>0.0</i> (a <i>double</i>) onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dconst_1
+				</td>
+				<td data-sort-value="15">0f
+				</td>
+				<td>0000 1111
+				</td>
+				<td>
+				</td>
+				<td>→ 1.0
+				</td>
+				<td>push the constant <i>1.0</i> (a <i>double</i>) onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fconst_0
+				</td>
+				<td data-sort-value="11">0b
+				</td>
+				<td>0000 1011
+				</td>
+				<td>
+				</td>
+				<td>→ 0.0f
+				</td>
+				<td>push <i>0.0f</i> on the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fconst_1
+				</td>
+				<td data-sort-value="12">0c
+				</td>
+				<td>0000 1100
+				</td>
+				<td>
+				</td>
+				<td>→ 1.0f
+				</td>
+				<td>push <i>1.0f</i> on the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fconst_2
+				</td>
+				<td data-sort-value="13">0d
+				</td>
+				<td>0000 1101
+				</td>
+				<td>
+				</td>
+				<td>→ 2.0f
+				</td>
+				<td>push <i>2.0f</i> on the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iconst_m1
+				</td>
+				<td data-sort-value="2">02
+				</td>
+				<td>0000 0010
+				</td>
+				<td>
+				</td>
+				<td>→ -1
+				</td>
+				<td>load the int value −1 onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iconst_0
+				</td>
+				<td data-sort-value="3">03
+				</td>
+				<td>0000 0011
+				</td>
+				<td>
+				</td>
+				<td>→ 0
+				</td>
+				<td>load the int value 0 onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iconst_1
+				</td>
+				<td data-sort-value="4">04
+				</td>
+				<td>0000 0100
+				</td>
+				<td>
+				</td>
+				<td>→ 1
+				</td>
+				<td>load the int value 1 onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iconst_2
+				</td>
+				<td data-sort-value="5">05
+				</td>
+				<td>0000 0101
+				</td>
+				<td>
+				</td>
+				<td>→ 2
+				</td>
+				<td>load the int value 2 onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iconst_3
+				</td>
+				<td data-sort-value="6">06
+				</td>
+				<td>0000 0110
+				</td>
+				<td>
+				</td>
+				<td>→ 3
+				</td>
+				<td>load the int value 3 onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iconst_4
+				</td>
+				<td data-sort-value="7">07
+				</td>
+				<td>0000 0111
+				</td>
+				<td>
+				</td>
+				<td>→ 4
+				</td>
+				<td>load the int value 4 onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iconst_5
+				</td>
+				<td data-sort-value="8">08
+				</td>
+				<td>0000 1000
+				</td>
+				<td>
+				</td>
+				<td>→ 5
+				</td>
+				<td>load the int value 5 onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lconst_0
+				</td>
+				<td data-sort-value="9">09
+				</td>
+				<td>0000 1001
+				</td>
+				<td>
+				</td>
+				<td>→ 0L
+				</td>
+				<td>push <i>0L</i> (the number <a href="/wiki/Zero" class="mw-redirect" title="Zero">zero</a> with
+					type <i>long</i>) onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lconst_1
+				</td>
+				<td data-sort-value="10">0a
+				</td>
+				<td>0000 1010
+				</td>
+				<td>
+				</td>
+				<td>→ 1L
+				</td>
+				<td>push <i>1L</i> (the number <a href="/wiki/One" class="mw-redirect" title="One">one</a> with type
+					<i>long</i>) onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aconst_null
+				</td>
+				<td data-sort-value="1">01
+				</td>
+				<td>0000 0001
+				</td>
+				<td>
+				</td>
+				<td>→ null
+				</td>
+				<td>push a <i>null</i> reference onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Generic stack operations</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>pop
+				</td>
+				<td data-sort-value="87">57
+				</td>
+				<td>0101 0111
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>discard the top value on the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>pop2
+				</td>
+				<td data-sort-value="88">58
+				</td>
+				<td>0101 1000
+				</td>
+				<td>
+				</td>
+				<td>{value2, value1} →
+				</td>
+				<td>discard the top two values on the stack (or one value, if it is a double or long)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dup
+				</td>
+				<td data-sort-value="89">59
+				</td>
+				<td>0101 1001
+				</td>
+				<td>
+				</td>
+				<td>value → value, value
+				</td>
+				<td>duplicate the value on top of the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dup_x1
+				</td>
+				<td data-sort-value="90">5a
+				</td>
+				<td>0101 1010
+				</td>
+				<td>
+				</td>
+				<td>value2, value1 → value1, value2, value1
+				</td>
+				<td>insert a copy of the top value into the stack two values from the top. value1 and value2 must
+					not be of the type double or long.
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dup_x2
+				</td>
+				<td data-sort-value="91">5b
+				</td>
+				<td>0101 1011
+				</td>
+				<td>
+				</td>
+				<td>value3, value2, value1 → value1, value3, value2, value1
+				</td>
+				<td>insert a copy of the top value into the stack two (if value2 is double or long it takes up the
+					entry of value3, too) or three values (if value2 is neither double nor long) from the top
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dup2
+				</td>
+				<td data-sort-value="92">5c
+				</td>
+				<td>0101 1100
+				</td>
+				<td>
+				</td>
+				<td>{value2, value1} → {value2, value1}, {value2, value1}
+				</td>
+				<td>duplicate top two stack words (two values, if value1 is not double nor long; a single value, if
+					value1 is double or long)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dup2_x1
+				</td>
+				<td data-sort-value="93">5d
+				</td>
+				<td>0101 1101
+				</td>
+				<td>
+				</td>
+				<td>value3, {value2, value1} → {value2, value1}, value3, {value2, value1}
+				</td>
+				<td>duplicate two words and insert beneath third word (see explanation above)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dup2_x2
+				</td>
+				<td data-sort-value="94">5e
+				</td>
+				<td>0101 1110
+				</td>
+				<td>
+				</td>
+				<td>{value4, value3}, {value2, value1} → {value2, value1}, {value4, value3}, {value2, value1}
+				</td>
+				<td>duplicate two words and insert beneath fourth word
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Push constant pool constants to stack</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ldc
+				</td>
+				<td data-sort-value="18">12
+				</td>
+				<td>0001 0010
+				</td>
+				<td>1: index
+				</td>
+				<td>→ value
+				</td>
+				<td>push a constant <i>#index</i> from a constant pool (String, int, float, Class,
+					java.lang.invoke.MethodType, java.lang.invoke.MethodHandle, or a dynamically-computed constant)
+					onto the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ldc_w
+				</td>
+				<td data-sort-value="19">13
+				</td>
+				<td>0001 0011
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>→ value
+				</td>
+				<td>push a constant <i>#index</i> from a constant pool (String, int, float, Class,
+					java.lang.invoke.MethodType, java.lang.invoke.MethodHandle, or a dynamically-computed constant)
+					onto the stack (wide <i>index</i> is constructed as
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ldc2_w
+				</td>
+				<td data-sort-value="20">14
+				</td>
+				<td>0001 0100
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>→ value
+				</td>
+				<td>push a constant <i>#index</i> from a constant pool (double, long, or a dynamically-computed
+					constant) onto the stack (wide <i>index</i> is constructed as
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>bipush
+				</td>
+				<td data-sort-value="16">10
+				</td>
+				<td>0001 0000
+				</td>
+				<td>1: byte
+				</td>
+				<td>→ value
+				</td>
+				<td>push a <i>byte</i> onto the stack as an integer <i>value</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>sipush
+				</td>
+				<td data-sort-value="17">11
+				</td>
+				<td>0001 0001
+				</td>
+				<td>2: byte1, byte2
+				</td>
+				<td>→ value
+				</td>
+				<td>push a short onto the stack as an integer <i>value</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>swap
+				</td>
+				<td data-sort-value="95">5f
+				</td>
+				<td>0101 1111
+				</td>
+				<td>
+				</td>
+				<td>value2, value1 → value1, value2
+				</td>
+				<td>swaps two top words on the stack (note that value1 and value2 must not be double or long)
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Push to stack from array or locals</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aaload
+				</td>
+				<td data-sort-value="50">32
+				</td>
+				<td>0011 0010
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load onto the stack a reference from an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aload
+				</td>
+				<td data-sort-value="25">19
+				</td>
+				<td>0001 1001
+				</td>
+				<td>1: index
+				</td>
+				<td>→ objectref
+				</td>
+				<td>load a reference onto the stack from a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aload_0
+				</td>
+				<td data-sort-value="42">2a
+				</td>
+				<td>0010 1010
+				</td>
+				<td>
+				</td>
+				<td>→ objectref
+				</td>
+				<td>load a reference onto the stack from local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aload_1
+				</td>
+				<td data-sort-value="43">2b
+				</td>
+				<td>0010 1011
+				</td>
+				<td>
+				</td>
+				<td>→ objectref
+				</td>
+				<td>load a reference onto the stack from local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aload_2
+				</td>
+				<td data-sort-value="44">2c
+				</td>
+				<td>0010 1100
+				</td>
+				<td>
+				</td>
+				<td>→ objectref
+				</td>
+				<td>load a reference onto the stack from local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aload_3
+				</td>
+				<td data-sort-value="45">2d
+				</td>
+				<td>0010 1101
+				</td>
+				<td>
+				</td>
+				<td>→ objectref
+				</td>
+				<td>load a reference onto the stack from local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>baload
+				</td>
+				<td data-sort-value="51">33
+				</td>
+				<td>0011 0011
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load a byte or Boolean value from an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>caload
+				</td>
+				<td data-sort-value="52">34
+				</td>
+				<td>0011 0100
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load a char from an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>daload
+				</td>
+				<td data-sort-value="49">31
+				</td>
+				<td>0011 0001
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load a double from an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dload
+				</td>
+				<td data-sort-value="24">18
+				</td>
+				<td>0001 1000
+				</td>
+				<td>1: index
+				</td>
+				<td>→ value
+				</td>
+				<td>load a double <i>value</i> from a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dload_0
+				</td>
+				<td data-sort-value="38">26
+				</td>
+				<td>0010 0110
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a double from local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dload_1
+				</td>
+				<td data-sort-value="39">27
+				</td>
+				<td>0010 0111
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a double from local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dload_2
+				</td>
+				<td data-sort-value="40">28
+				</td>
+				<td>0010 1000
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a double from local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dload_3
+				</td>
+				<td data-sort-value="41">29
+				</td>
+				<td>0010 1001
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a double from local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>faload
+				</td>
+				<td data-sort-value="48">30
+				</td>
+				<td>0011 0000
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load a float from an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fload
+				</td>
+				<td data-sort-value="23">17
+				</td>
+				<td>0001 0111
+				</td>
+				<td>1: index
+				</td>
+				<td>→ value
+				</td>
+				<td>load a float <i>value</i> from a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fload_0
+				</td>
+				<td data-sort-value="34">22
+				</td>
+				<td>0010 0010
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a float <i>value</i> from local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fload_1
+				</td>
+				<td data-sort-value="35">23
+				</td>
+				<td>0010 0011
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a float <i>value</i> from local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fload_2
+				</td>
+				<td data-sort-value="36">24
+				</td>
+				<td>0010 0100
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a float <i>value</i> from local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fload_3
+				</td>
+				<td data-sort-value="37">25
+				</td>
+				<td>0010 0101
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a float <i>value</i> from local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iaload
+				</td>
+				<td data-sort-value="46">2e
+				</td>
+				<td>0010 1110
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load an int from an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iload
+				</td>
+				<td data-sort-value="21">15
+				</td>
+				<td>0001 0101
+				</td>
+				<td>1: index
+				</td>
+				<td>→ value
+				</td>
+				<td>load an int <i>value</i> from a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iload_0
+				</td>
+				<td data-sort-value="26">1a
+				</td>
+				<td>0001 1010
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load an int <i>value</i> from local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iload_1
+				</td>
+				<td data-sort-value="27">1b
+				</td>
+				<td>0001 1011
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load an int <i>value</i> from local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iload_2
+				</td>
+				<td data-sort-value="28">1c
+				</td>
+				<td>0001 1100
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load an int <i>value</i> from local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iload_3
+				</td>
+				<td data-sort-value="29">1d
+				</td>
+				<td>0001 1101
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load an int <i>value</i> from local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>laload
+				</td>
+				<td data-sort-value="47">2f
+				</td>
+				<td>0010 1111
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load a long from an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lload
+				</td>
+				<td data-sort-value="22">16
+				</td>
+				<td>0001 0110
+				</td>
+				<td>1: index
+				</td>
+				<td>→ value
+				</td>
+				<td>load a long value from a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lload_0
+				</td>
+				<td data-sort-value="30">1e
+				</td>
+				<td>0001 1110
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a long value from a local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lload_1
+				</td>
+				<td data-sort-value="31">1f
+				</td>
+				<td>0001 1111
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a long value from a local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lload_2
+				</td>
+				<td data-sort-value="32">20
+				</td>
+				<td>0010 0000
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a long value from a local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lload_3
+				</td>
+				<td data-sort-value="33">21
+				</td>
+				<td>0010 0001
+				</td>
+				<td>
+				</td>
+				<td>→ value
+				</td>
+				<td>load a long value from a local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>saload
+				</td>
+				<td data-sort-value="53">35
+				</td>
+				<td>0011 0101
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index → value
+				</td>
+				<td>load short from array
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Type conversions</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>f2d
+				</td>
+				<td data-sort-value="141">8d
+				</td>
+				<td>1000 1101
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a float to a double
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>f2i
+				</td>
+				<td data-sort-value="139">8b
+				</td>
+				<td>1000 1011
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a float to an int
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>f2l
+				</td>
+				<td data-sort-value="140">8c
+				</td>
+				<td>1000 1100
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a float to a long
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>d2f
+				</td>
+				<td data-sort-value="144">90
+				</td>
+				<td>1001 0000
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a <a href="/wiki/Double-precision_floating-point_format"
+						title="Double-precision floating-point format">double</a> to a <a
+						href="/wiki/Single-precision_floating-point_format"
+						title="Single-precision floating-point format">float</a>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>d2i
+				</td>
+				<td data-sort-value="142">8e
+				</td>
+				<td>1000 1110
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a double to an int
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>d2l
+				</td>
+				<td data-sort-value="143">8f
+				</td>
+				<td>1000 1111
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a double to a long
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>i2b
+				</td>
+				<td data-sort-value="145">91
+				</td>
+				<td>1001 0001
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert an int into a byte
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>i2c
+				</td>
+				<td data-sort-value="146">92
+				</td>
+				<td>1001 0010
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert an int into a character
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>i2d
+				</td>
+				<td data-sort-value="135">87
+				</td>
+				<td>1000 0111
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert an int into a double
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>i2f
+				</td>
+				<td data-sort-value="134">86
+				</td>
+				<td>1000 0110
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert an int into a float
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>i2l
+				</td>
+				<td data-sort-value="133">85
+				</td>
+				<td>1000 0101
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert an int into a long
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>i2s
+				</td>
+				<td data-sort-value="147">93
+				</td>
+				<td>1001 0011
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert an int into a short
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>l2d
+				</td>
+				<td data-sort-value="138">8a
+				</td>
+				<td>1000 1010
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a long to a double
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>l2f
+				</td>
+				<td data-sort-value="137">89
+				</td>
+				<td>1000 1001
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a long to a float
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>l2i
+				</td>
+				<td data-sort-value="136">88
+				</td>
+				<td>1000 1000
+				</td>
+				<td>
+				</td>
+				<td>value → result
+				</td>
+				<td>convert a long to a int
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Logic operations</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lor
+				</td>
+				<td data-sort-value="129">81
+				</td>
+				<td>1000 0001
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>bitwise OR of two longs
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ior
+				</td>
+				<td data-sort-value="128">80
+				</td>
+				<td>1000 0000
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>bitwise int OR
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ishl
+				</td>
+				<td data-sort-value="120">78
+				</td>
+				<td>0111 1000
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>int shift left
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ishr
+				</td>
+				<td data-sort-value="122">7a
+				</td>
+				<td>0111 1010
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>int arithmetic shift right
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lshl
+				</td>
+				<td data-sort-value="121">79
+				</td>
+				<td>0111 1001
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>bitwise shift left of a long <i>value1</i> by int <i>value2</i> positions
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lshr
+				</td>
+				<td data-sort-value="123">7b
+				</td>
+				<td>0111 1011
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>bitwise shift right of a long <i>value1</i> by int <i>value2</i> positions
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iushr
+				</td>
+				<td data-sort-value="124">7c
+				</td>
+				<td>0111 1100
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>int logical shift right
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ixor
+				</td>
+				<td data-sort-value="130">82
+				</td>
+				<td>1000 0010
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>int xor
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lushr
+				</td>
+				<td data-sort-value="125">7d
+				</td>
+				<td>0111 1101
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>bitwise shift right of a long <i>value1</i> by int <i>value2</i> positions, unsigned
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lxor
+				</td>
+				<td data-sort-value="131">83
+				</td>
+				<td>1000 0011
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>bitwise XOR of two longs
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iand
+				</td>
+				<td data-sort-value="126">7e
+				</td>
+				<td>0111 1110
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td>perform a bitwise AND on two integers
+				</td>
+			</tr>
+
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>land
+				</td>
+				<td data-sort-value="127">7f
+				</td>
+				<td>0111 1111
+				</td>
+				<td>
+				</td>
+				<td>value1, value2 → result
+				</td>
+				<td><a href="/wiki/Bitwise_operation" title="Bitwise operation">bitwise</a> AND of two longs
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Storing to array or locals</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>aastore
+				</td>
+				<td data-sort-value="83">53
+				</td>
+				<td>0101 0011
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store a reference in an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>astore
+				</td>
+				<td data-sort-value="58">3a
+				</td>
+				<td>0011 1010
+				</td>
+				<td>1: index
+				</td>
+				<td>objectref →
+				</td>
+				<td>store a reference into a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>astore_0
+				</td>
+				<td data-sort-value="75">4b
+				</td>
+				<td>0100 1011
+				</td>
+				<td>
+				</td>
+				<td>objectref →
+				</td>
+				<td>store a reference into local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>astore_1
+				</td>
+				<td data-sort-value="76">4c
+				</td>
+				<td>0100 1100
+				</td>
+				<td>
+				</td>
+				<td>objectref →
+				</td>
+				<td>store a reference into local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>astore_2
+				</td>
+				<td data-sort-value="77">4d
+				</td>
+				<td>0100 1101
+				</td>
+				<td>
+				</td>
+				<td>objectref →
+				</td>
+				<td>store a reference into local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>astore_3
+				</td>
+				<td data-sort-value="78">4e
+				</td>
+				<td>0100 1110
+				</td>
+				<td>
+				</td>
+				<td>objectref →
+				</td>
+				<td>store a reference into local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>bastore
+				</td>
+				<td data-sort-value="84">54
+				</td>
+				<td>0101 0100
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store a byte or Boolean value into an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>castore
+				</td>
+				<td data-sort-value="85">55
+				</td>
+				<td>0101 0101
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store a char into an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dastore
+				</td>
+				<td data-sort-value="82">52
+				</td>
+				<td>0101 0010
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store a double into an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dstore
+				</td>
+				<td data-sort-value="57">39
+				</td>
+				<td>0011 1001
+				</td>
+				<td>1: index
+				</td>
+				<td>value →
+				</td>
+				<td>store a double <i>value</i> into a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dstore_0
+				</td>
+				<td data-sort-value="71">47
+				</td>
+				<td>0100 0111
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a double into local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dstore_1
+				</td>
+				<td data-sort-value="72">48
+				</td>
+				<td>0100 1000
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a double into local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dstore_2
+				</td>
+				<td data-sort-value="73">49
+				</td>
+				<td>0100 1001
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a double into local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dstore_3
+				</td>
+				<td data-sort-value="74">4a
+				</td>
+				<td>0100 1010
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a double into local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fastore
+				</td>
+				<td data-sort-value="81">51
+				</td>
+				<td>0101 0001
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store a float in an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fstore
+				</td>
+				<td data-sort-value="56">38
+				</td>
+				<td>0011 1000
+				</td>
+				<td>1: index
+				</td>
+				<td>value →
+				</td>
+				<td>store a float <i>value</i> into a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fstore_0
+				</td>
+				<td data-sort-value="67">43
+				</td>
+				<td>0100 0011
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a float <i>value</i> into local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fstore_1
+				</td>
+				<td data-sort-value="68">44
+				</td>
+				<td>0100 0100
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a float <i>value</i> into local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fstore_2
+				</td>
+				<td data-sort-value="69">45
+				</td>
+				<td>0100 0101
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a float <i>value</i> into local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>fstore_3
+				</td>
+				<td data-sort-value="70">46
+				</td>
+				<td>0100 0110
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a float <i>value</i> into local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iastore
+				</td>
+				<td data-sort-value="79">4f
+				</td>
+				<td>0100 1111
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store an int into an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>istore
+				</td>
+				<td data-sort-value="54">36
+				</td>
+				<td>0011 0110
+				</td>
+				<td>1: index
+				</td>
+				<td>value →
+				</td>
+				<td>store int <i>value</i> into variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>istore_0
+				</td>
+				<td data-sort-value="59">3b
+				</td>
+				<td>0011 1011
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store int <i>value</i> into variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>istore_1
+				</td>
+				<td data-sort-value="60">3c
+				</td>
+				<td>0011 1100
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store int <i>value</i> into variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>istore_2
+				</td>
+				<td data-sort-value="61">3d
+				</td>
+				<td>0011 1101
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store int <i>value</i> into variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>istore_3
+				</td>
+				<td data-sort-value="62">3e
+				</td>
+				<td>0011 1110
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store int <i>value</i> into variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lastore
+				</td>
+				<td data-sort-value="80">50
+				</td>
+				<td>0101 0000
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store a long to an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lstore
+				</td>
+				<td data-sort-value="55">37
+				</td>
+				<td>0011 0111
+				</td>
+				<td>1: index
+				</td>
+				<td>value →
+				</td>
+				<td>store a long <i>value</i> in a local variable <i>#index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lstore_0
+				</td>
+				<td data-sort-value="63">3f
+				</td>
+				<td>0011 1111
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a long <i>value</i> in a local variable 0
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lstore_1
+				</td>
+				<td data-sort-value="64">40
+				</td>
+				<td>0100 0000
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a long <i>value</i> in a local variable 1
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lstore_2
+				</td>
+				<td data-sort-value="65">41
+				</td>
+				<td>0100 0001
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a long <i>value</i> in a local variable 2
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lstore_3
+				</td>
+				<td data-sort-value="66">42
+				</td>
+				<td>0100 0010
+				</td>
+				<td>
+				</td>
+				<td>value →
+				</td>
+				<td>store a long <i>value</i> in a local variable 3
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>sastore
+				</td>
+				<td data-sort-value="86">56
+				</td>
+				<td>0101 0110
+				</td>
+				<td>
+				</td>
+				<td>arrayref, index, value →
+				</td>
+				<td>store short to array
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Conditionals</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_acmpeq
+				</td>
+				<td data-sort-value="165">a5
+				</td>
+				<td>1010 0101
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if references are equal, branch to instruction at <i>branchoffset</i> (signed short constructed
+					from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_acmpne
+				</td>
+				<td data-sort-value="166">a6
+				</td>
+				<td>1010 0110
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if references are not equal, branch to instruction at <i>branchoffset</i> (signed short
+					constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_icmpeq
+				</td>
+				<td data-sort-value="159">9f
+				</td>
+				<td>1001 1111
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if ints are equal, branch to instruction at <i>branchoffset</i> (signed short constructed from
+					unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_icmpge
+				</td>
+				<td data-sort-value="162">a2
+				</td>
+				<td>1010 0010
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if <i>value1</i> is greater than or equal to <i>value2</i>, branch to instruction at
+					<i>branchoffset</i> (signed short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_icmpgt
+				</td>
+				<td data-sort-value="163">a3
+				</td>
+				<td>1010 0011
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if <i>value1</i> is greater than <i>value2</i>, branch to instruction at <i>branchoffset</i>
+					(signed short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_icmple
+				</td>
+				<td data-sort-value="164">a4
+				</td>
+				<td>1010 0100
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if <i>value1</i> is less than or equal to <i>value2</i>, branch to instruction at
+					<i>branchoffset</i> (signed short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_icmplt
+				</td>
+				<td data-sort-value="161">a1
+				</td>
+				<td>1010 0001
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if <i>value1</i> is less than <i>value2</i>, branch to instruction at <i>branchoffset</i>
+					(signed short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>if_icmpne
+				</td>
+				<td data-sort-value="160">a0
+				</td>
+				<td>1010 0000
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value1, value2 →
+				</td>
+				<td>if ints are not equal, branch to instruction at <i>branchoffset</i> (signed short constructed
+					from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ifeq
+				</td>
+				<td data-sort-value="153">99
+				</td>
+				<td>1001 1001
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is 0, branch to instruction at <i>branchoffset</i> (signed short constructed
+					from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ifge
+				</td>
+				<td data-sort-value="156">9c
+				</td>
+				<td>1001 1100
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is greater than or equal to 0, branch to instruction at <i>branchoffset</i>
+					(signed short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ifgt
+				</td>
+				<td data-sort-value="157">9d
+				</td>
+				<td>1001 1101
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is greater than 0, branch to instruction at <i>branchoffset</i> (signed short
+					constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ifle
+				</td>
+				<td data-sort-value="158">9e
+				</td>
+				<td>1001 1110
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is less than or equal to 0, branch to instruction at <i>branchoffset</i> (signed
+					short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>iflt
+				</td>
+				<td data-sort-value="155">9b
+				</td>
+				<td>1001 1011
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is less than 0, branch to instruction at <i>branchoffset</i> (signed short
+					constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ifne
+				</td>
+				<td data-sort-value="154">9a
+				</td>
+				<td>1001 1010
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is not 0, branch to instruction at <i>branchoffset</i> (signed short constructed
+					from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ifnonnull
+				</td>
+				<td data-sort-value="199">c7
+				</td>
+				<td>1100 0111
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is not null, branch to instruction at <i>branchoffset</i> (signed short
+					constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ifnull
+				</td>
+				<td data-sort-value="198">c6
+				</td>
+				<td>1100 0110
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>if <i>value</i> is null, branch to instruction at <i>branchoffset</i> (signed short constructed
+					from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>goto
+				</td>
+				<td data-sort-value="167">a7
+				</td>
+				<td>1010 0111
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>[no change]
+				</td>
+				<td>goes to another instruction at <i>branchoffset</i> (signed short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>goto_w
+				</td>
+				<td data-sort-value="200">c8
+				</td>
+				<td>1100 1000
+				</td>
+				<td>4: branchbyte1, branchbyte2, branchbyte3, branchbyte4
+				</td>
+				<td>[no change]
+				</td>
+				<td>goes to another instruction at <i>branchoffset</i> (signed int constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 24 + branchbyte2 &lt;&lt; 16 + branchbyte3
+						&lt;&lt; 8 + branchbyte4</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>jsr
+				</td>
+				<td data-sort-value="168">a8
+				</td>
+				<td>1010 1000
+				</td>
+				<td>2: branchbyte1, branchbyte2
+				</td>
+				<td>→ address
+				</td>
+				<td>jump to subroutine at <i>branchoffset</i> (signed short constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>) and place the return
+					address on the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>jsr_w
+				</td>
+				<td data-sort-value="201">c9
+				</td>
+				<td>1100 1001
+				</td>
+				<td>4: branchbyte1, branchbyte2, branchbyte3, branchbyte4
+				</td>
+				<td>→ address
+				</td>
+				<td>jump to subroutine at <i>branchoffset</i> (signed int constructed from unsigned bytes
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">branchbyte1 &lt;&lt; 24 + branchbyte2 &lt;&lt; 16 + branchbyte3
+						&lt;&lt; 8 + branchbyte4</span>) and place the return address on the stack
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Return commands</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>areturn
+				</td>
+				<td data-sort-value="176">b0
+				</td>
+				<td>1011 0000
+				</td>
+				<td>
+				</td>
+				<td>objectref → [empty]
+				</td>
+				<td>return a reference from a method
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>dreturn
+				</td>
+				<td data-sort-value="175">af
+				</td>
+				<td>1010 1111
+				</td>
+				<td>
+				</td>
+				<td>value → [empty]
+				</td>
+				<td>return a double from a method
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>freturn
+				</td>
+				<td data-sort-value="174">ae
+				</td>
+				<td>1010 1110
+				</td>
+				<td>
+				</td>
+				<td>value → [empty]
+				</td>
+				<td>return a float
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ireturn
+				</td>
+				<td data-sort-value="172">ac
+				</td>
+				<td>1010 1100
+				</td>
+				<td>
+				</td>
+				<td>value → [empty]
+				</td>
+				<td>return an integer from a method
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lreturn
+				</td>
+				<td data-sort-value="173">ad
+				</td>
+				<td>1010 1101
+				</td>
+				<td>
+				</td>
+				<td>value → [empty]
+				</td>
+				<td>return a long value
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>ret
+				</td>
+				<td data-sort-value="169">a9
+				</td>
+				<td>1010 1001
+				</td>
+				<td>1: index
+				</td>
+				<td>[No change]
+				</td>
+				<td>continue execution from address taken from a local variable <i>#index</i> (the asymmetry with
+					jsr is intentional)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>return
+				</td>
+				<td data-sort-value="177">b1
+				</td>
+				<td>1011 0001
+				</td>
+				<td>
+				</td>
+				<td>→ [empty]
+				</td>
+				<td>return void from method
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Array functions</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>anewarray
+				</td>
+				<td data-sort-value="189">bd
+				</td>
+				<td>1011 1101
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>count → arrayref
+				</td>
+				<td>create a new array of references of length <i>count</i> and component type identified by the
+					class reference <i>index</i> (<style data-mw-deduplicate="TemplateStyles:r886049734">
+						.mw-parser-output .monospaced {
+							font-family: monospace, monospace
+						}
+					</style><span class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>) in the constant
+					pool
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>arraylength
+				</td>
+				<td data-sort-value="190">be
+				</td>
+				<td>1011 1110
+				</td>
+				<td>
+				</td>
+				<td>arrayref → length
+				</td>
+				<td>get the length of an array
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>multianewarray
+				</td>
+				<td data-sort-value="197">c5
+				</td>
+				<td>1100 0101
+				</td>
+				<td>3: indexbyte1, indexbyte2, dimensions
+				</td>
+				<td>count1, [count2,...] → arrayref
+				</td>
+				<td>create a new array of <i>dimensions</i> dimensions of type identified by class reference in
+					constant pool <i>index</i> (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>); the sizes of each dimension
+					is identified by <i>count1</i>, [<i>count2</i>, etc.]
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>newarray
+				</td>
+				<td data-sort-value="188">bc
+				</td>
+				<td>1011 1100
+				</td>
+				<td>1: atype
+				</td>
+				<td>count → arrayref
+				</td>
+				<td>create new array with <i>count</i> elements of primitive type identified by <i>atype</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Field accessors</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>getfield
+				</td>
+				<td data-sort-value="180">b4
+				</td>
+				<td>1011 0100
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>objectref → value
+				</td>
+				<td>get a field <i>value</i> of an object <i>objectref</i>, where the field is identified by field
+					reference in the constant pool <i>index</i> (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>getstatic
+				</td>
+				<td data-sort-value="178">b2
+				</td>
+				<td>1011 0010
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>→ value
+				</td>
+				<td>get a static field <i>value</i> of a class, where the field is identified by field reference in
+					the constant pool <i>index</i> (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>putfield
+				</td>
+				<td data-sort-value="181">b5
+				</td>
+				<td>1011 0101
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>objectref, value →
+				</td>
+				<td>set field to <i>value</i> in an object <i>objectref</i>, where the field is identified by a
+					field reference <i>index</i> in constant pool (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>putstatic
+				</td>
+				<td data-sort-value="179">b3
+				</td>
+				<td>1011 0011
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>value →
+				</td>
+				<td>set static field to <i>value</i> in a class, where the field is identified by a field reference
+					<i>index</i> in constant pool (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Type checking</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>checkcast
+				</td>
+				<td data-sort-value="192">c0
+				</td>
+				<td>1100 0000
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>objectref → objectref
+				</td>
+				<td>checks whether an <i>objectref</i> is of a certain type, the class reference of which is in the
+					constant pool at <i>index</i> (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>instanceof
+				</td>
+				<td data-sort-value="193">c1
+				</td>
+				<td>1100 0001
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>objectref → result
+				</td>
+				<td>determines if an object <i>objectref</i> is of a given type, identified by class reference
+					<i>index</i> in constant pool (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Instances</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>new
+				</td>
+				<td data-sort-value="187">bb
+				</td>
+				<td>1011 1011
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>→ objectref
+				</td>
+				<td>create new object of type identified by class reference in constant pool <i>index</i> (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>invokedynamic
+				</td>
+				<td data-sort-value="186">ba
+				</td>
+				<td>1011 1010
+				</td>
+				<td>4: indexbyte1, indexbyte2, 0, 0
+				</td>
+				<td>[arg1, [arg2 ...]] → result
+				</td>
+				<td>invokes a dynamic method and puts the result on the stack (might be void); the method is
+					identified by method reference <i>index</i> in constant pool (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>invokeinterface
+				</td>
+				<td data-sort-value="185">b9
+				</td>
+				<td>1011 1001
+				</td>
+				<td>4: indexbyte1, indexbyte2, count, 0
+				</td>
+				<td>objectref, [arg1, arg2, ...] → result
+				</td>
+				<td>invokes an interface method on object <i>objectref</i> and puts the result on the stack (might
+					be void); the interface method is identified by method reference <i>index</i> in constant pool
+					(
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>invokespecial
+				</td>
+				<td data-sort-value="183">b7
+				</td>
+				<td>1011 0111
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>objectref, [arg1, arg2, ...] → result
+				</td>
+				<td>invoke instance method on object <i>objectref</i> and puts the result on the stack (might be
+					void); the method is identified by method reference <i>index</i> in constant pool (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>invokestatic
+				</td>
+				<td data-sort-value="184">b8
+				</td>
+				<td>1011 1000
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>[arg1, arg2, ...] → result
+				</td>
+				<td>invoke a static method and puts the result on the stack (might be void); the method is
+					identified by method reference <i>index</i> in constant pool (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>invokevirtual
+				</td>
+				<td data-sort-value="182">b6
+				</td>
+				<td>1011 0110
+				</td>
+				<td>2: indexbyte1, indexbyte2
+				</td>
+				<td>objectref, [arg1, arg2, ...] → result
+				</td>
+				<td>invoke virtual method on object <i>objectref</i> and puts the result on the stack (might be
+					void); the method is identified by method reference <i>index</i> in constant pool (
+					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
+						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Advanced conditionals</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>lookupswitch
+				</td>
+				<td data-sort-value="171">ab
+				</td>
+				<td>1010 1011
+				</td>
+				<td>8+: &lt;0–3 bytes padding&gt;, defaultbyte1, defaultbyte2, defaultbyte3, defaultbyte4, npairs1,
+					npairs2, npairs3, npairs4, match-offset pairs...
+				</td>
+				<td>key →
+				</td>
+				<td>a target address is looked up from a table using a key and execution continues from the
+					instruction at that address
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>tableswitch
+				</td>
+				<td data-sort-value="170">aa
+				</td>
+				<td>1010 1010
+				</td>
+				<td>16+: [0–3 bytes padding], defaultbyte1, defaultbyte2, defaultbyte3, defaultbyte4, lowbyte1,
+					lowbyte2, lowbyte3, lowbyte4, highbyte1, highbyte2, highbyte3, highbyte4, jump offsets...
+				</td>
+				<td>index →
+				</td>
+				<td>continue execution from an address in the table at offset <i>index</i>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>wide
+				</td>
+				<td data-sort-value="196">c4
+				</td>
+				<td>1100 0100
+				</td>
+				<td>3/5: opcode, indexbyte1, indexbyte2<br />or<br /> iinc, indexbyte1, indexbyte2, countbyte1,
+					countbyte2
+				</td>
+				<td>[same as for corresponding instructions]
+				</td>
+				<td>execute <i>opcode</i>, where <i>opcode</i> is either iload, fload, aload, lload, dload, istore,
+					fstore, astore, lstore, dstore, or ret, but assume the <i>index</i> is 16 bit; or execute iinc,
+					where the <i>index</i> is 16 bits and the constant to increment by is a signed 16 bit short
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Throwing exceptions</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>athrow
+				</td>
+				<td data-sort-value="191">bf
+				</td>
+				<td>1011 1111
+				</td>
+				<td>
+				</td>
+				<td>objectref → [empty], objectref
+				</td>
+				<td>throws an error or exception (notice that the rest of the stack is cleared, leaving only a
+					reference to the Throwable)
+				</td>
+			</tr>
+
+			<tr>
+				<td />
+				<td />
+				<td />
+				<td />
+				<td>&nbsp;<h3>Monitor access</h3>
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>monitorenter
+				</td>
+				<td data-sort-value="194">c2
+				</td>
+				<td>1100 0010
+				</td>
+				<td>
+				</td>
+				<td>objectref →
+				</td>
+				<td>enter monitor for object ("grab the lock" – start of synchronized() section)
+				</td>
+			</tr>
+
+			<tr>
+				<td scope="col">
+				</td>
+				<td>monitorexit
+				</td>
+				<td data-sort-value="195">c3
+				</td>
+				<td>1100 0011
+				</td>
+				<td>
+				</td>
+				<td>objectref →
+				</td>
+				<td>exit monitor for object ("release the lock" – end of synchronized() section)
+				</td>
+			</tr>
+
+		</tbody>
+	</table>
+</body>
+</html>
