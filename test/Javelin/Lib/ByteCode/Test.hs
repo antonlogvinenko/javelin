@@ -2,16 +2,15 @@ module Javelin.Lib.ByteCode.Test
   ( javelinTests
   ) where
 
-import Data.Word (Word16)
-import Javelin.Lib.ByteCode.ClassFile
-import Javelin.Lib.ByteCode.DescSign
+import Javelin.Lib.ByteCode.ClassFile ()
+import Javelin.Lib.ByteCode.DescSign ()
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
 import Data.Map.Strict (member)
 
 import Javelin.Lib.ByteCode.Stats (getStats)
-import Test.Tasty.Providers
+import Test.Tasty.Providers ()
 
 import System.Process (readProcess)
 
@@ -26,6 +25,9 @@ executeMainClass className =
     stackPath
     ["exec", "--", "javelin", "jvm", className, rtPath, "1"]
     ""
+
+-- javac -d /Users/anton/dev/haskell/javelin/test-programs-output test-programs/javelin/demo/App.java
+-- java -cp test-programs-output javelin.demo.App
 
 javelinTests =
   testGroup
