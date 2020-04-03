@@ -911,7 +911,7 @@
 				</td>
 				<td>→ 0L
 				</td>
-				<td>push <i>0L</i> (the number <a href="/wiki/Zero" class="mw-redirect" title="Zero">zero</a> with
+				<td>push <i>0L</i> (the number zero with
 					type <i>long</i>) onto the stack
 				</td>
 			</tr>
@@ -929,7 +929,7 @@
 				</td>
 				<td>→ 1L
 				</td>
-				<td>push <i>1L</i> (the number <a href="/wiki/One" class="mw-redirect" title="One">one</a> with type
+				<td>push <i>1L</i> (the number one with type
 					<i>long</i>) onto the stack
 				</td>
 			</tr>
@@ -1142,9 +1142,7 @@
 				</td>
 				<td>push a constant <i>#index</i> from a constant pool (String, int, float, Class,
 					java.lang.invoke.MethodType, java.lang.invoke.MethodHandle, or a dynamically-computed constant)
-					onto the stack (wide <i>index</i> is constructed as
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+					onto the stack (wide <i>index</i> is constructed as indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -1163,8 +1161,7 @@
 				</td>
 				<td>push a constant <i>#index</i> from a constant pool (double, long, or a dynamically-computed
 					constant) onto the stack (wide <i>index</i> is constructed as
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+					indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -1862,10 +1859,7 @@
 				</td>
 				<td>value → result
 				</td>
-				<td>convert a <a href="/wiki/Double-precision_floating-point_format"
-						title="Double-precision floating-point format">double</a> to a <a
-						href="/wiki/Single-precision_floating-point_format"
-						title="Single-precision floating-point format">float</a>
+				<td>convert a double to a float
 				</td>
 			</tr>
 
@@ -2266,7 +2260,7 @@
 				</td>
 				<td>value1, value2 → result
 				</td>
-				<td><a href="/wiki/Bitwise_operation" title="Bitwise operation">bitwise</a> AND of two longs
+				<td>bitwise AND of two longs
 				</td>
 			</tr>
 
@@ -2864,8 +2858,7 @@
 				</td>
 				<td>if references are equal, branch to instruction at <i>branchoffset</i> (signed short constructed
 					from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -2884,8 +2877,7 @@
 				</td>
 				<td>if references are not equal, branch to instruction at <i>branchoffset</i> (signed short
 					constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -2904,8 +2896,7 @@
 				</td>
 				<td>if ints are equal, branch to instruction at <i>branchoffset</i> (signed short constructed from
 					unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -2924,8 +2915,7 @@
 				</td>
 				<td>if <i>value1</i> is greater than or equal to <i>value2</i>, branch to instruction at
 					<i>branchoffset</i> (signed short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -2944,8 +2934,7 @@
 				</td>
 				<td>if <i>value1</i> is greater than <i>value2</i>, branch to instruction at <i>branchoffset</i>
 					(signed short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -2964,8 +2953,7 @@
 				</td>
 				<td>if <i>value1</i> is less than or equal to <i>value2</i>, branch to instruction at
 					<i>branchoffset</i> (signed short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -2984,8 +2972,7 @@
 				</td>
 				<td>if <i>value1</i> is less than <i>value2</i>, branch to instruction at <i>branchoffset</i>
 					(signed short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3003,9 +2990,7 @@
 				<td>value1, value2 →
 				</td>
 				<td>if ints are not equal, branch to instruction at <i>branchoffset</i> (signed short constructed
-					from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3023,9 +3008,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is 0, branch to instruction at <i>branchoffset</i> (signed short constructed
-					from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3043,9 +3026,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is greater than or equal to 0, branch to instruction at <i>branchoffset</i>
-					(signed short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					(signed short constructed from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3063,9 +3044,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is greater than 0, branch to instruction at <i>branchoffset</i> (signed short
-					constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					constructed from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3083,9 +3062,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is less than or equal to 0, branch to instruction at <i>branchoffset</i> (signed
-					short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					short constructed from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3103,9 +3080,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is less than 0, branch to instruction at <i>branchoffset</i> (signed short
-					constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					constructed from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3123,9 +3098,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is not 0, branch to instruction at <i>branchoffset</i> (signed short constructed
-					from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3143,9 +3116,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is not null, branch to instruction at <i>branchoffset</i> (signed short
-					constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					constructed from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3163,9 +3134,7 @@
 				<td>value →
 				</td>
 				<td>if <i>value</i> is null, branch to instruction at <i>branchoffset</i> (signed short constructed
-					from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+					from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3182,9 +3151,7 @@
 				</td>
 				<td>[no change]
 				</td>
-				<td>goes to another instruction at <i>branchoffset</i> (signed short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>)
+				<td>goes to another instruction at <i>branchoffset</i> (signed short constructed from unsigned bytes branchbyte1 &lt;&lt; 8 + branchbyte2)
 				</td>
 			</tr>
 
@@ -3202,9 +3169,8 @@
 				<td>[no change]
 				</td>
 				<td>goes to another instruction at <i>branchoffset</i> (signed int constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 24 + branchbyte2 &lt;&lt; 16 + branchbyte3
-						&lt;&lt; 8 + branchbyte4</span>)
+					branchbyte1 &lt;&lt; 24 + branchbyte2 &lt;&lt; 16 + branchbyte3
+						&lt;&lt; 8 + branchbyte4)
 				</td>
 			</tr>
 
@@ -3222,8 +3188,7 @@
 				<td>→ address
 				</td>
 				<td>jump to subroutine at <i>branchoffset</i> (signed short constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 8 + branchbyte2</span>) and place the return
+					branchbyte1 &lt;&lt; 8 + branchbyte2) and place the return
 					address on the stack
 				</td>
 			</tr>
@@ -3242,9 +3207,8 @@
 				<td>→ address
 				</td>
 				<td>jump to subroutine at <i>branchoffset</i> (signed int constructed from unsigned bytes
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">branchbyte1 &lt;&lt; 24 + branchbyte2 &lt;&lt; 16 + branchbyte3
-						&lt;&lt; 8 + branchbyte4</span>) and place the return address on the stack
+					branchbyte1 &lt;&lt; 24 + branchbyte2 &lt;&lt; 16 + branchbyte3
+					&lt;&lt; 8 + branchbyte4) and place the return address on the stack
 				</td>
 			</tr>
 
@@ -3441,8 +3405,7 @@
 				</td>
 				<td>create a new array of <i>dimensions</i> dimensions of type identified by class reference in
 					constant pool <i>index</i> (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>); the sizes of each dimension
+						indexbyte1 &lt;&lt; 8 + indexbyte2); the sizes of each dimension
 					is identified by <i>count1</i>, [<i>count2</i>, etc.]
 				</td>
 			</tr>
@@ -3488,8 +3451,7 @@
 				</td>
 				<td>get a field <i>value</i> of an object <i>objectref</i>, where the field is identified by field
 					reference in the constant pool <i>index</i> (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3508,8 +3470,7 @@
 				</td>
 				<td>get a static field <i>value</i> of a class, where the field is identified by field reference in
 					the constant pool <i>index</i> (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3528,8 +3489,7 @@
 				</td>
 				<td>set field to <i>value</i> in an object <i>objectref</i>, where the field is identified by a
 					field reference <i>index</i> in constant pool (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3548,8 +3508,7 @@
 				</td>
 				<td>set static field to <i>value</i> in a class, where the field is identified by a field reference
 					<i>index</i> in constant pool (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3577,8 +3536,7 @@
 				</td>
 				<td>checks whether an <i>objectref</i> is of a certain type, the class reference of which is in the
 					constant pool at <i>index</i> (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3597,8 +3555,7 @@
 				</td>
 				<td>determines if an object <i>objectref</i> is of a given type, identified by class reference
 					<i>index</i> in constant pool (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3625,8 +3582,7 @@
 				<td>→ objectref
 				</td>
 				<td>create new object of type identified by class reference in constant pool <i>index</i> (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+					indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3645,8 +3601,7 @@
 				</td>
 				<td>invokes a dynamic method and puts the result on the stack (might be void); the method is
 					identified by method reference <i>index</i> in constant pool (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3665,9 +3620,7 @@
 				</td>
 				<td>invokes an interface method on object <i>objectref</i> and puts the result on the stack (might
 					be void); the interface method is identified by method reference <i>index</i> in constant pool
-					(
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+					(indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3686,8 +3639,7 @@
 				</td>
 				<td>invoke instance method on object <i>objectref</i> and puts the result on the stack (might be
 					void); the method is identified by method reference <i>index</i> in constant pool (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+						indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3705,9 +3657,7 @@
 				<td>[arg1, arg2, ...] → result
 				</td>
 				<td>invoke a static method and puts the result on the stack (might be void); the method is
-					identified by method reference <i>index</i> in constant pool (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+					identified by method reference <i>index</i> in constant pool (indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
@@ -3725,9 +3675,7 @@
 				<td>objectref, [arg1, arg2, ...] → result
 				</td>
 				<td>invoke virtual method on object <i>objectref</i> and puts the result on the stack (might be
-					void); the method is identified by method reference <i>index</i> in constant pool (
-					<link rel="mw-deduplicated-inline-style" href="mw-data:TemplateStyles:r886049734" /><span
-						class="monospaced">indexbyte1 &lt;&lt; 8 + indexbyte2</span>)
+					void); the method is identified by method reference <i>index</i> in constant pool (indexbyte1 &lt;&lt; 8 + indexbyte2)
 				</td>
 			</tr>
 
