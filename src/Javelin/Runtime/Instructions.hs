@@ -11,8 +11,8 @@ import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
 
---stack exec javelin jvm test.App /Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main 1
---runJVM "/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home/jre/lib/rt.jar:main" "test.App" []
+-- runJVM "./sample-classpath/rt.jar:main" "test.App" []
+-- cabal run javelin jvm test.App ./sample-classpath/rt.jar:main 1
 runJVM :: Global m => String -> String -> [String] -> m ()
 runJVM classPath mainClass args =
   let main =
@@ -245,7 +245,7 @@ execute (InvokeVirtual (CPIndex index)) =
           , do value <- pop jraw
                object <- pop jreference
                if outReference == object
-                 then liftIO $ putStr $ show value
+                 then liftIO $ print value
                  else empty)
 
 -- Instructions implementation
