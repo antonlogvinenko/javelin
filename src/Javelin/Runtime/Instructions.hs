@@ -2,14 +2,13 @@ module Javelin.Runtime.Instructions where
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State.Lazy (runStateT)
-import qualified Data.Array.IArray as Array (array)
 import Data.Bits ((.&.), (.|.), xor)
 import qualified Data.Map.Lazy as Map ((!))
 import Javelin.Capability.Classes
-import Javelin.Interpreter.ClassPathLoading (getClassSourcesLayout)
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
+import Data.Array.IArray (array)
 
 -- runJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run javelin jvm test.App ./sample-classpath/rt.jar:main 1
@@ -72,7 +71,7 @@ createFrame rt classId methodReference =
     Right (index, method) ->
       let localsLength = fromIntegral $ localsSize method
           initValue = [(i, 0) | i <- [0 .. localsLength - 1]]
-          locals = Locals $ Array.array (0, localsLength - 1) initValue
+          locals = Locals $ array (0, localsLength - 1) initValue
        in Right $ Frame 0 classId index locals []
     Left err -> Left err
 
@@ -224,7 +223,7 @@ execute IAdd = pureInstruction $ add jint
 execute LAdd = pureInstruction $ add jlong
 execute FAdd = pureInstruction $ add jfloat
 execute DAdd = pureInstruction $ add jdouble
-execute Return = pureInstruction $ dropTopFrame
+execute Return = pureInstruction dropTopFrame
 execute (InvokeVirtual (CPIndex index)) =
   \t@Thread { frames = (frame@Frame { pc = pc
                                     , currentClass = classId
@@ -232,7 +231,7 @@ execute (InvokeVirtual (CPIndex index)) =
                                     }):_
             , runtime = rt
             } -> do
-    console "operands frame" $ (operands frame !! 1)
+    console "operands frame" (operands frame !! 1)
     let eitherSymTable = symTable <$> getClass rt classId
     case eitherSymTable of
       Left err -> undefined
@@ -271,8 +270,7 @@ sipush = do
   push $ signExtend short
 
 -- Stack
-pop1 = do
-  remove
+pop1 = remove
 
 pop2 = do
   remove

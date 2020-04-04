@@ -161,21 +161,21 @@ getFrame :: Thread -> Frame
 getFrame = (!! 0) . frames
 
 updFrame :: Thread -> (Frame -> Frame) -> Thread
-updFrame t@(Thread {frames = (tframe:tframes)}) f =
+updFrame t@Thread {frames = (tframe : tframes)} f =
   t {frames = f tframe : tframes}
 
 getStack :: Thread -> [StackElement]
 getStack = operands . getFrame
 
 updStack :: Thread -> ([StackElement] -> [StackElement]) -> Thread
-updStack t@(Thread {frames = (tframe@(Frame {operands = toperands}):tframes)}) f =
+updStack t@Thread {frames = (tframe@Frame {operands = toperands} : tframes)} f =
   t {frames = (tframe {operands = f toperands}) : tframes}
 
 getLocals :: Thread -> Locals
 getLocals = locals . getFrame
 
 updLocals :: Thread -> (Array Int Word32 -> Array Int Word32) -> Thread
-updLocals t@(Thread {frames = (tframe@(Frame {locals = Locals {vars = tvars}}):tframes)}) f =
+updLocals t@Thread {frames = (tframe@Frame {locals = Locals {vars = tvars}} : tframes)} f =
   t {frames = (tframe {locals = Locals $ f tvars}) : tframes}
 
 remove :: ThreadOperation ()
