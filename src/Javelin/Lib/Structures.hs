@@ -18,9 +18,9 @@ import Flow
 
 import Control.Lens ((%~), (&), (^.), (^?), _1, _2, _Right, ix, makeLenses)
 import Data.Either.Utils (maybeToEither)
+import Data.Maybe (fromMaybe, isJust)
 import Javelin.Lib.ByteCode.Data
 import Javelin.Lib.ByteCode.DescSign
-import Data.Maybe (fromMaybe, isJust)
 
 data Runtime =
   Runtime
@@ -443,8 +443,7 @@ markClassPrepared :: ClassId -> Runtime -> Runtime
 markClassPrepared classId rt = rt & classPrepared %~ Map.insert classId True
 
 isClassPrepared :: ClassId -> Runtime -> Bool
-isClassPrepared classId rt =
-  fromMaybe False (_classPrepared rt Map.!? classId)
+isClassPrepared classId rt = fromMaybe False (_classPrepared rt Map.!? classId)
 
 updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Runtime
 updateClassFields classId rt update =

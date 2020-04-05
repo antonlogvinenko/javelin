@@ -3,7 +3,12 @@ module Javelin.Runtime.Thread where
 import Control.Monad.State.Lazy (StateT, state)
 import Data.Array.IArray (Array, (!), (//))
 import Data.Binary.Get (getWord64be, runGet)
-import Data.Binary.IEEE754 (wordToDouble, doubleToWord, floatToWord, wordToFloat)
+import Data.Binary.IEEE754
+  ( doubleToWord
+  , floatToWord
+  , wordToDouble
+  , wordToFloat
+  )
 import Data.Binary.Put
 import Data.Bits (rotate)
 import Data.ByteString.Lazy (pack)
@@ -88,7 +93,9 @@ narrowInt = Narrow . fromIntegral
 wideInt :: (Integral a) => a -> Representation
 wideInt = Wide . fromIntegral
 
-class Show a => JType a where
+class Show a =>
+      JType a
+  where
   represent :: a -> Representation
 
 instance JType Word8 where
@@ -161,21 +168,21 @@ getFrame :: Thread -> Frame
 getFrame = (!! 0) . frames
 
 updFrame :: Thread -> (Frame -> Frame) -> Thread
-updFrame t@Thread {frames = (tframe : tframes)} f =
+updFrame t@Thread {frames = (tframe:tframes)} f =
   t {frames = f tframe : tframes}
 
 getStack :: Thread -> [StackElement]
 getStack = operands . getFrame
 
 updStack :: Thread -> ([StackElement] -> [StackElement]) -> Thread
-updStack t@Thread {frames = (tframe@Frame {operands = toperands} : tframes)} f =
+updStack t@Thread {frames = (tframe@Frame {operands = toperands}:tframes)} f =
   t {frames = (tframe {operands = f toperands}) : tframes}
 
 getLocals :: Thread -> Locals
 getLocals = locals . getFrame
 
 updLocals :: Thread -> (Array Int Word32 -> Array Int Word32) -> Thread
-updLocals t@Thread {frames = (tframe@Frame {locals = Locals {vars = tvars}} : tframes)} f =
+updLocals t@Thread {frames = (tframe@Frame {locals = Locals {vars = tvars}}:tframes)} f =
   t {frames = (tframe {locals = Locals $ f tvars}) : tframes}
 
 remove :: ThreadOperation ()
@@ -191,11 +198,13 @@ push j =
      in ((), updStack t (elem :))
 
 popAndStoreAt ::
-     (JType j, Show j) => (Int -> StackElement -> j) -> JLocalRef -> ThreadOperation ()
+     (JType j, Show j)
+  => (Int -> StackElement -> j)
+  -> JLocalRef
+  -> ThreadOperation ()
 popAndStoreAt jaccess idx = do
   op <- pop jaccess
   store op idx
-  
 
 add :: (JType j, Num j) => (Int -> StackElement -> j) -> ThreadOperation ()
 add jtype = do
@@ -250,7 +259,7 @@ store j idx =
             Narrow x -> arr // [(idx2, x)]
             Wide x ->
               let (a, b) = split x
-              in arr // [(idx2, a), (idx2 + 1, b)]
+               in arr // [(idx2, a), (idx2 + 1, b)]
      in ((), updLocals t $ const newLocals)
 
 split :: Word64 -> (Word32, Word32)

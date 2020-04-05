@@ -12,37 +12,51 @@ import Data.Map.Strict (member)
 import Javelin.Lib.ByteCode.Stats (getStats)
 import Test.Tasty.Providers ()
 
+import Data.Text (pack, strip, unpack)
 import System.Process (readProcess)
-import Data.Text (unpack, strip, pack)
 
-rtPath =
-  "sample-classpath/rt.jar:test-programs-output/"
+rtPath = "sample-classpath/rt.jar:test-programs-output/"
 
 compileJava :: String -> IO String
-compileJava className = readProcess "javac" ["-d", "test-programs-output/", "test-programs/javelin/" ++ className ++ ".java"] ""
+compileJava className =
+  readProcess
+    "javac"
+    [ "-d"
+    , "test-programs-output/"
+    , "test-programs/javelin/" ++ className ++ ".java"
+    ]
+    ""
 
 -- temporary pack/unpack: don't want to introduce missingH for `strip` but also don't want to switch everything to text right now
 executeMainClass :: String -> IO String
-executeMainClass className =  unpack . strip . pack <$> readProcess "cabal" ["run", "--verbose=0", "javelin", "jvm", "javelin." ++ className, rtPath, "1"] ""
+executeMainClass className =
+  unpack . strip . pack <$>
+  readProcess
+    "cabal"
+    [ "run"
+    , "--verbose=0"
+    , "javelin"
+    , "jvm"
+    , "javelin." ++ className
+    , rtPath
+    , "1"
+    ]
+    ""
 
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
 -- javac -d /Users/anton/dev/haskell/javelin/test-programs-output test-programs/javelin/demo/App.java
 -- java -cp test-programs-output javelin.demo.App
-
 javelinTests =
   testGroup
     "Acceptance tests"
     [ testGroup "Unit tests" [testGroup "ByteCode parsing" [statsAndParserTest]]
     , testGroup
         "Sample testing"
-        [
-          executionTest "SumOfIntegers" "3" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
-          , executionTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
-          , executionTest "SumOfFloats" "2.0" --covers fconst0 fstore1 fconst1 fstore2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
-          ]
-    ]
-
-    -- enrich with other store/loads for ints. longs, floats
+        [ executionTest "SumOfIntegers" "3" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
+        , executionTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
+        , executionTest "SumOfFloats" "2.0" --covers fconst0 fstore1 fconst1 fstore2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
+        ]
+    ] -- enrich with other store/loads for ints. longs, floats
     -- same for other arithmetic ops
 
 executionTest :: String -> String -> TestTree

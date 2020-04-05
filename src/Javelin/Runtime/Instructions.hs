@@ -2,13 +2,13 @@ module Javelin.Runtime.Instructions where
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State.Lazy (runStateT)
+import Data.Array.IArray (array)
 import Data.Bits ((.&.), (.|.), xor)
 import qualified Data.Map.Lazy as Map ((!))
 import Javelin.Capability.Classes
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
-import Data.Array.IArray (array)
 
 -- runJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
@@ -239,7 +239,10 @@ execute (InvokeVirtual (CPIndex index)) =
         let methodReference = symTable `at` index
         console "method reference" methodReference
         let owner = _ownerName (classMethod methodReference)
-        let stringValue = if owner == "(F)V" then show <$> pop jfloat else show <$> pop jint
+        let stringValue =
+              if owner == "(F)V"
+                then show <$> pop jfloat
+                else show <$> pop jint
         let classFieldReference = symTable `at` index
         return
           ( t

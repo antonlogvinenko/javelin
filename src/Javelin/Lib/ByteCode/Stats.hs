@@ -12,9 +12,9 @@ import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.IO (appendFile, writeFile)
 import Text.Printf (printf)
 
+import Data.Bifunctor (Bifunctor(second))
 import Javelin.Lib.ByteCode.ClassFile (parse)
 import Javelin.Lib.ByteCode.Data
-import Data.Bifunctor (Bifunctor(second))
 
 listDir :: FilePath -> IO [FilePath]
 listDir path = do
@@ -49,8 +49,7 @@ stats path output = do
              printConsole formatted
 
 printConsole :: [(OpCode, String)] -> IO ()
-printConsole freqs =
-  putStrLn $ concatMap (uncurry (printf "%s: %s\n")) freqs
+printConsole freqs = putStrLn $ concatMap (uncurry (printf "%s: %s\n")) freqs
 
 textile :: [(OpCode, String)] -> FilePath -> IO ()
 textile freqs path = do

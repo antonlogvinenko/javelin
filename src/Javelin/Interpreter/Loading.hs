@@ -343,9 +343,9 @@ checkAndRecordLoadedClassFields sym body fieldInfo =
 
 deriveDefaultFieldValue :: SymTable -> [AttrInfo] -> Maybe ConstantValue
 deriveDefaultFieldValue sym [] = Nothing
-deriveDefaultFieldValue sym a@((ConstantValue idx) : as) =
+deriveDefaultFieldValue sym a@((ConstantValue idx):as) =
   Just $ ConstantString ""
-deriveDefaultFieldValue sym a@(_ : as) = deriveDefaultFieldValue sym as
+deriveDefaultFieldValue sym a@(_:as) = deriveDefaultFieldValue sym as
 
 deriveFieldAccess :: [FieldInfoAccessFlag] -> FieldAccess
 deriveFieldAccess flags =
