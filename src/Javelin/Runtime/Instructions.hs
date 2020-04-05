@@ -11,7 +11,7 @@ import Javelin.Runtime.Thread
 import Data.Array.IArray (array)
 
 -- runJVM "./sample-classpath/rt.jar:main" "test.App" []
--- cabal run javelin jvm javelin.test.App sample-classpath/rt.jar:test-programs-output 1
+-- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
 runJVM :: Global m => String -> String -> [String] -> m ()
 runJVM classPath mainClass args =
   let main =

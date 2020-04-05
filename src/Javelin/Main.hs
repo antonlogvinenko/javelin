@@ -124,7 +124,7 @@ javelinMain = execParser opts >>= runWithOptions
     jvmParser =
       JVM <$> strArgument (metavar "mainClass") <*>
       strArgument (metavar "classPath") <*>
-      flag False True (long "loggingMode" <> short 's') <*>
+      flag False True (long "loggingMode" <> short 'l') <*>
       some (strArgument (metavar "mainArguments"))
 
 runWithOptions :: JVMOpts -> IO ()

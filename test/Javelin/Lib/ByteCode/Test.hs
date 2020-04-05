@@ -25,6 +25,7 @@ compileJava className = readProcess "javac" ["-d", "test-programs-output/", "tes
 executeMainClass :: String -> IO String
 executeMainClass className =  unpack . strip . pack <$> readProcess "cabal" ["run", "--verbose=0", "javelin", "jvm", "javelin." ++ className, rtPath, "1"] ""
 
+-- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
 -- javac -d /Users/anton/dev/haskell/javelin/test-programs-output test-programs/javelin/demo/App.java
 -- java -cp test-programs-output javelin.demo.App
 
@@ -34,7 +35,10 @@ javelinTests =
     [ testGroup "Unit tests" [testGroup "ByteCode parsing" [statsAndParserTest]]
     , testGroup
         "Sample testing"
-        [executionTest "sum of integers" "SumOfIntegers" "3"]
+        [
+          executionTest "sum of integers" "SumOfIntegers" "3" --iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3
+          -- , executionTest "sum of longs" "SumOfLongs" "1" --lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore5 lload5 -- lload3 does not work
+          ]
     ]
 
 executionTest :: String -> String -> String -> TestTree
