@@ -13,12 +13,12 @@ import Javelin.Lib.ByteCode.Utils
 getConstants 1 = return []
 getConstants len = do
   constant <- getConstant
-  let double = ([constant, constant] ++) <$> (getConstants $ len - 2)
-      single = (constant :) <$> (getConstants $ len - 1)
+  let double = ([constant, constant] ++) <$> getConstants (len - 2)
+      single = (constant :) <$> getConstants (len - 1)
   case constant of
     LongInfo _ -> double
     DoubleInfo _ -> double
-    otherwise -> single
+    _ -> single
 
 getConstant :: Get Constant
 getConstant = do

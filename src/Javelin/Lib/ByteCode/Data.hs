@@ -31,7 +31,7 @@ alignLines opt P {heading = h, text = t} =
   [h ++ "\n"] ++ (map (tab ++) (t >>= (alignLines opt)))
 
 showByteCode :: Bool -> ByteCode -> String
-showByteCode opt (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool p)})) =
+showByteCode opt (ByteCode min maj body@ClassBody {constPool = cp@(ConstantPool p)}) =
   concat . alignLines opt $
   P "Bytecode"
     [ L (nameAndValue "Minor version: " min)
@@ -53,10 +53,10 @@ showByteCode opt (ByteCode min maj body@(ClassBody {constPool = cp@(ConstantPool
     ]
 
 nameAndId :: String -> Word16 -> String
-nameAndId name id = name ++ " #" ++ (show id)
+nameAndId name id = name ++ " #" ++ show id
 
 nameAndValue :: (Show s) => String -> s -> String
-nameAndValue name value = name ++ " " ++ (show value)
+nameAndValue name value = name ++ " " ++ show value
 
 -- ByteCode
 instance Show ByteCode where
@@ -103,7 +103,7 @@ printCode p c =
   case cpIndex c of
     Nothing -> L (show c)
     Just idx ->
-      POpt ((show c) ++ " -> " ++ (showConstRefShort p idx)) [showConst p idx]
+      POpt (show c ++ " -> " ++ showConstRefShort p idx) [showConst p idx]
 
 br :: CPIndex -> Maybe Word16
 br (CPIndex idx) = Just idx
@@ -178,7 +178,7 @@ showConstShort p (InvokeDynamicInfo bi ti) =
   (showConstRefShort p bi) ++ ", " ++ (showConstRefShort p ti)
 
 constHeading :: [Constant] -> String -> Constant -> String
-constHeading p name c = name ++ " -> " ++ (showConstShort p c)
+constHeading p name c = name ++ " -> " ++ showConstShort p c
 
 constHeadingRef :: [Constant] -> String -> Word16 -> String
 constHeadingRef p name idx = constHeading p name (at p idx)
@@ -609,7 +609,7 @@ data Instruction
   deriving (Show, Eq)
 
 isCodeAttrInfo :: AttrInfo -> Bool
-isCodeAttrInfo (CodeAttr _ _ _ _ _) = True
+isCodeAttrInfo CodeAttr {} = True
 isCodeAttrInfo _ = False
 
 data AttrInfo

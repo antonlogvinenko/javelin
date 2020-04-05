@@ -84,7 +84,7 @@ parseRaw ::
 parseRaw bytes = runGetOrFail parseByteCode $ LBS.pack bytes
 
 parse :: [Word8] -> Either String ByteCode
-parse = (either formatParseError validateParseResult) . parseRaw
+parse = either formatParseError validateParseResult . parseRaw
 
 formatParseError ::
      (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
@@ -95,4 +95,4 @@ validateParseResult ::
 validateParseResult (bs, off, bc) =
   if LBS.null bs
     then Right bc
-    else Left $ "Bytes left after parsing. Offset: " ++ (show off)
+    else Left $ "Bytes left after parsing. Offset: " ++ show off

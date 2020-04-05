@@ -20,6 +20,7 @@ import Control.Lens ((%~), (&), (^.), (^?), _1, _2, _Right, ix, makeLenses)
 import Data.Either.Utils (maybeToEither)
 import Javelin.Lib.ByteCode.Data
 import Javelin.Lib.ByteCode.DescSign
+import Data.Maybe (fromMaybe, isJust)
 
 data Runtime =
   Runtime
@@ -192,7 +193,7 @@ data ClassPathLayout =
 instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
     "== Classpath ==\n" ++ show classPath ++ "\n\n" ++ "== Loaded classes ==\n" ++
-    (classes |> Map.toList |> map (\(c, p) -> c ++ "\n" ++ (show p)) |>
+    (classes |> Map.toList |> map (\(c, p) -> c ++ "\n" ++ show p) |>
      intersperse "\n\n" |>
      concat)
 
@@ -279,13 +280,13 @@ data Frame =
     }
   deriving (Show, Eq)
 
-data StackElement =
+newtype StackElement =
   StackElement
     { stackElement :: Word64
     }
   deriving (Show, Eq)
 
-data Locals =
+newtype Locals =
   Locals
     { vars :: Array Int Word32
     }
@@ -395,11 +396,10 @@ getMethodBySignature ::
      Runtime -> ClassId -> PartReference -> Either VMError (Int, Method)
 getMethodBySignature rt classId partRef = do
   classMethods <- methodsList <$> getClass rt classId
-  case findIndex (\m -> (methodName m) == (_name partRef)) classMethods of
-    Just idx -> Right $ (fromIntegral idx, classMethods !! idx)
+  case findIndex (\m -> methodName m == _name partRef) classMethods of
+    Just idx -> Right (fromIntegral idx, classMethods !! idx)
     Nothing ->
-      Left $ InternalError rt $ CustomError $ "Cant find method" ++
-      (show partRef)
+      Left $ InternalError rt $ CustomError $ "Cant find method" ++ show partRef
 
 getClass :: Runtime -> ClassId -> Either VMError Class
 getClass rt classId = _classInfo <$> getLoadedClass rt classId
@@ -432,7 +432,7 @@ newRuntime layout =
         loadedClassesInfo
         (Map.fromList [])
         (Map.fromList [])
-        (0, (array (0, 0) [(0, (Map.fromList [("", JReference 0)]))]))
+        (0, array (0, 0) [(0, Map.fromList [("", JReference 0)])])
         emptyThreads
 
 addLoadedClass :: ClassId -> LoadedClass -> Runtime -> Runtime
@@ -444,9 +444,7 @@ markClassPrepared classId rt = rt & classPrepared %~ Map.insert classId True
 
 isClassPrepared :: ClassId -> Runtime -> Bool
 isClassPrepared classId rt =
-  case (_classPrepared rt) Map.!? classId of
-    Nothing -> False
-    Just x -> x
+  fromMaybe False (_classPrepared rt Map.!? classId)
 
 updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Runtime
 updateClassFields classId rt update =
@@ -466,7 +464,7 @@ classDefinesField :: ClassId -> ClassPartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
   let fieldResStatus =
         rt ^? classResolving . ix classId . resolvedFields . ix partRef
-   in Nothing /= fieldResStatus
+   in isJust fieldResStatus
 
 -- Heap contents
 newThread :: Frame -> ClassPathLayout -> Thread
@@ -486,7 +484,7 @@ getField rt ref name =
         else Left $ InternalError rt SpecifyMeError
 
 writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
-writeField rt@(Runtime {_heap = (s, h)}) ref (name, value) = do
+writeField rt@Runtime {_heap = (s, h)} ref (name, value) = do
   let jobject = h ! ref
       newObject = Map.insert name value jobject
   return $ rt & heap . _2 %~ (// [(ref, newObject)])

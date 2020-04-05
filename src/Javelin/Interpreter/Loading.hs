@@ -40,7 +40,7 @@ getClassFromSource ::
      ClassName -> ClassSource -> IO (Either VMError BSS.ByteString)
 getClassFromSource name (ClassFile path)
   --todo should we check that class x.y.z.class is loaded from x/y/z.class file?
- = Right <$> BSL.toStrict <$> BSL.readFile path
+ = Right . BSL.toStrict <$> BSL.readFile path
 --  if classToPath name == path
 --    else throwE $ ClassNotFoundException "cake"
 getClassFromSource name (JarFile path) = do
@@ -55,7 +55,7 @@ classToPath :: ClassName -> FilePath
 classToPath name = name ++ ".class"
 
 initClassOrArray :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-initClassOrArray classId rt = linking classId rt
+initClassOrArray = linking
 
 loadClassOrArray :: ClassId -> Runtime -> ExceptT VMError IO Runtime
 loadClassOrArray request@(ClassId initCL name) rt =
@@ -149,10 +149,10 @@ deriveFromClass :: (Integral i) => i -> i -> [Constant] -> ClassPartReference
 deriveFromClass classIdx nameAndTypeIdx p =
   let classInfo = p `at` classIdx
       nameAndTypeInfo = p `at` nameAndTypeIdx
-      className = stringValue $ p `at` (nameIndex classInfo)
-      memberName = stringValue $ p `at` (nameIndex nameAndTypeInfo)
+      className = stringValue $ p `at` nameIndex classInfo
+      memberName = stringValue $ p `at` nameIndex nameAndTypeInfo
       memberDescriptor =
-        stringValue $ p `at` (nameAndTypeDescriptorIndex nameAndTypeInfo)
+        stringValue $ p `at` nameAndTypeDescriptorIndex nameAndTypeInfo
    in ClassPartReference (PartReference className memberName) memberDescriptor
 
 -- note: stringValue usage, can fail for invalid bytecode; need a way to handle/notify
@@ -175,7 +175,7 @@ checkAndRecordLoadedClass request@(ClassId initCL name) rt defCL bs = do
 checkInitiatingClassLoader ::
      ClassLoader -> ClassName -> Runtime -> ExceptT VMError IO Runtime
 checkInitiatingClassLoader initCL name rt = do
-  if rt ^. loadedClasses . (to $ Map.member (ClassId initCL name))
+  if rt ^. loadedClasses . to (Map.member (ClassId initCL name))
     then throwE $ Linkage rt LinkageError
     else lift $ return rt
 
@@ -204,7 +204,7 @@ checkRepresentedClass name rt bc =
           if actualName == name
             then lift $ return symTable
             else throwE $ Linkage rt $
-                 NoClassDefFoundError (name ++ actualName ++ (show thisIndex))
+                 NoClassDefFoundError (name ++ actualName ++ show thisIndex)
         _ -> throwE $ Linkage rt ClassFormatError
 
 -- last case is due to invalid bytecode; throw an exception and terminate?
@@ -215,8 +215,8 @@ checkSuperClass request defCL rt classInfo =
       name = getName request
    in case (name, classSuperName) of
         ("java/lang/Object", Nothing) -> lift $ return rt
-        ("java/lang/Object", _) -> throwE $ Linkage rt $ ClassFormatError
-        (_, Nothing) -> throwE $ Linkage rt $ ClassFormatError
+        ("java/lang/Object", _) -> throwE $ Linkage rt ClassFormatError
+        (_, Nothing) -> throwE $ Linkage rt ClassFormatError
         (_, Just parent) -> do
           let parentId = ClassId defCL parent
           rt <- resolveClass parentId rt
@@ -281,7 +281,7 @@ deriveClass bc =
   let classBody = body bc
       cp = constPool classBody
       sym = deriveSymTable cp
-      ClassOrInterface className = sym `at` (this classBody)
+      ClassOrInterface className = sym `at` this classBody
       superIdx = super classBody
       superName =
         if superIdx == 0
@@ -343,9 +343,9 @@ checkAndRecordLoadedClassFields sym body fieldInfo =
 
 deriveDefaultFieldValue :: SymTable -> [AttrInfo] -> Maybe ConstantValue
 deriveDefaultFieldValue sym [] = Nothing
-deriveDefaultFieldValue sym (a@((ConstantValue idx):as)) =
+deriveDefaultFieldValue sym a@((ConstantValue idx) : as) =
   Just $ ConstantString ""
-deriveDefaultFieldValue sym (a@(_:as)) = deriveDefaultFieldValue sym as
+deriveDefaultFieldValue sym a@(_ : as) = deriveDefaultFieldValue sym as
 
 deriveFieldAccess :: [FieldInfoAccessFlag] -> FieldAccess
 deriveFieldAccess flags =
@@ -423,7 +423,7 @@ wrapClassNotFound _ x = x
 
 -- 5.3.1 Loading Using the Bootstrap Class Loader
 loadClassWithBootstrap :: ClassId -> Runtime -> ExceptT VMError IO Runtime
-loadClassWithBootstrap request@(ClassId _ name) rt@(Runtime {_classPathLayout = layout}) = do
+loadClassWithBootstrap request@(ClassId _ name) rt@Runtime {_classPathLayout = layout} = do
   bytes <- ExceptT $ getClassBytesIO name $ rt ^. classPathLayout
   checkAndRecordLoadedClass request rt BootstrapClassLoader bytes
 
@@ -468,8 +468,8 @@ parseSignature name = bla name (ArrayRepr 0 Nothing)
 
 bla :: String -> ArrayRepr -> ArrayRepr
 bla [] r = r
-bla ('[':s) r = bla s r {depth = (depth r) + 1}
-bla ('L':s) r = r {componentType = Just $ take ((length s) - 1) s}
+bla ('[':s) r = bla s r {depth = depth r + 1}
+bla ('L':s) r = r {componentType = Just $ take (length s - 1) s}
 bla (_:xs) r = bla xs r
 
 -- 5.3.4 Loading Constraints

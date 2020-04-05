@@ -360,7 +360,7 @@ getCPIndex :: Get CPIndex
 getCPIndex = CPIndex <$> getWord16
 
 getCPIndex8 :: Get CPIndex
-getCPIndex8 = (CPIndex . fromIntegral) <$> getWord8
+getCPIndex8 = CPIndex . fromIntegral <$> getWord8
 
 getLocal :: Get Local
 getLocal = getWord8
@@ -372,7 +372,7 @@ stackMapTableAttr len = do
 
 getStackMapFrame = do
   tag <- getWord8
-  findWithDefault failingStackMapFrame tag stackMapFrameList $ tag
+  findWithDefault failingStackMapFrame tag stackMapFrameList tag
 
 findWithDefault dft tag m =
   case take 1 . filter (elem tag . fst) $ m of
@@ -406,7 +406,7 @@ sameFrameExtended tag = SameFrameExtended tag <$> getWord16
 
 appendFrame tag =
   AppendFrame tag <$> getWord16 <*>
-  times parseVerifTypeInfo ((fromIntegral tag) - 251)
+  times parseVerifTypeInfo (fromIntegral tag - 251)
 
 fullFrame tag =
   FullFrame tag <$> getWord16 <*> several parseVerifTypeInfo <*>

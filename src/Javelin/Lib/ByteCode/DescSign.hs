@@ -47,7 +47,7 @@ data BaseType
   deriving (Show, Eq, Ord)
 
 -- FieldDescriptor
-data FieldDescriptor =
+newtype FieldDescriptor =
   FieldDescriptor
     { unFieldType :: FieldType
     }
@@ -171,7 +171,7 @@ data ThrowsSignature =
   deriving (Show, Eq)
 
 -- FieldSignature
-data FieldSignature =
+newtype FieldSignature =
   FieldSignature
     { referenceType :: ReferenceTypeSignature
     }

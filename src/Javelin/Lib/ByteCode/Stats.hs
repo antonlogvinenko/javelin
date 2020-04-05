@@ -14,6 +14,7 @@ import Text.Printf (printf)
 
 import Javelin.Lib.ByteCode.ClassFile (parse)
 import Javelin.Lib.ByteCode.Data
+import Data.Bifunctor (Bifunctor(second))
 
 listDir :: FilePath -> IO [FilePath]
 listDir path = do
@@ -41,26 +42,26 @@ stats path output = do
             sortOn (Down . snd) $
             Map.foldrWithKey (\k v list -> (k, v) : list) [] freqs
           amount = fromIntegral $ foldl (\c (k, v) -> c + v) 0 list
-          normalize x = ((fromIntegral $ 100 * x) / amount) :: Double
-          normalized = map (\(k, v) -> (k, normalize v)) list
-          formatted = map (\(k, v) -> (k, printf "%.4f%%" v)) normalized
+          normalize x = (fromIntegral (100 * x) / amount) :: Double
+          normalized = map (second normalize) list
+          formatted = map (second (printf "%.4f%%")) normalized
        in do maybe mempty (textile formatted) output
              printConsole formatted
 
 printConsole :: [(OpCode, String)] -> IO ()
 printConsole freqs =
-  putStrLn $ concatMap (\(k, v) -> printf "%s: %s\n" k v) freqs
+  putStrLn $ concatMap (uncurry (printf "%s: %s\n")) freqs
 
 textile :: [(OpCode, String)] -> FilePath -> IO ()
 textile freqs path = do
   writeFile path "| OpCpde | Frequency |\n"
-  appendFile path $ concatMap (\(k, v) -> printf "| %s | %s |\n" k v) freqs
+  appendFile path $ concatMap (uncurry (printf "| %s | %s |\n")) freqs
 
 calcFreqs ::
      Map.Map String Integer
   -> [FilePath]
   -> ExceptT String IO (Map.Map String Integer)
-calcFreqs accum [] = return $ accum
+calcFreqs accum [] = return accum
 calcFreqs !accum (f:fs) = do
   bytecode <- parseFileContents f
   calcFreqs (addFreq accum bytecode) fs
@@ -82,13 +83,13 @@ composeFreqs x (c:cs) = composeFreqs (Map.alter statsAlter c x) cs
     statsAlter = Just . maybe 1 (1 +)
 
 isCodeAttr :: AttrInfo -> Bool
-isCodeAttr (CodeAttr _ _ _ _ _) = True
+isCodeAttr CodeAttr {} = True
 isCodeAttr _ = False
 
 parseFileContents :: FilePath -> ExceptT String IO ByteCode
 parseFileContents path =
   ExceptT $
-  (either (addPath path) Right) <$> parse <$> BS.unpack <$> BS.readFile path
+  either (addPath path) Right <$> parse <$> BS.unpack <$> BS.readFile path
 
 addPath :: String -> String -> Either String ByteCode
 addPath path msg = Left $ "Failed parsing file " ++ path ++ ". " ++ msg
@@ -274,7 +275,7 @@ oc (IfACmpNe _) = "if_acmpne"
 oc (Goto _) = "goto"
 oc (Jsr _) = "jsr"
 oc (Ret _) = "ret"
-oc (TableSwitch _ _ _ _) = "tableswitch"
+oc (TableSwitch {}) = "tableswitch"
 oc (LookupSwitch _ _) = "lookupswitch"
 oc IReturn = "ireturn"
 oc LReturn = "lreturn"

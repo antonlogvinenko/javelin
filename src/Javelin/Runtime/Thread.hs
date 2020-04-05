@@ -23,7 +23,7 @@ nativeJVM = Map.fromList [(("java.lang.Class", "getClass"), id)]
 class BytesContainer c where
   getBytes :: c -> Int -> Int -> Word64
 
-data Arguments =
+newtype Arguments =
   Arguments
     { argumentsArray :: [Word8]
     }
@@ -34,7 +34,7 @@ instance BytesContainer Arguments where
 
 argumentToWord64 :: [Word8] -> Word64
 argumentToWord64 bs =
-  let normalized = (take (8 - length bs) bs) ++ bs
+  let normalized = take (8 - length bs) bs ++ bs
    in runGet getWord64be $ pack normalized
 
 instance BytesContainer Locals where
@@ -46,7 +46,7 @@ instance BytesContainer Locals where
 
 localToWord64 :: [Word32] -> Word64
 localToWord64 bs =
-  runGet getWord64be $ runPut $ putWord32be (bs !! 0) >> putWord32be (bs !! 1)
+  runGet getWord64be $ runPut $ putWord32be (head bs) >> putWord32be (bs !! 1)
 
 instance BytesContainer StackElement where
   getBytes c idx len = stackElement c
@@ -228,7 +228,7 @@ pushn js =
 pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
 pop f =
   state $ \t ->
-    let nElems = getStack t !! 0
+    let nElems = head (getStack t)
      in (f 0 nElems, updStack t $ drop 1)
 
 popn :: (JType j) => (Int -> StackElement -> j) -> Int -> ThreadOperation [j]
@@ -251,7 +251,7 @@ store j idx =
             Wide x ->
               let (a, b) = split x
               in arr // [(idx2, a), (idx2 + 1, b)]
-     in ((), updLocals t $ \_ -> newLocals)
+     in ((), updLocals t $ const newLocals)
 
 split :: Word64 -> (Word32, Word32)
 split x =
