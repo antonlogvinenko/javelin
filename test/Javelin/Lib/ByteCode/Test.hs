@@ -36,9 +36,9 @@ javelinTests =
     , testGroup
         "Sample testing"
         [
-          executionTest "sum of integers" "SumOfIntegers" "3" --iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3
-          , executionTest "sum of longs" "SumOfLongs" "1" --lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore5 lload5 -- lload3 does not work
-          , executionTest "sum of floats" "SumOfFloats" "1.0" --iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3
+          executionTest "sum of integers" "SumOfIntegers" "3" --covers iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return
+          , executionTest "sum of longs" "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
+          , executionTest "sum of floats" "SumOfFloats" "2.0" --covers fconst0 fstore1 fconst1 fstore2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
           ]
     ]
 
