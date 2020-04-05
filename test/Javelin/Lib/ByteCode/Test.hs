@@ -36,21 +36,21 @@ javelinTests =
     , testGroup
         "Sample testing"
         [
-          executionTest "sum of integers" "SumOfIntegers" "3" --covers iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return
-          , executionTest "sum of longs" "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
-          , executionTest "sum of floats" "SumOfFloats" "2.0" --covers fconst0 fstore1 fconst1 fstore2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
+          executionTest "SumOfIntegers" "3" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
+          , executionTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
+          , executionTest "SumOfFloats" "2.0" --covers fconst0 fstore1 fconst1 fstore2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
           ]
     ]
 
     -- enrich with other store/loads for ints. longs, floats
     -- same for other arithmetic ops
 
-executionTest :: String -> String -> String -> TestTree
-executionTest testName className expectedResult =
-  testCaseSteps testName $ \step -> do
+executionTest :: String -> String -> TestTree
+executionTest className expectedResult =
+  testCaseSteps className $ \step -> do
     compileJava className
     output <- executeMainClass className
-    assertEqual testName expectedResult output
+    assertEqual className expectedResult output
 
 statsAndParserTest =
   testCase "stats" $ do
