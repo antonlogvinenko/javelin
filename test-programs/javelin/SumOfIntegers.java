@@ -1,6 +1,6 @@
-package javelin.test;
+package javelin;
 
-public class App 
+public class SumOfIntegers 
 {
     public static void main( String[] args )
     {

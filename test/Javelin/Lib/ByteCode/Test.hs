@@ -19,11 +19,11 @@ rtPath =
   "sample-classpath/rt.jar:test-programs-output/"
 
 compileJava :: String -> IO String
-compileJava className = readProcess "javac" ["-d", "test-programs-output/", "test-programs/javelin/test/" ++ className ++ ".java"] ""
+compileJava className = readProcess "javac" ["-d", "test-programs-output/", "test-programs/javelin/" ++ className ++ ".java"] ""
 
 -- temporary pack/unpack: don't want to introduce missingH for `strip` but also don't want to switch everything to text right now
 executeMainClass :: String -> IO String
-executeMainClass className =  unpack . strip . pack <$> readProcess "cabal" ["run", "--verbose=0", "javelin", "jvm", "javelin.test." ++ className, rtPath, "1"] ""
+executeMainClass className =  unpack . strip . pack <$> readProcess "cabal" ["run", "--verbose=0", "javelin", "jvm", "javelin." ++ className, rtPath, "1"] ""
 
 -- javac -d /Users/anton/dev/haskell/javelin/test-programs-output test-programs/javelin/demo/App.java
 -- java -cp test-programs-output javelin.demo.App
@@ -34,7 +34,7 @@ javelinTests =
     [ testGroup "Unit tests" [testGroup "ByteCode parsing" [statsAndParserTest]]
     , testGroup
         "Sample testing"
-        [executionTest "sum of integers" "App" "3"]
+        [executionTest "sum of integers" "SumOfIntegers" "3"]
     ]
 
 executionTest :: String -> String -> String -> TestTree
