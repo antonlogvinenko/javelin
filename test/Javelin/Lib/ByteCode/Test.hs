@@ -55,10 +55,15 @@ javelinTests =
         [ executionTest "SumOfIntegers" "3" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
         , executionTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
         , executionTest "SumOfFloats" "2.0" --covers fconst0 fstore1 fconst1 fstore2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
-        --, executionTest "SumOfDoubles" "2.0"
+        , executionTest "SumOfDoubles" "2.0"
         ]
     ] -- enrich with other store/loads for ints. longs, floats
     -- same for other arithmetic ops
+
+
+-- jint stores both info
+-- jint is passed to push instead of type annotation
+-- code fetchest first or second from jint when it needs to write/read word64/32
 
 executionTest :: String -> String -> TestTree
 executionTest className expectedResult =
