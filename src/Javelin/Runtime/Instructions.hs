@@ -9,6 +9,7 @@ import Javelin.Capability.Classes
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
+import Debug.Trace (traceShow)
 
 -- runJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
@@ -239,10 +240,7 @@ execute (InvokeVirtual (CPIndex index)) =
         let methodReference = symTable `at` index
         console "method reference" methodReference
         let owner = _ownerName (classMethod methodReference)
-        let stringValue =
-              if owner == "(F)V"
-                then show <$> pop jfloat
-                else show <$> pop jint
+        let stringValue = typeFormatter owner
         let classFieldReference = symTable `at` index
         return
           ( t
@@ -251,6 +249,13 @@ execute (InvokeVirtual (CPIndex index)) =
                if outReference == object
                  then liftIO $ putStr value
                  else empty)
+
+typeFormatter :: String -> ThreadOperation String
+typeFormatter x
+  | x == "(F)V" = show <$> pop jfloat
+  | x == "(I)V" = show <$> pop jint
+  | x == "(J)V" = show <$> pop jlong
+  | x == "(D)V" = show <$> pop jdouble
 
 -- Instructions implementation
 -- Constants
