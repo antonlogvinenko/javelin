@@ -3,7 +3,7 @@ module Javelin.Runtime.Thread where
 import Control.Monad.State.Lazy (StateT, state)
 import Data.Array.IArray (Array, (!), (//))
 import Data.Binary.Get (getWord64be, runGet)
-import Data.Binary.IEEE754 (doubleToWord, floatToWord)
+import Data.Binary.IEEE754 (wordToDouble, doubleToWord, floatToWord, wordToFloat)
 import Data.Binary.Put
 import Data.Bits (rotate)
 import Data.ByteString.Lazy (pack)
@@ -88,7 +88,7 @@ narrowInt = Narrow . fromIntegral
 wideInt :: (Integral a) => a -> Representation
 wideInt = Wide . fromIntegral
 
-class JType a where
+class Show a => JType a where
   represent :: a -> Representation
 
 instance JType Word8 where
@@ -146,10 +146,10 @@ jboolean :: (BytesContainer c) => Int -> c -> JBoolean
 jboolean = fetchBytes 1
 
 jfloat :: (BytesContainer c) => Int -> c -> JFloat
-jfloat = fetchBytes 8
+jfloat idx c = wordToFloat $ fetchBytes 4 idx c
 
 jdouble :: (BytesContainer c) => Int -> c -> JDouble
-jdouble = fetchBytes 8
+jdouble idx c = wordToDouble $ fetchBytes 8 idx c
 
 jreference :: (BytesContainer c) => Int -> c -> JReference
 jreference = fetchBytes 8
@@ -191,10 +191,11 @@ push j =
      in ((), updStack t (elem :))
 
 popAndStoreAt ::
-     (JType j) => (Int -> StackElement -> j) -> JLocalRef -> ThreadOperation ()
+     (JType j, Show j) => (Int -> StackElement -> j) -> JLocalRef -> ThreadOperation ()
 popAndStoreAt jaccess idx = do
   op <- pop jaccess
   store op idx
+  
 
 add :: (JType j, Num j) => (Int -> StackElement -> j) -> ThreadOperation ()
 add jtype = do
@@ -249,13 +250,13 @@ store j idx =
             Narrow x -> arr // [(idx2, x)]
             Wide x ->
               let (a, b) = split x
-               in arr // [(idx2, a), (idx2 + 1, b)]
+              in arr // [(idx2, a), (idx2 + 1, b)]
      in ((), updLocals t $ \_ -> newLocals)
 
 split :: Word64 -> (Word32, Word32)
 split x =
-  let a = fromIntegral x
-      b = fromIntegral $ rotate x 32
+  let b = fromIntegral x
+      a = fromIntegral $ rotate x 32
    in (a, b)
 
 load :: (JType j) => (Int -> Locals -> j) -> JLocalRef -> ThreadOperation j

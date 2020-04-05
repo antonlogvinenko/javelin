@@ -37,9 +37,13 @@ javelinTests =
         "Sample testing"
         [
           executionTest "sum of integers" "SumOfIntegers" "3" --iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3
-          -- , executionTest "sum of longs" "SumOfLongs" "1" --lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore5 lload5 -- lload3 does not work
+          , executionTest "sum of longs" "SumOfLongs" "1" --lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore5 lload5 -- lload3 does not work
+          , executionTest "sum of floats" "SumOfFloats" "1.0" --iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3
           ]
     ]
+
+    -- enrich with other store/loads for ints. longs, floats
+    -- same for other arithmetic ops
 
 executionTest :: String -> String -> String -> TestTree
 executionTest testName className expectedResult =

@@ -172,11 +172,11 @@ execute IConst4 = pureInstruction $ iconst 4
 execute IConst5 = pureInstruction $ iconst 5
 execute LConst0 = pureInstruction $ lconst 0
 execute LConst1 = pureInstruction $ lconst 1
-execute FConst0 = pureInstruction $ fconst 0
-execute FConst1 = pureInstruction $ fconst 1
-execute FConst2 = pureInstruction $ fconst 2
-execute DConst0 = pureInstruction $ dconst 0
-execute DConst1 = pureInstruction $ dconst 1
+execute FConst0 = pureInstruction $ fconst 0.0
+execute FConst1 = pureInstruction $ fconst 1.0
+execute FConst2 = pureInstruction $ fconst 2.0
+execute DConst0 = pureInstruction $ dconst 0.0
+execute DConst1 = pureInstruction $ dconst 1.0
 -- pop int from stack, put to <i> local variable
 execute IStore0 = pureInstruction $ popAndStoreAt jint 0
 execute IStore1 = pureInstruction $ popAndStoreAt jint 1
@@ -187,7 +187,7 @@ execute LStore0 = pureInstruction $ popAndStoreAt jlong 0
 execute LStore1 = pureInstruction $ popAndStoreAt jlong 1
 execute LStore2 = pureInstruction $ popAndStoreAt jlong 2
 execute LStore3 = pureInstruction $ popAndStoreAt jlong 3
-execute (LStore localId) = pureInstruction $ popAndStoreAt jint localId
+execute (LStore localId) = pureInstruction $ popAndStoreAt jlong localId
 execute FStore0 = pureInstruction $ popAndStoreAt jfloat 0
 execute FStore1 = pureInstruction $ popAndStoreAt jfloat 1
 execute FStore2 = pureInstruction $ popAndStoreAt jfloat 2
@@ -238,13 +238,15 @@ execute (InvokeVirtual (CPIndex index)) =
       Right symTable -> do
         let methodReference = symTable `at` index
         console "method reference" methodReference
+        let owner = _ownerName (classMethod methodReference)
+        let stringValue = if owner == "(F)V" then show <$> pop jfloat else show <$> pop jint
         let classFieldReference = symTable `at` index
         return
           ( t
-          , do value <- pop jraw
+          , do value <- stringValue
                object <- pop jreference
                if outReference == object
-                 then liftIO $ print value
+                 then liftIO $ putStr value
                  else empty)
 
 -- Instructions implementation
