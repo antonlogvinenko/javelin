@@ -142,6 +142,9 @@ outReference = maxBound
 
 execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 execute Nop = pureInstruction empty
+execute BreakPoint = pureInstruction empty
+execute ImDep1 = pureInstruction empty
+execute ImDep2 = pureInstruction empty
 -- resolve field -> resolve class -> load class
 execute v@(GetStatic (CPIndex index)) =
   \t@Thread { frames = Frame { pc = pc
