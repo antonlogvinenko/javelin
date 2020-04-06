@@ -54,7 +54,7 @@ javelinTests =
         "Sample testing"
         [ executionTest "SumOfIntegers" "3" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
         , executionTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
-        , executionTest "SumOfFloats" "2.0" --covers fconst0 fstore1 fconst1 fstore2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
+        , executionTest "SumOfFloats" "3.0" --covers fconst0 fstore1 fconst1 fstore2 fconst2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
         , executionTest "SumOfDoubles" "2.0" --covers dconst0 dstore1 dconst1 dstore3 dload1 dload3 dadd dload dstore
         , executionTest "MulOfIntegers" "60" --covers iconst3 iconst4 iconst5 imul
         ]
