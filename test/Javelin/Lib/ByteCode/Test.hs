@@ -57,6 +57,9 @@ javelinTests =
         , executionTest "SumOfFloats" "3.0" --covers fconst0 fstore1 fconst1 fstore2 fconst2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
         , executionTest "SumOfDoubles" "2.0" --covers dconst0 dstore1 dconst1 dstore3 dload1 dload3 dadd dload dstore
         , executionTest "MulOfIntegers" "60" --covers iconst3 iconst4 iconst5 imul
+        , executionTest "MulOfLongs" "1" --covers lmul
+        , executionTest "MulOfFloats" "4.0" --covers fmul
+        , executionTest "MulOfDoubles" "1.0" --covers dmul
         ]
     ]
 
