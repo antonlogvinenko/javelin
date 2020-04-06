@@ -231,6 +231,10 @@ execute ISub = pureInstruction $ math jint (-)
 execute LSub = pureInstruction $ math jlong (-)
 execute FSub = pureInstruction $ math jfloat (-)
 execute DSub = pureInstruction $ math jdouble (-)
+execute INeg = pureInstruction $ neg jint
+execute LNeg = pureInstruction $ neg jlong
+execute FNeg = pureInstruction $ neg jfloat
+execute DNeg = pureInstruction $ neg jdouble
 execute Return = pureInstruction dropTopFrame
 execute (InvokeVirtual (CPIndex index)) =
   \t@Thread { frames = (frame@Frame { pc = pc

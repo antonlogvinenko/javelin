@@ -64,11 +64,16 @@ javelinTests =
         , executionTest "SubOfLongs" "1" --covers
         , executionTest "SubOfFloats" "1.0" --covers
         , executionTest "SubOfDoubles" "1.0" --covers
+        , executionTest "NegInteger" "-2" --covers
+        , executionTest "NegLong" "-1" --covers
+        , executionTest "NegFloats" "-2.0" --covers
+        , executionTest "NegDouble" "-1.0" --covers
         ]
     ]
 
 -- iconst_m1 iinc
--- [sub div rem neg cmpg] X [int double float long]
+-- [neg cmpg div rem] X [int double float long]
+-- [div rem] X [int double float long]
 -- breakpoint impdep1 impdep2 nop
 
 -- jint stores both info
