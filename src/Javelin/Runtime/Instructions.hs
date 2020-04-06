@@ -227,6 +227,10 @@ execute IMul = pureInstruction $ math jint (*)
 execute LMul = pureInstruction $ math jlong (*)
 execute FMul = pureInstruction $ math jfloat (*)
 execute DMul = pureInstruction $ math jdouble (*)
+execute ISub = pureInstruction $ math jint (-)
+execute LSub = pureInstruction $ math jlong (-)
+execute FSub = pureInstruction $ math jfloat (-)
+execute DSub = pureInstruction $ math jdouble (-)
 execute Return = pureInstruction dropTopFrame
 execute (InvokeVirtual (CPIndex index)) =
   \t@Thread { frames = (frame@Frame { pc = pc
@@ -313,8 +317,8 @@ dup = do
 --   pushn [op2, op1]
 -- Math
 math operandType operation = do
-  op1 <- pop operandType
   op2 <- pop operandType
+  op1 <- pop operandType
   push $ operation op1 op2
 
 isub = math jint (-)

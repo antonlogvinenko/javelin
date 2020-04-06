@@ -60,11 +60,16 @@ javelinTests =
         , executionTest "MulOfLongs" "1" --covers lmul
         , executionTest "MulOfFloats" "4.0" --covers fmul
         , executionTest "MulOfDoubles" "1.0" --covers dmul
+        , executionTest "SubOfIntegers" "1" --covers
+        , executionTest "SubOfLongs" "1" --covers
+        , executionTest "SubOfFloats" "1.0" --covers
+        , executionTest "SubOfDoubles" "1.0" --covers
         ]
     ]
 
--- iconst_m1
--- mul sub div rem neg cmpg inc x int double float long
+-- iconst_m1 iinc
+-- [sub div rem neg cmpg] X [int double float long]
+-- breakpoint impdep1 impdep2 nop
 
 -- jint stores both info
 -- jint is passed to push instead of type annotation
