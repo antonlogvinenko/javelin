@@ -223,6 +223,10 @@ execute IAdd = pureInstruction $ add jint
 execute LAdd = pureInstruction $ add jlong
 execute FAdd = pureInstruction $ add jfloat
 execute DAdd = pureInstruction $ add jdouble
+execute IMul = pureInstruction $ math jint (*)
+execute LMul = pureInstruction $ math jlong (*)
+execute FMul = pureInstruction $ math jfloat (*)
+execute DMul = pureInstruction $ math jdouble (*)
 execute Return = pureInstruction dropTopFrame
 execute (InvokeVirtual (CPIndex index)) =
   \t@Thread { frames = (frame@Frame { pc = pc
