@@ -219,18 +219,18 @@ execute DLoad0 = pureInstruction $ loadAndPushAt jdouble 0
 execute DLoad1 = pureInstruction $ loadAndPushAt jdouble 1
 execute DLoad2 = pureInstruction $ loadAndPushAt jdouble 2
 execute DLoad3 = pureInstruction $ loadAndPushAt jdouble 3
-execute IAdd = pureInstruction $ math jint (+)
-execute LAdd = pureInstruction $ math jlong (+)
-execute FAdd = pureInstruction $ math jfloat (+)
-execute DAdd = pureInstruction $ math jdouble (+)
-execute IMul = pureInstruction $ math jint (*)
-execute LMul = pureInstruction $ math jlong (*)
-execute FMul = pureInstruction $ math jfloat (*)
-execute DMul = pureInstruction $ math jdouble (*)
-execute ISub = pureInstruction $ math jint (-)
-execute LSub = pureInstruction $ math jlong (-)
-execute FSub = pureInstruction $ math jfloat (-)
-execute DSub = pureInstruction $ math jdouble (-)
+execute IAdd = pureInstruction $ math (+) jint
+execute LAdd = pureInstruction $ math (+) jlong
+execute FAdd = pureInstruction $ math (+) jfloat
+execute DAdd = pureInstruction $ math (+) jdouble
+execute IMul = pureInstruction $ math (*) jint
+execute LMul = pureInstruction $ math (*) jlong
+execute FMul = pureInstruction $ math (*) jfloat
+execute DMul = pureInstruction $ math (*) jdouble
+execute ISub = pureInstruction $ math (-) jint
+execute LSub = pureInstruction $ math (-) jlong
+execute FSub = pureInstruction $ math (-) jfloat
+execute DSub = pureInstruction $ math (-) jdouble
 execute INeg = pureInstruction $ neg jint
 execute LNeg = pureInstruction $ neg jlong
 execute FNeg = pureInstruction $ neg jfloat
@@ -320,54 +320,38 @@ dup = do
 --   [op1, op2] <- popn jraw 2
 --   pushn [op2, op1]
 -- Math
-math operandType operation = do
+math operation operandType = do
   op2 <- pop operandType
   op1 <- pop operandType
   push $ operation op1 op2
 
-isub = math jint (-)
+idiv = math div jint
 
-lsub = math jlong (-)
+ldiv = math div jlong
 
-fsub = math jfloat (-)
+fdiv = math (/) jfloat
 
-dsub = math jdouble (-)
+ddiv = math (/) jdouble
 
-idiv = math jint div
+irem = math rem jint
 
-ldiv = math jlong div
-
-fdiv = math jfloat (/)
-
-ddiv = math jdouble (/)
-
-irem = math jint rem
-
-lrem = math jlong rem
+lrem = math rem jlong
 
 neg operandType = do
   x <- pop operandType
   push $ -x
 
-ineg = neg jint
+iand = math (.&.) jint
 
-lneg = neg jlong
+land = math (.&.) jlong
 
-fneg = neg jfloat
+ior = math (.|.) jint
 
-dneg = neg jdouble
+lor = math (.|.) jlong
 
-iand = math jint (.&.)
+ixor = math xor jint
 
-land = math jlong (.&.)
-
-ior = math jint (.|.)
-
-lor = math jlong (.|.)
-
-ixor = math jint xor
-
-lxor = math jlong xor
+lxor = math xor jlong
 
 -- wrong implementation: bytes are read from instruction not local arguments
 iinc = do

@@ -71,10 +71,11 @@ javelinTests =
         ]
     ]
 
--- iconst_m1 iinc
--- [neg cmpg div rem] X [int double float long]
+-- iconst_m1
 -- [div rem] X [int double float long]
+-- [cmpg] X [int double float long]
 -- breakpoint impdep1 impdep2 nop
+-- iinc
 
 -- jint stores both info
 -- jint is passed to push instead of type annotation
