@@ -3,7 +3,7 @@ module Javelin.Runtime.Instructions where
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State.Lazy (runStateT)
 import Data.Array.IArray (array)
-import Data.Bits ((.&.), (.|.), xor)
+import Data.Bits (shiftR, shiftL, (.&.), (.|.), xor)
 import qualified Data.Map.Lazy as Map ((!))
 import Javelin.Capability.Classes
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
@@ -137,6 +137,16 @@ out =
     (PartReference "java/lang/System" "out")
     "Ljava/io/PrintStream;"
 
+
+-- shift :: (JType j) => (j -> Int -> j) -> (Int -> StackElement -> j) -> ThreadOperation ()
+shift operation operandType = do
+  op2 <- pop jint
+  op1 <- pop operandType
+  push $ operation op1 (fromIntegral op2)
+
+uShiftR :: (JType j, Integral j) => j -> Int -> j
+uShiftR n k = fromIntegral (fromIntegral n `shiftR` k :: Word)
+
 outReference :: JReference
 outReference = maxBound
 
@@ -238,6 +248,19 @@ execute INeg = pureInstruction $ neg jint
 execute LNeg = pureInstruction $ neg jlong
 execute FNeg = pureInstruction $ neg jfloat
 execute DNeg = pureInstruction $ neg jdouble
+execute IOr = pureInstruction $ math (.|.) jint
+execute IAnd = pureInstruction $ math (.&.) jint
+execute IXor = pureInstruction $ math xor jint
+execute IShl = pureInstruction $ shift shiftL jint
+execute IShr = pureInstruction $ shift shiftR jint
+execute IUshr = pureInstruction $ shift uShiftR jint
+execute LOr = pureInstruction $ math (.|.) jlong
+execute LAnd = pureInstruction $ math (.&.) jlong
+execute LXor = pureInstruction $ math xor jlong
+execute LShl = pureInstruction $ shift shiftL jlong
+execute LShr = pureInstruction $ shift shiftR jlong
+execute LUshr = pureInstruction $ shift uShiftR jlong
+
 execute Return = pureInstruction dropTopFrame
 execute (InvokeVirtual (CPIndex index)) =
   \t@Thread { frames = (frame@Frame { pc = pc
@@ -343,18 +366,6 @@ lrem = math rem jlong
 neg operandType = do
   x <- pop operandType
   push $ -x
-
-iand = math (.&.) jint
-
-land = math (.&.) jlong
-
-ior = math (.|.) jint
-
-lor = math (.|.) jlong
-
-ixor = math xor jint
-
-lxor = math xor jlong
 
 -- wrong implementation: bytes are read from instruction not local arguments
 iinc = do

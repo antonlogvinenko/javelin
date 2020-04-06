@@ -4,7 +4,7 @@ module Javelin.Lib.ByteCode.Test
 
 import Javelin.Lib.ByteCode.ClassFile ()
 import Javelin.Lib.ByteCode.DescSign ()
-import Test.Tasty (TestTree, testGroup)
+import Test.Tasty (TestTree, testGroup, withResource)
 import Test.Tasty.HUnit
 
 import Data.Map.Strict (member)
@@ -24,6 +24,17 @@ compileJava className =
     [ "-d"
     , "test-programs-output/"
     , "test-programs/javelin/" ++ className ++ ".java"
+    ]
+    ""
+
+compileAll :: IO String
+compileAll =
+  readProcess
+    "javac -d test-programs-output/ test-programs/javelin/\\*"
+    [ 
+    --   "-d"
+    -- , "test-programs-output/"
+    -- , "test-programs/javelin/*"
     ]
     ""
 
@@ -49,8 +60,9 @@ executeMainClass className =
 javelinTests =
   testGroup
     "Acceptance tests"
-    [ testGroup "Unit tests" [testGroup "ByteCode parsing" [statsAndParserTest]]
-    , testGroup
+    [
+       testGroup "Unit tests" [testGroup "ByteCode parsing" [statsAndParserTest]],
+       withResource (print "") (\_ -> print "release") $ \_ -> testGroup
         "Sample testing"
         [ executionTest "SumOfIntegers" "4" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
         , executionTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
@@ -71,9 +83,10 @@ javelinTests =
         ]
     ]
 
--- [div rem] X [int double float long]
+-- optiimize: list all java files and compile at once
+-- tests for: lor ior iand land ixor lxor ishl ishr iushr lshl lshr lushr
+-- pushing constance and [div rem] X [int double float long]
 -- [cmpg] X [int double float long]
--- breakpoint impdep1 impdep2 nop
 -- iinc
 
 -- jint stores both info
