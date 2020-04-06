@@ -206,12 +206,6 @@ popAndStoreAt jaccess idx = do
   op <- pop jaccess
   store op idx
 
-add :: (JType j, Num j) => (Int -> StackElement -> j) -> ThreadOperation ()
-add jtype = do
-  arg1 <- pop jtype
-  arg2 <- pop jtype
-  push $ arg1 + arg2
-
 loadAndPushAt ::
      (JType j) => (Int -> Locals -> j) -> JLocalRef -> ThreadOperation ()
 loadAndPushAt jaccess idx = do

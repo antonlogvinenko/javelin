@@ -219,10 +219,10 @@ execute DLoad0 = pureInstruction $ loadAndPushAt jdouble 0
 execute DLoad1 = pureInstruction $ loadAndPushAt jdouble 1
 execute DLoad2 = pureInstruction $ loadAndPushAt jdouble 2
 execute DLoad3 = pureInstruction $ loadAndPushAt jdouble 3
-execute IAdd = pureInstruction $ add jint
-execute LAdd = pureInstruction $ add jlong
-execute FAdd = pureInstruction $ add jfloat
-execute DAdd = pureInstruction $ add jdouble
+execute IAdd = pureInstruction $ math jint (+)
+execute LAdd = pureInstruction $ math jlong (+)
+execute FAdd = pureInstruction $ math jfloat (+)
+execute DAdd = pureInstruction $ math jdouble (+)
 execute IMul = pureInstruction $ math jint (*)
 execute LMul = pureInstruction $ math jlong (*)
 execute FMul = pureInstruction $ math jfloat (*)
@@ -317,14 +317,6 @@ math operandType operation = do
   op2 <- pop operandType
   push $ operation op1 op2
 
-iadd = math jint (+)
-
-ladd = math jlong (+)
-
-fadd = math jfloat (+)
-
-dadd = math jdouble (+)
-
 isub = math jint (-)
 
 lsub = math jlong (-)
@@ -332,14 +324,6 @@ lsub = math jlong (-)
 fsub = math jfloat (-)
 
 dsub = math jdouble (-)
-
-imul = math jint (*)
-
-lmul = math jlong (*)
-
-fmul = math jfloat (*)
-
-dmul = math jdouble (*)
 
 idiv = math jint div
 

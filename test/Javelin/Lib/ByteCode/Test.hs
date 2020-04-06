@@ -58,11 +58,10 @@ javelinTests =
         , executionTest "SumOfDoubles" "2.0" --covers dconst0 dstore1 dconst1 dstore3 dload1 dload3 dadd dload dstore
         , executionTest "MulOfIntegers" "60" --covers iconst3 iconst4 iconst5 imul
         ]
-    ] -- enrich with other store/loads for ints. longs, floats
-    -- same for other arithmetic ops
+    ]
 
--- fconst_1 fconst_2 iconst_m1 iconst_3 iconst_4 iconst_5
--- int double float long x sub mul div rem neg cmpg inc
+-- iconst_m1
+-- mul sub div rem neg cmpg inc x int double float long
 
 -- jint stores both info
 -- jint is passed to push instead of type annotation
