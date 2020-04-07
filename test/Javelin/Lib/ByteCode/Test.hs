@@ -14,28 +14,25 @@ import Test.Tasty.Providers ()
 
 import Data.Text (pack, strip, unpack)
 import System.Process (readProcess)
+import System.Directory (listDirectory)
+import Data.List ( isSuffixOf )
 
 rtPath = "sample-classpath/rt.jar:test-programs-output/"
 
-compileJava :: String -> IO String
-compileJava className =
-  readProcess
-    "javac"
-    [ "-d"
-    , "test-programs-output/"
-    , "test-programs/javelin/" ++ className ++ ".java"
-    ]
-    ""
+isJavaFile :: String -> Bool
+isJavaFile file = ".java" `isSuffixOf` file
 
 compileAll :: IO String
-compileAll =
+compileAll = do
+  files <- listDirectory "test-programs/javelin"
+  let javaFiles = filter isJavaFile files :: [FilePath]
+  let compilePath = map ("test-programs/javelin/" ++) javaFiles :: [String]
   readProcess
-    "javac -d test-programs-output/ test-programs/javelin/\\*"
-    [
-    --   "-d"
-    -- , "test-programs-output/"
-    -- , "test-programs/javelin/*"
-    ]
+    "javac"
+    ([
+      "-d"
+    , "test-programs-output/"
+    ] ++ compilePath)
     ""
 
 -- temporary pack/unpack: don't want to introduce missingH for `strip` but also don't want to switch everything to text right now
@@ -62,7 +59,7 @@ javelinTests =
     "Acceptance tests"
     [
        testGroup "Unit tests" [testGroup "ByteCode parsing" [statsAndParserTest]],
-       withResource (print "") (\_ -> print "release") $ \_ -> testGroup
+       withResource compileAll (\_ -> print "release") $ \_ -> testGroup
         "Sample testing"
         [ jvmTest "SumOfIntegers" "4" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
         , jvmTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
@@ -89,19 +86,18 @@ javelinTests =
         ]
     ]
 
--- 1) optiimize: list all java files and compile at once
--- 2) tests for: ishl ishr iushr lshl lshr lushr
--- 3) [div rem] X [int double float long]
--- 4) [cmpg] X [int double float long]
--- 5) iinc
--- 6) jint stores both info
--- 7) jint is passed to push instead of type annotation
--- 8) code fetchest first or second from jint when it needs to write/read word64/32
+-- 0) use turtle to work directory stuff
+-- 1) tests for: ishl ishr iushr lshl lshr lushr
+-- 2) [div rem] X [int double float long]
+-- 3) [cmpg] X [int double float long]
+-- 4) iinc
+-- 5) jint stores both info
+-- 6) jint is passed to push instead of type annotation
+-- 7) code fetchest first or second from jint when it needs to write/read word64/32
 
 jvmTest :: String -> String -> TestTree
 jvmTest className expectedResult =
   testCaseSteps className $ \step -> do
-    compileJava className
     output <- executeMainClass className
     assertEqual className expectedResult output
 
