@@ -64,44 +64,42 @@ javelinTests =
        testGroup "Unit tests" [testGroup "ByteCode parsing" [statsAndParserTest]],
        withResource (print "") (\_ -> print "release") $ \_ -> testGroup
         "Sample testing"
-        [ executionTest "SumOfIntegers" "4" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
-        , executionTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
-        , executionTest "SumOfFloats" "3.0" --covers fconst0 fstore1 fconst1 fstore2 fconst2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
-        , executionTest "SumOfDoubles" "2.0" --covers dconst0 dstore1 dconst1 dstore3 dload1 dload3 dadd dload dstore
-        , executionTest "MulOfIntegers" "60" --covers iconst3 iconst4 iconst5 imul
-        , executionTest "MulOfLongs" "1" --covers lmul
-        , executionTest "MulOfFloats" "4.0" --covers fmul
-        , executionTest "MulOfDoubles" "1.0" --covers dmul
-        , executionTest "SubOfIntegers" "1" --covers isub
-        , executionTest "SubOfLongs" "1" --covers lsub
-        , executionTest "SubOfFloats" "1.0" --covers fsub
-        , executionTest "SubOfDoubles" "1.0" --covers dsub
-        , executionTest "NegInteger" "-2" --covers ineg
-        , executionTest "NegLong" "-1" --covers lneg
-        , executionTest "NegFloats" "-2.0" --covers fneg
-        , executionTest "NegDouble" "-1.0" --covers dneg
-        , executionTest "OrOfIntegers" "3" --covers ior
-        , executionTest "AndOfIntegers" "0" --covers iand
-        , executionTest "XorOfIntegers" "7" --covers ixor
-        , executionTest "OrOfLongs" "3" --covers lor
-        , executionTest "AndOfLongs" "0" --covers land
-        , executionTest "XorOfLongs" "0" --covers lxor
+        [ jvmTest "SumOfIntegers" "4" --covers iconst0 iconst1 istore1 iconst2 istore2 iload1 iload2 iadd istore3 iload3 return istore iload
+        , jvmTest "SumOfLongs" "1" --covers lconst0 lstore1 lconst1 lstore3 lload1 lload3 ladd lstore lload return
+        , jvmTest "SumOfFloats" "3.0" --covers fconst0 fstore1 fconst1 fstore2 fconst2 fstore3 fload1 fload2 fadd fload3 fadd fstore fload
+        , jvmTest "SumOfDoubles" "2.0" --covers dconst0 dstore1 dconst1 dstore3 dload1 dload3 dadd dload dstore
+        , jvmTest "MulOfIntegers" "60" --covers iconst3 iconst4 iconst5 imul
+        , jvmTest "MulOfLongs" "1" --covers lmul
+        , jvmTest "MulOfFloats" "4.0" --covers fmul
+        , jvmTest "MulOfDoubles" "1.0" --covers dmul
+        , jvmTest "SubOfIntegers" "1" --covers isub
+        , jvmTest "SubOfLongs" "1" --covers lsub
+        , jvmTest "SubOfFloats" "1.0" --covers fsub
+        , jvmTest "SubOfDoubles" "1.0" --covers dsub
+        , jvmTest "NegInteger" "-2" --covers ineg
+        , jvmTest "NegLong" "-1" --covers lneg
+        , jvmTest "NegFloats" "-2.0" --covers fneg
+        , jvmTest "NegDouble" "-1.0" --covers dneg
+        , jvmTest "OrOfIntegers" "3" --covers ior
+        , jvmTest "AndOfIntegers" "0" --covers iand
+        , jvmTest "XorOfIntegers" "7" --covers ixor
+        , jvmTest "OrOfLongs" "3" --covers lor
+        , jvmTest "AndOfLongs" "0" --covers land
+        , jvmTest "XorOfLongs" "11" --covers lxor, ldc2w
         ]
     ]
 
--- optiimize: list all java files and compile at once
--- ldc2_w for pushing constant
--- tests for: ishl ishr iushr lshl lshr lushr
--- [div rem] X [int double float long]
--- [cmpg] X [int double float long]
--- iinc
+-- 1) optiimize: list all java files and compile at once
+-- 2) tests for: ishl ishr iushr lshl lshr lushr
+-- 3) [div rem] X [int double float long]
+-- 4) [cmpg] X [int double float long]
+-- 5) iinc
+-- 6) jint stores both info
+-- 7) jint is passed to push instead of type annotation
+-- 8) code fetchest first or second from jint when it needs to write/read word64/32
 
--- jint stores both info
--- jint is passed to push instead of type annotation
--- code fetchest first or second from jint when it needs to write/read word64/32
-
-executionTest :: String -> String -> TestTree
-executionTest className expectedResult =
+jvmTest :: String -> String -> TestTree
+jvmTest className expectedResult =
   testCaseSteps className $ \step -> do
     compileJava className
     output <- executeMainClass className

@@ -103,11 +103,11 @@ executable javelin
                       -- -Wall
                       -Werror
                       -fwarn-tabs
-                      -fwarn-incomplete-patterns
+                    --   -fwarn-incomplete-patterns
                       -fwarn-overlapping-patterns
                       -fwarn-unused-imports
                       -Wincomplete-record-updates
-                      -fwarn-monomorphism-restriction
+                    --   -fwarn-monomorphism-restriction
                       -- -fwarn-implicit-prelude
                       -- -fwarn-missing-import-lists
   build-depends:       base >=4.7 && < 5,

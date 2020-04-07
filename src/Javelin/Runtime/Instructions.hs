@@ -137,6 +137,8 @@ out =
     (PartReference "java/lang/System" "out")
     "Ljava/io/PrintStream;"
 
+doNothing :: (Global m) => Thread -> m (Thread, ThreadOperation ())
+doNothing t = return (t, empty)
 
 -- shift :: (JType j) => (j -> Int -> j) -> (Int -> StackElement -> j) -> ThreadOperation ()
 shift operation operandType = do
@@ -260,6 +262,28 @@ execute LXor = pureInstruction $ math xor jlong
 execute LShl = pureInstruction $ shift shiftL jlong
 execute LShr = pureInstruction $ shift shiftR jlong
 execute LUshr = pureInstruction $ shift uShiftR jlong
+execute (Ldc2W (CPIndex idx)) = \t@Thread {frames = frame@Frame { pc = pc, currentClass = classId, currentMethod = methodIndex}:_, runtime = rt} ->
+  do
+    let eitherSymTable = symTable <$> getClass rt classId
+    case eitherSymTable of
+      Left err -> terminate "Failed to access constant pool" >> doNothing t
+      Right symTable -> do
+        let valueReference = symTable `at` idx :: SymbolicReference
+        case valueReference of
+          LongLiteral value -> return (t, push value)
+          DoubleLiteral value -> return (t, push value)
+          _ -> terminate "Long value expected in constant pool" >> doNothing t
+execute (Ldc (CPIndex idx)) = \t@Thread {frames = frame@Frame { pc = pc, currentClass = classId, currentMethod = methodIndex}:_, runtime = rt} ->
+  do
+    let eitherSymTable = symTable <$> getClass rt classId
+    case eitherSymTable of
+      Left err -> terminate "Failed to access constant pool" >> doNothing t
+      Right symTable -> do
+        let valueReference = symTable `at` idx :: SymbolicReference
+        case valueReference of
+          IntegerLiteral value -> return (t, push value)
+          FloatLiteral value -> return (t, push value)
+          _ -> terminate "not implemented yet" >> doNothing t
 
 execute Return = pureInstruction dropTopFrame
 execute (InvokeVirtual (CPIndex index)) =
