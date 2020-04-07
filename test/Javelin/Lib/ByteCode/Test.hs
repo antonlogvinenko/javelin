@@ -31,7 +31,7 @@ compileAll :: IO String
 compileAll =
   readProcess
     "javac -d test-programs-output/ test-programs/javelin/\\*"
-    [ 
+    [
     --   "-d"
     -- , "test-programs-output/"
     -- , "test-programs/javelin/*"
@@ -72,20 +72,27 @@ javelinTests =
         , executionTest "MulOfLongs" "1" --covers lmul
         , executionTest "MulOfFloats" "4.0" --covers fmul
         , executionTest "MulOfDoubles" "1.0" --covers dmul
-        , executionTest "SubOfIntegers" "1" --covers
-        , executionTest "SubOfLongs" "1" --covers
-        , executionTest "SubOfFloats" "1.0" --covers
-        , executionTest "SubOfDoubles" "1.0" --covers
-        , executionTest "NegInteger" "-2" --covers
-        , executionTest "NegLong" "-1" --covers
-        , executionTest "NegFloats" "-2.0" --covers
-        , executionTest "NegDouble" "-1.0" --covers
+        , executionTest "SubOfIntegers" "1" --covers isub
+        , executionTest "SubOfLongs" "1" --covers lsub
+        , executionTest "SubOfFloats" "1.0" --covers fsub
+        , executionTest "SubOfDoubles" "1.0" --covers dsub
+        , executionTest "NegInteger" "-2" --covers ineg
+        , executionTest "NegLong" "-1" --covers lneg
+        , executionTest "NegFloats" "-2.0" --covers fneg
+        , executionTest "NegDouble" "-1.0" --covers dneg
+        , executionTest "OrOfIntegers" "3" --covers ior
+        , executionTest "AndOfIntegers" "0" --covers iand
+        , executionTest "XorOfIntegers" "7" --covers ixor
+        , executionTest "OrOfLongs" "3" --covers lor
+        , executionTest "AndOfLongs" "0" --covers land
+        , executionTest "XorOfLongs" "0" --covers lxor
         ]
     ]
 
 -- optiimize: list all java files and compile at once
--- tests for: lor ior iand land ixor lxor ishl ishr iushr lshl lshr lushr
--- pushing constance and [div rem] X [int double float long]
+-- ldc2_w for pushing constant
+-- tests for: ishl ishr iushr lshl lshr lushr
+-- [div rem] X [int double float long]
 -- [cmpg] X [int double float long]
 -- iinc
 
