@@ -81,17 +81,19 @@ javelinTests =
         , jvmTest "AndOfIntegers" "0" --covers iand
         , jvmTest "XorOfIntegers" "7" --covers ixor
         , jvmTest "LeftShiftOfIntegers" "16" --bipush, ishl
-        -- , jvmTest "RightShiftOfIntegers" "4" --ishr
-        -- , jvmTest "UnsignedRightShiftOfIntegers" "4" --ishr
+        , jvmTest "RightShiftOfIntegers" "-4" --ishr
+        , jvmTest "UnsignedRightShiftOfIntegers" "7" --iushr
         , jvmTest "OrOfLongs" "3" --covers lor
         , jvmTest "AndOfLongs" "0" --covers land
         , jvmTest "XorOfLongs" "11" --covers lxor, ldc2w
         , jvmTest "LeftShiftOfLongs" "16" --lshl
+        , jvmTest "RightShiftOfLongs" "-4" --lshr
+        , jvmTest "UnsignedRightShiftOfLongs" "7" --lushr
         ]
     ]
 
 -- 0) use turtle to work with directory stuff
--- 1) tests for shifts
+-- 1) tests for right shifts
 -- 2) [div rem] X [int double float long]
 -- 3) [cmpg] X [int double float long]
 -- 4) iinc

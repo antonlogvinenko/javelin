@@ -1,9 +1,9 @@
 package javelin;
 
-public class RightShiftOfIntegers {
+public class RightShiftOfLongs {
     public static void main(String[] args) {
-        int a = -8;
-        int b = a >> 1;
+        long a = -8;
+        long b = a >> 1;
         System.out.println(b);
     }
 }
