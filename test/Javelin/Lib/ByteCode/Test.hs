@@ -15,7 +15,7 @@ import Test.Tasty.Providers ()
 import Data.Text (pack, strip, unpack)
 import System.Process (readProcess)
 import System.Directory (listDirectory)
-import Data.List ( isSuffixOf )
+import Data.List (isSuffixOf)
 
 rtPath = "sample-classpath/rt.jar:test-programs-output/"
 
@@ -26,7 +26,7 @@ compileAll :: IO String
 compileAll = do
   files <- listDirectory "test-programs/javelin"
   let javaFiles = filter isJavaFile files :: [FilePath]
-  let compilePath = map ("test-programs/javelin/" ++) javaFiles :: [String]
+  let compilePath = map ("test-programs/javelin/" ++) javaFiles :: [FilePath]
   readProcess
     "javac"
     ([
@@ -80,14 +80,18 @@ javelinTests =
         , jvmTest "OrOfIntegers" "3" --covers ior
         , jvmTest "AndOfIntegers" "0" --covers iand
         , jvmTest "XorOfIntegers" "7" --covers ixor
+        , jvmTest "LeftShiftOfIntegers" "16" --bipush, ishl
+        -- , jvmTest "RightShiftOfIntegers" "4" --ishr
+        -- , jvmTest "UnsignedRightShiftOfIntegers" "4" --ishr
         , jvmTest "OrOfLongs" "3" --covers lor
         , jvmTest "AndOfLongs" "0" --covers land
         , jvmTest "XorOfLongs" "11" --covers lxor, ldc2w
+        , jvmTest "LeftShiftOfLongs" "16" --lshl
         ]
     ]
 
--- 0) use turtle to work directory stuff
--- 1) tests for: ishl ishr iushr lshl lshr lushr
+-- 0) use turtle to work with directory stuff
+-- 1) tests for shifts
 -- 2) [div rem] X [int double float long]
 -- 3) [cmpg] X [int double float long]
 -- 4) iinc

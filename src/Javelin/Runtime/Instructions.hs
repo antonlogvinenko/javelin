@@ -3,12 +3,13 @@ module Javelin.Runtime.Instructions where
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State.Lazy (runStateT)
 import Data.Array.IArray (array)
-import Data.Bits (shiftR, shiftL, (.&.), (.|.), xor)
+import Data.Bits (complement, shiftR, shiftL, (.&.), (.|.), xor)
 import qualified Data.Map.Lazy as Map ((!))
 import Javelin.Capability.Classes
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
+import Debug.Trace (traceShow)
 
 -- runJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
@@ -147,7 +148,7 @@ shift operation operandType = do
   push $ operation op1 (fromIntegral op2)
 
 uShiftR :: (JType j, Integral j) => j -> Int -> j
-uShiftR n k = fromIntegral (fromIntegral n `shiftR` k :: Word)
+uShiftR n k = fromIntegral $ traceShow (">>>>>>>>>>>> " ++ show ((fromIntegral n :: JInt) `shiftR` k + 2 `shiftL` complement k) ++ " <<<<<<") ((fromIntegral n :: JInt) `shiftR` k + 2 `shiftL` complement k)
 
 outReference :: JReference
 outReference = maxBound
@@ -255,13 +256,14 @@ execute IAnd = pureInstruction $ math (.&.) jint
 execute IXor = pureInstruction $ math xor jint
 execute IShl = pureInstruction $ shift shiftL jint
 execute IShr = pureInstruction $ shift shiftR jint
-execute IUshr = pureInstruction $ shift uShiftR jint
+execute IUshr = pureInstruction $ shift shiftR jint
 execute LOr = pureInstruction $ math (.|.) jlong
 execute LAnd = pureInstruction $ math (.&.) jlong
 execute LXor = pureInstruction $ math xor jlong
 execute LShl = pureInstruction $ shift shiftL jlong
 execute LShr = pureInstruction $ shift shiftR jlong
 execute LUshr = pureInstruction $ shift uShiftR jlong
+execute (BiPush value) = pureInstruction $ push (fromIntegral value :: JInt)
 execute (Ldc2W (CPIndex idx)) = \t@Thread {frames = frame@Frame { pc = pc, currentClass = classId, currentMethod = methodIndex}:_, runtime = rt} ->
   do
     let eitherSymTable = symTable <$> getClass rt classId
