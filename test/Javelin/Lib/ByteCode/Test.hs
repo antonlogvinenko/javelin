@@ -92,14 +92,13 @@ javelinTests =
         ]
     ]
 
--- 0) use turtle to work with directory stuff
--- 1) tests for right shifts
--- 2) [div rem] X [int double float long]
--- 3) [cmpg] X [int double float long]
--- 4) iinc
--- 5) jint stores both info
--- 6) jint is passed to push instead of type annotation
--- 7) code fetchest first or second from jint when it needs to write/read word64/32
+-- 0) [div rem] X [int double float long]
+-- 1) use turtle to work with directory stuff
+-- 2) [cmpg] X [int double float long]
+-- 3) iinc
+-- 4) jint stores both info
+-- 5) jint is passed to push instead of type annotation
+-- 6) code fetches first or second from jint when it needs to write/read word64/32
 
 jvmTest :: String -> String -> TestTree
 jvmTest className expectedResult =

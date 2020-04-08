@@ -9,7 +9,7 @@ import Javelin.Capability.Classes
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
-import Data.Word (Word32)
+import Data.Word (Word64, Word32)
 
 -- runJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
@@ -147,8 +147,11 @@ shift operation operandType = do
   op1 <- pop operandType
   push $ operation op1 (fromIntegral op2)
 
-uShiftR :: (JType j, Integral j) => j -> Int -> j
-uShiftR n k = fromIntegral $ shiftR (fromIntegral n :: Word32) k
+ulShiftR :: JLong -> Int -> JLong
+ulShiftR n k = fromIntegral $ shiftR (fromIntegral n :: Word64) k
+
+uiShiftR :: JInt -> Int -> JInt
+uiShiftR n k = fromIntegral $ shiftR (fromIntegral n :: Word32) k
 
 outReference :: JReference
 outReference = maxBound
@@ -256,13 +259,13 @@ execute IAnd = pureInstruction $ math (.&.) jint
 execute IXor = pureInstruction $ math xor jint
 execute IShl = pureInstruction $ shift shiftL jint
 execute IShr = pureInstruction $ shift shiftR jint
-execute IUshr = pureInstruction $ shift uShiftR jint
+execute IUshr = pureInstruction $ shift uiShiftR jint
 execute LOr = pureInstruction $ math (.|.) jlong
 execute LAnd = pureInstruction $ math (.&.) jlong
 execute LXor = pureInstruction $ math xor jlong
 execute LShl = pureInstruction $ shift shiftL jlong
 execute LShr = pureInstruction $ shift shiftR jlong
-execute LUshr = pureInstruction $ shift uShiftR jlong
+execute LUshr = pureInstruction $ shift ulShiftR jlong
 execute (BiPush value) = pureInstruction $ push (fromIntegral value :: JByte)
 execute (Ldc2W (CPIndex idx)) = \t@Thread {frames = frame@Frame { pc = pc, currentClass = classId, currentMethod = methodIndex}:_, runtime = rt} ->
   do
