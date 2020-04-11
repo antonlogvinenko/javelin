@@ -93,6 +93,8 @@ javelinTests =
         , jvmTest "DivOfLongs" "2" --ldiv
         , jvmTest "DivOfFloats" "3.0" --fdiv
         , jvmTest "DivOfDoubles" "3.0" --fdiv
+        , jvmTest "RemOfIntegers" "1" --irem
+        , jvmTest "RemOfLongs" "1" --lrem
         ]
     ]
 

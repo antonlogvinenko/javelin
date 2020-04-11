@@ -271,6 +271,10 @@ execute IDiv = pureInstruction $ math div jint
 execute LDiv = pureInstruction $ math div jlong
 execute FDiv = pureInstruction $ math (/) jfloat
 execute DDiv = pureInstruction $ math (/) jdouble
+execute IRem = pureInstruction $ math rem jint
+execute LRem = pureInstruction $ math rem jlong
+execute FRem = undefined
+execute DRem = undefined
 execute (Ldc2W (CPIndex idx)) = \t@Thread {frames = frame@Frame { pc = pc, currentClass = classId, currentMethod = methodIndex}:_, runtime = rt} ->
   do
     let eitherSymTable = symTable <$> getClass rt classId
@@ -379,18 +383,6 @@ math operation operandType = do
   op2 <- pop operandType
   op1 <- pop operandType
   push $ operation op1 op2
-
-idiv = math div jint
-
-ldiv = math div jlong
-
-fdiv = math (/) jfloat
-
-ddiv = math (/) jdouble
-
-irem = math rem jint
-
-lrem = math rem jlong
 
 neg operandType = do
   x <- pop operandType
