@@ -98,16 +98,12 @@ javelinTests =
         ]
     ]
 
--- 0) [div rem] X [int double float long]
-
+-- 0) frem drem
 -- 1) iinc
-
 -- 2) use turtle to work with directory stuff
-
 -- 3) jint stores both info
 -- 4) jint is passed to push instead of type annotation
 -- 5) code fetches first or second from jint when it needs to write/read word64/32
-
 -- 6) [cmpg] X [int double float long]
 
 
