@@ -267,6 +267,10 @@ execute LShl = pureInstruction $ shift shiftL jlong
 execute LShr = pureInstruction $ shift shiftR jlong
 execute LUshr = pureInstruction $ shift ulShiftR jlong
 execute (BiPush value) = pureInstruction $ push (fromIntegral value :: JByte)
+execute IDiv = pureInstruction $ math div jint
+execute LDiv = pureInstruction $ math div jlong
+execute FDiv = pureInstruction $ math (/) jfloat
+execute DDiv = pureInstruction $ math (/) jdouble
 execute (Ldc2W (CPIndex idx)) = \t@Thread {frames = frame@Frame { pc = pc, currentClass = classId, currentMethod = methodIndex}:_, runtime = rt} ->
   do
     let eitherSymTable = symTable <$> getClass rt classId
@@ -336,10 +340,6 @@ fconst x = push (x :: JFloat)
 dconst x = push (x :: JDouble)
 
 aconst_null = iconst 0
-
-bipush = do
-  byte <- arg jbyte 0
-  push $ signExtend byte
 
 sipush = do
   short <- arg jshort 0
