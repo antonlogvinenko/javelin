@@ -1,58 +1,59 @@
 module Javelin.Lib.ByteCode.FieldMethod where
 
 import qualified Data.Binary.Get as Get
-import Data.Map.Lazy (Map, fromList)
-import Data.Word (Word16)
+import qualified Data.Map.Lazy as Map
+import qualified Data.Word as Word
 
-import Javelin.Lib.ByteCode.Attribute
-import Javelin.Lib.ByteCode.Data
-import Javelin.Lib.ByteCode.Utils
+import qualified Javelin.Lib.ByteCode.Attribute as Attribute
+import qualified Javelin.Lib.ByteCode.Data as ByteCode
+import qualified Javelin.Lib.ByteCode.Utils as Utils
 
+fieldInfoAF :: Map.Map Word.Word16 ByteCode.FieldInfoAccessFlag
 fieldInfoAF =
-  fromList
-    [ (0x0001, FieldPublic)
-    , (0x0002, FieldPrivate)
-    , (0x0004, FieldProtected)
-    , (0x0008, FieldStatic)
-    , (0x0010, FieldFinal)
-    , (0x0040, FieldVolatile)
-    , (0x0080, FieldTransient)
-    , (0x1000, FieldSynthetic)
-    , (0x4000, FieldEnum)
+  Map.fromList
+    [ (0x0001, ByteCode.FieldPublic)
+    , (0x0002, ByteCode.FieldPrivate)
+    , (0x0004, ByteCode.FieldProtected)
+    , (0x0008, ByteCode.FieldStatic)
+    , (0x0010, ByteCode.FieldFinal)
+    , (0x0040, ByteCode.FieldVolatile)
+    , (0x0080, ByteCode.FieldTransient)
+    , (0x1000, ByteCode.FieldSynthetic)
+    , (0x4000, ByteCode.FieldEnum)
     ]
 
 methodInfoAF =
-  fromList
-    [ (0x0001, MethodPublic)
-    , (0x0002, MethodPrivate)
-    , (0x0004, MethodProtected)
-    , (0x0008, MethodStatic)
-    , (0x0010, MethodFinal)
-    , (0x0020, MethodSynchronized)
-    , (0x0040, MethodBridge)
-    , (0x0080, MethodVarargs)
-    , (0x0100, MethodNative)
-    , (0x0400, MethodAbstract)
-    , (0x0800, MethodStrict)
-    , (0x1000, MethodSynthetic)
+  Map.fromList
+    [ (0x0001, ByteCode.MethodPublic)
+    , (0x0002, ByteCode.MethodPrivate)
+    , (0x0004, ByteCode.MethodProtected)
+    , (0x0008, ByteCode.MethodStatic)
+    , (0x0010, ByteCode.MethodFinal)
+    , (0x0020, ByteCode.MethodSynchronized)
+    , (0x0040, ByteCode.MethodBridge)
+    , (0x0080, ByteCode.MethodVarargs)
+    , (0x0100, ByteCode.MethodNative)
+    , (0x0400, ByteCode.MethodAbstract)
+    , (0x0800, ByteCode.MethodStrict)
+    , (0x1000, ByteCode.MethodSynthetic)
     ]
 
 getFieldMethod ::
-     Map Word16 flag
-  -> ([flag] -> Word16 -> Word16 -> [AttrInfo] -> x)
-  -> [Constant]
+     Map.Map Word.Word16 flag
+  -> ([flag] -> Word.Word16 -> Word.Word16 -> [ByteCode.AttrInfo] -> x)
+  -> [ByteCode.Constant]
   -> Get.Get x
 getFieldMethod accessFlags constr pool = do
   maskBytes <- Get.getWord16be
-  let mask = foldMask accessFlags maskBytes
+  let mask = Utils.foldMask accessFlags maskBytes
   nameIndex <- Get.getWord16be
   descriptorIndex <- Get.getWord16be
   attrsCount <- Get.getWord16be
-  attributes <- times (getAttr pool) attrsCount
+  attributes <- Utils.times (Attribute.getAttr pool) attrsCount
   return $ constr mask nameIndex descriptorIndex attributes
 
-getField :: [Constant] -> Get.Get FieldInfo
-getField = getFieldMethod fieldInfoAF FieldInfo
+getField :: [ByteCode.Constant] -> Get.Get ByteCode.FieldInfo
+getField = getFieldMethod fieldInfoAF ByteCode.FieldInfo
 
-getMethod :: [Constant] -> Get.Get MethodInfo
-getMethod = getFieldMethod methodInfoAF MethodInfo
+getMethod :: [ByteCode.Constant] -> Get.Get ByteCode.MethodInfo
+getMethod = getFieldMethod methodInfoAF ByteCode.MethodInfo
