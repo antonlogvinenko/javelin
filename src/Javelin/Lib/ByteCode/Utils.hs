@@ -1,29 +1,21 @@
 module Javelin.Lib.ByteCode.Utils where
 
-import Data.Binary.Get (Get, getWord16be, getWord32be, getWord64be)
+import qualified Data.Binary.Get as Get
 import Data.Bits
-import Data.ByteString (ByteString)
-import Data.ByteString.UTF8 (toString)
 import qualified Data.Map.Lazy as Map (Map, keys, lookup)
 import Data.Word (Word16)
 import Debug.Trace
 
--- getWord16 = getWord16be
-
-getWord32 = getWord32be
-
-getWord64 = getWord64be
-
-times :: Get a -> Word16 -> Get [a]
+times :: Get.Get a -> Word16 -> Get.Get [a]
 times _ 0 = return []
 times get n = do
   x <- get
   xs <- times get (n - 1)
   return $ x : xs
 
-several :: Get a -> Get [a]
+several :: Get.Get a -> Get.Get [a]
 several get = do
-  len <- getWord16be
+  len <- Get.getWord16be
   times get len
 
 addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]
@@ -57,6 +49,3 @@ return' x = seq (say x) (return x)
 debugM m = do
   v <- m
   return' v
-
-bytesToString :: ByteString -> String
-bytesToString = toString

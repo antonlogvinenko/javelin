@@ -2,6 +2,7 @@ module Javelin.Lib.ByteCode.Attribute where
 
 import qualified Data.Binary.Get as Get
 import Data.ByteString (unpack)
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map.Lazy as Map (Map, findWithDefault, fromList, lookup)
 import Data.Word (Word32, Word8)
 
@@ -25,7 +26,7 @@ innerClassAccessFlagsMap =
 getAttr :: [Constant] -> Get.Get AttrInfo
 getAttr pool = do
   attrNameIndex <- Get.getWord16be
-  attrLength <- getWord32
+  attrLength <- Get.getWord32be
   case getFromPool pool attrNameIndex of
     Just (Utf8Info text) -> parseAttr pool text attrLength
     Just x -> fail $ "Utf8Info expected for attribute, but found "
@@ -74,7 +75,7 @@ getExceptionTable =
 codeAttr pool len = do
   maxStack <- Get.getWord16be
   maxLocals <- Get.getWord16be
-  codeLength <- getWord32
+  codeLength <- Get.getWord32be
   code <- Get.isolate (fromIntegral codeLength) parseInstructions
   exceptionTable <- several getExceptionTable
   attributes <- several (getAttr pool)
@@ -286,10 +287,10 @@ instructionParsers =
                    then 4 - off
                    else 0
            times Get.getWord8 (fromIntegral pad)
-           defaultDWord <- getWord32
-           lowDWord <- getWord32
-           highDWord <- getWord32
-           jumps <- times getWord32 (fromIntegral $ highDWord - lowDWord + 1)
+           defaultDWord <- Get.getWord32be
+           lowDWord <- Get.getWord32be
+           highDWord <- Get.getWord32be
+           jumps <- times Get.getWord32be (fromIntegral $ highDWord - lowDWord + 1)
            return $ TableSwitch defaultDWord lowDWord highDWord jumps)
     , ( 0xab
       , do read <- Get.bytesRead
@@ -299,10 +300,10 @@ instructionParsers =
                    then 4 - off
                    else 0
            times Get.getWord8 (fromIntegral pad)
-           defaultDWord <- getWord32
-           npairs <- getWord32
+           defaultDWord <- Get.getWord32be
+           npairs <- Get.getWord32be
            pairs <-
-             times ((,) <$> getWord32 <*> getWord32) (fromIntegral npairs)
+             times ((,) <$> Get.getWord32be <*> Get.getWord32be) (fromIntegral npairs)
            return $ LookupSwitch defaultDWord pairs)
     , (0xac, return IReturn)
     , (0xad, return LReturn)
@@ -348,8 +349,8 @@ instructionParsers =
     , (0xc5, MultiANewArray <$> getCPIndex <*> Get.getWord8)
     , (0xc6, IfNull <$> getCPIndex)
     , (0xc7, IfNotNull <$> getCPIndex)
-    , (0xc8, GotoW <$> getWord32)
-    , (0xc9, JsrW <$> getWord32)
+    , (0xc8, GotoW <$> Get.getWord32be)
+    , (0xc9, JsrW <$> Get.getWord32be)
   -- Reserved
     , (0xca, return BreakPoint)
     , (0xfe, return ImDep1)
@@ -455,7 +456,7 @@ sourceFileAttr _ = SourceFile <$> Get.getWord16be
 
 sourceDebugExtensionAttr len = do
   byteString <- Get.getByteString (fromIntegral len)
-  let string = bytesToString byteString
+  let string = BS.toString byteString
   return $ SourceDebugExtension string
 
 lineNumberTableAttr len = do
@@ -499,7 +500,7 @@ elementValuePairParser = ElementValuePair <$> Get.getWord16be <*> elementValuePa
 
 elementValueParser = do
   tag <- Get.getByteString 1
-  let tagChar = head $ bytesToString tag
+  let tagChar = head $ BS.toString tag
   case take 1 . filter (elem tagChar . fst) $ elementValueParsersList of
     [(_, parser)] -> parser tagChar
     _ -> fail "Aaaa"

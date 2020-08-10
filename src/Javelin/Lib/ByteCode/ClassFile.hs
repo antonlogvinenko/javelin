@@ -44,7 +44,7 @@ classBody = do
 
 magicNumber :: Get.Get Int
 magicNumber = do
-  magic <- getWord32
+  magic <- Get.getWord32be
   if magic == 0xCAFEBABE
     then return 42
     else fail "Not a Java class format"
