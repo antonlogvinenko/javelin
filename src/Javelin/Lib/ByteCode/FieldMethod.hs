@@ -1,6 +1,6 @@
 module Javelin.Lib.ByteCode.FieldMethod where
 
-import Data.Binary.Get
+import qualified Data.Binary.Get as Get
 import Data.Map.Lazy (Map, fromList)
 import Data.Word (Word16)
 
@@ -41,18 +41,18 @@ getFieldMethod ::
      Map Word16 flag
   -> ([flag] -> Word16 -> Word16 -> [AttrInfo] -> x)
   -> [Constant]
-  -> Get x
+  -> Get.Get x
 getFieldMethod accessFlags constr pool = do
-  maskBytes <- getWord16
+  maskBytes <- Get.getWord16be
   let mask = foldMask accessFlags maskBytes
-  nameIndex <- getWord16
-  descriptorIndex <- getWord16
-  attrsCount <- getWord16
+  nameIndex <- Get.getWord16be
+  descriptorIndex <- Get.getWord16be
+  attrsCount <- Get.getWord16be
   attributes <- times (getAttr pool) attrsCount
   return $ constr mask nameIndex descriptorIndex attributes
 
-getField :: [Constant] -> Get FieldInfo
+getField :: [Constant] -> Get.Get FieldInfo
 getField = getFieldMethod fieldInfoAF FieldInfo
 
-getMethod :: [Constant] -> Get MethodInfo
+getMethod :: [Constant] -> Get.Get MethodInfo
 getMethod = getFieldMethod methodInfoAF MethodInfo

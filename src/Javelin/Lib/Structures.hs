@@ -18,7 +18,7 @@ import Flow
 
 import Control.Lens ((%~), (&), (^.), (^?), _1, _2, _Right, ix, makeLenses)
 import Data.Either.Utils (maybeToEither)
-import Data.Maybe (fromMaybe, isJust)
+import Data.Maybe (isJust, fromMaybe)
 import Javelin.Lib.ByteCode.Data
 import Javelin.Lib.ByteCode.DescSign
 

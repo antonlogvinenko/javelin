@@ -6,7 +6,7 @@ module Javelin.Lib.ByteCode.ClassFile
   , classBody
   ) where
 
-import Data.Binary.Get
+import qualified Data.Binary.Get as Get
 import qualified Data.ByteString.Lazy as LBS (ByteString, null, pack)
 import Data.Map (Map, fromList)
 import Data.Word
@@ -17,16 +17,16 @@ import Javelin.Lib.ByteCode.Data
 import Javelin.Lib.ByteCode.FieldMethod
 import Javelin.Lib.ByteCode.Utils
 
-getInterface :: Get Word16
-getInterface = getWord16
+getInterface :: Get.Get Word16
+getInterface = Get.getWord16be
 
-classBody :: Get ClassBody
+classBody :: Get.Get ClassBody
 classBody = do
-  poolLength <- getWord16
+  poolLength <- Get.getWord16be
   pool <- getConstants poolLength
   flags <- parseClassAccessFlags
-  thisClass <- getWord16
-  superClass <- getWord16
+  thisClass <- Get.getWord16be
+  superClass <- Get.getWord16be
   interfaces <- several getInterface
   fields <- several $ getField pool
   methods <- several $ getMethod pool
@@ -42,7 +42,7 @@ classBody = do
       methods
       attributes
 
-magicNumber :: Get Int
+magicNumber :: Get.Get Int
 magicNumber = do
   magic <- getWord32
   if magic == 0xCAFEBABE
@@ -62,13 +62,13 @@ classFlagsList =
     , (0x4000, AccEnum)
     ]
 
-parseClassAccessFlags :: Get [ClassAccessFlags]
-parseClassAccessFlags = foldMask classFlagsList <$> getWord16
+parseClassAccessFlags :: Get.Get [ClassAccessFlags]
+parseClassAccessFlags = foldMask classFlagsList <$> Get.getWord16be
 
-version :: Get Word16
-version = getWord16
+version :: Get.Get Word16
+version = Get.getWord16be
 
-parseByteCode :: Get ByteCode
+parseByteCode :: Get.Get ByteCode
 parseByteCode = do
   magicNumber
   minor <- version
@@ -78,20 +78,20 @@ parseByteCode = do
 
 parseRaw ::
      [Word8]
-  -> Either (LBS.ByteString, ByteOffset, String) ( LBS.ByteString
-                                                 , ByteOffset
+  -> Either (LBS.ByteString, Get.ByteOffset, String) ( LBS.ByteString
+                                                 , Get.ByteOffset
                                                  , ByteCode)
-parseRaw bytes = runGetOrFail parseByteCode $ LBS.pack bytes
+parseRaw bytes = Get.runGetOrFail parseByteCode $ LBS.pack bytes
 
 parse :: [Word8] -> Either String ByteCode
 parse = either formatParseError validateParseResult . parseRaw
 
 formatParseError ::
-     (LBS.ByteString, ByteOffset, String) -> Either String ByteCode
+     (LBS.ByteString, Get.ByteOffset, String) -> Either String ByteCode
 formatParseError (_, _, msg) = Left msg
 
 validateParseResult ::
-     (LBS.ByteString, ByteOffset, ByteCode) -> Either String ByteCode
+     (LBS.ByteString, Get.ByteOffset, ByteCode) -> Either String ByteCode
 validateParseResult (bs, off, bc) =
   if LBS.null bs
     then Right bc

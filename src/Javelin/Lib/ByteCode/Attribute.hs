@@ -1,6 +1,6 @@
 module Javelin.Lib.ByteCode.Attribute where
 
-import Data.Binary.Get
+import qualified Data.Binary.Get as Get
 import Data.ByteString (unpack)
 import qualified Data.Map.Lazy as Map (Map, findWithDefault, fromList, lookup)
 import Data.Word (Word32, Word8)
@@ -22,22 +22,22 @@ innerClassAccessFlagsMap =
     , (0x4000, InnerClassEnum)
     ]
 
-getAttr :: [Constant] -> Get AttrInfo
+getAttr :: [Constant] -> Get.Get AttrInfo
 getAttr pool = do
-  attrNameIndex <- getWord16
+  attrNameIndex <- Get.getWord16be
   attrLength <- getWord32
   case getFromPool pool attrNameIndex of
     Just (Utf8Info text) -> parseAttr pool text attrLength
     Just x -> fail $ "Utf8Info expected for attribute, but found "
     Nothing -> fail "Utf8Info expected for attribute, found nothing. X_X"
 
-parseAttr :: [Constant] -> String -> Word32 -> Get AttrInfo
+parseAttr :: [Constant] -> String -> Word32 -> Get.Get AttrInfo
 parseAttr pool "Code" len = codeAttr pool len
 parseAttr _ text len =
   case Map.lookup text attrsNamesMap of
     Just parser -> parser $ fromIntegral len
     Nothing -> do
-      byteString <- getByteString $ fromIntegral len
+      byteString <- Get.getByteString $ fromIntegral len
       return $ UnknownAttr byteString
 
 attrsNamesMap =
@@ -66,38 +66,38 @@ attrsNamesMap =
     , ("RuntimeInvisibleTypeAnnotations", rtInvisibleTypeAnnotationsAttr)
     ]
 
-constantValueAttr len = ConstantValue <$> getWord16
+constantValueAttr len = ConstantValue <$> Get.getWord16be
 
 getExceptionTable =
-  Exception <$> getWord16 <*> getWord16 <*> getWord16 <*> getWord16
+  Exception <$> Get.getWord16be <*> Get.getWord16be <*> Get.getWord16be <*> Get.getWord16be
 
 codeAttr pool len = do
-  maxStack <- getWord16
-  maxLocals <- getWord16
+  maxStack <- Get.getWord16be
+  maxLocals <- Get.getWord16be
   codeLength <- getWord32
-  code <- isolate (fromIntegral codeLength) parseInstructions
+  code <- Get.isolate (fromIntegral codeLength) parseInstructions
   exceptionTable <- several getExceptionTable
   attributes <- several (getAttr pool)
   return $ CodeAttr maxStack maxLocals code exceptionTable attributes
 
-parseInstructions :: Get [Instruction]
+parseInstructions :: Get.Get [Instruction]
 parseInstructions = do
-  finish <- isEmpty
+  finish <- Get.isEmpty
   if finish
     then return []
     else do
-      code <- getWord8
+      code <- Get.getWord8
       instruction <- findInstructionParser code
       instructions <- parseInstructions
       return $ instruction : instructions
 
-findInstructionParser :: Word8 -> Get Instruction
+findInstructionParser :: Word8 -> Get.Get Instruction
 findInstructionParser idx =
   case Map.lookup idx instructionParsers of
     Just p -> p
     Nothing -> fail $ "No instruction parser for opcode " ++ show idx
 
-instructionParsers :: Map.Map Word8 (Get Instruction)
+instructionParsers :: Map.Map Word8 (Get.Get Instruction)
 instructionParsers =
   Map.fromList
   -- Constants
@@ -117,8 +117,8 @@ instructionParsers =
     , (0x0d, return FConst2)
     , (0x0e, return DConst0)
     , (0x0f, return DConst1)
-    , (0x10, BiPush <$> getWord8)
-    , (0x11, SiPush <$> getWord16)
+    , (0x10, BiPush <$> Get.getWord8)
+    , (0x11, SiPush <$> Get.getWord16be)
     , (0x12, Ldc <$> getCPIndex8)
     , (0x13, LdcW <$> getCPIndex)
     , (0x14, Ldc2W <$> getCPIndex)
@@ -237,7 +237,7 @@ instructionParsers =
     , (0x81, return LOr)
     , (0x82, return IXor)
     , (0x83, return LXor)
-    , (0x84, IInc <$> getLocal <*> getWord8)
+    , (0x84, IInc <$> getLocal <*> Get.getWord8)
   -- Conversions
     , (0x85, return I2L)
     , (0x86, return I2F)
@@ -260,45 +260,45 @@ instructionParsers =
     , (0x96, return FCmpG)
     , (0x97, return DCmpL)
     , (0x98, return DCmpG)
-    , (0x99, IfEq <$> getWord16)
-    , (0x9a, IfNe <$> getWord16)
-    , (0x9b, IfLt <$> getWord16)
-    , (0x9c, IfGe <$> getWord16)
-    , (0x9d, IfGt <$> getWord16)
-    , (0x9e, IfLe <$> getWord16)
-    , (0x9f, IfICmpEq <$> getWord16)
-    , (0xa0, IfICmpNe <$> getWord16)
-    , (0xa1, IfICmpLt <$> getWord16)
-    , (0xa2, IfICmpGe <$> getWord16)
-    , (0xa3, IfICmpGt <$> getWord16)
-    , (0xa4, IfICmpLe <$> getWord16)
-    , (0xa5, IfACmpEq <$> getWord16)
-    , (0xa6, IfACmpNe <$> getWord16)
+    , (0x99, IfEq <$> Get.getWord16be)
+    , (0x9a, IfNe <$> Get.getWord16be)
+    , (0x9b, IfLt <$> Get.getWord16be)
+    , (0x9c, IfGe <$> Get.getWord16be)
+    , (0x9d, IfGt <$> Get.getWord16be)
+    , (0x9e, IfLe <$> Get.getWord16be)
+    , (0x9f, IfICmpEq <$> Get.getWord16be)
+    , (0xa0, IfICmpNe <$> Get.getWord16be)
+    , (0xa1, IfICmpLt <$> Get.getWord16be)
+    , (0xa2, IfICmpGe <$> Get.getWord16be)
+    , (0xa3, IfICmpGt <$> Get.getWord16be)
+    , (0xa4, IfICmpLe <$> Get.getWord16be)
+    , (0xa5, IfACmpEq <$> Get.getWord16be)
+    , (0xa6, IfACmpNe <$> Get.getWord16be)
   -- Control
-    , (0xa7, Goto <$> getWord16)
-    , (0xa8, Jsr <$> getWord16)
-    , (0xa9, Ret <$> getWord8)
+    , (0xa7, Goto <$> Get.getWord16be)
+    , (0xa8, Jsr <$> Get.getWord16be)
+    , (0xa9, Ret <$> Get.getWord8)
     , ( 0xaa
-      , do read <- bytesRead
+      , do read <- Get.bytesRead
            let off = rem read 4
            let pad =
                  if off /= 0
                    then 4 - off
                    else 0
-           times getWord8 (fromIntegral pad)
+           times Get.getWord8 (fromIntegral pad)
            defaultDWord <- getWord32
            lowDWord <- getWord32
            highDWord <- getWord32
            jumps <- times getWord32 (fromIntegral $ highDWord - lowDWord + 1)
            return $ TableSwitch defaultDWord lowDWord highDWord jumps)
     , ( 0xab
-      , do read <- bytesRead
+      , do read <- Get.bytesRead
            let off = rem read 4
            let pad =
                  if off /= 0
                    then 4 - off
                    else 0
-           times getWord8 (fromIntegral pad)
+           times Get.getWord8 (fromIntegral pad)
            defaultDWord <- getWord32
            npairs <- getWord32
            pairs <-
@@ -318,10 +318,10 @@ instructionParsers =
     , (0xb6, InvokeVirtual <$> getCPIndex)
     , (0xb7, InvokeSpecial <$> getCPIndex)
     , (0xb8, InvokeStatic <$> getCPIndex)
-    , (0xb9, InvokeInterface <$> getCPIndex <*> getWord8)
-    , (0xba, InvokeDynamic <$> getCPIndex <*> getWord8)
+    , (0xb9, InvokeInterface <$> getCPIndex <*> Get.getWord8)
+    , (0xba, InvokeDynamic <$> getCPIndex <*> Get.getWord8)
     , (0xbb, New_ <$> getCPIndex)
-    , (0xbc, NewArray <$> getWord8)
+    , (0xbc, NewArray <$> Get.getWord8)
     , (0xbd, ANewArray <$> getCPIndex)
     , (0xbe, return ArrayLength)
     , (0xbf, return AThrow)
@@ -331,9 +331,9 @@ instructionParsers =
     , (0xc3, return MonitorExit)
   -- Extended
     , ( 0xc4
-      , do cmd <- getWord8
+      , do cmd <- Get.getWord8
            case cmd of
-             0x84 -> WideIInc <$> getCPIndex <*> getWord16
+             0x84 -> WideIInc <$> getCPIndex <*> Get.getWord16be
              0x15 -> WideILoad <$> getCPIndex
              0x16 -> WideLLoad <$> getCPIndex
              0x17 -> WideFLoad <$> getCPIndex
@@ -345,7 +345,7 @@ instructionParsers =
              0x39 -> WideDStore <$> getCPIndex
              0x3a -> WideAStore <$> getCPIndex
              0xa9 -> WideRet <$> getCPIndex)
-    , (0xc5, MultiANewArray <$> getCPIndex <*> getWord8)
+    , (0xc5, MultiANewArray <$> getCPIndex <*> Get.getWord8)
     , (0xc6, IfNull <$> getCPIndex)
     , (0xc7, IfNotNull <$> getCPIndex)
     , (0xc8, GotoW <$> getWord32)
@@ -356,14 +356,14 @@ instructionParsers =
     , (0xff, return ImDep2)
     ]
 
-getCPIndex :: Get CPIndex
-getCPIndex = CPIndex <$> getWord16
+getCPIndex :: Get.Get CPIndex
+getCPIndex = CPIndex <$> Get.getWord16be
 
-getCPIndex8 :: Get CPIndex
-getCPIndex8 = CPIndex . fromIntegral <$> getWord8
+getCPIndex8 :: Get.Get CPIndex
+getCPIndex8 = CPIndex . fromIntegral <$> Get.getWord8
 
-getLocal :: Get Local
-getLocal = getWord8
+getLocal :: Get.Get Local
+getLocal = Get.getWord8
 
 -- -> StackMapTable
 stackMapTableAttr len = do
@@ -371,7 +371,7 @@ stackMapTableAttr len = do
   return $ StackMapTable frames
 
 getStackMapFrame = do
-  tag <- getWord8
+  tag <- Get.getWord8
   findWithDefault failingStackMapFrame tag stackMapFrameList tag
 
 findWithDefault dft tag m =
@@ -398,22 +398,22 @@ sameLocals1StackItemFrame tag =
   SameLocals1StackItemFrame tag <$> parseVerifTypeInfo
 
 sameLocals1StackItemFrameExtended tag =
-  SameLocals1StackItemFrameExtended tag <$> getWord16 <*> parseVerifTypeInfo
+  SameLocals1StackItemFrameExtended tag <$> Get.getWord16be <*> parseVerifTypeInfo
 
-chopFrame tag = ChopFrame tag <$> getWord16
+chopFrame tag = ChopFrame tag <$> Get.getWord16be
 
-sameFrameExtended tag = SameFrameExtended tag <$> getWord16
+sameFrameExtended tag = SameFrameExtended tag <$> Get.getWord16be
 
 appendFrame tag =
-  AppendFrame tag <$> getWord16 <*>
+  AppendFrame tag <$> Get.getWord16be <*>
   times parseVerifTypeInfo (fromIntegral tag - 251)
 
 fullFrame tag =
-  FullFrame tag <$> getWord16 <*> several parseVerifTypeInfo <*>
+  FullFrame tag <$> Get.getWord16be <*> several parseVerifTypeInfo <*>
   several parseVerifTypeInfo
 
 --   -> VerifTypeInfo
-verifTypeInfo :: Map.Map Word8 (Get VerifTypeInfo)
+verifTypeInfo :: Map.Map Word8 (Get.Get VerifTypeInfo)
 verifTypeInfo =
   Map.fromList
     [ (0, return TopVariableInfo)
@@ -423,38 +423,38 @@ verifTypeInfo =
     , (4, return DoubleVariableInfo)
     , (5, return NullVariableInfo)
     , (6, return UninitializedThisVariableInfo)
-    , (7, ObjectVariableInfo <$> getWord16)
-    , (8, UninitializedVariableInfo <$> getWord16)
+    , (7, ObjectVariableInfo <$> Get.getWord16be)
+    , (8, UninitializedVariableInfo <$> Get.getWord16be)
     ]
 
 failingVerifInfo = fail "Unknown verif info"
 
 parseVerifTypeInfo = do
-  tag <- getWord8
+  tag <- Get.getWord8
   Map.findWithDefault failingVerifInfo tag verifTypeInfo
 
 --   <-- VerifTypeInfo
 -- <- StackMapTable
-exceptionsAttr _ = Exceptions <$> several getWord16
+exceptionsAttr _ = Exceptions <$> several Get.getWord16be
 
 innerClass =
-  InnerClassInfo <$> getWord16 <*> getWord16 <*> getWord16 <*>
-  (foldMask innerClassAccessFlagsMap <$> getWord16)
+  InnerClassInfo <$> Get.getWord16be <*> Get.getWord16be <*> Get.getWord16be <*>
+  (foldMask innerClassAccessFlagsMap <$> Get.getWord16be)
 
 innerClassesAttr _ = do
   innerClasses <- several innerClass
   return $ InnerClasses innerClasses
 
-enclosingMethodAttr _ = EnclosingMethod <$> getWord16 <*> getWord16
+enclosingMethodAttr _ = EnclosingMethod <$> Get.getWord16be <*> Get.getWord16be
 
 syntheticAttr _ = return Synthetic
 
-signatureAttr _ = Signature <$> getWord16
+signatureAttr _ = Signature <$> Get.getWord16be
 
-sourceFileAttr _ = SourceFile <$> getWord16
+sourceFileAttr _ = SourceFile <$> Get.getWord16be
 
 sourceDebugExtensionAttr len = do
-  byteString <- getByteString (fromIntegral len)
+  byteString <- Get.getByteString (fromIntegral len)
   let string = bytesToString byteString
   return $ SourceDebugExtension string
 
@@ -463,13 +463,12 @@ lineNumberTableAttr len = do
   return $ LineNumberTable attrs
 
 lineNumberAttr = do
-  pc <- getWord16
-  line <- getWord16
+  pc <- Get.getWord16be
+  line <- Get.getWord16be
   return $ LineNumber pc line
 
 localVariableInfoParser =
-  LocalVariableInfo <$> getWord16 <*> getWord16 <*> getWord16 <*> getWord16 <*>
-  getWord16
+  LocalVariableInfo <$> Get.getWord16be <*> Get.getWord16be <*> Get.getWord16be <*> Get.getWord16be <*> Get.getWord16be
 
 localVariableTableAttr len =
   LocalVariableTable <$> several localVariableInfoParser
@@ -485,21 +484,21 @@ rtVisibleAnnsAttr len = RTVisibleAnns <$> several parseAnnAttr
 rtInvisibleAnnsAttr len = RTInvisibleAnns <$> several parseAnnAttr
 
 rtVisibleParamAnnsAttr len = do
-  numParameters <- getWord8
+  numParameters <- Get.getWord8
   annAttrs <- times (several parseAnnAttr) (fromIntegral numParameters)
   return $ RTVisibleParamAnns annAttrs
 
 rtInvisibleParamAnnsAttr len = do
-  numParameters <- getWord8
+  numParameters <- Get.getWord8
   annAttrs <- times (several parseAnnAttr) (fromIntegral numParameters)
   return $ RTInvisibleParamAnns annAttrs
 
-parseAnnAttr = Ann <$> getWord16 <*> several elementValuePairParser
+parseAnnAttr = Ann <$> Get.getWord16be <*> several elementValuePairParser
 
-elementValuePairParser = ElementValuePair <$> getWord16 <*> elementValueParser
+elementValuePairParser = ElementValuePair <$> Get.getWord16be <*> elementValueParser
 
 elementValueParser = do
-  tag <- getByteString 1
+  tag <- Get.getByteString 1
   let tagChar = head $ bytesToString tag
   case take 1 . filter (elem tagChar . fst) $ elementValueParsersList of
     [(_, parser)] -> parser tagChar
@@ -513,11 +512,11 @@ elementValueParsersList =
   , ("[", parseArrayValue)
   ]
 
-parseConstValue tag = ElementConstValue tag <$> getWord16
+parseConstValue tag = ElementConstValue tag <$> Get.getWord16be
 
-parseEnumValue tag = ElementEnumConstValue tag <$> getWord16 <*> getWord16
+parseEnumValue tag = ElementEnumConstValue tag <$> Get.getWord16be <*> Get.getWord16be
 
-parseClassValue tag = ElementClassInfoIndex tag <$> getWord16
+parseClassValue tag = ElementClassInfoIndex tag <$> Get.getWord16be
 
 parseAnnValue tag = ElementAnnValue tag <$> parseAnnAttr
 
@@ -525,16 +524,16 @@ parseArrayValue tag = ElementArrayValue tag <$> several elementValueParser
 
 -- <-- Annotations
 annDefaultAttr len =
-  AnnDefault <$> (unpack <$> getByteString (fromIntegral len))
+  AnnDefault <$> (unpack <$> Get.getByteString (fromIntegral len))
 
 addDefauktAttr len = do
-  value <- getByteString len
+  value <- Get.getByteString len
   let bytes = unpack value
   return $ AnnDefault bytes
 
 bootstrapMethodsAttr len =
   BootstrapMethods <$>
-  several (BootstrapMethod <$> getWord16 <*> several getWord16)
+  several (BootstrapMethod <$> Get.getWord16be <*> several Get.getWord16be)
 
 methodParametersAttr len = MethodParameters <$> several methodParameterAttr
 
@@ -543,8 +542,8 @@ methodParametersAccessFlagsMap =
     [(0x0010, ACC_FINAL), (0x1000, ACC_SYNTHETIC), (0x8000, ACC_MANDATED)]
 
 methodParameterAttr = do
-  nameIndex <- getWord16
-  accessFlags <- getWord16
+  nameIndex <- Get.getWord16be
+  accessFlags <- Get.getWord16be
   let accessFlagsList = foldMask methodParametersAccessFlagsMap accessFlags
   return $ MethodParameter nameIndex accessFlagsList
 
@@ -562,16 +561,16 @@ parseTypeAnnAttr = do
   return $ TypeAnn targetType targetInfo typePath annotation
 
 getTargetType = do
-  tag <- getWord8
+  tag <- Get.getWord8
   case Map.lookup tag typeTargetType of
     Nothing -> fail "Illegal tag for type target info"
     Just x -> return x
 
 getTypePath = do
-  len <- getWord8
+  len <- Get.getWord8
   times getTypePathElem $ fromIntegral len
   where
-    getTypePathElem = TypePathElem <$> getWord8 <*> getWord8
+    getTypePathElem = TypePathElem <$> Get.getWord8 <*> Get.getWord8
 
 typeTargetType :: Map.Map Word8 TypeTargetType
 typeTargetType =
@@ -600,7 +599,7 @@ typeTargetType =
     , (0x4b, MethodRefArg)
     ]
 
-typeTargetInfo :: [([TypeTargetType], Get TypeTargetInfo)]
+typeTargetInfo :: [([TypeTargetType], Get.Get TypeTargetInfo)]
 typeTargetInfo =
   [ ([GenericClassInterface, MethodConstructor], typeParameterTargetInfo)
   , ([ClassInterfaceExtendsImplements], supertypeTargetInfo)
@@ -619,26 +618,26 @@ typeTargetInfo =
 
 failingTypeTargetInfo = fail "Unknown type target tag"
 
-typeParameterTargetInfo = TypeParameterTarget <$> getWord8
+typeParameterTargetInfo = TypeParameterTarget <$> Get.getWord8
 
-supertypeTargetInfo = SupertypeTarget <$> getWord16
+supertypeTargetInfo = SupertypeTarget <$> Get.getWord16be
 
 typeParameterBoundTargetInfo =
-  TypeParameterBoundTarget <$> getWord8 <*> getWord8
+  TypeParameterBoundTarget <$> Get.getWord8 <*> Get.getWord8
 
 emptyTargetInfo = return EmptyTarget
 
-formalParameterTargetInfo = FormalParameterTarget <$> getWord8
+formalParameterTargetInfo = FormalParameterTarget <$> Get.getWord8
 
-throwsTargetInfo = ThrowsTarget <$> getWord16
+throwsTargetInfo = ThrowsTarget <$> Get.getWord16be
 
 localvarTargetInfo = LocalvarTarget <$> several localVarTargetElem
   where
     localVarTargetElem =
-      LocalVarTargetElem <$> getWord16 <*> getWord16 <*> getWord16
+      LocalVarTargetElem <$> Get.getWord16be <*> Get.getWord16be <*> Get.getWord16be
 
-catchTargetInfo = CatchTarget <$> getWord16
+catchTargetInfo = CatchTarget <$> Get.getWord16be
 
-offsetTargetInfo = OffsetTarget <$> getWord16
+offsetTargetInfo = OffsetTarget <$> Get.getWord16be
 
-typeArgumentTargetInfo = TypeArgumentTarget <$> getWord16 <*> getWord8
+typeArgumentTargetInfo = TypeArgumentTarget <$> Get.getWord16be <*> Get.getWord8

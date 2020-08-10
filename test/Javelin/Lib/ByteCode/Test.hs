@@ -98,14 +98,14 @@ javelinTests =
         ]
     ]
 
--- 0) frem drem
--- 1) iinc
--- 2) use turtle to work with directory stuff
--- 3) jint stores both info
--- 4) jint is passed to push instead of type annotation
--- 5) code fetches first or second from jint when it needs to write/read word64/32
--- 6) [cmpg] X [int double float long]
-
+-- use turtle to work with directory stuff
+-- type conversions
+-- frem drem
+-- iinc
+-- jint stores both info
+-- jint is passed to push instead of type annotation
+-- code fetches first or second from jint when it needs to write/read word64/32
+-- [cmpg] X [int double float long]
 
 jvmTest :: String -> String -> TestTree
 jvmTest className expectedResult =

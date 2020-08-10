@@ -8,8 +8,7 @@ import qualified Data.Map.Lazy as Map (Map, keys, lookup)
 import Data.Word (Word16)
 import Debug.Trace
 
--- getWord8 = getWord8
-getWord16 = getWord16be
+-- getWord16 = getWord16be
 
 getWord32 = getWord32be
 
@@ -24,7 +23,7 @@ times get n = do
 
 several :: Get a -> Get [a]
 several get = do
-  len <- getWord16
+  len <- getWord16be
   times get len
 
 addFlagIfMatches :: Word16 -> Map.Map Word16 a -> [a] -> Word16 -> [a]
