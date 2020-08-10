@@ -13,27 +13,27 @@ import Data.Word
 
 import Javelin.Lib.ByteCode.Attribute
 import Javelin.Lib.ByteCode.ConstantPool
-import Javelin.Lib.ByteCode.Data
+import qualified Javelin.Lib.ByteCode.Data as ByteCode
 import Javelin.Lib.ByteCode.FieldMethod
-import Javelin.Lib.ByteCode.Utils
+import qualified Javelin.Lib.ByteCode.Utils as Utils
 
 getInterface :: Get.Get Word16
 getInterface = Get.getWord16be
 
-classBody :: Get.Get ClassBody
+classBody :: Get.Get ByteCode.ClassBody
 classBody = do
   poolLength <- Get.getWord16be
   pool <- getConstants poolLength
   flags <- parseClassAccessFlags
   thisClass <- Get.getWord16be
   superClass <- Get.getWord16be
-  interfaces <- several getInterface
-  fields <- several $ getField pool
-  methods <- several $ getMethod pool
-  attributes <- several $ getAttr pool
+  interfaces <- Utils.several getInterface
+  fields <- Utils.several $ getField pool
+  methods <- Utils.several $ getMethod pool
+  attributes <- Utils.several $ getAttr pool
   return $
-    ClassBody
-      (ConstantPool pool)
+    ByteCode.ClassBody
+      (ByteCode.ConstantPool pool)
       flags
       thisClass
       superClass
@@ -49,49 +49,49 @@ magicNumber = do
     then return 42
     else fail "Not a Java class format"
 
-classFlagsList :: Map Word16 ClassAccessFlags
+classFlagsList :: Map Word16 ByteCode.ClassAccessFlags
 classFlagsList =
   fromList
-    [ (0x0001, AccPublic)
-    , (0x0010, AccFinal)
-    , (0x0020, AccSuper)
-    , (0x0200, AccInterface)
-    , (0x0400, AccAbstract)
-    , (0x1000, AccSynthetic)
-    , (0x2000, AccAnn)
-    , (0x4000, AccEnum)
+    [ (0x0001, ByteCode.AccPublic)
+    , (0x0010, ByteCode.AccFinal)
+    , (0x0020, ByteCode.AccSuper)
+    , (0x0200, ByteCode.AccInterface)
+    , (0x0400, ByteCode.AccAbstract)
+    , (0x1000, ByteCode.AccSynthetic)
+    , (0x2000, ByteCode.AccAnn)
+    , (0x4000, ByteCode.AccEnum)
     ]
 
-parseClassAccessFlags :: Get.Get [ClassAccessFlags]
-parseClassAccessFlags = foldMask classFlagsList <$> Get.getWord16be
+parseClassAccessFlags :: Get.Get [ByteCode.ClassAccessFlags]
+parseClassAccessFlags = Utils.foldMask classFlagsList <$> Get.getWord16be
 
 version :: Get.Get Word16
 version = Get.getWord16be
 
-parseByteCode :: Get.Get ByteCode
+parseByteCode :: Get.Get ByteCode.ByteCode
 parseByteCode = do
   magicNumber
   minor <- version
   major <- version
   body <- classBody
-  return $ ByteCode minor major body
+  return $ ByteCode.ByteCode minor major body
 
 parseRaw ::
      [Word8]
   -> Either (LBS.ByteString, Get.ByteOffset, String) ( LBS.ByteString
                                                  , Get.ByteOffset
-                                                 , ByteCode)
+                                                 , ByteCode.ByteCode)
 parseRaw bytes = Get.runGetOrFail parseByteCode $ LBS.pack bytes
 
-parse :: [Word8] -> Either String ByteCode
+parse :: [Word8] -> Either String ByteCode.ByteCode
 parse = either formatParseError validateParseResult . parseRaw
 
 formatParseError ::
-     (LBS.ByteString, Get.ByteOffset, String) -> Either String ByteCode
+     (LBS.ByteString, Get.ByteOffset, String) -> Either String ByteCode.ByteCode
 formatParseError (_, _, msg) = Left msg
 
 validateParseResult ::
-     (LBS.ByteString, Get.ByteOffset, ByteCode) -> Either String ByteCode
+     (LBS.ByteString, Get.ByteOffset, ByteCode.ByteCode) -> Either String ByteCode.ByteCode
 validateParseResult (bs, off, bc) =
   if LBS.null bs
     then Right bc
