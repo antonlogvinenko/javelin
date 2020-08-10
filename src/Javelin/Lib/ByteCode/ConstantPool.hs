@@ -7,7 +7,7 @@ import qualified Data.Map.Lazy as Map
 import qualified Data.Word as Word
 import qualified Unsafe.Coerce as Unsafe
 
-import Javelin.Lib.ByteCode.Data
+import qualified Javelin.Lib.ByteCode.Data as ByteCode
 import qualified Data.ByteString.UTF8 as BS
 
 getConstants 1 = return []
@@ -16,19 +16,19 @@ getConstants len = do
   let double = ([constant, constant] ++) <$> getConstants (len - 2)
       single = (constant :) <$> getConstants (len - 1)
   case constant of
-    LongInfo _ -> double
-    DoubleInfo _ -> double
+    ByteCode.LongInfo _ -> double
+    ByteCode.DoubleInfo _ -> double
     _ -> single
 
-getConstant :: Get.Get Constant
+getConstant :: Get.Get ByteCode.Constant
 getConstant = do
   tag <- Get.getWord8
   Map.findWithDefault (failingConstParser tag) tag constantTypeParser
 
-failingConstParser :: Word.Word8 -> Get.Get Constant
+failingConstParser :: Word.Word8 -> Get.Get ByteCode.Constant
 failingConstParser x = fail $ "Undefined constant with index " ++ show x ++ "\n"
 
-constantTypeParser :: Map.Map Word.Word8 (Get.Get Constant)
+constantTypeParser :: Map.Map Word.Word8 (Get.Get ByteCode.Constant)
 constantTypeParser =
   Map.fromList
     [ (1, utf8InfoParser)
@@ -47,48 +47,48 @@ constantTypeParser =
     , (18, invokeDynamicInfoParser)
     ]
 
-utf8InfoParser :: Get.Get Constant
+utf8InfoParser :: Get.Get ByteCode.Constant
 utf8InfoParser = do
   byteStringLen <- Get.getWord16be
   byteString <- Get.getByteString $ fromIntegral byteStringLen
-  return $ Utf8Info $ BS.toString byteString
+  return $ ByteCode.Utf8Info $ BS.toString byteString
 
-twoTwoBytesInfoParser :: (Word.Word16 -> Word.Word16 -> Constant) -> Get.Get Constant
+twoTwoBytesInfoParser :: (Word.Word16 -> Word.Word16 -> ByteCode.Constant) -> Get.Get ByteCode.Constant
 twoTwoBytesInfoParser constConstr = constConstr <$> Get.getWord16be <*> Get.getWord16be
 
-twoFourBytesInfoParser :: (Word.Word32 -> Word.Word32 -> Constant) -> Get.Get Constant
+twoFourBytesInfoParser :: (Word.Word32 -> Word.Word32 -> ByteCode.Constant) -> Get.Get ByteCode.Constant
 twoFourBytesInfoParser constConstr = constConstr <$> Get.getWord32be <*> Get.getWord32be
 
-twoBytesInfoParser :: (Word.Word16 -> Constant) -> Get.Get Constant
+twoBytesInfoParser :: (Word.Word16 -> ByteCode.Constant) -> Get.Get ByteCode.Constant
 twoBytesInfoParser constConstr = constConstr <$> Get.getWord16be
 
-fourBytesInfoParser :: (Word.Word32 -> Constant) -> Get.Get Constant
+fourBytesInfoParser :: (Word.Word32 -> ByteCode.Constant) -> Get.Get ByteCode.Constant
 fourBytesInfoParser constConstr = constConstr <$> Get.getWord32be
 
-fieldrefParser = twoTwoBytesInfoParser Fieldref
+fieldrefParser = twoTwoBytesInfoParser ByteCode.Fieldref
 
-methodrefParser = Methodref <$> Get.getWord16be <*> Get.getWord16be
+methodrefParser = ByteCode.Methodref <$> Get.getWord16be <*> Get.getWord16be
 
-interfaceMethodrefParser :: Get.Get Constant
-interfaceMethodrefParser = twoTwoBytesInfoParser InterfaceMethodref
+interfaceMethodrefParser :: Get.Get ByteCode.Constant
+interfaceMethodrefParser = twoTwoBytesInfoParser ByteCode.InterfaceMethodref
 
-nameAndTypeInfoParser :: Get.Get Constant
-nameAndTypeInfoParser = twoTwoBytesInfoParser NameAndTypeInfo
+nameAndTypeInfoParser :: Get.Get ByteCode.Constant
+nameAndTypeInfoParser = twoTwoBytesInfoParser ByteCode.NameAndTypeInfo
 
-classInfoParser = twoBytesInfoParser ClassInfo
+classInfoParser = twoBytesInfoParser ByteCode.ClassInfo
 
-stringInfoParser = twoBytesInfoParser StringInfo
+stringInfoParser = twoBytesInfoParser ByteCode.StringInfo
 
-integerInfoParser = IntegerInfo <$> Unsafe.unsafeCoerce <$> Get.getWord32be
+integerInfoParser = ByteCode.IntegerInfo <$> Unsafe.unsafeCoerce <$> Get.getWord32be
 
-floatInfoParser = FloatInfo <$> Unsafe.unsafeCoerce <$> Get.getWord32be
+floatInfoParser = ByteCode.FloatInfo <$> Unsafe.unsafeCoerce <$> Get.getWord32be
 
-longInfoParser = LongInfo <$> Unsafe.unsafeCoerce <$> Get.getWord64be
+longInfoParser = ByteCode.LongInfo <$> Unsafe.unsafeCoerce <$> Get.getWord64be
 
-doubleInfoParser = DoubleInfo <$> Unsafe.unsafeCoerce <$> Get.getWord64be
+doubleInfoParser = ByteCode.DoubleInfo <$> Unsafe.unsafeCoerce <$> Get.getWord64be
 
-methodHandleInfoParser = MethodHandleInfo <$> Get.getWord8 <*> Get.getWord16be
+methodHandleInfoParser = ByteCode.MethodHandleInfo <$> Get.getWord8 <*> Get.getWord16be
 
-methodTypeInfoParser = MethodTypeInfo <$> Get.getWord16be
+methodTypeInfoParser = ByteCode.MethodTypeInfo <$> Get.getWord16be
 
-invokeDynamicInfoParser = twoTwoBytesInfoParser InvokeDynamicInfo
+invokeDynamicInfoParser = twoTwoBytesInfoParser ByteCode.InvokeDynamicInfo
