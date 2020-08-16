@@ -2,7 +2,7 @@
 
 module Javelin.Interpreter.Loading where
 
-import Javelin.Interpreter.ClassPathLoading (getClassBytes)
+-- import Javelin.Interpreter.ClassPathLoading (getClassBytes)
 import Javelin.Lib.ByteCode.ClassFile (parseRaw)
 import Javelin.Lib.ByteCode.Data
 import Javelin.Lib.ByteCode.DescSign
@@ -13,6 +13,7 @@ import Data.ByteString.Lazy as BSL (readFile, toStrict)
 import Data.Map as Map (Map(..), (!), empty, insert, lookup, member)
 import Data.Maybe (catMaybes, isJust, isNothing, listToMaybe)
 import Data.Word (Word16)
+import Data.Function
 
 import Codec.Archive.Zip
 import Control.Lens ((^.), (^?), ix, to)
@@ -20,7 +21,6 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE)
 import Data.Either.Utils (maybeToEither)
-import Flow ((|>))
 import Javelin.Capability.Classes
 import Javelin.Interpreter.JVMApp
 
@@ -31,7 +31,7 @@ instance ClassLoading JVM where
   -- 5.3 Creation and Loading top level code
 
 getClassBytesIO name (ClassPathLayout classes _) = do
-  case classes |> Map.lookup name |> maybeToEither (ClassNotFoundException name) of
+  case classes & Map.lookup name & maybeToEither (ClassNotFoundException name) of
     Left err -> return $ Left err
     Right v -> getClassFromSource name v
 
@@ -225,7 +225,7 @@ checkSuperClass request defCL rt classInfo =
             Right True -> throwE $ Linkage rt IncompatibleClassChangeError
             Right False ->
               let thisIsInterface =
-                    classInfo |> classVisibility |> isClassInterface
+                    classInfo & classVisibility & isClassInterface
                in case (thisIsInterface, parent) of
                     (True, "java/lang/Object") -> lift $ return rt
                     (True, _) ->
@@ -290,9 +290,9 @@ deriveClass bc =
       classAttrs = attrs classBody
       accessFlags = classAccessFlags classBody
       classInterfaces =
-        classBody |> interfaces |> map (classOrInterfaceName . (sym `at`))
+        classBody & interfaces & map (classOrInterfaceName . (sym `at`))
       classMethods =
-        classBody |> methods |>
+        classBody & methods &
         map (checkAndRecordLoadedClassMethods sym classBody)
    in do classFields <-
            mapM
@@ -324,9 +324,9 @@ deriveClassAccess flags =
 checkAndRecordLoadedClassFields ::
      SymTable -> ClassBody -> FieldInfo -> Either VMError Field
 checkAndRecordLoadedClassFields sym body fieldInfo =
-  let fieldName = fieldInfo |> fieldNameIndex |> (sym `at`) |> string
+  let fieldName = fieldInfo & fieldNameIndex & (sym `at`) & string
       fieldDescriptor =
-        fieldInfo |> fieldDescriptorIndex |> (sym `at`) |> string
+        fieldInfo & fieldDescriptorIndex & (sym `at`) & string
       fieldAttrs = attrs body
       parsedFieldDescriptor = parseFieldDescriptor fieldDescriptor
    in case parsedFieldDescriptor of
@@ -363,9 +363,9 @@ deriveFieldAccess flags =
 checkAndRecordLoadedClassMethods ::
      SymTable -> ClassBody -> MethodInfo -> Method
 checkAndRecordLoadedClassMethods sym body methodInfo =
-  let methodName = methodInfo |> methodNameIndex |> (sym `at`) |> string
+  let methodName = methodInfo & methodNameIndex & (sym `at`) & string
       methodDescriptor =
-        methodInfo |> methodInfoDescriptorIndex |> (sym `at`) |> string
+        methodInfo & methodInfoDescriptorIndex & (sym `at`) & string
       attrs = methodAttrs methodInfo
       codeAttr = head $ filter isCodeAttrInfo attrs
    in Method
@@ -395,14 +395,14 @@ deriveMethodAccess flags =
     (elem MethodSynthetic flags)
 
 getFields :: ByteCode -> SymTable -> Map PartReference FieldInfo
-getFields bc sym = bc |> body |> fields |> foldl fieldsFold Map.empty
+getFields bc sym = bc & body & fields & foldl fieldsFold Map.empty
   where
     fieldsFold = \acc field -> Map.insert (buildPartReference field) field acc
     buildPartReference (FieldInfo _ nameIdx descrIdx _) =
       PartReference (string $ sym `at` nameIdx) (string $ sym `at` descrIdx)
 
 getMethods :: ByteCode -> SymTable -> Map PartReference MethodInfo
-getMethods bc sym = bc |> body |> methods |> foldl fieldsFold Map.empty
+getMethods bc sym = bc & body & methods & foldl fieldsFold Map.empty
   where
     fieldsFold = \acc field -> Map.insert (buildPartReference field) field acc
     buildPartReference (MethodInfo _ nameIdx descrIdx _) =
@@ -526,9 +526,9 @@ resolveClassFieldInParents ::
 resolveClassFieldInParents classId partRef rt = do
   superInterfaces <- getSuperInterfaces rt classId
   interfaceResolution <-
-    superInterfaces |>
-    map (\superInterface -> ClassId (getInitCL classId) superInterface) |>
-    map (\classId -> resolveFieldSearch classId partRef rt) |>
+    superInterfaces &
+    map (\superInterface -> ClassId (getInitCL classId) superInterface) &
+    map (\classId -> resolveFieldSearch classId partRef rt) &
     findSuccessfulResolution
   case interfaceResolution of
     Just r -> return $ Just r
@@ -590,7 +590,7 @@ resolveMethodSignPolymorphic rt partRef classId classInfo = return Nothing
 resolveMethodNameDescriptor :: MethodResolution
 resolveMethodNameDescriptor rt partRef classId classInfo =
   let matchedMethods =
-        classInfo |> methodsList |> filter (methodMatches partRef)
+        classInfo & methodsList & filter (methodMatches partRef)
    in return $
       case matchedMethods of
         (m:_) -> Just $ getName classId
@@ -631,20 +631,20 @@ maxSpecific rt partRef classId@(ClassId initCL _) =
   case getClass rt classId of
     Left error -> Nothing
     Right classInfo ->
-      case classInfo |> methodsList |> filter (methodMatches partRef) of
-        [method] -> classInfo |> className |> Just |> Just
+      case classInfo & methodsList & filter (methodMatches partRef) of
+        [method] -> classInfo & className & Just & Just
         [] ->
           let found =
-                classInfo |> classInterfaces |> map (ClassId initCL) |>
+                classInfo & classInterfaces & map (ClassId initCL) &
                 map (maxSpecific rt partRef)
-              failures = found |> filter isNothing |> length
-              successes = found |> catMaybes |> filter isJust
+              failures = found & filter isNothing & length
+              successes = found & catMaybes & filter isJust
               successesLength = length successes
            in if failures > 0
                 then Nothing
                 else case successesLength of
                        0 -> Just Nothing
-                       1 -> successes |> head |> Just
+                       1 -> successes & head & Just
                        _ -> Nothing
         _ -> Nothing
 
@@ -657,12 +657,12 @@ findNonPrivateNonStatic rt classId@(ClassId initCL _) partRef =
   case getClass rt classId of
     Left error -> Nothing
     Right classInfo ->
-      case classInfo |> methodsList |> filter (methodMatches partRef) of
-        (m:_) -> classInfo |> className |> Just
+      case classInfo & methodsList & filter (methodMatches partRef) of
+        (m:_) -> classInfo & className & Just
         _ ->
-          classInfo |> classInterfaces |> map (ClassId initCL) |>
-          map (\classId -> findNonPrivateNonStatic rt classId partRef) |>
-          catMaybes |>
+          classInfo & classInterfaces & map (ClassId initCL) &
+          map (\classId -> findNonPrivateNonStatic rt classId partRef) &
+          catMaybes &
           listToMaybe
 
 requireNotInterface :: Runtime -> ClassId -> Either VMError Runtime

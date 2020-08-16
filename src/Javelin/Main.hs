@@ -3,7 +3,6 @@ module Javelin.Main
   ) where
 
 import qualified Data.ByteString as BS (readFile, unpack)
-import Data.Semigroup ((<>))
 import Javelin.Capability.Classes
 import Javelin.Interpreter.ClassPathLoading ()
 import Javelin.Interpreter.JVMApp (JVMConfig(..), runJVMApp)

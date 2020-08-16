@@ -1,10 +1,10 @@
 module Javelin.Interpreter.Logging where
 
-import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader
 import Javelin.Capability.Classes
 import Javelin.Interpreter.JVMApp
 import Rainbow
+import Data.Text as Text
 
 doIO :: Bool -> IO () -> JVM ()
 doIO True io = liftIO io
@@ -16,7 +16,7 @@ instance Logging JVM where
     doIO logging $ writeFile "jvmDump.log" (x ++ " " ++ show a)
   console x a = do
     logging <- asks loggingMode
-    doIO logging (putChunkLn $ fore blue (chunk (x ++ " " ++ show a)))
+    doIO logging (putChunkLn $ fore blue $ chunk $ Text.pack (x ++ " " ++ show a))
   say x = do
     logging <- asks loggingMode
-    doIO logging (putChunkLn $ fore green (chunk x))
+    doIO logging (putChunkLn $ fore green $ chunk $ Text.pack x)

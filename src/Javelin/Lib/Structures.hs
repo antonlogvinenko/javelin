@@ -4,7 +4,7 @@ module Javelin.Lib.Structures where
 
 import Data.Array.IArray (Array, (!), (//), array, bounds)
 import Data.Int (Int16, Int32, Int64, Int8)
-import Data.List ((!!), findIndex, intersperse)
+import Data.List (findIndex, intersperse)
 import qualified Data.Map.Strict as Map
   ( Map
   , (!?)
@@ -14,7 +14,7 @@ import qualified Data.Map.Strict as Map
   , toList
   )
 import Data.Word (Word16, Word32, Word64, Word8)
-import Flow
+import qualified Data.Function as Function
 
 import Control.Lens ((%~), (&), (^.), (^?), _1, _2, _Right, ix, makeLenses)
 import Data.Either.Utils (maybeToEither)
@@ -190,12 +190,14 @@ data ClassPathLayout =
     }
   deriving (Eq)
 
+
 instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
     "== Classpath ==\n" ++ show classPath ++ "\n\n" ++ "== Loaded classes ==\n" ++
     (classes |> Map.toList |> map (\(c, p) -> c ++ "\n" ++ show p) |>
      intersperse "\n\n" |>
      concat)
+     where (|>) = (Function.&)
 
 type ClassName = String
 

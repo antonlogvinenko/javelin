@@ -11,9 +11,6 @@ module Javelin.Lib.ByteCode.DescSign
 
 import Data.Word ()
 
-import Control.Applicative ((*>), (<$), (<$>), (<*), (<*>))
-  -- Signatures
-
 import Text.ParserCombinators.Parsec.Char
 import Text.ParserCombinators.Parsec.Combinator
 import Text.ParserCombinators.Parsec.Error (ParseError)

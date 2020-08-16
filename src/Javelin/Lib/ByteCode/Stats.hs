@@ -9,7 +9,6 @@ import Data.List (sortOn)
 import qualified Data.Map.Strict as Map (Map(..), alter, foldrWithKey)
 import Data.Ord (Down(..))
 import System.Directory (doesDirectoryExist, getDirectoryContents)
-import System.IO (appendFile, writeFile)
 import Text.Printf (printf)
 
 import Data.Bifunctor (Bifunctor(second))
