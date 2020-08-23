@@ -2,23 +2,17 @@
 
 module Javelin.Lib.Structures where
 
-import Data.Array.IArray (Array, (!), (//), array, bounds)
-import Data.Int (Int16, Int32, Int64, Int8)
-import Data.List (findIndex, intersperse)
+import qualified Data.Array.IArray as Array
+import qualified Data.Int as Int
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
-  ( Map
-  , (!?)
-  , fromList
-  , insert
-  , lookup
-  , toList
-  )
-import Data.Word (Word16, Word32, Word64, Word8)
+import qualified Data.Word as Word
 import qualified Data.Function as Function
+import qualified Data.Maybe as Maybe
 
 import Control.Lens ((%~), (&), (^.), (^?), _1, _2, _Right, ix, makeLenses)
+
 import Data.Either.Utils (maybeToEither)
-import Data.Maybe (isJust, fromMaybe)
 import Javelin.Lib.ByteCode.Data
 import Javelin.Lib.ByteCode.DescSign
 
@@ -28,7 +22,7 @@ data Runtime =
     , _loadedClasses :: Map.Map ClassId (Either VMError LoadedClass)
     , _classResolving :: Map.Map ClassId ClassRes
     , _classPrepared :: Map.Map ClassId Bool --todo change Bool to error as in ClassRes
-    , _heap :: (Int, Array Int JObject)
+    , _heap :: (Int, Array.Array Int JObject)
     , _threads :: [Thread]
     }
   deriving (Show, Eq)
@@ -100,8 +94,8 @@ data Method =
     { methodName :: String
     , methodDescriptor :: String
     , methodAccess :: MethodAccess
-    , stackSize :: Word16
-    , localsSize :: Word16
+    , stackSize :: Word.Word16
+    , localsSize :: Word.Word16
     , instructions :: [Instruction]
     , exceptions :: [Exception]
     , methodParameters :: [MethodParameter2]
@@ -148,10 +142,10 @@ data Field =
   deriving (Show, Eq)
 
 data ConstantValue
-  = ConstantLong Word64
+  = ConstantLong Word.Word64
   | ConstantFloat Float
   | ConstantDouble Double
-  | ConstantInteger Word32
+  | ConstantInteger Word.Word32
   | ConstantString String
   deriving (Show, Eq)
 
@@ -195,8 +189,8 @@ instance Show ClassPathLayout where
   show cpl@(ClassPathLayout classes classPath) =
     "== Classpath ==\n" ++ show classPath ++ "\n\n" ++ "== Loaded classes ==\n" ++
     (classes |> Map.toList |> map (\(c, p) -> c ++ "\n" ++ show p) |>
-     intersperse "\n\n" |>
-     concat)
+     List.intersperse "\n\n" |>
+     List.concat)
      where (|>) = (Function.&)
 
 type ClassName = String
@@ -284,13 +278,13 @@ data Frame =
 
 newtype StackElement =
   StackElement
-    { stackElement :: Word64
+    { stackElement :: Word.Word64
     }
   deriving (Show, Eq)
 
 newtype Locals =
   Locals
-    { vars :: Array Int Word32
+    { vars :: Array.Array Int Word.Word32
     }
   deriving (Show, Eq)
 
@@ -300,22 +294,22 @@ type JObject = Map.Map String JValue
 
 data JValue
   = JInt
-      { getInt :: Int32
+      { getInt :: Int.Int32
       }
   | JLong
-      { getLong :: Int64
+      { getLong :: Int.Int64
       }
   | JBoolean
-      { getBoolean :: Int32
+      { getBoolean :: Int.Int32
       }
   | JShort
-      { getShort :: Int16
+      { getShort :: Int.Int16
       }
   | JByte
-      { getByte :: Int8
+      { getByte :: Int.Int8
       }
   | JChar
-      { getChar :: Word8
+      { getChar :: Word.Word8
       }
   | JDouble
       { getDouble :: Double
@@ -358,10 +352,10 @@ data SymbolicReference
       { float :: Float
       }
   | IntegerLiteral
-      { integer :: Int32
+      { integer :: Int.Int32
       }
   | LongLiteral
-      { long :: Int64
+      { long :: Int.Int64
       }
   | EmptyLiteral
   deriving (Show, Eq)
@@ -398,7 +392,7 @@ getMethodBySignature ::
      Runtime -> ClassId -> PartReference -> Either VMError (Int, Method)
 getMethodBySignature rt classId partRef = do
   classMethods <- methodsList <$> getClass rt classId
-  case findIndex (\m -> methodName m == _name partRef) classMethods of
+  case List.findIndex (\m -> methodName m == _name partRef) classMethods of
     Just idx -> Right (fromIntegral idx, classMethods !! idx)
     Nothing ->
       Left $ InternalError rt $ CustomError $ "Cant find method" ++ show partRef
@@ -416,7 +410,7 @@ findLoadedClass rt classId = rt ^? loadedClasses . ix classId
 getDefiningClassLoader :: Runtime -> ClassId -> Either VMError ClassLoader
 getDefiningClassLoader rt classId = _defining <$> getLoadedClass rt classId
 
-getStringLiteral :: SymTable -> Word16 -> Either VMError String
+getStringLiteral :: SymTable -> Word.Word16 -> Either VMError String
 getStringLiteral t i =
   maybeToEither undefined $ do
     let elem = t !! fromIntegral i
@@ -434,7 +428,7 @@ newRuntime layout =
         loadedClassesInfo
         (Map.fromList [])
         (Map.fromList [])
-        (0, array (0, 0) [(0, Map.fromList [("", JReference 0)])])
+        (0, Array.array (0, 0) [(0, Map.fromList [("", JReference 0)])])
         emptyThreads
 
 addLoadedClass :: ClassId -> LoadedClass -> Runtime -> Runtime
@@ -445,7 +439,7 @@ markClassPrepared :: ClassId -> Runtime -> Runtime
 markClassPrepared classId rt = rt & classPrepared %~ Map.insert classId True
 
 isClassPrepared :: ClassId -> Runtime -> Bool
-isClassPrepared classId rt = fromMaybe False (_classPrepared rt Map.!? classId)
+isClassPrepared classId rt = Maybe.fromMaybe False (_classPrepared rt Map.!? classId)
 
 updateClassFields :: ClassId -> Runtime -> ([Field] -> [Field]) -> Runtime
 updateClassFields classId rt update =
@@ -465,7 +459,7 @@ classDefinesField :: ClassId -> ClassPartReference -> Runtime -> Bool
 classDefinesField classId partRef rt =
   let fieldResStatus =
         rt ^? classResolving . ix classId . resolvedFields . ix partRef
-   in isJust fieldResStatus
+   in Maybe.isJust fieldResStatus
 
 -- Heap contents
 newThread :: Frame -> ClassPathLayout -> Thread
@@ -479,16 +473,16 @@ malloc rt =
 getField :: Runtime -> Ref -> String -> Either VMError JValue
 getField rt ref name =
   let h = rt ^. heap . _2
-   in if ref < (snd . bounds) h
+   in if ref < (snd . Array.bounds) h
         then maybeToEither (InternalError rt SpecifyMeError) $
-             Map.lookup name (h ! ref)
+             Map.lookup name ((Array.!) h ref)
         else Left $ InternalError rt SpecifyMeError
 
 writeField :: Runtime -> Ref -> (String, JValue) -> Either VMError Runtime
 writeField rt@Runtime {_heap = (s, h)} ref (name, value) = do
-  let jobject = h ! ref
+  let jobject = (Array.!) h ref
       newObject = Map.insert name value jobject
-  return $ rt & heap . _2 %~ (// [(ref, newObject)])
+  return $ rt & heap . _2 %~ ( (flip (Array.//)) [(ref, newObject)])
 
 -- LLI ClassPath
 nullReference = JReference (-1)

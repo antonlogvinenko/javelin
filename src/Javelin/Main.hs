@@ -2,7 +2,10 @@ module Javelin.Main
   ( javelinMain
   ) where
 
-import qualified Data.ByteString as BS (readFile, unpack)
+import qualified Data.ByteString as BS
+import qualified Text.Show.Pretty as Pretty
+import qualified Options.Applicative as Opt
+
 import Javelin.Capability.Classes
 import Javelin.Interpreter.ClassPathLoading ()
 import Javelin.Interpreter.JVMApp (JVMConfig(..), runJVMApp)
@@ -15,8 +18,6 @@ import Javelin.Lib.ByteCode.Data (showByteCode)
 import Javelin.Lib.ByteCode.Stats (stats)
 import Javelin.Lib.Structures hiding (long)
 import Javelin.Runtime.Instructions (runJVM)
-import Options.Applicative
-import Text.Show.Pretty
 
 disasmClass :: Bool -> FilePath -> IO ()
 disasmClass opt path = do
@@ -31,7 +32,7 @@ disasmSemantics path = do
   bytestring <- BS.readFile path
   let words = BS.unpack bytestring
   case parseRaw words of
-    Right (_, _, v) -> putStrLn $ ppShow $ deriveClass v
+    Right (_, _, v) -> putStrLn $ Pretty.ppShow $ deriveClass v
     Left (_, off, v) ->
       putStrLn $ "Failed to parse file " ++ path ++ ". Offset " ++ show off
 
@@ -83,48 +84,48 @@ data JVMOpts
       }
 
 javelinMain :: IO ()
-javelinMain = execParser opts >>= runWithOptions
+javelinMain = Opt.execParser opts >>= runWithOptions
   where
-    opts = info topParser $ progDesc "JVM implementation"
+    opts = Opt.info topParser $ Opt.progDesc "JVM implementation"
     topParser =
-      subparser $
-      command "disasm" (info disasmParser $ progDesc "Disassemble a class") <>
-      command
+      Opt.subparser $
+      Opt.command "disasm" (Opt.info disasmParser $ Opt.progDesc "Disassemble a class") <>
+      Opt.command
         "disasmSemantics"
-        (info disasmSemanticsParser $
-         progDesc "Display class contents in a readable form") <>
-      command
+        (Opt.info disasmSemanticsParser $
+         Opt.progDesc "Display class contents in a readable form") <>
+      Opt.command
         "disasmFull"
-        (info disasmFullParser $
-         progDesc "Disassembler with traced references to constant pool") <>
-      command "stats" (info disasmStatsParser $ progDesc "Bytecode statistics") <>
-      command
+        (Opt.info disasmFullParser $
+         Opt.progDesc "Disassembler with traced references to constant pool") <>
+      Opt.command "stats" (Opt.info disasmStatsParser $ Opt.progDesc "Bytecode statistics") <>
+      Opt.command
         "classpath"
-        (info loadClassPathParser $
-         progDesc "Parsing classpath, traversing it and loading class bytes") <>
-      command
+        (Opt.info loadClassPathParser $
+         Opt.progDesc "Parsing classpath, traversing it and loading class bytes") <>
+      Opt.command
         "loadClass"
-        (info loadClassWithDepsParser $
-         progDesc "Loading class with all dependencies") <>
-      command "jvm" (info jvmParser $ progDesc "Run JVM")
-    disasmParser = Disasm <$> strArgument (metavar "Path to class file")
-    disasmFullParser = DisasmFull <$> strArgument (metavar "Path to class file")
+        (Opt.info loadClassWithDepsParser $
+         Opt.progDesc "Loading class with all dependencies") <>
+      Opt.command "jvm" (Opt.info jvmParser $ Opt.progDesc "Run JVM")
+    disasmParser = Disasm <$> Opt.strArgument (Opt.metavar "Path to class file")
+    disasmFullParser = DisasmFull <$> Opt.strArgument (Opt.metavar "Path to class file")
     disasmSemanticsParser =
-      DisasmSemantics <$> strArgument (metavar "Path to class file")
+      DisasmSemantics <$> Opt.strArgument (Opt.metavar "Path to class file")
     disasmStatsParser =
-      DisasmByteCodeStats <$> strArgument (metavar "Directory with classes") <*>
-      optional (strArgument (metavar "Output file path"))
+      DisasmByteCodeStats <$> Opt.strArgument (Opt.metavar "Directory with classes") <*>
+      Opt.optional (Opt.strArgument (Opt.metavar "Output file path"))
     loadClassPathParser =
-      LoadClassPath <$> strArgument (metavar "JVM class path") <*>
-      strArgument (metavar "Class file to load")
+      LoadClassPath <$> Opt.strArgument (Opt.metavar "JVM class path") <*>
+      Opt.strArgument (Opt.metavar "Class file to load")
     loadClassWithDepsParser =
-      LoadClassWithDeps <$> strArgument (metavar "JVM class path") <*>
-      strArgument (metavar "Class file to load")
+      LoadClassWithDeps <$> Opt.strArgument (Opt.metavar "JVM class path") <*>
+      Opt.strArgument (Opt.metavar "Class file to load")
     jvmParser =
-      JVM <$> strArgument (metavar "mainClass") <*>
-      strArgument (metavar "classPath") <*>
-      flag False True (long "loggingMode" <> short 'l') <*>
-      some (strArgument (metavar "mainArguments"))
+      JVM <$> Opt.strArgument (Opt.metavar "mainClass") <*>
+      Opt.strArgument (Opt.metavar "classPath") <*>
+      Opt.flag False True (Opt.long "loggingMode" <> Opt.short 'l') <*>
+      Opt.some (Opt.strArgument (Opt.metavar "mainArguments"))
 
 runWithOptions :: JVMOpts -> IO ()
 runWithOptions jvmOpts =
@@ -142,6 +143,6 @@ runWithOptions jvmOpts =
         Left error -> print error
         Right bs -> loadClassPath False bs
     LoadClassWithDeps classPath classFilePath ->
-      (loadClassWithDeps classPath classFilePath) >>= print
+      loadClassWithDeps classPath classFilePath >>= print
     JVM mainClass classPath loggingMode mainArgs ->
       runJVMApp (runJVM classPath mainClass mainArgs) (JVMConfig loggingMode)

@@ -1,15 +1,17 @@
 module Javelin.Runtime.Instructions where
 
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State.Lazy (runStateT)
-import Data.Array.IArray (array)
-import Data.Bits (shiftR, shiftL, (.&.), (.|.), xor)
-import qualified Data.Map.Lazy as Map ((!))
+import qualified Control.Monad.IO.Class as MonadIO
+import qualified Control.Monad.State.Lazy as State
+import qualified Data.Array.IArray as Array
+import qualified Data.Bits as Bits
+import qualified Data.Map.Lazy as Map
+import qualified Data.Word as Word
+
 import Javelin.Capability.Classes
 import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
-import Data.Word (Word64, Word32)
+
 
 -- runJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
@@ -72,7 +74,7 @@ createFrame rt classId methodReference =
     Right (index, method) ->
       let localsLength = fromIntegral $ localsSize method
           initValue = [(i, 0) | i <- [0 .. localsLength - 1]]
-          locals = Locals $ array (0, localsLength - 1) initValue
+          locals = Locals $ Array.array (0, localsLength - 1) initValue
        in Right $ Frame 0 classId index locals []
     Left err -> Left err
 
@@ -93,7 +95,7 @@ runThread c thread
         console "Instruction:" instruction
         let thread1 = incrementInstructionCounter thread
         (thread2, execution) <- execute instruction thread1
-        (_, thread3) <- runIO $! runStateT execution thread2
+        (_, thread3) <- runIO $! State.runStateT execution thread2
         let topFrame = getTopFrame thread3
         console " stack:" $ operands <$> topFrame
         console " local:" $ locals <$> topFrame
@@ -148,10 +150,10 @@ shift operation operandType = do
   push $ operation op1 (fromIntegral op2)
 
 ulShiftR :: JLong -> Int -> JLong
-ulShiftR n k = fromIntegral $ shiftR (fromIntegral n :: Word64) k
+ulShiftR n k = fromIntegral $ Bits.shiftR (fromIntegral n :: Word.Word64) k
 
 uiShiftR :: JInt -> Int -> JInt
-uiShiftR n k = fromIntegral $ shiftR (fromIntegral n :: Word32) k
+uiShiftR n k = fromIntegral $ Bits.shiftR (fromIntegral n :: Word.Word32) k
 
 outReference :: JReference
 outReference = maxBound
@@ -254,17 +256,17 @@ execute INeg = pureInstruction $ neg jint
 execute LNeg = pureInstruction $ neg jlong
 execute FNeg = pureInstruction $ neg jfloat
 execute DNeg = pureInstruction $ neg jdouble
-execute IOr = pureInstruction $ math (.|.) jint
-execute IAnd = pureInstruction $ math (.&.) jint
-execute IXor = pureInstruction $ math xor jint
-execute IShl = pureInstruction $ shift shiftL jint
-execute IShr = pureInstruction $ shift shiftR jint
+execute IOr = pureInstruction $ math (Bits..|.) jint
+execute IAnd = pureInstruction $ math (Bits..&.) jint
+execute IXor = pureInstruction $ math Bits.xor jint
+execute IShl = pureInstruction $ shift Bits.shiftL jint
+execute IShr = pureInstruction $ shift Bits.shiftR jint
 execute IUshr = pureInstruction $ shift uiShiftR jint
-execute LOr = pureInstruction $ math (.|.) jlong
-execute LAnd = pureInstruction $ math (.&.) jlong
-execute LXor = pureInstruction $ math xor jlong
-execute LShl = pureInstruction $ shift shiftL jlong
-execute LShr = pureInstruction $ shift shiftR jlong
+execute LOr = pureInstruction $ math (Bits..|.) jlong
+execute LAnd = pureInstruction $ math (Bits..&.) jlong
+execute LXor = pureInstruction $ math Bits.xor jlong
+execute LShl = pureInstruction $ shift Bits.shiftL jlong
+execute LShr = pureInstruction $ shift Bits.shiftR jlong
 execute LUshr = pureInstruction $ shift ulShiftR jlong
 execute (BiPush value) = pureInstruction $ push (fromIntegral value :: JByte)
 execute IDiv = pureInstruction $ math div jint
@@ -321,7 +323,7 @@ execute (InvokeVirtual (CPIndex index)) =
           , do value <- stringValue
                object <- pop jreference
                if outReference == object
-                 then liftIO $ putStr value
+                 then MonadIO.liftIO $ putStr value
                  else empty)
 
 typeFormatter :: String -> ThreadOperation String

@@ -2,26 +2,26 @@
 
 module Javelin.Lib.ByteCode.Stats where
 
-import Control.Monad (guard)
-import Control.Monad.Trans.Except (ExceptT(..), runExceptT)
-import qualified Data.ByteString as BS (readFile, unpack)
-import Data.List (sortOn)
-import qualified Data.Map.Strict as Map (Map(..), alter, foldrWithKey)
-import Data.Ord (Down(..))
-import System.Directory (doesDirectoryExist, getDirectoryContents)
-import Text.Printf (printf)
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.Except as Except
+import qualified Data.ByteString as BS
+import qualified Data.List as List
+import qualified Data.Map.Strict as Map
+import qualified Data.Ord as Ord
+import qualified System.Directory as Dir
+import qualified Text.Printf as Printf
+import qualified Data.Bifunctor as BF
 
-import Data.Bifunctor (Bifunctor(second))
-import Javelin.Lib.ByteCode.ClassFile (parse)
+import Javelin.Lib.ByteCode.ClassFile
 import Javelin.Lib.ByteCode.Data
 
 listDir :: FilePath -> IO [FilePath]
 listDir path = do
-  isDirectory <- doesDirectoryExist path
+  isDirectory <- Dir.doesDirectoryExist path
   if not isDirectory
     then return [path]
     else do
-      contents <- getDirectoryContents path
+      contents <- Dir.getDirectoryContents path
       let files =
             map ((path ++ "/") ++) . filter (`notElem` [".", ".."]) $ contents
       concat <$> mapM listDir files
@@ -29,7 +29,7 @@ listDir path = do
 getStats :: FilePath -> IO (Either String (Map.Map String Integer))
 getStats path = do
   filePaths <- listDir path
-  runExceptT $ calcFreqs mempty filePaths
+  Except.runExceptT $ calcFreqs mempty filePaths
 
 stats :: FilePath -> Maybe FilePath -> IO ()
 stats path output = do
@@ -38,27 +38,27 @@ stats path output = do
     Left msg -> putStrLn msg
     Right freqs ->
       let list =
-            sortOn (Down . snd) $
+            List.sortOn (Ord.Down . snd) $
             Map.foldrWithKey (\k v list -> (k, v) : list) [] freqs
           amount = fromIntegral $ foldl (\c (k, v) -> c + v) 0 list
           normalize x = (fromIntegral (100 * x) / amount) :: Double
-          normalized = map (second normalize) list
-          formatted = map (second (printf "%.4f%%")) normalized
+          normalized = map (BF.second normalize) list
+          formatted = map (BF.second (Printf.printf "%.4f%%")) normalized
        in do maybe mempty (textile formatted) output
              printConsole formatted
 
 printConsole :: [(OpCode, String)] -> IO ()
-printConsole freqs = putStrLn $ concatMap (uncurry (printf "%s: %s\n")) freqs
+printConsole freqs = putStrLn $ concatMap (uncurry (Printf.printf "%s: %s\n")) freqs
 
 textile :: [(OpCode, String)] -> FilePath -> IO ()
 textile freqs path = do
   writeFile path "| OpCpde | Frequency |\n"
-  appendFile path $ concatMap (uncurry (printf "| %s | %s |\n")) freqs
+  appendFile path $ concatMap (uncurry (Printf.printf "| %s | %s |\n")) freqs
 
 calcFreqs ::
      Map.Map String Integer
   -> [FilePath]
-  -> ExceptT String IO (Map.Map String Integer)
+  -> Except.ExceptT String IO (Map.Map String Integer)
 calcFreqs accum [] = return accum
 calcFreqs !accum (f:fs) = do
   bytecode <- parseFileContents f
@@ -69,7 +69,7 @@ addFreq freq bc =
   let opCodes = do
         method <- methods $ body bc
         attr <- methodAttrs method
-        guard (isCodeAttr attr)
+        Monad.guard (isCodeAttr attr)
         instruction <- code attr
         return $ oc instruction
    in composeFreqs freq opCodes
@@ -84,9 +84,9 @@ isCodeAttr :: AttrInfo -> Bool
 isCodeAttr CodeAttr {} = True
 isCodeAttr _ = False
 
-parseFileContents :: FilePath -> ExceptT String IO ByteCode
+parseFileContents :: FilePath -> Except.ExceptT String IO ByteCode
 parseFileContents path =
-  ExceptT $
+  Except.ExceptT $
   either (addPath path) Right <$> parse <$> BS.unpack <$> BS.readFile path
 
 addPath :: String -> String -> Either String ByteCode
