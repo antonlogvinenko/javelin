@@ -1,10 +1,10 @@
 module Javelin.Lib.ByteCode.Attribute where
 
 import qualified Data.Binary.Get as Get
-import Data.ByteString (unpack)
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Map.Lazy as Map (Map, findWithDefault, fromList, lookup)
-import Data.Word (Word32, Word8)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as UTF8
+import qualified Data.Map.Lazy as Map
+import qualified Data.Word as Word
 
 import Javelin.Lib.ByteCode.Data
 import Javelin.Lib.ByteCode.Utils
@@ -32,7 +32,7 @@ getAttr pool = do
     Just x -> fail $ "Utf8Info expected for attribute, but found "
     Nothing -> fail "Utf8Info expected for attribute, found nothing. X_X"
 
-parseAttr :: [Constant] -> String -> Word32 -> Get.Get AttrInfo
+parseAttr :: [Constant] -> String -> Word.Word32 -> Get.Get AttrInfo
 parseAttr pool "Code" len = codeAttr pool len
 parseAttr _ text len =
   case Map.lookup text attrsNamesMap of
@@ -92,13 +92,13 @@ parseInstructions = do
       instructions <- parseInstructions
       return $ instruction : instructions
 
-findInstructionParser :: Word8 -> Get.Get Instruction
+findInstructionParser :: Word.Word8 -> Get.Get Instruction
 findInstructionParser idx =
   case Map.lookup idx instructionParsers of
     Just p -> p
     Nothing -> fail $ "No instruction parser for opcode " ++ show idx
 
-instructionParsers :: Map.Map Word8 (Get.Get Instruction)
+instructionParsers :: Map.Map Word.Word8 (Get.Get Instruction)
 instructionParsers =
   Map.fromList
   -- Constants
@@ -414,7 +414,7 @@ fullFrame tag =
   several parseVerifTypeInfo
 
 --   -> VerifTypeInfo
-verifTypeInfo :: Map.Map Word8 (Get.Get VerifTypeInfo)
+verifTypeInfo :: Map.Map Word.Word8 (Get.Get VerifTypeInfo)
 verifTypeInfo =
   Map.fromList
     [ (0, return TopVariableInfo)
@@ -456,7 +456,7 @@ sourceFileAttr _ = SourceFile <$> Get.getWord16be
 
 sourceDebugExtensionAttr len = do
   byteString <- Get.getByteString (fromIntegral len)
-  let string = BS.toString byteString
+  let string = UTF8.toString byteString
   return $ SourceDebugExtension string
 
 lineNumberTableAttr len = do
@@ -500,7 +500,7 @@ elementValuePairParser = ElementValuePair <$> Get.getWord16be <*> elementValuePa
 
 elementValueParser = do
   tag <- Get.getByteString 1
-  let tagChar = head $ BS.toString tag
+  let tagChar = head $ UTF8.toString tag
   case take 1 . filter (elem tagChar . fst) $ elementValueParsersList of
     [(_, parser)] -> parser tagChar
     _ -> fail "Aaaa"
@@ -525,11 +525,11 @@ parseArrayValue tag = ElementArrayValue tag <$> several elementValueParser
 
 -- <-- Annotations
 annDefaultAttr len =
-  AnnDefault <$> (unpack <$> Get.getByteString (fromIntegral len))
+  AnnDefault <$> (BS.unpack <$> Get.getByteString (fromIntegral len))
 
 addDefauktAttr len = do
   value <- Get.getByteString len
-  let bytes = unpack value
+  let bytes = BS.unpack value
   return $ AnnDefault bytes
 
 bootstrapMethodsAttr len =
@@ -573,7 +573,7 @@ getTypePath = do
   where
     getTypePathElem = TypePathElem <$> Get.getWord8 <*> Get.getWord8
 
-typeTargetType :: Map.Map Word8 TypeTargetType
+typeTargetType :: Map.Map Word.Word8 TypeTargetType
 typeTargetType =
   Map.fromList
     [ (0x00, GenericClassInterface)
