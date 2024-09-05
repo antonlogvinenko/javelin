@@ -40,9 +40,8 @@ executeMainClass :: String -> IO String
 executeMainClass className =
   unpack . strip . pack <$>
   readProcess
-    "cabal"
+    "stack"
     [ "run"
-    , "--verbose=0"
     , "javelin"
     , "jvm"
     , "javelin." ++ className
