@@ -1,3 +1,29 @@
+*Info*
+ # Load -> Link (R*) -> Initialize
+ # R*: Resolution (of references in the constant pool of class being linked) can be done:
+ ## during Link phase
+ ## later, when a proper instruction requires it (getfield, ldc, instanceof, etc)
+ # Resolution of a method/field => resolution of its class
+ # Resolution of a class => Loading the class
+
+Thus, a class can be
+ # Loaded
+ # Loaded and Linked (with all/none/some refs in constant pool resolved)
+ # Loaded, Linked, and Initialized (with all/none/some refs in constant pool resolved)
+
+e.g.,
+* a class A was loaded, linked, initialized
+* its method a() is being executed
+* method a() has "getstatic" instruction referencing class B and method b()
+* method b() (and by recursion class B) will be resolved
+* getstatic will then require class B initialization
+
+e.g.
+* a class A was loaded, linked, initialized
+* its method a() is being executed
+* method a() has "ldc" instruction referencing class B
+* class B must must be resolved
+
 *Current*
 * commands execution
  * invokestatic
