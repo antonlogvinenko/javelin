@@ -5,6 +5,7 @@ module Javelin.Main
 import qualified Data.ByteString as BS
 import qualified Text.Show.Pretty as Pretty
 import qualified Options.Applicative as Opt
+import qualified Data.Time.Clock as Clock
 
 import Javelin.Capability.Classes
 import Javelin.Interpreter.ClassPathLoading ()
@@ -17,7 +18,7 @@ import Javelin.Lib.ByteCode.ClassFile (parseRaw)
 import Javelin.Lib.ByteCode.Data (showByteCode)
 import Javelin.Lib.ByteCode.Stats (stats)
 import Javelin.Lib.Structures hiding (long)
-import Javelin.Runtime.Instructions (runJVM)
+import Javelin.Runtime.Instructions (createJVM)
 
 disasmClass :: Bool -> FilePath -> IO ()
 disasmClass opt path = do
@@ -51,8 +52,9 @@ loadClassWithDepsPure classPath className = do
   loadClass (ClassId BootstrapClassLoader className) rt
 
 loadClassWithDeps :: FilePath -> String -> IO (Either VMError Runtime)
-loadClassWithDeps classPath className =
-  runJVMApp (loadClassWithDepsPure classPath className) (JVMConfig False)
+loadClassWithDeps classPath className = do
+  time <- Clock.getCurrentTime
+  runJVMApp (loadClassWithDepsPure classPath className) (JVMConfig False time)
 
 data JVMOpts
   = Disasm
@@ -80,6 +82,7 @@ data JVMOpts
       { mainClass :: String
       , classPath :: String
       , loggingMode :: Bool
+      , performanceMode :: Bool
       , args :: [String]
       }
 
@@ -125,6 +128,7 @@ javelinMain = Opt.execParser opts >>= runWithOptions
       JVM <$> Opt.strArgument (Opt.metavar "mainClass") <*>
       Opt.strArgument (Opt.metavar "classPath") <*>
       Opt.flag False True (Opt.long "loggingMode" <> Opt.short 'l') <*>
+      Opt.flag False True (Opt.long "performanceMode" <> Opt.short 'p') <*>
       Opt.some (Opt.strArgument (Opt.metavar "mainArguments"))
 
 runWithOptions :: JVMOpts -> IO ()
@@ -135,14 +139,16 @@ runWithOptions jvmOpts =
     DisasmSemantics path -> disasmSemantics path
     DisasmByteCodeStats path mbOutput -> stats path mbOutput
     LoadClassPath classPath classFilePath -> do
+      time <- Clock.getCurrentTime
       bb <-
         runJVMApp
           (getClassSourcesLayout classPath >>= getClassBytes classFilePath)
-          (JVMConfig False)
+          (JVMConfig False time)
       case bb of
         Left error -> print error
         Right bs -> loadClassPath False bs
     LoadClassWithDeps classPath classFilePath ->
       loadClassWithDeps classPath classFilePath >>= print
-    JVM mainClass classPath loggingMode mainArgs ->
-      runJVMApp (runJVM classPath mainClass mainArgs) (JVMConfig loggingMode)
+    JVM mainClass classPath loggingMode performanceMode mainArgs -> do
+      time <- Clock.getCurrentTime
+      runJVMApp (createJVM classPath mainClass mainArgs) (JVMConfig loggingMode time)

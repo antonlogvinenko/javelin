@@ -60,7 +60,8 @@ library
       process,
       HUnit,
       tasty-hunit,
-      text
+      text,
+      time
   default-language: Haskell2010
   ghc-options:
                     -- -Wall

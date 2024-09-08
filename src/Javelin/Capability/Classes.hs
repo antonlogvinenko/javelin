@@ -21,9 +21,10 @@ class Monad m =>
 class Monad m =>
       Logging m
   where
+  emptyLine :: m ()
   dump :: Show a => String -> a -> m ()
   console :: Show a => String -> a -> m ()
-  say :: String -> m ()
+  msg :: String -> m ()
 
 class Monad m =>
       Termination m

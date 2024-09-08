@@ -13,10 +13,10 @@ import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
 
 
--- runJVM "./sample-classpath/rt.jar:main" "test.App" []
+-- createJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
-runJVM :: Global m => String -> String -> [String] -> m ()
-runJVM classPath mainClass args =
+createJVM :: Global m => String -> String -> [String] -> m ()
+createJVM classPath mainClass args =
   let main =
         map
           (\c ->
@@ -25,10 +25,9 @@ runJVM classPath mainClass args =
                else c)
           mainClass
    in do dump "\n" "_______ Starting JVM ________"
-         console "Main class arg" mainClass
          console "Main class" main
          cpLayout <- getClassSourcesLayout classPath
-         console "Classpath" (_classPath cpLayout)
+         console "Reading classpath" (_classPath cpLayout)
          dump "classpath.log" cpLayout
          case (Map.!) (_classes cpLayout) main of
            JarFile path ->
@@ -38,6 +37,7 @@ runJVM classPath mainClass args =
              console "Main class found in class file" path
              let classId = ClassId BootstrapClassLoader main
              mainClassInit <- initClass classId (newRuntime cpLayout)
+             msg "Main class loaded"
              case mainClassInit of
                Left err -> terminate err
                Right rt ->
@@ -99,7 +99,7 @@ runThread c thread
         let topFrame = getTopFrame thread3
         console " stack:" $ operands <$> topFrame
         console " local:" $ locals <$> topFrame
-        say ""
+        emptyLine
         runThread (c + 1) thread3
       Left error -> terminate error
 

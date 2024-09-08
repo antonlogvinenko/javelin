@@ -6,3 +6,4 @@ jvmDump.log
 .stack-work
 javelin.iml
 .idea/
+*/**/.DS_Store
