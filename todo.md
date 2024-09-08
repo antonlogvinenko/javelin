@@ -1,15 +1,15 @@
-*Info*
- # Load -> Link (R*) -> Initialize
- # R*: Resolution (of references in the constant pool of class being linked) can be done:
- ## during Link phase
- ## later, when a proper instruction requires it (getfield, ldc, instanceof, etc)
- # Resolution of a method/field => resolution of its class
- # Resolution of a class => Loading the class
+*Info about loading, linking, iniialization*
+ 1. Load -> Link (R*) -> Initialize
+ 2. R: Resolution (of references in the constant pool of class being linked) can be done:
+    1. during Link phase
+    2. later, when a proper instruction requires it (getfield, ldc, instanceof, etc)
+ 3. Resolution of a method/field => resolution of its class
+ 4. Resolution of a class => Loading the class
 
 Thus, a class can be
- # Loaded
- # Loaded and Linked (with all/none/some refs in constant pool resolved)
- # Loaded, Linked, and Initialized (with all/none/some refs in constant pool resolved)
+1. Loaded
+2. Loaded and Linked (with all/none/some refs in constant pool resolved)
+3. Loaded, Linked, and Initialized (with all/none/some refs in constant pool resolved)
 
 e.g.,
 * a class A was loaded, linked, initialized
