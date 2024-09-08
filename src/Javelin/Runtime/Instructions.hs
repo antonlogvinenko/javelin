@@ -12,7 +12,6 @@ import Javelin.Lib.ByteCode.Data (CPIndex(..), Instruction(..))
 import Javelin.Lib.Structures
 import Javelin.Runtime.Thread
 
-
 -- createJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
 createJVM :: Global m => String -> String -> [String] -> m ()
@@ -165,7 +164,7 @@ execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 
 -- push const <i> to stack
 execute Nop = undefinedInstruction
-execute AConstNull = undefinedInstruction
+execute AConstNull = pureInstruction $ aconst_null
 execute IConstM1 = pureInstruction $ iconst (-1)
 execute IConst0 = pureInstruction $ iconst 0
 execute IConst1 = pureInstruction $ iconst 1
@@ -245,7 +244,7 @@ execute (IStore localId) = pureInstruction $ popAndStoreAt jint localId
 execute (LStore localId) = pureInstruction $ popAndStoreAt jlong localId
 execute (FStore localId) = pureInstruction $ popAndStoreAt jfloat localId
 execute (DStore localId) = pureInstruction $ popAndStoreAt jdouble localId
-execute (AStore localId) = undefinedInstruction
+execute (AStore localId) = pureInstruction $ popAndStoreAt jreference localId
 execute IStore0 = pureInstruction $ popAndStoreAt jint 0
 execute IStore1 = pureInstruction $ popAndStoreAt jint 1
 execute IStore2 = pureInstruction $ popAndStoreAt jint 2
@@ -275,8 +274,8 @@ execute BaStore = undefinedInstruction
 execute CaStore = undefinedInstruction
 execute SaStore = undefinedInstruction
 -- Stack
-execute Pop = undefinedInstruction
-execute Pop2 = undefinedInstruction
+execute Pop = pureInstruction $ pop jint >> empty
+execute Pop2 = pureInstruction $ popn jint 2 >> empty
 execute Dup = undefinedInstruction
 execute DupX1 = undefinedInstruction
 execute DupX2 = undefinedInstruction
@@ -321,7 +320,7 @@ execute IRem = pureInstruction $ math rem jint
 execute LRem = pureInstruction $ math rem jlong
 execute FRem = undefinedInstruction
 execute DRem = undefinedInstruction
-execute (IInc localId word8) = undefinedInstruction 
+execute (IInc localId word8) = undefinedInstruction
 
 -- Conversions
 execute I2L = undefinedInstruction

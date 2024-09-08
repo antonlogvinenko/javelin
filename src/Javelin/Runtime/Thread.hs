@@ -228,17 +228,17 @@ pushn js =
     let vals = map jToStackElement js
      in ((), updStack t (vals ++))
 
-pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
-pop f =
-  state $ \t ->
-    let nElems = head (getStack t)
-     in (f 0 nElems, updStack t $ drop 1)
-
 popn :: (JType j) => (Int -> StackElement -> j) -> Int -> ThreadOperation [j]
 popn f n =
   state $ \t ->
     let nElems = take n $ getStack t
      in (map (f 0) nElems, updStack t $ drop n)
+
+pop :: (JType j) => (Int -> StackElement -> j) -> ThreadOperation j
+pop f =
+  state $ \t ->
+    let nElems = head (getStack t)
+     in (f 0 nElems, updStack t $ drop 1)
 
 dropTopFrame :: ThreadOperation ()
 dropTopFrame = state $ \t@Thread {frames = (f:fs)} -> ((), t {frames = fs})
