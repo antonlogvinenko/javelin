@@ -158,12 +158,12 @@ outReference :: JReference
 outReference = maxBound
 
 undefinedInstruction :: Global m => Thread -> m (Thread, ThreadOperation ())
-undefinedInstruction = pureInstruction empty
+undefinedInstruction = undefined
 
 execute :: Global m => Instruction -> Thread -> m (Thread, ThreadOperation ())
 
 -- push const <i> to stack
-execute Nop = undefinedInstruction
+execute Nop = nop
 execute AConstNull = pureInstruction $ aconst_null
 execute IConstM1 = pureInstruction $ iconst (-1)
 execute IConst0 = pureInstruction $ iconst 0
@@ -456,10 +456,12 @@ execute (GotoW word32) = undefinedInstruction
 execute (JsrW word32) = undefinedInstruction
 
 -- Reserved
-execute BreakPoint = undefinedInstruction
-execute ImDep1 = undefinedInstruction
-execute ImDep2 = undefinedInstruction
+execute BreakPoint = nop
+execute ImDep1 = nop
+execute ImDep2 = nop
 
+nop :: Global m => Thread -> m (Thread, ThreadOperation ())
+nop = pureInstruction empty
 
 typeFormatter :: String -> ThreadOperation String
 typeFormatter x
@@ -470,8 +472,6 @@ typeFormatter x
 
 -- Instructions implementation
 -- Constants
-nop = empty
-
 iconst x = push (x :: JInt)
 
 lconst x = push (x :: JLong)
