@@ -4,7 +4,6 @@ module Javelin.Interpreter.ClassPathLoading
   , getClassBytes
   ) where
 
-import qualified Control.Monad.IO.Class as MonadIO
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.List as List
 import qualified Data.Map as Map
@@ -13,6 +12,8 @@ import qualified System.FilePath as FilePath
 import qualified Codec.Archive.Zip as Zip
 import qualified Data.List.Split as Split
 import qualified Data.String.Utils as String
+import Control.Monad.IO.Class (liftIO)
+import Javelin.Interpreter.Logging()
 
 import Data.Function ((&))
 
@@ -23,33 +24,39 @@ import Javelin.Interpreter.JVMApp
 instance ClassPathLoading JVM where
   getClassSourcesLayout paths =
     let pathsList = String.strip <$> Split.splitOn ":" paths
-     in MonadIO.liftIO $ do
-          layout <- getClassPathLayout pathsList
-          return $ ClassPathLayout layout pathsList
+     in do
+      layout <- getClassPathLayout pathsList
+      return $ ClassPathLayout layout pathsList
 
-getClassPathLayout :: [FilePath] -> IO (Map.Map ClassName ClassSource)
+getClassPathLayout :: [FilePath] -> JVM (Map.Map ClassName ClassSource)
 getClassPathLayout paths = Map.unions <$> mapM getClassPathElementLayout paths
 
-getClassPathElementLayout :: FilePath -> IO (Map.Map ClassName ClassSource)
+getClassPathElementLayout :: FilePath -> JVM (Map.Map ClassName ClassSource)
 getClassPathElementLayout path
   | ".class" `List.isSuffixOf` path = extractFileClass path
-  | isZip path = extractZipClasses path
+  | isZip path = do
+      msg "start"
+      x <- id $! extractZipClasses path
+      let y = Map.size x
+      console "" y
+      msg "end"
+      return x
   | otherwise = do
-    isDirectory <- Dir.doesDirectoryExist path
+    isDirectory <- liftIO $ Dir.doesDirectoryExist path
     if not isDirectory
       then return Map.empty
-      else getFilesInClassPath path >>= getClassPathLayout
+      else (getFilesInClassPath path) >>= getClassPathLayout
 
-getFilesInClassPath :: FilePath -> IO [FilePath]
+getFilesInClassPath :: FilePath -> JVM [FilePath]
 getFilesInClassPath path = do
-  isDirectory <- Dir.doesDirectoryExist path
+  isDirectory <- liftIO $ Dir.doesDirectoryExist path
   if not isDirectory
     then return [path]
     else do
       files <-
         map ((FilePath.</>) path) <$> filter (`notElem` [".", ".."]) <$>
-        Dir.getDirectoryContents path
-      allFiles <- mapM getFilesInClassPath files :: IO [[FilePath]]
+        (liftIO $ Dir.getDirectoryContents path)
+      allFiles <- mapM getFilesInClassPath files :: JVM [[FilePath]]
       return $ concat allFiles
 
 zipContentFold :: [ClassSource] -> FilePath -> [ClassSource]
@@ -58,8 +65,8 @@ zipContentFold list path
   | isZip path = JarFile path : list
   | otherwise = list
 
-extractZipClasses :: FilePath -> IO (Map.Map ClassName ClassSource)
-extractZipClasses path = do
+extractZipClasses :: FilePath -> JVM (Map.Map ClassName ClassSource)
+extractZipClasses path = liftIO $ do
   raw <- BSL.readFile path
   let arc = Zip.toArchive raw
       allFiles = Zip.filesInArchive arc
@@ -67,7 +74,7 @@ extractZipClasses path = do
       s = JarFile path
   return $ Map.fromList $ (\c -> (c, s)) <$> pathToClass <$> paths
 
-extractFileClass :: FilePath -> IO (Map.Map ClassName ClassSource)
+extractFileClass :: FilePath -> JVM (Map.Map ClassName ClassSource)
 extractFileClass path =
   return
     (Map.fromList [(pathToClass (filePathToClassPath path), ClassFile path)])

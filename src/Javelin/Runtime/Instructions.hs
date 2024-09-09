@@ -26,8 +26,8 @@ createJVM classPath mainClass args =
    in do dump "\n" "_______ Starting JVM ________"
          console "Main class" main
          cpLayout <- getClassSourcesLayout classPath
+         dump "classpath.log" $! cpLayout
          console "Reading classpath" (_classPath cpLayout)
-         dump "classpath.log" cpLayout
          case (Map.!) (_classes cpLayout) main of
            JarFile path ->
              terminate
