@@ -15,34 +15,37 @@ import Javelin.Runtime.Thread
 -- createJVM "./sample-classpath/rt.jar:main" "test.App" []
 -- cabal run --verbose=0 javelin jvm javelin.SumOfIntegers sample-classpath/rt.jar:test-programs-output 1
 createJVM :: Global m => String -> String -> [String] -> m ()
-createJVM classPath mainClass args =
-  let main =
-        map
-          (\c ->
-             if c == '.'
-               then '/'
-               else c)
-          mainClass
-   in do dump "\n" "_______ Starting JVM ________"
-         console "Main class" main
-         cpLayout <- getClassSourcesLayout classPath
-         dump "classpath.log" $! cpLayout
-         console "Reading classpath" (_classPath cpLayout)
-         case (Map.!) (_classes cpLayout) main of
-           JarFile path ->
-             terminate
-               "Not implemented yet: running JVM from a main class inside jar file"
-           ClassFile path -> do
-             console "Main class found in class file" path
-             let classId = ClassId BootstrapClassLoader main
-             mainClassInit <- initClass classId (newRuntime cpLayout)
-             msg "Main class loaded"
-             case mainClassInit of
-               Left err -> terminate err
-               Right rt ->
-                 case createMainFrame rt classId of
-                   Right frame -> runThread 0 $ Thread [frame] rt
-                   Left err -> terminate err
+createJVM classPath mainClass args = do
+  cpLayout <- createClasspath classPath mainClass
+  executeInstructions cpLayout mainClass args
+
+executeInstructions :: Global m => ClassPathLayout -> String -> [String] -> m ()
+executeInstructions cpLayout mainClass args = do
+  let main = map (\c -> if c == '.' then '/' else c) mainClass
+  case (Map.!) (_classes cpLayout) main of
+    JarFile path ->
+      terminate "Not implemented yet: running JVM from a main class inside jar file"
+    ClassFile path -> do
+      console "Main class found in class file" path
+      let classId = ClassId BootstrapClassLoader main
+      mainClassInit <- initClass classId (newRuntime cpLayout)
+      msg "Main class loaded"
+      case mainClassInit of
+        Left err -> terminate err
+        Right rt ->
+          case createMainFrame rt classId of
+            Right frame -> runThread 0 $ Thread [frame] rt
+            Left err -> terminate err
+
+createClasspath :: Global m => String -> String -> m ClassPathLayout
+createClasspath classPath mainClass = do
+  let main = map (\c -> if c == '.' then '/' else c) mainClass
+  dump "\n" "_______ Starting JVM ________"
+  console "Main class" main
+  cpLayout <- getClassSourcesLayout classPath
+  dump "classpath.log" $! cpLayout
+  console "Reading classpath" (_classPath cpLayout)
+  return cpLayout
 
 -- Global plan:
 -- 1. create a small snippet

@@ -1,3 +1,4 @@
+*.prof
 .vscode
 stack.yaml.lock
 dist-newstyle/
