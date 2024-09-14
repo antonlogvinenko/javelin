@@ -23,7 +23,7 @@ executeInstructions :: Global m => ClassPathLayout -> String -> [String] -> m ()
 executeInstructions cpLayout mainClass args = do
   let main = map (\c -> if c == '.' then '/' else c) mainClass
   case (Map.!) (_classes cpLayout) main of
-    JarFile path ->
+    JarFile path get ->
       terminate "Not implemented yet: running JVM from a main class inside jar file"
     ClassFile path -> do
       console "Main class found in class file" path

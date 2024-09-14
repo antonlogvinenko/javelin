@@ -3,6 +3,7 @@
 module Javelin.Lib.Structures where
 
 import qualified Data.Array.IArray as Array
+import qualified Data.ByteString as BS
 import qualified Data.Int as Int
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -195,14 +196,21 @@ instance Show ClassPathLayout where
 
 type ClassName = String
 
+
 data ClassSource
   = JarFile
       { getPath :: FilePath
+      , get :: FilePath -> Maybe BS.ByteString
       }
   | ClassFile
       { getPath :: FilePath
       }
-  deriving (Show, Eq)
+
+instance Eq ClassSource where
+  x == y = False
+
+instance Show ClassSource where
+  show _ = "? -> ?"
 
 -- ClassLoading Info
 data ClassLoader

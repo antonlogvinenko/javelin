@@ -15,7 +15,7 @@ import Data.Maybe (catMaybes, isJust, isNothing, listToMaybe)
 import Data.Word (Word16)
 import Data.Function
 
-import Codec.Archive.Zip
+import Codec.Archive.Zip as Zip
 import Control.Lens ((^.), (^?), ix, to)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
@@ -43,13 +43,18 @@ getClassFromSource name (ClassFile path)
  = Right . BSL.toStrict <$> BSL.readFile path
 --  if classToPath name == path
 --    else throwE $ ClassNotFoundException "cake"
-getClassFromSource name (JarFile path) = do
-  raw <- BSL.readFile path
-  return $ maybeToEither (ClassNotFoundException name) $ do
-    let arc = toArchive raw
-        classPath = classToPath name
-    entry <- findEntryByPath classPath arc
-    return $ BSL.toStrict $ fromEntry entry
+getClassFromSource name (JarFile path get) = do
+  return $ maybeToEither (ClassNotFoundException name) (get $ classToPath name)
+  -- raw <- BSL.readFile path
+  -- return $ maybeToEither (ClassNotFoundException name) $ do
+  --   let arc = toArchive raw
+  --       classPath = classToPath name
+  --   pfft arc classPath
+
+pfft :: Zip.Archive -> FilePath -> Maybe BSS.ByteString
+pfft arc classPath = do
+  entry <- findEntryByPath classPath arc
+  return $ BSL.toStrict $ fromEntry entry
 
 classToPath :: ClassName -> FilePath
 classToPath name = name ++ ".class"
