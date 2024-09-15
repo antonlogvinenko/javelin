@@ -4,7 +4,6 @@ module Javelin.Interpreter.ClassPathLoading
   , getClassBytes
   ) where
 
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import qualified Data.List as List
 import qualified Data.Map as Map
@@ -53,17 +52,16 @@ extractFileClass path =
 
 extractZipClasses :: FilePath -> JVM (Map.Map ClassName ClassSource)
 extractZipClasses path = liftIO $ do
-  raw <- BSL.readFile path
-  let arc = Zip.toArchive raw
-      allFiles = Zip.filesInArchive arc :: [FilePath]
-      bytes = Map.fromList $ map (\f -> (f, pfft arc f)) allFiles :: Map.Map FilePath (Maybe BSS.ByteString)
+  entries <- Zip.withArchive path (Map.keys <$> Zip.getEntries)
+  let allFiles = map Zip.unEntrySelector entries :: [FilePath]
+      bytes = Map.fromList $ map (\f -> (f, pfft path f)) allFiles :: Map.Map FilePath (IO BSS.ByteString)
       s = JarFile path ((Map.!) bytes)
   return $ Map.fromList $ (\c -> (c, s)) <$> pathToClass <$> allFiles
 
-pfft :: Zip.Archive -> FilePath -> Maybe BSS.ByteString
-pfft arc classPath = do
-  entry <- Zip.findEntryByPath classPath arc
-  return $ BSL.toStrict $ Zip.fromEntry entry
+pfft :: FilePath -> FilePath -> IO BSS.ByteString
+pfft arcPath classPath = do
+  selector <- Zip.mkEntrySelector classPath
+  liftIO $ Zip.withArchive arcPath $ Zip.getEntry selector
 
 getFilesInDirectory :: FilePath -> JVM [FilePath]
 getFilesInDirectory path = do

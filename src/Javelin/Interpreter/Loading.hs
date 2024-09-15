@@ -43,7 +43,8 @@ getClassFromSource name (ClassFile path)
 --  if classToPath name == path
 --    else throwE $ ClassNotFoundException "cake"
 getClassFromSource name (JarFile path get) = do
-  return $ maybeToEither (ClassNotFoundException name) (get $ classToPath name)
+  bytes <- get $ classToPath name
+  return $ maybeToEither (ClassNotFoundException name) (Just bytes)
 
 classToPath :: ClassName -> FilePath
 classToPath name = name ++ ".class"

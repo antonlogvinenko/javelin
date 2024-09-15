@@ -200,7 +200,7 @@ type ClassName = String
 data ClassSource
   = JarFile
       { getPath :: FilePath
-      , get :: FilePath -> Maybe BS.ByteString
+      , get :: FilePath -> IO BS.ByteString
       }
   | ClassFile
       { getPath :: FilePath
